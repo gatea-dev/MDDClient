@@ -1,0 +1,89 @@
+#######################################################
+#
+#  Makefile for:
+#     libmddWire
+#
+#  REVISION HISTORY:
+#     18 SEP 2013 jcs  Created (from librtEdge).
+#      5 OCT 2015 jcs  Build 11: MDW_GLxml.o
+#     14 MAY 2020 jcs  git-ready
+#
+# (c) 1994-2020 Gatea Ltd.
+#######################################################
+
+## Hostname-dependent
+
+ifeq ($(HOSTNAME),gatea.com)
+   WARN  = -Wall
+else
+   WARN  = -Wno-write-strings
+endif
+
+## Linux
+
+SOFLAGS   = -fPIC -rdynamic $(WARN)
+BITS      =64
+ARCH      = -m$(BITS)
+BIN_DIR   = bin$(BITS)
+CCC       = g++ $(ARCH)
+CC        = gcc $(ARCH)
+LFLAGS    = -lpthread -lrt -ldl -Lexpat/lib -lexpat
+EXE_LIBS  = -L./lib -lmddWire$(BITS) $(LFLAGS) # -lstdc++
+
+## Compiler, Linker, etc.
+
+CPP       = $(CCC)
+CFLAGS    = -g -c $(SOFLAGS) -I./inc
+INC_FLAGS = -I./Internal/inc  -I./expat/xmlparse
+CPPFLAGS  = $(CFLAGS) $(INC_FLAGS)
+
+## Us
+
+OBJS = \
+	MDW_API.o \
+	Binary.o \
+	Data.o \
+	GLedgDTD.o \
+	MDW_GLxml.o \
+	MDW_Logger.o \
+	MDW_Mutex.o \
+	Publish.o \
+	Schema.o \
+	Subscribe.o \
+	MDW_version.o
+
+TEST_OBJS   = config.o test.o
+
+all:	libmddWire$(BITS) test move_objs
+
+libmddWire$(BITS):	clear $(OBJS) Expat
+	ar cr ./lib/$@.a $(OBJS)
+
+test: clear $(TEST_OBJS)
+	$(CPP) -o $@ $(TEST_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+Expat:	clear
+	( cd expat; make -f Makefile$(BITS) clean ; make -f Makefile$(BITS); cd .. )
+
+move_objs:
+	mv *.o ./obj
+
+clear:
+	clear
+
+clean:
+	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core
+	( cd expat; make clean; /bin/rm lib/*; /bin/rm */*.o )
+
+%.o:  Internal/src/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  src/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  src/%.c
+	$(CC) $(CFLAGS) $<
+
+%.o:  drivers/%.cpp
+	$(CPP) $(CPPFLAGS) $<

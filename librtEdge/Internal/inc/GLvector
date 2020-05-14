@@ -1,0 +1,260 @@
+/******************************************************************************
+*
+*  GLvector
+*     Non-STL vector
+*
+*  REVISION HISTORY:
+*     11 JUL 2006 jcs  Created.
+*      7 AUG 2006 jcs  libgl; InsertAt()
+*     31 AUG 2006 jcs  Don't delete array in clear()
+*     29 SEP 2006 jcs  operator=
+*     10 NOV 2006 jcs  operator+=
+*     23 MAR 2007 jcs  No GLMutex
+*     25 NOV 2007 jcs  Grow : Double, not K
+*     25 NOV 2008 jcs  _K; _WithinRange
+*     25 APR 2009 jcs  memory.h
+*      9 JAN 2012 jcs  _WithinRange( _sz ), not _max
+*     11 JAN 2012 jcs  Grow() : Double, not K each time
+*     24 JAN 2012 jcs  static _K, not define (STL on WIN32)
+*     25 MAR 2012 jcs  Allow init size up to 10*K*K
+*     28 AUG 2012 jcs  zeroAndClear()
+*     20 OCT 2014 jcs  _VEC_MAX
+*     27 MAR 2015 jcs  De-lint
+*      9 JAN 2017 jcs  InsertAt() : Grow to insertion location - DUH!! 
+*
+*  (c) 1994-2017 Gatea Ltd.
+******************************************************************************/
+#ifndef __GL_VECTOR_H
+#define __GL_VECTOR_H
+#include <memory.h>
+
+static  int _K                = 1024;
+#define _gmin( a,b )          ( ((a)<=(b)) ? (a) : (b) )
+#define _gmax( a,b )          ( ((a)>=(b)) ? (a) : (b) )
+#define _WithinRange( a,b,c ) ( _gmin( _gmax((a),(b)), (c)) )
+// #define _VEC_MAX              10*_K*_K
+#define _VEC_MAX              _K*_K*_K
+
+
+////////////////////////
+// Forward declarations
+////////////////////////
+
+////////////////////////////////////////
+// Non-STL vector
+/////////////////////////////////////////
+template <class T>
+class GLvector
+{
+private:
+   T   *_q;
+   int  _sz;
+   int  _max;
+
+   // Constructor / Destructor
+public:
+   GLvector( int maxSz=8 );
+   ~GLvector();
+
+   // Access / Mutator
+
+   T   *q();
+   T    operator[]( int );
+   int  size();
+   void Insert( T );
+   void InsertAt( T, int );
+   T    Remove( T );
+   void RemoveAndDestroy( T );
+   void clear();
+   void zeroAndClear();
+   void clearAndDestroy();
+
+   // Assignment / Arithmetic Operator
+
+   GLvector<T> &operator=( GLvector<T> & );
+   GLvector<T> &operator+=( GLvector<T> & );
+};
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//                  c l a s s      G L v e c t o r
+//
+//////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Constructor / Destructor
+////////////////////////////////////////////
+template <class T>
+GLvector<T>::GLvector( int maxSz ) :
+   _q( (T *)0 ),
+   _sz( 0 ),
+   _max( _WithinRange( 4,maxSz,_VEC_MAX ) )
+{
+   int sz;
+
+   // Vector
+
+   sz = _max * sizeof( T );
+   _q = new T[_max];
+   ::memset( _q, 0, sz );
+}
+
+template <class T>
+GLvector<T>::~GLvector()
+{
+   if ( _q )
+      delete[] _q;
+}
+
+
+/////////////////////////////////////////
+// Access / Mutator
+/////////////////////////////////////////
+template <class T>
+T GLvector<T>::operator[]( int n )
+{
+   int rn;
+
+   rn = _WithinRange( 0, n, _sz-1 );
+   return _q[rn];
+}
+
+template <class T>
+T *GLvector<T>::q()
+{
+   return _q;
+}
+
+template <class T>
+int GLvector<T>::size()
+{
+   return _sz;
+}
+
+template <class T>
+void GLvector<T>::Insert( T t )
+{
+   T  *cp;
+   int s0, s1, mx;
+
+   // Grow??
+
+   if ( _sz == _max ) {
+      cp    = _q;
+      mx    = _gmin( _max*2, _K );
+      _max += _gmax( _max,mx );
+      s0    = _sz  * sizeof( T );
+      s1    = _max * sizeof( T );
+      _q    = new T[_max];
+      ::memset( _q,  0, s1 );
+      ::memcpy( _q, cp, s0 );
+      delete[] cp;
+   }
+
+   // Add
+
+   _q[_sz] = t;
+   _sz++;
+}
+
+template <class T>
+void GLvector<T>::InsertAt( T t, int l )
+{
+   T  *cp;
+   int s0, s1, sz;
+
+   // Grow??
+
+   sz = _gmax( l+1, _sz );
+   if ( sz >= _max ) {
+      cp    = _q;
+      _max  = sz;
+      _max += _K;
+      s0    = _sz  * sizeof( T );
+      s1    = _max * sizeof( T );
+      _q    = new T[_max];
+      ::memset( _q,  0, s1 );
+      ::memcpy( _q, cp, s0 );
+      delete[] cp;
+   }
+
+   // Add
+
+   _q[l] = t;
+   _sz   = sz;
+}
+
+template <class T>
+T GLvector<T>::Remove( T t )
+{
+   int  i, loc;
+
+   loc = -1;
+   for ( i=0; ( loc == -1 ) && i<size(); i++ )
+      loc = ( _q[i] == t ) ? i : -1;
+   if ( loc != -1 ) {
+      for ( i=loc; i<size()-1; i++ )
+         _q[i] = _q[i+1];
+      _sz -= 1;
+      return t;
+   }
+   return (T)0;
+}
+
+template <class T>
+void GLvector<T>::RemoveAndDestroy( T t )
+{
+   Remove( t );
+   delete t;
+}
+
+template <class T>
+void GLvector<T>::clear()
+{
+   _sz = 0;
+}
+
+template <class T>
+void GLvector<T>::zeroAndClear()
+{
+   int i;
+
+   for ( i=0; i<_sz; _q[i++] = (T)0 );
+   clear();
+}
+
+template <class T>
+void GLvector<T>::clearAndDestroy()
+{
+   int i;
+
+   for ( i=0; i<_sz; i++ ) {
+      if ( _q[i] )
+         delete _q[i];
+   }
+   clear();
+}
+
+
+/////////////////////////////////////////
+// Assignment / Arithmetic Operator
+/////////////////////////////////////////
+template <class T>
+GLvector<T> &GLvector<T>::operator=( GLvector<T> &c )
+{
+   clear();
+   return operator+=( c );
+}
+
+template <class T>
+GLvector<T> &GLvector<T>::operator+=( GLvector<T> &c )
+{
+   int i;
+
+   for ( i=0; i<c.size(); i++ )
+      Insert( c[i] );
+   return *this;
+}
+
+#endif // __GL_VECTOR_H

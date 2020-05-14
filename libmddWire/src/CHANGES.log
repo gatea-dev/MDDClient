@@ -1,0 +1,138 @@
+libmddWire Client Library
+-------------------------
+
+Known Bugs
+----------
+
+
+Features To Add
+---------------
+
+
+Build 12 18-12-10
+-----------------
+1) VS2017
+
+
+Build 11 16-04-18
+-----------------
+1) Edge3 perms:
+   - mddMt_query is XML in Publish.BuildMsg()
+
+
+Build 10b 16-03-05
+------------------
+1) BB3 Perm Query:
+   - _mdd_pXmlMsg[xm_query] = "QUERY"
+
+
+Build 10a 15-10-12
+------------------
+1) Integrate with libMDDplatform:
+   - MDW__dNow, not dNow
+   - MDW__SLEEP, not SLEEP
+   - MDW__GLxml.xxx, not GLxml.xxx
+   - MDW__API.cpp, not API.cpp
+   - MDW__Logger.xxx, not Logger.xxx
+   - MDW__Mutex.xxx, not Mutex.xxx
+   - MDW__version.cpp, not version.cpp
+   - MDW__Internal.h, not Internal.h
+   - _pUser and friends = _mdwUser
+
+2) gettimeofday(); No mo clock_gettime()
+
+3) mddWire_dumpField()
+
+
+
+Build 10 15-09-14
+-----------------
+1) Fix MDW_NEED_U_INT crap via <winsock.h>
+
+2) No mo LOCALTIME = localtime_r
+
+3) namespace MDDWIRE_PRIVATE
+
+4) WIN32:
+   - localtime_r / strtok_r
+
+
+Build  9 15-01-26
+-----------------
+1) MF fractions:
+   - Subscribe._MF_str2dbl()
+
+2) Unsolicited updates / Protocol Negotiation:
+   - Subscribe._MF_ParseHdr() :
+      + Complete msg = 2 FS; Don't assume 1st byte == FS
+      + _hdrLen includes slop
+   - Data._XML_Parse() : 
+      + Set h = b._hdr if non-zero
+
+
+Build  8 14-12-05
+-----------------
+1) Fucking Windows:
+   - mddFieldList_Alloc() / mddFieldList_Free()
+   - mddBldBuf_Alloc() / mddBldBuf_Free()
+
+2) -Wall
+
+
+
+Build  7 14-06-03
+-----------------
+1) mddFld_real:
+   - Does not change sizeof( mddValue )
+      typedef struct {
+         u_int  value;
+         u_char hint;
+         u_char isBlank;
+      } mddReal;
+
+2) mddFld_bytestream
+
+
+
+Build  6 14-03-10
+-----------------
+1) Subscribe._MF_ParseHdr() : 
+   - No Img/Upd w/o RS
+   - tkr len : Check gs[nSz-1] for US
+
+2) WIN32 : No mo _ftime() 
+   - GetSystemTime()
+
+
+Build  5 14-01-31
+------------------
+1) MF DEAD not propogating to app:
+   - Subscribe::_MF_Parse() : tkr = h._tkr
+
+
+Build  4 13-12-05
+------------------
+1) Binary : int64 > _MAX_U48:
+   - UNPACKED_BINFLD
+   - Binary::_u_pack( ... u_int64_t, Bool & )
+
+
+Build  3 13-10-23
+------------------
+1) Fixed size messages:
+   - Loadable Fixed-to-FieldList library
+   - Publish._Xxxx_Build() : mddDataType from mddMsgHdr arg 
+
+
+Build  2 13-10-11
+------------------
+1) mddPub_AddFieldList
+
+2) Binary stuff
+
+3) mddWire_ConvertFieldList
+
+
+Build  1 13-09-18
+------------------
+1) Created (from librtEdge).

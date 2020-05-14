@@ -1,0 +1,729 @@
+librtEdge Client Library
+-------------------------
+
+Performance
+-----------
+1) Publish : 33 mikes to the wire on 2.9 GHz Linux
+
+
+Known Bugs
+----------
+
+
+
+Features To Add
+---------------
+
+
+Build 44 20-04-xx
+-----------------
+/*
+1) BDS : Add / Del :
+   - "~~SYM_ADD~~" / "~~SYM_DEL~~"
+   - "~~SYM_LIST~~" for backwards compatibility
+   - OnSymbol( ..., bool bAdd ) 
+ */
+
+
+Build 43 20-04-29
+-----------------
+1) Field._StripTrailing0()
+
+2) rtEdge_Destroy() : thr().Stop() - DUH!!
+
+3) Performance :
+   - SubChannel.hpp : hash_map, not std::map ByteStreams / Chains
+
+4) BDS:
+   - _BDS_PFX
+   - SubChannel:
+      + OpenBDS()
+      + CloseBDS()
+      + OnSymbol()
+      + SymLists
+   - PubChannel :
+      + OnOpenBDS()
+      + OnCloseBDS()
+      + PublishBDS()
+
+
+Build 42 20-02-22
+------------------
+1) Subscribe -renko
+
+2) Chain:
+   - OnChainLink( ..., Strings & )
+
+3) LVC Schema in CLI:
+   - rtEdgeField.Clear() : Blow away _name : DUH!!
+
+4) Conflict between std and cli namespace:
+   - No mo using namespace std in *.hpp
+   - Else, cli::array in CLI shit ...
+
+5) DataFusion : Column-centric in CLI:
+   - LVCDataAll.GetColumnAsXxx()
+
+6) Bug : Message.GetField() for LVC:
+   - IntMap if _dataLVC
+   - Else rtEdge_GetField()
+
+7) CLI : Schema.GetDef()
+
+8) Subscription Channel Heartbeat
+   - RTEDGE::Channel::SetHeartbeat()
+   - Socket._tHbeat
+   - Socket.SetHeartbeat()
+   - virtual bool Ioctl()
+
+9) CLI Cache
+   - rtEdgeField.Cache()
+   - rtEdgeData copy constructor - Deep copy
+
+10) No more support for WIN32
+
+
+Build 41 19-01-17
+------------------
+1) Visual Studio 2017:
+   - VS2017.64
+   - _MSC_VER in EDG_version.cpp
+   - VOID_PTR
+
+2) Subscribe -bstr
+
+3) ByteStream responding too quickly:
+   - SubChannel._bStrMtx
+
+4) Field.Dump() : Include Name()
+
+5) BB Perms w/ no error:
+   - PubChannel._NotEmpty()
+
+6) Field Names when pumping from tape:
+   - TapeChannel._ParseFieldList() : GetDef()
+
+
+Build 40 18-07-10
+------------------
+1) Build in 1 thread / Publish in another:
+   - Update.Init( ..., bool bReset=true )
+   - Update.Reset()
+   - Update.Publish( rtEdgeData )
+
+2) Worker threads:
+   - OS_StartThread() / OS_StopThread()
+   - Channel.StartThread() / StopThread() / OnWorkerThread()
+
+3) rtEdge_Sleep() : usleep( (u_int64_t)x ), not (int)x
+
+4) OS_GetCpuStats() : Allow for CPU's to be removed (hyper-threading disabled)
+
+5) Multi-day Tape : GLrecDailyHdr
+
+6) TapeChannel._get32() / _get64() : No Endian Change - DUH!!
+
+
+
+Build 39 18-01-15
+------------------
+1) Update._MAX_FLOAT
+
+2) C++ LVC Memory Leak:
+   - RTEDGE::LVC::_FreeSchema()
+   - RTEDGE::Schema::Initialize() : Call _Clear() 1st
+
+3) .NET LVC Memory Leak:
+   - librtEdge.rtEdge.NumObj()
+   - Pair delete w/ gcnew - DUH!!
+
+4) Lock LVC during LVCAdmin activities:
+   - GLlvcDb.mtx()
+   - Lock during LVC_Snap / LVC_SnapAll
+   -  CockpitAttr._cxtLVC
+
+
+Build 38 17-11-10
+-----------------
+1) rtEdge_RemapFile()
+
+2) OS_GetFileStats()
+
+3) WIN32 EDG_GLmmap bug:
+   - _w32FileMapping( _len ), not len
+
+
+Build 37 17-11-02
+-----------------
+1) PubChannel.PubPermResponse() : PubChannel._PubPermQryRsp() guts
+   - Marry w/ GLmdXmlSink._CrackPermResp()
+
+2) Crash on Edge3 disconnect:
+   - PubChannel._Close() : StreamID from pub - DUH!!
+
+
+Build 36 17-10-16
+-----------------
+1) Update._MAX_DBL
+
+2) rtBuf64
+   - EDG_GLmmap : All OFF_T (64-bit)
+
+3) rtEdge_pDateTimeMs() : dTime=0 for current time
+
+4) TapeChannel.hpp : 64-bit platform only!!!
+
+
+Build 35 17-09-25
+-----------------
+1) Cockpit
+   - No mo LVC_AddTicker() / LVC_DelTicker()
+   - No mo LVC_Initialize( , pAdmin )
+
+2) Performance : hash_map
+   - No mo map or GLHashMap
+
+3) LVCAdmin.AddTicker() / DelTicker()
+
+
+Build 34 17-07-15
+-----------------
+1) Drop Empty Data Dict
+
+2) RTEDGE::rtEdge::unix2rtDateTime()
+
+3) Buried Thread in Socket : Cleaner
+
+4) UDP:
+   - rtEdgePubAttr._bUDP 
+
+5) OS_cpu.cpp / OS_disk.cpp
+
+6) rtEdge_Is64Bit()
+
+
+
+Build 33 16-10-07
+-----------------
+1) Publish dates / times:
+   - rtDateTime / rtDate / rtTime
+   - Update.AddField( rtDateTime )
+   - Update.AddField( rtDate )
+   - Update.AddField( rtTime )
+
+2) ASCII File:
+   - EDG_GLmmap : GLasciiFile
+
+3) InfoReach code : Pump._Destroy()
+   - if ( (*it).second )
+      (*it).second->Disconnect( ... )
+
+4) User-defined StreamId (gateaRecorder):
+   - ioctl_userDefStreamID
+
+
+Build 32 16-04-18
+-----------------
+1) Snapshot Channel:
+   - ioctl_isSnapChan
+   - EdgChannel._bSnapChan / IsSnapChan()
+   - SubChannel.IsSnapshot()
+
+2) More ioctl's:
+   - ioctl_setStrictPubMsgTy
+   - ioctl_enable1secTimer
+
+3) Linux compatibliity in libmddWire:
+   - localtime_r; No mo LOCALTIME
+   - strtok_r; No mo STRTOK
+
+4) CLI.SubChannel.OnDead()
+
+5) ChartDb:
+   - RTEDGE.CDBData.SeriesTime() / pSeriesTime()
+   - CDBTable
+
+6) Integration w/ libMDDPlatform:
+   - EDG_Internal.h
+   - EDG_API.xxx
+   - EDG_GLchtDb.xxx
+   - EDG_GLlvcDb.xxx
+   - EDG_GLmd5.xxx
+   - EDG_GLmmap.xxx
+   - EDG_version.xxx
+
+7) PubChannel.OnDisconnect() deadlock:
+   - Unlock during callbacks
+   - vector<string>
+
+8) Channel.OnIdle() : Both Pub and Sub
+
+9) Controlled appliance:
+   - ioctl_setPubAuthenticate / ioctl_getPubAuthenticate
+   - PubChannel.OnMount()
+   - PubChannel.IsAuthenticated()
+
+10) PubChannel.OnDisconnect() : _Close()- DUH!!
+
+11) Pump._OnTimer() : Allow channel destruction
+   - tmp = _tmrs; Work thru tmp
+
+12) VS2013.64 : _SetWindowLong() / _GetWindowLong()
+
+13) Dumpage:
+   - Field.Dump()
+   - Message.Dump()
+
+14) Binary LVC:
+   - Transparent to user : Determine from LVC file signature 
+   - LVCData._bBinary / LVCDataAll._bBinary
+
+15) class LVC : public rtEdge
+
+16) RoundTrip.cpp, not RoundTrip.c
+
+17) BB3 : edg_permQuery
+   - PubChannel.OnPermQuery()
+
+
+Build 31 15-07-24
+-----------------
+1) rtEdgeChanStats._qSiz / _qSizMax
+
+2) Update.AddField( int, char *, int fLen=0 );
+
+3) RTEDGE::Channel
+
+4) ioctl_getFd
+
+5) valgrind:
+   - EdgChannel.GetSvc() : string, not const char *
+   - EdgChannel.OnMF()   : string ss( svc._data, svc._dLen );
+
+6) ATOMIC operations
+   - Socket, Thread, etc. like libQuoddFeed
+
+7) More ioctl's:
+   - ioctl_setRxBufSize
+   - ioctl_getRxBufSize
+   - ioctl_setThreadProcessor
+   - ioctl_getThreadProcessor
+
+8) Empty Schema core fix
+
+9) WIN32 localtime_r
+
+10) Buffer shit from libQuoddFeed
+
+11) ReuterFeed:
+   - rtEdge_PubGetData()
+   - ioctl_setPubDataPayload
+   - PubChannel.OnOverflow()
+
+12) GLHashMap in pub / sub channels = 23 x lookup improvement:
+   + GFC : 0.027s to find 1000000  ##  27 nanos
+   + RW  : 0.058s to find 1000000
+   + STL : 0.625s to find 1000000  ## 625 nanos
+   + STLh: 0.063s to find 1000000  ## unordered_map
+
+13) ioctl_getStats returns POINTER to rtEdgeChanStats
+
+14) Username / Password:
+   - Internal/src/GLmd5.cpp
+
+15) Message.hpp -> rtMessage.hpp (Bridge w/ libQuoddFeed.)
+
+
+
+Build 30 15-03-20
+-----------------
+1) Disconnect during Read / Write events:
+   - No mo Thread.Add() / Remove()
+   - Pump Dispatch : Non-zero Socket from _sox
+
+2) Logging : tm_mon + 1
+
+3) CLI : rtEdgeData._rawData :
+   - array<Byte>, not String
+   - No mo rtEdgeData._rawLen
+
+4) Implement ioctl_setHeartbeat
+
+
+
+Build 29 15-01-30
+------------------
+1) inc/hpp rearranging:
+   - ByteStream.hpp
+
+2) rtEdgeData._StreamID;
+
+3) int rtEdge_Unsubscribe()
+
+4) ByteStream Publisher / Subscriber
+
+5) Chain.hpp; Mutex.hpp
+
+6) ioctl_getProtocol / ioctl_randomize / ioctl_setHeartbeat
+
+7) EdgChannel.HasField() bug : Check message, not schema - DUH!! 
+
+8) Allow Unsubscribe() in response to data arriving:
+   - EdgChannel.Unsubscribe() : Clear out _recU 
+
+9) Handle Binary DEAD
+
+10) <CTL Error="xxx"/> -> Socket.Disconnect( "xxx" );
+
+11) PubChannel.OnDisconnect() -> _closeCbk
+   - PubChannel._wl
+
+12) IDN_RDF fractions : Field._str2dbl()
+
+
+
+Build 28 14-12-04
+------------------
+1) libmddWire
+
+2) Socket.OnRead() performance:
+   - Logger.CanLog()
+
+3) LVC locking:
+   - Semaphore
+   - GLlvcDb._lock
+   - GLlvcLock
+   - GLlvcDef : Only create GLlvcDb during LVC_Snap, etc.
+
+4) Binary / bytestream:
+   - rtEdge_mapFile
+   - mddFld_bytestream
+   - mddFld_real
+   - mddFld_int8
+
+5) Socket.Write() : 
+   - mddBldBuf _wrData, not string for binary
+
+6) Linux Disco:
+   - Socket.OnRead() : Readable + 0 bytes == disconnected
+
+7) inc/hpp
+
+8) Pump destructor : No mo tmp (crash on exit)
+
+9) Changed callback signatures to include cxt as 1st argument
+
+10) rtEdge_PubError()
+
+11) rtEdge_TimeNs() - Bug fix; 
+   - On WIN32, Logger::dblNow() uses QueryPerformanceCounter()
+
+12) -Wall
+
+13) Cached field list access:
+   - int rtEdge_Subscribe() - Stream ID
+   - rtEdge_GetCache() / rtEdge_GetCacheByStreamID()
+   - Record._fl / Field._fld
+
+14) LVC_Schema() : Deep copy, then LVC_Free()
+
+
+Build 27 13-09-16
+------------------
+1) HOT2:
+   - 64-bit Linux : THR_TID = pthread_t 
+   - Socket._bStart
+
+2) Polymorphic EdgChannel._Time2Native():
+   - [YYYYMMDD]HHMMSS.mmm
+
+
+Build 26a 13-07-11
+------------------
+1) rtEdgeStats:
+   - ioctl_getStats
+   - rtEdge_GetStats()
+   - rtEdge_SetMDDirectMon()
+
+
+Build 26  13-07-10
+------------------
+1) Schema.GetDef()
+   - Check InRange( _minFid, fid, _maxFid ) for fields not defined in
+     Schema from rtEdgeCache2 AND outside of range ...
+
+2) Full reset on Socket on disconnect
+   - Null-out Socket._wrData
+
+3) Publication Schema:
+   - rtEdge_PubInitSchema()
+
+4) int rtEdge_Publish() : Return byte size
+
+
+Build 25  13-05-10
+------------------
+1) Support for MF building in .NET:
+   - PubChannel.Publish() : Check _rawLen and !d._nFld
+
+2) Native rtFIELD values
+   - ioctl_nativeField
+   - EdgChannel._bNativeFld
+   - rtBUF / rtVALUE
+
+3) class Schema
+
+4) No Svc / Tkr / Raw Data into user app:
+   - ioctl_svcTkrName
+   - ioctl_rawData
+
+
+Build 24  13-02-14
+------------------
+1) rtEdge_ioctl()
+
+2) rtEdge_MemSize()
+
+
+Build 23  13-02-11
+------------------
+1) (13-01-21) Set rtFIELD._type in EdgChannel.GetSchema() - DUH!!
+
+2) Handle NULL characters from RDF:
+   - Socket._in / _cp, not _rdData
+
+
+
+Build 22  12-12-30
+------------------
+1) Re-subscribe from DEAD services:
+   - EdgChannel.OnMF() / MT_STAT_RES - Set rec._bOpn = false
+
+2) SurgeProtect:
+   -  EdgChannel.Subscribe() : Open() iff svc->IsUp()
+
+3) Broadcast publisher Image:
+   - PubChannel._IncUpd() : _Open(), if not found
+
+
+Build 21  12-11-15
+------------------
+1) rtEdge_CPU()
+
+
+
+Build 20  12-10-20
+------------------
+1) ( 12-09-19) Crash in pump on connect / disconnect:
+   - Pump.buildFDs() : Check for !sox
+
+2) ChartDB : CDB_xxx()
+
+
+
+Build 19a 12-08-04
+------------------
+1) .NET 32-bit integration:
+   - EDGAPI
+
+
+Build 19  12-04-22
+------------------
+1) Integration w/ GFC:
+   - rtFIELD, not FIELD
+   - namespace LIBRTEDGE
+
+
+Build 18  12-03-20
+------------------
+1) Conflation:
+   - rtEdge_Conflate() 
+   - rtEdge_Dispatch()
+   - Event::SetEvent( double )
+   - RecCache.cpp
+
+2) Disable Nagle on publication channel - DUH
+
+
+Build 17a 12-01-20
+------------------
+1) LVC_SIG_004 : Max ticker length = 256
+
+
+Build 17 12-01-20
+------------------
+1) GL64
+
+2) FIELD._name; FIELD._type
+
+3) rtEdge_HasFieldByID() / rtEdge_GetFieldByID()
+
+4) WIN32 LVC age : Logger::tvNow(), not dNow()
+
+5) Pipe : Mutex deadlock:
+   - Don't lock PubChannel._mtx in OnRead() / OnXML() / OnPubOpen()
+   - PubChannel::_OnOpen() / _OnClose()
+
+6) Pub : !_xml.isComplete() : break; 
+
+7) Logging : Handle full data dict
+
+
+
+Build 16  11-09-16
+------------------
+1) LVC_AddTicker() : Pipe-delimited string for > 1 ticker
+
+
+Build 15  11-07-29
+------------------
+1) rtEdgeAttr._schemaCbk
+
+2) rtEdge_GetSchema()
+
+
+Build 14a 11-07-20
+------------------
+1) HasField() bug - Stack overflow
+
+
+Build 14  11-07-12
+------------------
+1) Data Dictionary from rtEdgeCache
+   - EdgChannel::GetDef()
+   - EdgFldDef
+
+2) GetField() / HasField()
+
+
+
+Build 13  11-06-24
+------------------
+1) VC6.0, VS2003, VS2010 - 32-bit and 64-bit
+
+2) LVC_Free() core:
+   - GLlvcDb::GetItem() : bShallow, not d._copy
+
+
+Build 12  11-05-11
+------------------
+1) Improved .NET support:
+   - Deep copy rtEdgeAttr
+   - Deep copy rtEdgePubAttr
+
+
+Build 11  11-04-11
+------------------
+1) Logger.cpp: time_t, not tv.tv_sec
+
+2) Add EdgSvc on Service UP / DOWN
+
+3) Return MT_PING's
+
+
+
+Build 10  11-01-13
+------------------
+1) LVC_View() / LVC_ViewAll()
+
+
+Build  9  10-12-30
+------------------
+10-11-15
+--------
+1) LVCData._dSnap
+
+2) Logger::dblNow() : QueryPerformanceCounter() on WIN32
+
+3) LVC_SIG_003 : GLlvcChanDef, etc.
+
+
+10-12-30
+--------
+4) 64-bit Linux support
+
+5) FID-based filtering:
+   - LVC_SetFilter() 
+   - GLlvcDb.SetFilter()
+   - GLlvdDb._fidFltr
+   - GLlvcDb.CanAddField()
+
+7) LVC_SnapAll() / LVC_FreeAll()
+
+
+Build  8b 10-10-04
+------------------
+1) LVC_SIG_002 : '003 LVC' : Read 2 different file types 
+
+
+Build  8a 10-10-01
+------------------
+1) 64-bit:
+   - time_t, not long
+
+
+Build  8 10-09-27
+-----------------
+1) Publisher Interface
+
+2) EdgChannel : Last field parse bug  
+
+3) rtEdgeData._rawData / _rLen
+
+4) CrossMkt.c
+
+5) Utilities:
+   double rtEdge_TimeNs();
+   long   rtEdge_TimeSec();
+   char  *rtEdge_pTimeMs( char * );
+   int    rtEdge_Time2Mark( int, int, int );
+   void   rtEdge_Sleep( double );
+   int    rtEdge_hexMsg( char *, int, char * );
+   double rtEdge_atof( FIELD );
+   int    rtEdge_atoi( FIELD );
+
+6) SQLSnap.c
+
+
+
+Build  7 10-09-18
+-----------------
+1) LVC Admin Channel
+
+
+Build  6 10-09-02
+-----------------
+1) LVC
+
+
+Build  5 09-12-03
+-----------------
+1) TradeLog
+
+
+Build  4 09-10-05
+-----------------
+1) Re-connect logic:
+   - Socket : public TimerEvent
+   - Pump.cpp : TimerTable
+
+
+Build  3 09-08-31
+-----------------
+1) MF Parsing Bug
+
+2) Proper item / global status processing
+
+3) Re-request logic
+
+
+Build  2 09-08-17
+-----------------
+1) FIELD._dLen 1 byte too long
+
+2) EdgChannel::OnIdle()
+
+
+Build  1 09-08-16
+-----------------
+1) Created.

@@ -1,0 +1,203 @@
+#######################################################
+#
+#  Makefile for:
+#     librtEdge
+#
+#  REVISION HISTORY:
+#     21 JUL 2009 jcs  Created.
+#      2 SEP 2010 jcs  Build  6: GLlvdDb / GLmmap
+#     23 SEP 2010 jcs  Build  8: PubChannel
+#     24 JAN 2012 jcs  Build 17: BITS
+#     20 MAR 2012 jcs  Build 18: RecCache
+#     20 OCT 2012 jcs  Build 20: ChartDB
+#      2 AUG 2013 jcs  Build 22: Correlate
+#     15 SEP 2014 jcs  Build 28: libmddWire; Subscribe
+#      2 JUL 2015 jcs  Build 31: GLmd5
+#     18 MAR 2016 jcs  Build 32: EDG_xxx; ChartDBSvr
+#     13 JUL 2017 jcs  Build 34: OS_xxx
+#     22 AUG 2017 jcs  Build 35: Cockpit
+#      6 JUN 2018 jcs  Build 35: Bridge
+#
+# (c) 1994-2018 Gatea Ltd.
+#######################################################
+
+## Linux
+
+SOFLAGS   = -fPIC -rdynamic -Wall
+BITS      =64
+ARCH      = -m$(BITS)
+BIN_DIR   = bin$(BITS)
+CCC       = g++ $(ARCH)
+CC        = gcc $(ARCH)
+
+### libmddData library
+
+MDWLIB    = libmddWire
+MDW_ROOT  = ../$(MDWLIB)
+MDW_LDIR  = $(MDW_ROOT)/lib
+MDW_INC   = -I$(MDW_ROOT)/inc
+MDW_LIBS  = $(MDW_LDIR)/$(MDWLIB)$(BITS).a
+MDW_LIBS += $(MDW_ROOT)/expat/lib/libexpat.a
+
+## Compiler, Linker, etc.
+
+CPP       = $(CCC)
+CFLAGS    = -g -c -I./inc $(MDW_INC)
+#CFLAGS   += -D_REENTRANT -DPOSIX
+INC_FLAGS = -I./Internal/inc
+CPPFLAGS  = $(SOFLAGS) $(CFLAGS) $(INC_FLAGS)
+LFLAGS    = -lpthread -lrt -ldl $(MDW_LIBS)
+EXE_LIBS  = -L./lib -lrtEdge$(BITS) $(LFLAGS) # -lstdc++
+
+## Us
+
+OBJS = \
+	EDG_API.o \
+	Cockpit.o \
+	EdgChannel.o \
+	PubChannel.o \
+	RecCache.o \
+	EDG_GLchtDb.o \
+	EDG_GLlvcDb.o \
+	EDG_GLmmap.o \
+	EDG_GLmd5.o \
+	Logger.o \
+	Mutex.o \
+	OS_cpu.o \
+	OS_disk.o \
+	Socket.o \
+	Pump.o \
+	Thread.o \
+	EDG_version.o
+
+TEST_OBJS    = config.o test.o
+TRDLOG_OBJS  = config.o TradeLog.o
+XMKT_OBJS    = config.o CrossMkt.o
+PUBSUB_OBJS  = config.o PubSub.o
+PIPE_OBJS    = config.o Pipe.o
+
+#all:	librtEdge$(BITS) test ByteClient FileSvr Publish Subscribe etc move_objs
+all:	librtEdge$(BITS) Publish Subscribe etc move_objs
+
+#etc:	Correlate PubSub TradeLog CrossMkt
+etc:	
+
+librtEdge$(BITS):	clear $(OBJS)
+	ar cr ./lib/$@.a $(OBJS)
+
+#############
+# ./src
+#############
+test: clear $(TEST_OBJS)
+	$(CPP) -o $@ $(TEST_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+Pipe: clear $(PIPE_OBJS)
+	$(CPP) -o $@ $(PIPE_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+PubSub: clear $(PUBSUB_OBJS)
+	$(CPP) -o $@ $(PUBSUB_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+TradeLog: clear $(TRDLOG_OBJS)
+	$(CPP) -o $@ $(TRDLOG_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+CrossMkt: clear $(XMKT_OBJS)
+	$(CPP) -o $@ $(XMKT_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+DumpDB: clear DumpDB.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+#############
+# ./cpp
+#############
+ByteClient: clear ByteClient.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+CDBTest: clear CDBTest.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+Correlate: clear Correlate.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+ChartDBSvr: clear ChartDBSvr.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+CSVPublish: clear CSVPublish.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+FileSvr: clear FileSvr.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+LVCTest: clear LVCTest.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+QueryCache: clear QueryCache.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+Publish: clear Publish.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+SysAgent: clear SysAgent.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+Subscribe: clear Subscribe.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+RoundTrip: clear RoundTrip.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+Bridge: clear Bridge.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+topCPU: clear topCPU.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+move_objs:
+	mv *.o ./obj
+
+clear:
+	clear
+
+clean:
+	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
+
+%.o:  Internal/src/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  cpp/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  src/%.c
+	$(CC) $(CFLAGS) $<
