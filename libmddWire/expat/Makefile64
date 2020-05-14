@@ -25,9 +25,9 @@ OBJS=xmltok/xmltok.o \
   $(FILEMAP_OBJ)
 EXE=
 
-all:	libexpat # xmlwf/xmlwf$(EXE)
+all:	libexpat
 
-libexpat: $(OBJS)
+libexpat: mkdir $(OBJS)
 	ar cr lib/$@.a $(OBJS)
 
 xmlwf/xmlwf$(EXE): $(OBJS)
@@ -36,6 +36,9 @@ xmlwf/xmlwf$(EXE): $(OBJS)
 clean:
 	rm -f $(OBJS) xmlwf/xmlwf$(EXE)
 	rm -f ./lib/*.a
+
+mkdir:
+	mkdir -p ./lib
 
 xmltok/xmltok.o: xmltok/nametab.h
 

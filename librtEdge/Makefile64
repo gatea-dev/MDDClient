@@ -21,9 +21,17 @@
 # (c) 1994-2018 Gatea Ltd.
 #######################################################
 
+## Hostname-dependent
+
+ifeq ($(HOSTNAME),gatea.com)
+   WARN  = -Wall
+else
+   WARN  = -Wno-write-strings
+endif
+
 ## Linux
 
-SOFLAGS   = -fPIC -rdynamic -Wall
+SOFLAGS   = -fPIC -rdynamic $(WARN)
 BITS      =64
 ARCH      = -m$(BITS)
 BIN_DIR   = bin$(BITS)
@@ -76,13 +84,9 @@ XMKT_OBJS    = config.o CrossMkt.o
 PUBSUB_OBJS  = config.o PubSub.o
 PIPE_OBJS    = config.o Pipe.o
 
-#all:	librtEdge$(BITS) test ByteClient FileSvr Publish Subscribe etc move_objs
-all:	librtEdge$(BITS) Publish Subscribe etc move_objs
+all:	librtEdge$(BITS) Publish Subscribe move_objs
 
-#etc:	Correlate PubSub TradeLog CrossMkt
-etc:	
-
-librtEdge$(BITS):	clear $(OBJS)
+librtEdge$(BITS):	mkdir clear $(OBJS)
 	ar cr ./lib/$@.a $(OBJS)
 
 #############
@@ -183,6 +187,9 @@ topCPU: clear topCPU.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
+
+mkdir:
+	mkdir -p ./obj ./lib ./$(BIN_DIR)
 
 move_objs:
 	mv *.o ./obj

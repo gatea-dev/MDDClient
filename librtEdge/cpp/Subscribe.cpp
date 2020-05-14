@@ -15,6 +15,7 @@
 *  (c) 1994-2019 Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+#include <math.h>
 #include <vector>
 
 using namespace RTEDGE;
