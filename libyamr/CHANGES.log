@@ -1,0 +1,40 @@
+libyamr Client Library
+-------------------------
+
+Performance
+-----------
+1) Publish : 33 mikes to the wire on 2.9 GHz Linux
+
+
+Known Bugs
+----------
+
+
+Features To Add
+---------------
+
+
+
+Build  3 19-11-xx
+-----------------
+1) Ysend, not ySend
+
+2) ygrep bug:
+   - ygrepListener.OnMessage() : pro == _PROTO_USAGE 
+   - ygrepListener.OnStringDict() - DUH  
+
+
+
+Build  2 19-07-30
+-----------------
+1) Codec.DumpCSV()
+
+2) 1 StringDict per Reader / Writer:
+   - class Sharable
+   - clase Reader : public Sharable
+   - clase Writer : public Sharable
+
+
+Build  1 19-06-13
+-----------------
+1) Created.

@@ -1,0 +1,104 @@
+#######################################################
+#
+#  Makefile for:
+#     libyamr
+#
+#  REVISION HISTORY:
+#     10 MAY 2019 jcs  Created.
+#
+# (c) 1994-2019, Gatea Ltd.
+#######################################################
+
+## Hostname-dependent
+
+ifeq ($(HOSTNAME),gatea.com)
+   WARN  = -Wall
+else
+   WARN  = -Wno-write-strings
+endif
+
+## Linux
+
+SOFLAGS   = -fPIC -rdynamic $(WARN)
+BITS      =64
+ARCH      = -m$(BITS)
+BIN_DIR   = bin$(BITS)
+CCC       = g++ $(ARCH)
+CC        = gcc $(ARCH)
+
+## Compiler, Linker, etc.
+
+CPP       = $(CCC)
+CFLAGS    = -g -c -I./inc -I.
+INC_FLAGS = -I./Internal/inc
+CPPFLAGS  = $(SOFLAGS) $(CFLAGS) $(INC_FLAGS)
+LFLAGS    = -lpthread -lrt -ldl
+EXE_LIBS  = -L./lib -lyamr$(BITS) $(LFLAGS) # -lstdc++
+
+## Us
+
+OBJS = \
+	API.o \
+	Channel.o \
+	GLmmap.o \
+	Logger.o \
+	Mutex.o \
+	Socket.o \
+	Pump.o \
+	Reader.o \
+	Thread.o \
+	version.o
+
+TEST_OBJS    = config.o test.o
+
+all:	libyamr$(BITS) Ysend ygrep LogUsage move_objs
+
+libyamr$(BITS):	mkdir clear $(OBJS)
+	ar cr ./lib/$@.a $(OBJS)
+
+#############
+# ./src
+#############
+test: clear $(TEST_OBJS)
+	$(CPP) -o $@ $(TEST_OBJS) $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+
+
+#############
+# ./cpp
+#############
+Ysend: clear Ysend.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+ygrep: clear ygrep.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+LogUsage: clear LogUsage.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+move_objs:
+	mv *.o ./obj
+
+mkdir:
+	mkdir -p ./obj ./lib ./$(BIN_DIR)
+
+clear:
+	clear
+
+clean:
+	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
+
+%.o:  Internal/src/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  cpp/%.cpp
+	$(CPP) $(CPPFLAGS) $<
+
+%.o:  src/%.c
+	$(CC) $(CFLAGS) $<
