@@ -24,18 +24,21 @@
 #include <string>
 #include <map>
 #include <vector>
+
+using namespace std;
+
 #undef K
 #if !defined(hash_map)
 #if !defined(_GLIBCXX_UNORDERED_MAP) && !defined(WIN32)
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#define hash_map std::tr1::unordered_map
-#define hash_set std::tr1::unordered_set
+#define hash_map tr1::unordered_map
+#define hash_set tr1::unordered_set
 #else
 #include <unordered_map>
 #include <unordered_set>
-#define hash_map std::unordered_map
-#define hash_set std::unordered_set
+#define hash_map unordered_map
+#define hash_set unordered_set
 #endif // !defined(_GLIBCXX_UNORDERED_MAP)
 #endif // !defined(hash_map)
 #define K 1024
@@ -49,7 +52,7 @@
 namespace RTEDGE
 {
 
-typedef std::vector<std::string> Strings;
+typedef vector<string> Strings;
 
 
 
@@ -233,11 +236,11 @@ public:
 	 * \brief Returns  time in YYYY-MM-DD HH:MM:SS.mmm
 	 *
 	 * \see ::rtEdge_pDateTimeMs()
-	 * \param rtn - std::string to hold return value
+	 * \param rtn - string to hold return value
 	 * \param dTime - 0 for current time
 	 * \return Current time in YYYY-MM-DD HH:MM:SS.mmm 
 	 */
-	static const char *pDateTimeMs( std::string &rtn, double dTime=0.0 )
+	static const char *pDateTimeMs( string &rtn, double dTime=0.0 )
 	{
 	   char buf[K];
 
@@ -249,11 +252,11 @@ public:
 	 * \brief Returns current time in HH:MM:SS.mmm
 	 *
 	 * \see ::rtEdge_pTimeMs()
-	 * \param rtn - std::string to hold return value
+	 * \param rtn - string to hold return value
 	 * \param dTime - 0 for current time
 	 * \return Current time in HH:MM:SS.mmm 
 	 */
-	static const char *pTimeMs( std::string &rtn, double dTime=0.0 )
+	static const char *pTimeMs( string &rtn, double dTime=0.0 )
 	{
 	   char buf[K];
 
@@ -337,11 +340,11 @@ public:
 	 *
 	 * \param msg - Message to dump
 	 * \param len - Message length
-	 * \return Hex dump of msg in std::string
+	 * \return Hex dump of msg in string
 	 */
-	std::string HexMsg( char *msg, int len )
+	string HexMsg( char *msg, int len )
 	{
-	   std::string tmp;
+	   string tmp;
 	   char       *obuf;
 	   int         sz;
 
@@ -350,7 +353,7 @@ public:
 	   obuf[sz] = '\0';
 	   tmp      = obuf;
 	   delete[] obuf;
-	   return std::string( tmp );
+	   return string( tmp );
 	}
 
 	/**
