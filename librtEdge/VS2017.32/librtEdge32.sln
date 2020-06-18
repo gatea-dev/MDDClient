@@ -1,0 +1,17 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librtEdge32", "librtEdge32.vcxproj", "{601AE887-70F1-4B4B-9CCD-2AB77435396F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{601AE887-70F1-4B4B-9CCD-2AB77435396F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{601AE887-70F1-4B4B-9CCD-2AB77435396F}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
