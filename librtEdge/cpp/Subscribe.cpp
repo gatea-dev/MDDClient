@@ -11,11 +11,11 @@
 *     13 JAN 2019 jcs  Build 41: -bytestream; -csv; -csvF
 *     20 FEB 2019 jcs  Build 42: -renko
 *     30 APR 2019 jcs  Build 43: -bds
+*     28 JUL 2020 jcs  Build 44: -tapeDir
 *
-*  (c) 1994-2019 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
-#include <math.h>
 #include <vector>
 
 using namespace RTEDGE;
@@ -238,7 +238,7 @@ public:
        */
       _nUpd += 1;
       if ( _bCSV ) {
-         tm = pDateTimeMs( st );
+         tm = pDateTimeMs( st, msg.MsgTime() );
          pm = msg.IsImage() ? "IMG" : "UPD";
          ::fprintf( stdout, "%s,%s,%s,%s,%d,", tm, pm, svc, tkr, nf );
          for ( i=0; i<nf; i++ ) {
@@ -264,6 +264,16 @@ public:
       else
          ::fprintf( stdout, msg.Dump() );
       _flush();
+   }
+
+   virtual void OnRecovering( Message &msg )
+   {
+      OnDead( msg, msg.Error() );
+   }
+
+   virtual void OnStreamDone( Message &msg )
+   {
+      OnDead( msg, msg.Error() );
    }
 
    virtual void OnDead( Message &msg, const char *err )
@@ -324,7 +334,7 @@ private:
          dv *= _Renko._Mul;
          svc = msg.Service();
          tkr = msg.Ticker();
-         tm  = pDateTimeMs( st );
+         tm  = pDateTimeMs( st, msg.MsgTime() );
          /*
           * Find; Create if not found
           */
@@ -381,7 +391,7 @@ int main( int argc, char **argv )
    FILE       *fp;
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *r0, *r1, *r2;
    char       *pa, *cp, *rp, sTkr[K];
-   bool        bCfg, aOK, bBin, bStr;
+   bool        bCfg, aOK, bBin, bStr, bTape;
    string      s;
    int         i, nt, tRun;
 
@@ -393,16 +403,17 @@ int main( int argc, char **argv )
       printf( "%s\n", ch.Version() );
       return 0;
    }
-   svr  = "localhost:9998";
-   usr  = argv[0];
-   svc  = "bloomberg";
-   tkr  = NULL;
-   t0   = NULL;
-   t1   = NULL;
-   tRun = 0;
-   bBin = true;
-   bCfg = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
-   bStr = false;
+   svr   = "localhost:9998";
+   usr   = argv[0];
+   svc   = "bloomberg";
+   tkr   = NULL;
+   t0    = NULL;
+   t1    = NULL;
+   tRun  = 0;
+   bBin  = true;
+   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   bStr  = false;
+   bTape = true;
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -h  <Source : host:port or TapeFile> ] \\ \n";
@@ -418,21 +429,23 @@ int main( int argc, char **argv )
       s += "       [ -csvF <csv list of FIDs> \\ \n";
       s += "       [ -renko <FID,BoxSize[,Mult]>\n";
       s += "       [ -bds true ] \\ \n";
+      s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
-      printf( "      -h     : %s\n", svr );
-      printf( "      -u     : %s\n", usr );
-      printf( "      -s     : %s\n", svc );
-      printf( "      -t     : <empty>\n" );
-      printf( "      -t0    : <empty>\n" );
-      printf( "      -t1    : <empty>\n" );
-      printf( "      -r     : %d\n", tRun );
-      printf( "      -p     : %s\n", bBin ? "BIN" : "MF" );
-      printf( "      -bstr  : %s\n", bStr ? "YES" : "NO" );
-      printf( "      -csv   : %s\n", ch._bCSV ? "YES" : "NO" );
-      printf( "      -csvF  : <empty>\n" );
-      printf( "      -renko : <empty>\n" );
-      printf( "      -bds   : %s\n", ch._bds ? "YES" : "NO" );
+      printf( "      -h       : %s\n", svr );
+      printf( "      -u       : %s\n", usr );
+      printf( "      -s       : %s\n", svc );
+      printf( "      -t       : <empty>\n" );
+      printf( "      -t0      : <empty>\n" );
+      printf( "      -t1      : <empty>\n" );
+      printf( "      -r       : %d\n", tRun );
+      printf( "      -p       : %s\n", bBin ? "BIN" : "MF" );
+      printf( "      -bstr    : %s\n", bStr ? "YES" : "NO" );
+      printf( "      -csv     : %s\n", ch._bCSV ? "YES" : "NO" );
+      printf( "      -csvF    : <empty>\n" );
+      printf( "      -renko   : <empty>\n" );
+      printf( "      -bds     : %s\n", ch._bds ? "YES" : "NO" );
+      printf( "      -tapeDir : %s\n", bTape   ? "YES" : "NO" );
       return 0;
    }
 
@@ -487,9 +500,14 @@ int main( int argc, char **argv )
          pa       = argv[++i];
          ch._bds |= !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
       }
+      else if ( !::strcmp( argv[i], "-tapeDir" ) ) {
+         pa    = argv[++i];
+         bTape = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
+      }
    }
    printf( "%s\n", ch.Version() );
    ch.SetBinary( bStr || bBin );
+   ch.SetTapeDirection( bTape );
    pc = ch.Start( svr, usr );
    printf( "%s\n", pc ? pc : "" );
    if ( !ch.IsValid() )

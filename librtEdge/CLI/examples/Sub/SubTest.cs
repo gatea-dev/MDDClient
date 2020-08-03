@@ -17,8 +17,9 @@
 *     17 JUL 2017 jcs  Build 34: Cleaned up
 *     12 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: bds
+*     28 JUL 2020 jcs  Build 44: -tapeDir
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 using System;
 using System.IO;
@@ -61,6 +62,16 @@ class SubTest : rtEdgeSubscriber
    public override void OnData( rtEdgeData d )
    {
       OnData_DUMP( d );
+   }
+
+   public override void OnRecovering( rtEdgeData d )
+   {
+      OnDead( d, d._pErr );
+   }
+
+   public override void OnStreamDone( rtEdgeData d )
+   {
+      OnDead( d, d._pErr );
    }
 
    public override void OnDead( rtEdgeData d, string err )
@@ -152,7 +163,7 @@ class SubTest : rtEdgeSubscriber
       try {
          SubTest  sub;
          int      i, nt, argc, tRun;
-         bool     bMF, aOK, bds;
+         bool     bMF, aOK, bds, bTape;
          string[] tkrs;
          string   s, svr, usr, svc, tkr, t0, t1;
 
@@ -164,16 +175,17 @@ class SubTest : rtEdgeSubscriber
             Console.WriteLine( rtEdge.Version() );
             return 0;
          }
-         svr  = "localhost:9998";
-         usr  = "SubTest";
-         svc  = "bloomberg";
-         tkr  = null;
-         tkrs = null;
-         t0   = null;
-         t1   = null;
-         tRun = 0;
-         bMF  = false;
-         bds  = false;
+         svr   = "localhost:9998";
+         usr   = "SubTest";
+         svc   = "bloomberg";
+         tkr   = null;
+         tkrs  = null;
+         t0    = null;
+         t1    = null;
+         tRun  = 0;
+         bMF   = false;
+         bds   = false;
+         bTape = true;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -h   <Source : host:port or TapeFile> ] \\ \n";
@@ -184,16 +196,18 @@ class SubTest : rtEdgeSubscriber
             s += "       [ -t1  <TapeSliceEndTime> ] \\ \n";
             s += "       [ -r   <AppRunTime> ] \\ \n";
             s += "       [ -bds <true> ] \\ \n";
+            s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
-            Console.Write( "      -h     : {0}\n", svr );
-            Console.Write( "      -u     : {0}\n", usr );
-            Console.Write( "      -s     : {0}\n", svc );
-            Console.Write( "      -t     : <empty>\n" );
-            Console.Write( "      -t0    : <empty>\n" );
-            Console.Write( "      -t1    : <empty>\n" );
-            Console.Write( "      -r     : {0}\n", tRun );
-            Console.Write( "      -bds   : {0}\n", bds );
+            Console.Write( "      -h       : {0}\n", svr );
+            Console.Write( "      -u       : {0}\n", usr );
+            Console.Write( "      -s       : {0}\n", svc );
+            Console.Write( "      -t       : <empty>\n" );
+            Console.Write( "      -t0      : <empty>\n" );
+            Console.Write( "      -t1      : <empty>\n" );
+            Console.Write( "      -r       : {0}\n", tRun );
+            Console.Write( "      -bds     : {0}\n", bds );
+            Console.Write( "      -tapeDir : {0}\n", bds );
             return 0;
          }
 
@@ -225,9 +239,12 @@ class SubTest : rtEdgeSubscriber
                tRun = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-bds" )
                bds = ( args[++i] == "true" );
+            else if ( args[i] == "-tapeDir" )
+               bTape = ( args[++i] == "true" );
          }
          Console.WriteLine( rtEdge.Version() );
          sub = new SubTest( svr, usr, !bMF );
+         sub.SetTapeDirection( bTape );
          if ( !bMF )
             Console.WriteLine( "BINARY" );
          Console.WriteLine( sub.Start() );

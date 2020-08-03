@@ -9,6 +9,7 @@
 *      5 MAR 2016 jcs  Build 32: Dump(); edg_permQuery
 *     12 OCT 2017 jcs  Build 36
 *      8 FEB 2020 jcs  Build 42: IntMap for _dataLVC
+*     28 JUL 2020 jcs  Build 44: IsRecovering()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -210,6 +211,7 @@ public:
 	      case edg_recovering: return "RECOVER";
 	      case edg_dead:       return "DEAD   ";
 	      case edg_permQuery:  return "QUERY  ";
+	      case edg_streamDone: return "DONE   ";
 	   }
 	   return "UNKNOWN";
 	}
@@ -308,6 +310,19 @@ public:
 	}
 
 	/**
+	 * \brief Returns true if the stream is RECOVERING
+	 *
+	 * \return true if the stream is RECOVERING
+	 */
+	bool IsRecovering()
+	{
+	   rtEdgeType ty;
+
+	   ty = IsLVC() ? dataLVC()._ty : data()._ty;
+	   return( ty == edg_recovering );
+	}
+
+	/**
 	 * \brief Returns true if the stream is STALE
 	 *
 	 * \return true if the stream is STALE
@@ -331,6 +346,19 @@ public:
 
 	   ty = IsLVC() ? dataLVC()._ty : data()._ty;
 	   return( ty == edg_dead );
+	}
+
+	/**
+	 * \brief Returns true if the stream is completed / closed
+	 *
+	 * \return true if the stream is completed / closed
+	 */
+	bool IsStreamDone()
+	{
+	   rtEdgeType ty;
+
+	   ty = IsLVC() ? dataLVC()._ty : data()._ty;
+	   return( ty == edg_streamDone );
 	}
 
 

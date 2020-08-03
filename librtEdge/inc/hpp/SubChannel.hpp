@@ -13,6 +13,7 @@
 *     12 OCT 2017 jcs  Build 36: StartTape()
 *     10 DEC 2018 jcs  Build 41: _bStrMtx
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
+*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -91,6 +92,7 @@ public:
 	   _bBinary( false ),
 	   _bRandom( false ),
 	   _bUsrStreamID( false ),
+	   _bTapeDir( false ),
 	   _msg( (Message *)0 ),
 	   _msgQ( (Message *)0 ),
 	   _msgSchema( ::mddFieldList_Alloc( K ) ),
@@ -291,6 +293,7 @@ private:
 	   schans_[_cxt]    = this;
 	   _msg             = new Message( _cxt );
 	   SetIdleCallback( _bIdleCbk );
+	   SetTapeDirection( _bTapeDir );
 	   return ::rtEdge_Start( _cxt );
 	}
 #endif // DOXYGEN_OMIT
@@ -393,6 +396,27 @@ public:
 	   _bUsrStreamID = bUsrStreamID;
 	   if ( _cxt )
 	      ::rtEdge_ioctl( _cxt, ioctl_userDefStreamID, (void *)_bUsrStreamID );
+	}
+
+	/**
+	 * \brief Sets the direction messages - chronological or reverse - when
+	 * pumping from tape.
+	 *
+	 * Messages are stored on the tape in reverse order as each messsage has 
+	 * a backward-, not forward-pointer.  As such, when Subscribing from tape, 
+	 * the messages are read from tape in reverse order.
+	 *
+	 * Call this method to control whether messages are pumped in reverse or
+	 * chronological order.
+	 *
+	 * \param bTapeDir - true to pump in tape (reverse) order; false in 
+	 * chronological order
+	 */
+	void SetTapeDirection( bool bTapeDir ) 
+	{
+	   _bTapeDir = bTapeDir;
+	   if ( _cxt )
+	      ::rtEdge_ioctl( _cxt, ioctl_tapeDirection, (void *)_bTapeDir );
 	}
 
 
@@ -738,6 +762,17 @@ protected:
 
 	/**
 	 * \brief Called asynchronously when the real-time market data stream
+	 * is recovering
+	 *
+	 * Override this method in your application to consume market data.
+	 *
+	 * \param msg - Market data update in a Message object
+	 */
+	virtual void OnRecovering( Message &msg )
+	{ ; }
+
+	/**
+	 * \brief Called asynchronously when the real-time market data stream
 	 * goes stale.
 	 *
 	 * Override this method in your application to consume market data.
@@ -757,6 +792,17 @@ protected:
 	 * \param pErr - Error string
 	 */
 	virtual void OnDead( Message &msg, const char *pErr )
+	{ ; }
+
+	/**
+	 * \brief Called asynchronously when the real-time market data stream
+	 * is complete
+	 *
+	 * Override this method in your application to consume market data.
+	 *
+	 * \param msg - Market data update in a Message object
+	 */
+	virtual void OnStreamDone( Message &msg )
 	{ ; }
 
 	/**
@@ -854,10 +900,14 @@ private:
 	      _msg->Set( &d, &fl );
 	      if ( _msg->IsImage() || _msg->IsUpdate() )
 	         OnData( *_msg );
+	      else if ( _msg->IsRecovering() )
+	         OnRecovering( *_msg );
 	      else if ( _msg->IsStale() )
 	         OnStale( *_msg );
 	      else if ( _msg->IsDead() )
 	         OnDead( *_msg, _msg->Error() );
+	      else if ( _msg->IsStreamDone() )
+	         OnStreamDone( *_msg );
 	   }
 	}
 
@@ -879,6 +929,7 @@ private:
 	bool         _bBinary;
 	bool         _bRandom;
 	bool         _bUsrStreamID;
+	bool         _bTapeDir;
 	Message     *_msg;
 	Message     *_msgQ;   // QueryCache()
 	rtEdgeData   _qry;

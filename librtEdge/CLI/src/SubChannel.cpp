@@ -12,8 +12,9 @@
 *     13 OCT 2017 jcs  Build 36: Tape
 *     10 DEC 2018 jcs  Build 41: VS2017
 *     29 APR 2020 jcs  Build 43: BDS 
+*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <SubChannel.h>
@@ -91,10 +92,28 @@ void SubChannel::OnData( RTEDGE::Message &msg )
    _cli->OnData( _upd );
 }
 
+void SubChannel::OnRecovering( RTEDGE::Message &msg )
+{
+   _upd->Set( msg );
+   _cli->OnRecovering( _upd );
+}
+
+void SubChannel::OnStale( RTEDGE::Message &msg )
+{
+   _upd->Set( msg );
+   _cli->OnStale( _upd );
+}
+
 void SubChannel::OnDead( RTEDGE::Message &msg, const char *err )
 {
    _upd->Set( msg );
    _cli->OnDead( _upd, gcnew String( err ) );
+}
+
+void SubChannel::OnStreamDone( RTEDGE::Message &msg )
+{
+   _upd->Set( msg );
+   _cli->OnStreamDone( _upd );
 }
 
 void SubChannel::OnSymbol( RTEDGE::Message &msg, const char *err )
@@ -214,6 +233,16 @@ void rtEdgeSubscriber::SetRandomize( bool bRandom )
 void rtEdgeSubscriber::SetIdleCallback( bool bIdleCbk )
 {
    _sub->SetIdleCallback( bIdleCbk );
+}
+
+void rtEdgeSubscriber::SetHeartbeat( int tHbeat )
+{
+   _sub->SetHeartbeat( tHbeat );
+}
+
+void rtEdgeSubscriber::SetTapeDirection( bool bTapeDir )
+{
+   _sub->SetTapeDirection( bTapeDir );
 }
 
 

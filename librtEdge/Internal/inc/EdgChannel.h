@@ -28,6 +28,7 @@
 *     13 OCT 2017 jcs  Build 36: TapeChannel
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
+*     28 JUL 2020 jcs  Build 44: _bTapeDir
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -82,6 +83,9 @@ protected:
 	bool           _bRawData;
 	bool           _bSvcTkr;
 	bool           _bUsrStreamID;
+public:
+	bool           _bTapeDir;
+protected:
 	EventPump      _Q;
 	TapeChannel   *_tape;
 
@@ -262,6 +266,7 @@ typedef hash_map<string, int>   TapeRecords;
 typedef vector<GLrecTapeRec *>  TapeRecDb;
 typedef hash_map<int, int>      TapeWatchList;
 typedef hash_map<int, string *> DeadTickers;
+typedef vector<u_int64_t>       Offsets;
 
 class TapeChannel
 {
@@ -313,6 +318,7 @@ private:
 	int       _LoadSchema();
 	bool      _ParseFieldList( mddBuf );
 	int       _PumpDead();
+	void      _PumpStatus( GLrecTapeMsg &, const char *, rtEdgeType ty=edg_recovering );
 	int       _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
 	string    _Key( const char *, const char * );
 	int       _get32( u_char * );

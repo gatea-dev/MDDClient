@@ -11,8 +11,9 @@
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     13 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: BDS
+*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -46,7 +47,10 @@ public:
 	virtual void OnConnect( String ^, librtEdge::rtEdgeState ) abstract;
 	virtual void OnService( String ^, librtEdge::rtEdgeState ) abstract;
 	virtual void OnData( librtEdge::rtEdgeData ^ ) abstract;
+	virtual void OnRecovering( librtEdge::rtEdgeData ^ ) abstract;
+	virtual void OnStale( librtEdge::rtEdgeData ^ ) abstract;
 	virtual void OnDead( librtEdge::rtEdgeData ^, String ^ ) abstract;
+	virtual void OnStreamDone( librtEdge::rtEdgeData ^ ) abstract;
 	virtual void OnSymbol( librtEdge::rtEdgeData ^, String ^ ) abstract;
 	virtual void OnSchema( librtEdge::rtEdgeSchema ^ ) abstract;
 	virtual void OnIdle() abstract;
@@ -93,7 +97,10 @@ protected:
 	virtual void OnConnect( const char *msg, bool );
 	virtual void OnService( const char *msg, bool );
 	virtual void OnData( RTEDGE::Message &msg );
+	virtual void OnRecovering( RTEDGE::Message &msg );
+	virtual void OnStale( RTEDGE::Message &msg );
 	virtual void OnDead( RTEDGE::Message &msg, const char *pErr );
+	virtual void OnStreamDone( RTEDGE::Message &msg );
 	virtual void OnSymbol( RTEDGE::Message &msg, const char *sym );
 	virtual void OnSchema( RTEDGE::Schema &sch );
 	virtual void OnIdle();
@@ -280,6 +287,38 @@ public:
 	 * \param bIdleCbk - true to receive OnIdle(); false to disable
 	 */
 	void SetIdleCallback( bool bIdleCbk );
+
+	/**
+	 * \brief Sets channel heartbeat / ping interval in seconds.
+	 *
+	 * At connect time, this value is passed to the rtEdgeCache3 server.
+	 * The server sends a Ping request at this interval, which the library
+	 * returns.  If the server does not get a message from the library
+	 * in twice this interval, the connection is terminated by the
+	 * server.
+	 *
+	 * This must be called BEFORE calling Start() for it to take effect.
+	 * If not called, the library default of 3600 (1 hour) is used.
+	 *
+	 * \param tHbeat - Heartbeat interval in seconds.
+	 */
+	void SetHeartbeat( int tHbeat );
+
+	/**
+	 * \brief Sets the direction messages - chronological or reverse - when
+	 * pumping from tape.
+	 *
+	 * Messages are stored on the tape in reverse order as each messsage has
+	 * a backward-, not forward-pointer.  As such, when Subscribing from tape,
+	 * the messages are read from tape in reverse order.
+	 *
+	 * Call this method to control whether messages are pumped in reverse or
+	 * chronological order.
+	 *
+	 * \param bTapeDir - true to pump in tape (reverse) order; false in 
+	 * chronological order
+	 */
+	void SetTapeDirection( bool bTapeDir );
 
 
 	/////////////////////////////////
@@ -565,6 +604,28 @@ public:
 	{ ; }
 
 	/**
+	 * \brief Called asynchronously when the real-time market data stream
+	 * is recovering
+	 *
+	 * Override this method in your application to consume market data.
+	 *
+	 * \param msg - Market data update in a Message object
+	 */
+	virtual void OnRecovering( rtEdgeData ^msg )
+	{ ; }
+
+	/**
+	 * \brief Called asynchronously when the real-time market data stream
+	 * goes stale.
+	 *
+	 * Override this method in your application to consume market data.
+	 *
+	 * \param msg - Market data update in a Message object
+	 */
+	virtual void OnStale( rtEdgeData ^msg )
+	{ ; }
+
+	/**
 	 * \brief Called asynchronously when real-time market data stream
 	 * opened via Subscribe() becomes DEAD.
 	 *
@@ -575,6 +636,18 @@ public:
 	 */
 	virtual void OnDead( rtEdgeData ^msg, String ^err )
 	{ ; }
+
+	/**
+	 * \brief Called asynchronously when the real-time market data stream
+	 * is complete
+	 *
+	 * Override this method in your application to consume market data.
+	 *
+	 * \param msg - Market data update in a Message object
+	 */
+	virtual void OnStreamDone( rtEdgeData ^msg )
+	{ ; }
+
 
 	/**
 	 * \brief Called asynchronously when Symbol List opened via OpenBDS()

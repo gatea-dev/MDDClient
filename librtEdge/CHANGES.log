@@ -15,10 +15,15 @@ Features To Add
 ---------------
 
 
-Build 44 20-04-xx
+Build 44 20-07-xx
 -----------------
+1) ioctl_tapeDirection
+   - Subscribe -tapeDir
+   - rtEdge.SetTapeDirection()
+
+2) Subscribe : Use Message.MsgTime() w/ CSV - DUH!!
 /*
-1) BDS : Add / Del :
+2) BDS : Add / Del :
    - "~~SYM_ADD~~" / "~~SYM_DEL~~"
    - "~~SYM_LIST~~" for backwards compatibility
    - OnSymbol( ..., bool bAdd ) 

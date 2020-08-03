@@ -7,8 +7,9 @@
 *     15 SEP 2014 jcs  Created.
 *      7 JAN 2015 jcs  Build 29: ByteStream.hpp
 *      5 MAR 2016 jcs  Build 32: edg_permQuery
+*     28 JUL 2020 jcs  Build 44: edg_streamDone
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_ByteStream_H
 #define __RTEDGE_ByteStream_H
@@ -97,25 +98,25 @@ public:
 	 */
 	ByteStream( const char *svc,
 	            const char *tkr,
-               int         fidOff=6,
-               int         fidLen=7,
-               int         fidNumFld=8,
-               int         fidPayload=9 ) :
-		_svc( svc ),
-		_tkr( tkr ),
-		_fidOff( fidOff ),
-		_fidLen( fidLen ),
-		_fidNumFld( fidNumFld ),
-		_fidPayload( fidPayload ),
-		_StreamID( 0 )
+	            int         fidOff=6,
+	            int         fidLen=7,
+	            int         fidNumFld=8,
+	            int         fidPayload=9 ) :
+	   _svc( svc ),
+	   _tkr( tkr ),
+	   _fidOff( fidOff ),
+	   _fidLen( fidLen ),
+	   _fidNumFld( fidNumFld ),
+	   _fidPayload( fidPayload ),
+	   _StreamID( 0 )
 	{
-		::memset( &_pubBuf, 0, sizeof( _pubBuf ) );
-		::memset( &_subBuf, 0, sizeof( _subBuf ) );
+	   ::memset( &_pubBuf, 0, sizeof( _pubBuf ) );
+	   ::memset( &_subBuf, 0, sizeof( _subBuf ) );
 	}
 
 	virtual ~ByteStream()
 	{
-		_Clear();
+	   _Clear();
 	}
 
 
@@ -130,7 +131,7 @@ public:
 	 */
 	const char *svc()
 	{
-		return _svc.c_str();
+	   return _svc.c_str();
 	}
 
 	/**
@@ -140,7 +141,7 @@ public:
 	 */
 	const char *tkr()
 	{
-		return _tkr.c_str();
+	   return _tkr.c_str();
 	}
 
 	/**
@@ -150,7 +151,7 @@ public:
 	 */
 	int fidOff()
 	{
-		return _fidOff;
+	   return _fidOff;
 	}
 
 	/**
@@ -160,7 +161,7 @@ public:
 	 */
 	int fidLen()
 	{
-		return _fidLen;
+	   return _fidLen;
 	}
 
 	/**
@@ -170,7 +171,7 @@ public:
 	 */
 	int fidNumFld()
 	{
-		return _fidNumFld;
+	   return _fidNumFld;
 	}
 
 	/**
@@ -180,7 +181,7 @@ public:
 	 */
 	int fidPayload()
 	{
-		return _fidPayload;
+	   return _fidPayload;
 	}
 
 	/**
@@ -190,7 +191,7 @@ public:
 	 */
 	int StreamID()
 	{
-		return _StreamID;
+	   return _StreamID;
 	}
 
 	/**
@@ -204,11 +205,11 @@ public:
 	 */
 	rtBUF subBuf()
 	{
-		rtBUF rtn;
+	   rtBUF rtn;
 
-		rtn._data = _subBuf._data;
-		rtn._dLen = _subBuf._dLen;
-		return rtn;
+	   rtn._data = _subBuf._data;
+	   rtn._dLen = _subBuf._dLen;
+	   return rtn;
 	}
 
 	/**
@@ -220,7 +221,7 @@ public:
 	 */
 	int subBufLen()
 	{
-		return _subBuf._nAlloc;
+	   return _subBuf._nAlloc;
 	}
 
 	/**
@@ -230,7 +231,7 @@ public:
 	 */
 	rtBUF pubBuf()
 	{
-		return _pubBuf;
+	   return _pubBuf;
 	}
 
 
@@ -245,8 +246,8 @@ public:
 	 */
 	void SetStreamID( int StreamID )
 	{
-		_StreamID = StreamID;
-		_Clear();
+	   _StreamID = StreamID;
+	   _Clear();
 	}
 
 	/**
@@ -256,7 +257,7 @@ public:
 	 */
 	void SetPublishData( rtBUF buf )
 	{
-		_pubBuf = buf;
+	   _pubBuf = buf;
 	}
 
 
@@ -275,7 +276,7 @@ protected:
 	 * \param buf - Buffer pointing to new chunk
 	 */
 	virtual void OnData( rtBUF buf )
-   { ; }
+	{ ; }
 
 	/**
 	 * \brief Called asynchronously if there is an error in consuming 
@@ -290,7 +291,7 @@ protected:
 	 * \param err - Textual description of error
 	 */
 	virtual void OnError( const char *err )
-   { ; }
+	{ ; }
 
 	/**
 	 * \brief Called asynchronously once the complete ByteStream has arrived.
@@ -315,7 +316,7 @@ protected:
 	 * \param totByte - Total bytes published so far
 	 */
 	virtual void OnPublishData( int nByte, int totByte )
-   { ; }
+	{ ; }
 
 	/**
 	 * \brief Called asynchronously once the complete ByteStream has been
@@ -337,120 +338,121 @@ protected:
 private:
 	bool _OnData( SubChannel &, Message &msg )
 	{
-		Field    *fld;
-		rtFldType mTy;
-		rtBUF    *bdb, b;
-		char     *cp;
-		bool      bDone;
-		int       idx, fid, off0, off, len, nFld, fidData;
+	   Field    *fld;
+	   rtFldType mTy;
+	   rtBUF    *bdb, b;
+	   char     *cp;
+	   bool      bDone;
+	   int       idx, fid, off0, off, len, nFld, fidData;
 
-		// By Message Type
+	   // By Message Type
 
-		switch( msg.mt() ) {
-			case edg_image:
-			case edg_update:
-				break; // OK
-			case edg_stale:
-			case edg_recovering:
-			case edg_permQuery:
-				return false;
-			case edg_dead:
-			{
-				std::string err( "Stream DEAD : " );
+	   switch( msg.mt() ) {
+	      case edg_image:
+	      case edg_update:
+	         break; // OK
+	      case edg_stale:
+	      case edg_recovering:
+	      case edg_permQuery:
+	      case edg_streamDone:
+	         return false;
+	      case edg_dead:
+	      {
+	         std::string err( "Stream DEAD : " );
 
-				err += msg.Error();
-				OnError( err.data() );
-				return true;
-			}
-		}
+	         err += msg.Error();
+	         OnError( err.data() );
+	         return true;
+	      }
+	   }
 
-		// Header ...
+	   // Header ...
 
-		off0 = 0;
-		len  = nFld = fidData = 0;
-		for ( msg.reset(); (msg)(); ) {
-			fld = msg.field();
-			fid = fld->Fid();
-			if ( fid == _fidOff )
-				off0 = fld->GetAsInt32();
-			else if ( fid == _fidLen )
-				len = fld->GetAsInt32();
-			else if ( fid == _fidNumFld )
-				nFld = fld->GetAsInt32();
-			else if ( fid == _fidPayload )
-				fidData = fld->GetAsInt32();
-		}
-		if ( !len )
-			OnError( "Invalid header : Missing length" );
-		if ( !nFld )
-			OnError( "Invalid header : Missing NumFld" );
-		if ( !fidData )
-			OnError( "Invalid header : Missing Payload field ID" );
-		if ( !len || !nFld || !fidData )
-			return true;
+	   off0 = 0;
+	   len  = nFld = fidData = 0;
+	   for ( msg.reset(); (msg)(); ) {
+	      fld = msg.field();
+	      fid = fld->Fid();
+	      if ( fid == _fidOff )
+	         off0 = fld->GetAsInt32();
+	      else if ( fid == _fidLen )
+	         len = fld->GetAsInt32();
+	      else if ( fid == _fidNumFld )
+	         nFld = fld->GetAsInt32();
+	      else if ( fid == _fidPayload )
+	         fidData = fld->GetAsInt32();
+	   }
+	   if ( !len )
+	      OnError( "Invalid header : Missing length" );
+	   if ( !nFld )
+	      OnError( "Invalid header : Missing NumFld" );
+	   if ( !fidData )
+	      OnError( "Invalid header : Missing Payload field ID" );
+	   if ( !len || !nFld || !fidData )
+	      return true;
 
-		// First time?
+	   // First time?
 
-		if ( _subBuf._nAlloc == 0 )
-			_subBuf = ::mddBldBuf_Alloc( len );
+	   if ( _subBuf._nAlloc == 0 )
+	      _subBuf = ::mddBldBuf_Alloc( len );
 
-		// ... then payload
+	   // ... then payload
 
-		bdb = new rtBUF[nFld];
-		::memset( bdb, 0, sizeof( rtBUF ) * nFld );
-		for ( msg.reset(); (msg)(); ) {
-			fld = msg.field();
-			mTy = fld->TypeFromMsg();
-			switch ( mTy ) {
-				case rtFld_undef:
-				case rtFld_string:
-				case rtFld_int:
-				case rtFld_double:
-				case rtFld_date:
-				case rtFld_time:
-				case rtFld_timeSec:
-				case rtFld_float:
-				case rtFld_int8:
-				case rtFld_int16:
-				case rtFld_int64:
-				case rtFld_real:
-					break;
-				case rtFld_bytestream:
-					fid = fld->Fid();
-					idx = fid - fidData;
-					b   = fld->GetAsByteStream().buf();
-					if ( InRange( 0, idx, nFld-1 ) )
-						bdb[idx] = b;
-					break;
-			}
-		}
-		off = off0;
-		for ( idx=0; idx<nFld; idx++ ) {
-			b   = bdb[idx];
-			cp  = _subBuf._data;
-			cp += off;
-			if ( b._data && b._dLen ) {
-				::memcpy( cp, b._data, b._dLen );
-				off += b._dLen;
-			}
-		}
-		_subBuf._dLen = off;
-		delete[] bdb;
-		b._data  = _subBuf._data;
-		b._data += off0;
-		b._dLen  = ( off-off0 );
-		OnData( b );
-		bDone = ( _subBuf._dLen >= _subBuf._nAlloc );
-		if ( bDone )
-			OnSubscribeComplete();
-		return bDone;
+	   bdb = new rtBUF[nFld];
+	   ::memset( bdb, 0, sizeof( rtBUF ) * nFld );
+	   for ( msg.reset(); (msg)(); ) {
+	      fld = msg.field();
+	      mTy = fld->TypeFromMsg();
+	      switch ( mTy ) {
+	         case rtFld_undef:
+	         case rtFld_string:
+	         case rtFld_int:
+	         case rtFld_double:
+	         case rtFld_date:
+	         case rtFld_time:
+	         case rtFld_timeSec:
+	         case rtFld_float:
+	         case rtFld_int8:
+	         case rtFld_int16:
+	         case rtFld_int64:
+	         case rtFld_real:
+	            break;
+	         case rtFld_bytestream:
+	            fid = fld->Fid();
+	            idx = fid - fidData;
+	            b   = fld->GetAsByteStream().buf();
+	            if ( InRange( 0, idx, nFld-1 ) )
+	               bdb[idx] = b;
+	            break;
+	      }
+	   }
+	   off = off0;
+	   for ( idx=0; idx<nFld; idx++ ) {
+	      b   = bdb[idx];
+	      cp  = _subBuf._data;
+	      cp += off;
+	      if ( b._data && b._dLen ) {
+	         ::memcpy( cp, b._data, b._dLen );
+	         off += b._dLen;
+	      }
+	   }
+	   _subBuf._dLen = off;
+	   delete[] bdb;
+	   b._data  = _subBuf._data;
+	   b._data += off0;
+	   b._dLen  = ( off-off0 );
+	   OnData( b );
+	   bDone = ( _subBuf._dLen >= _subBuf._nAlloc );
+	   if ( bDone )
+	      OnSubscribeComplete();
+	   return bDone;
 	}
 
 	void _Clear()
 	{
-		if ( _subBuf._data ) 
-			delete[] _subBuf._data;
-		::memset( &_subBuf, 0, sizeof( _subBuf ) );
+	   if ( _subBuf._data ) 
+	      delete[] _subBuf._data;
+	   ::memset( &_subBuf, 0, sizeof( _subBuf ) );
 	}
 
 

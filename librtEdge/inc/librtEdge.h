@@ -19,8 +19,9 @@
 *     21 JAN 2018 jcs  Build 39: CockpitAttr._cxtLVC
 *      6 MAR 2018 jcs  Build 40: OS_StartThread / OS_StopThread()
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
+*     28 JUL 2020 jcs  Build 44: ioctl_normalTapeDir
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -418,7 +419,18 @@ typedef enum {
     *
     * \param (void *)val - 1 to enable; 0 to disable; Default = 0
     */
-   ioctl_userDefStreamID    = 30
+   ioctl_userDefStreamID    = 30,
+   /**
+    * \brief Sets the direction messages - tape (reverse) or chronological -
+    * when pumping from tape.
+    *
+    * Messages are stored on the tape in reverse order as each messsage has
+    * a backward-, not forward-pointer.  As such, when Subscribing from tape,
+    * the messages are read from tape in reverse order.
+    *
+    * \param (void *)val - 1 to pump in tape (reverse) order; 0 in chronological; Default is 1
+    */
+   ioctl_tapeDirection     = 31
 } rtEdgeIoctl;
 
 /**
@@ -524,7 +536,9 @@ typedef enum {
    /** \brief Dead Stream */
    edg_dead       = mddMt_dead,
    /** \brief Perm Query */
-   edg_permQuery  = mddMt_dbQry
+   edg_permQuery  = mddMt_dbQry,
+   /** \brief Stream Complete */
+   edg_streamDone = mddMt_close
 } rtEdgeType;
 
 /**

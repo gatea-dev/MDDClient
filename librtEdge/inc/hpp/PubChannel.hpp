@@ -15,6 +15,7 @@
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
 *     29 APR 2020 jcs  Build 43: OnOpenBDS()
+*     26 JUN 2020 jcs  Build 44: De-lint
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -458,7 +459,7 @@ public:
 	   d._arg  = (VOID_PTR)StreamID;
 	   d._ty   = edg_image;
 	   d._flds = flds;
-	   for ( i=0,nf=0; symbols[i]; i++ ) {
+	   for ( i=0,nf=0,nb=0; symbols[i]; i++ ) {
 	      f._fid   = LONGLINK1+nf;
 	      f._type  = rtFld_string;
 	      b._data  = (char *)symbols[i];

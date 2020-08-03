@@ -17,6 +17,7 @@
 *     10 JUL 2018 jcs  Build 40: Meow
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
+*     28 JUL 2020 jcs  Build 44: _bTapeDir
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -51,6 +52,7 @@ EdgChannel::EdgChannel( rtEdgeAttr     attr,
    _bRawData( true ),
    _bSvcTkr( true ),
    _bUsrStreamID( false ),
+   _bTapeDir( true ),
    _Q(),
    _tape( (TapeChannel *)0 )
 {
@@ -569,6 +571,9 @@ bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
          return true;
       case ioctl_userDefStreamID:
          _bUsrStreamID = bArg;
+         return true;
+      case ioctl_tapeDirection:
+         _bTapeDir = bArg;
          return true;
       default:
          break;
@@ -1658,9 +1663,8 @@ int TapeChannel::Pump()
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
-      m._dLen = msg->_msgLen - mSz;
-      off    += msg->_msgLen;
       n      += _PumpOneMsg( *msg, m, false );
+      off    += msg->_msgLen;
    }
    _bRun   = false;
    _bInUse = false;
@@ -1674,12 +1678,14 @@ int TapeChannel::PumpTicker( int ix )
 {
    GLrecTapeRec *rec;
    GLrecTapeMsg *msg;
-   char         *bp, *cp;
-   char         *rp;
+   char         *bp, *cp, *rp, sts[K];
    u_int64_t    *idb;
    mddBuf        m;
-   u_int64_t     off, diff;
-   int           n, mSz, idx;
+   Offsets       odb;
+   u_int64_t     off, diff, nMsg;
+   size_t        i, j, nr;
+   int           n, mSz, idx, pct;
+   static int    _pct[] = { 10, 25, 50, 75 };
 
    // Pre-condition(s)
 
@@ -1692,6 +1698,7 @@ int TapeChannel::PumpTicker( int ix )
    bp      = _tape._data;
    rec     = _tdb[ix];
    off     = rec->_loc;
+   nMsg    = rec->_nMsg;
    _PumpDead();
    if ( _t1.tv_sec != INFINITEs  ) {
       rp  = (char *)rec;
@@ -1702,19 +1709,55 @@ int TapeChannel::PumpTicker( int ix )
       idx = _tapeIdx( _t1 );
       off = tapeIdxDb()[idx];
    }
-   for ( n=0; _bRun && off; ) {
+   for ( i=0,n=0; _bRun && off; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
       m._dLen = msg->_msgLen - mSz;
+      if ( !_chan._bTapeDir ) {
+         if ( !i ) {
+#if (_MSC_VER >= 1910)
+            sprintf( sts, "Reversing about %lld msgs", nMsg );
+#else
+            sprintf( sts, "Reversing about %ld msgs", nMsg );
+#endif // (_MSC_VER >= 1910)
+            _PumpStatus( *msg, sts );
+         }
+         else {
+            for ( j=0; j<4; j++ ) {
+               pct = 100 - _pct[j];
+               if ( i == ( nMsg / pct ) ) {
+                  sprintf( sts, "%d%% msgs reversed", _pct[j] );
+                  _PumpStatus( *msg, sts );
+               }
+            }
+         }
+         odb.push_back( off );
+      }
+      else
+         n   += _PumpOneMsg( *msg, m, true );
       if ( msg->_bLast4 )
          diff = (u_int64_t)_get32( msg->_last );
       else
          diff = _get64( msg->_last );
       off -= diff;
-      n   += _PumpOneMsg( *msg, m, true );
    }
+   /*
+    * Reverse??
+    */
+   nr = odb.size();
+   for ( i=0; i<nr; i++ ) {
+      off     = odb[nr-1-i];
+      cp      = bp+off;
+      msg     = (GLrecTapeMsg *)cp;
+      mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
+      m._data = cp + mSz;
+      m._dLen = msg->_msgLen - mSz;
+      n      += _PumpOneMsg( *msg, m, true );
+   }
+   if ( nr )
+      _PumpStatus( *msg, "Stream Complete", edg_streamDone );
    _bRun   = false;
    _bInUse = false;
 
@@ -1875,6 +1918,26 @@ int TapeChannel::_PumpDead()
    }
    _dead.clear();
    return n;
+}
+
+void TapeChannel::_PumpStatus( GLrecTapeMsg &msg, 
+                               const char   *sts,
+                               rtEdgeType    ty )
+{
+   rtEdgeData d;
+   int        ix;
+
+   // Fill in rtEdgeData and dispatch
+
+   ::memset( &d, 0, sizeof( d ) );
+   ix          = msg._dbIdx;
+   d._tMsg     = Logger::Time2dbl( Logger::tvNow() );
+   d._pSvc     = _tdb[ix]->_svc;
+   d._pTkr     = _tdb[ix]->_tkr;
+   d._pErr     = sts;
+   d._ty       = ty;
+   if ( _attr._dataCbk )
+      (*_attr._dataCbk)( _chan.cxt(), d );
 }
 
 int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
