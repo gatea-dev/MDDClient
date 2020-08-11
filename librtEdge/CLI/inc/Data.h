@@ -12,6 +12,7 @@
 *     11 JAN 2018 jcs  Build 39: Leak : _FreeHeap()
 *     10 DEC 2018 jcs  Build 41: VS2017
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
+*     11 AUG 2020 jcs  Build 44: _MsgTime
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -180,6 +181,20 @@ public:
 	// Properties
 	/////////////////////////////////
 public:
+	/** \brief Returns name of service supplying this update */
+	property DateTime ^_MsgTime
+	{
+	   DateTime ^get() {
+	      double r64, mike;
+	      long   tv_sec;
+
+	      r64    = _msg->MsgTime();
+	      tv_sec = (long)r64;
+	      mike   = ( r64  - tv_sec ) * 1000000.0;
+	      return rtEdge::FromUnixTime( tv_sec, (long)mike );
+	   }
+	}
+
 	/** \brief Returns name of service supplying this update */
 	property String ^_pSvc
 	{

@@ -24,8 +24,9 @@ Build 44 20-07-xx
 2) Subscribe : Use Message.MsgTime() w/ CSV - DUH!!
 
 3) DateTime:
-   - .NET : Fill in rtEdgeField.GetAsDateTime() guts
    - C++  : Field.GetAsDate() / GetAsTime() : Use _r64, not GetAsDouble()
+   - .NET : Fill in rtEdgeField.GetAsDateTime() guts
+   - .NET : rtEdgeData._MsgTime
 /*
 2) BDS : Add / Del :
    - "~~SYM_ADD~~" / "~~SYM_DEL~~"
