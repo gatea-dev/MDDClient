@@ -1964,6 +1964,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
 
    tv.tv_sec  = msg._tv_sec;
    tv.tv_usec = msg._tv_usec;
+   ::memset( &d, 0, sizeof( d ) );
 
    // Fill in rtEdgeData and dispatch
 
@@ -1971,6 +1972,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    d._tMsg     = Logger::Time2dbl( tv );
    d._pSvc     = _tdb[ix]->_svc;
    d._pTkr     = _tdb[ix]->_tkr;
+   d._pErr     = "OK";
    d._ty       = edg_update;
    d._flds     = (rtFIELD *)_fl._flds;
    d._nFld     = _fl._nFld;
