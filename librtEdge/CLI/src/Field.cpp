@@ -246,7 +246,7 @@ DateTime ^rtEdgeField::GetAsDateTime()
          break;
       case ::rtFld_time:
       case ::rtFld_timeSec:
-         now = gcnew DateTime();
+         now = DateTime::Now; // gcnew DateTime();
          rTm = _fld->GetAsTime();
          dt  = gcnew DateTime( now->Year,
                                now->Month,
@@ -257,7 +257,7 @@ DateTime ^rtEdgeField::GetAsDateTime()
                                _WithinRange( 0, rTm._micros / 1000, 999 ) );
          break;
       default:
-         dt = gcnew DateTime();
+         dt = DateTime::Now; // gcnew DateTime();
          break;
    }
    return dt;
