@@ -621,7 +621,7 @@ public:
 	rtTime GetAsTime()
 	{
 	   rtVALUE &v   = _fld._val;
-	   double   r64 = GetAsDouble();
+	   double   r64 = v._r64;
 	   int      i32 = (int)r64;
 	   rtTime   t;
 
