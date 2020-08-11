@@ -8,6 +8,7 @@
 *      5 FEB 2016 jcs  Build 32: Dump()
 *     14 JAN 2018 jcs  Build 39: _name
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
+*     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -325,6 +326,13 @@ public:
 
 	/** \brief Backwards compatibility */
 	String ^Data() { return GetAsString( false ); }
+
+
+	/////////////////////////////////
+	// Helpers
+	/////////////////////////////////
+private:
+	int _WithinRange( int, int, int );
 
 }; // class rtEdgeField
 

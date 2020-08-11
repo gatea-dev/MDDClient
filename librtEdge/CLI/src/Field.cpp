@@ -8,6 +8,7 @@
 *      5 FEB 2016 jcs  Build 32: Dump()
 *     11 JAN 2018 jcs  Build 39: _IncObj() / _DecObj()
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
+*     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -230,92 +231,35 @@ ByteStreamFld ^rtEdgeField::GetAsByteStream()
 
 DateTime ^rtEdgeField::GetAsDateTime()
 {
-   DateTime ^dt = gcnew DateTime();
+   DateTime      ^dt, ^now;
+   ::rtFldType    ty;
+   RTEDGE::rtDate rDt;
+   RTEDGE::rtTime rTm;
 
-   dt = dt->Now;
-/*
-            string DMY;
-            string[] ff, hms, ss;
-            int nf, dmy;
-            int Y, M, D, h, m, s, ms;
-            rtFldType tmp;
-            DateTime rtn, now;
-            string[] mons = { "JAN", "FEB", "MAR", "APR",
-                              "MAY", "JUN", "JUL", "AUG",
-                              "SEP", "OCT", "NOV", "DEC" };
-
-            // Native -> DateTime
-
-            switch (_type)
-            {
-                case rtFldType.rtFld_date:
-                {
-                    //
-                     / Hack for librtEdge Build 26a and earlier;
-                    // librtEdgeBuild 27 and later are all native
-                    ///
-                    if ( _iBld == 26 ) {
-                       tmp   = _type;
-                       _type = rtFldType.rtFld_string;
-                       rtn   = GetAsDateTime();
-                       _type = tmp;
-                    }
-                    else
-                       rtn = _GetAsDateTime( _r64 );
-                    return rtn;
-                }
-                case rtFldType.rtFld_time:
-                case rtFldType.rtFld_timeSec:
-                    return _GetAsDateTime( _r64 );
-            }
-
-            //
-            // 1) 12:23:56.mmm
-            // 2) 2011-01-15 12:23:56.mmm
-            // 3) 20110115 12:23:56.mmm
-            // 4) 15 JAN 2011 12:23:56.mmm
-            // 
-            now = DateTime.Now;
-            ff  = Data().Split(' ');
-            nf  = ff.Length;
-            Y   = now.Year;
-            M   = now.Month;
-            D   = now.Day;
-            h   = 0;
-            m   = 0;
-            s   = 0;
-            ms  = 0;
-            hms = null;
-            switch (nf)
-            {
-                case 1:   // 1) above
-                    hms = ff[0].Split(':');
-                    break;
-                case 2:   // 2) or 3) above
-                    DMY = ff[0].Replace("-", "");   // "20110115"
-                    dmy = Convert.ToInt32(DMY);     // 20110115
-                    Y   = Convert.ToInt32(dmy / 10000);
-                    M   = Convert.ToInt32(dmy / 100) % 100;
-                    D   = dmy % 100;
-                    hms = ff[1].Split(':');
-                    break;
-                case 4:   // 4) above
-                    D = Convert.ToInt32(ff[0]);
-                    M = Array.IndexOf(mons, ff[1]) + 1;
-                    Y = Convert.ToInt32(ff[2]);
-                    hms = ff[3].Split(':');
-                    break;
-            }
-            if ((hms != null) && (hms.Length == 3))
-            {
-                h  = Convert.ToInt32( hms[0] );
-                m  = Convert.ToInt32( hms[1] );
-                ss = hms[2].Split('.');
-                s  = Convert.ToInt32(ss[0]);
-                ms = (ss.Length > 1) ? Convert.ToInt32(ss[1]) : 0;
-            }
-            return new DateTime(Y, M, D, h, m, s, ms);
- */
+   ty = _fld->Type();
+   switch( ty ) {
+      case ::rtFld_date:
+         rDt = _fld->GetAsDate();
+         dt  = gcnew DateTime( _WithinRange( 0, rDt._year, 9999 ),
+                               _WithinRange( 1, rDt._month + 1, 12 ),
+                               _WithinRange( 1, rDt._mday, 31 ) );
+         break;
+      case ::rtFld_time:
+      case ::rtFld_timeSec:
+         now = gcnew DateTime();
+         rTm = _fld->GetAsTime();
+         dt  = gcnew DateTime( now->Year,
+                               now->Month,
+                               now->Day,
+                               _WithinRange( 0, rTm._hour, 23 ),
+                               _WithinRange( 0, rTm._minute, 59 ),
+                               _WithinRange( 0, rTm._second, 59 ),
+                               _WithinRange( 0, rTm._micros / 1000, 999 ) );
+         break;
+      default:
+         dt = gcnew DateTime();
+         break;
+   }
    return dt;
 }
 
@@ -355,6 +299,19 @@ void rtEdgeField::Clear()
    if ( _name != nullptr )
       delete _name;
    _name = nullptr;
+}
+
+
+/////////////////////////////////
+// Helpers
+/////////////////////////////////
+int rtEdgeField::_WithinRange( int x0, int x, int x1 )
+{
+   if ( x0 > x )
+      return x0;
+   if ( x > x1 )
+      return x1;
+   return x;
 }
 
 } // namespace librtEdge

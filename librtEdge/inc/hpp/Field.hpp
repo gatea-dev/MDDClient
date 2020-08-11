@@ -13,6 +13,7 @@
 *     15 DEC 2018 jcs  Build 41: Dump() : Include Name()
 *      8 FEB 2020 jcs  Build 42: public Set( Schema &, ... )
 *     16 MAR 2020 jcs  Build 43: _StripTrailing0()
+*     12 AUG 2020 jcs  Build 44: Date/Time : _r64, not GetAsDouble()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -597,9 +598,10 @@ public:
 	 */
 	rtDate GetAsDate()
 	{
-	   double r64 = GetAsDouble();
-	   int    i32;
-	   rtDate d;
+	   rtVALUE &v   = _fld._val;
+	   double   r64 = v._r64;
+	   int      i32;
+	   rtDate   d;
 
 	   // YYYYMMDD * _MIL;
 
@@ -618,9 +620,10 @@ public:
 	 */
 	rtTime GetAsTime()
 	{
-	   double r64 = GetAsDouble();
-	   int    i32 = (int)r64;
-	   rtTime t;
+	   rtVALUE &v   = _fld._val;
+	   double   r64 = GetAsDouble();
+	   int      i32 = (int)r64;
+	   rtTime   t;
 
 	   // HHMMSS.uuuuuu
 
