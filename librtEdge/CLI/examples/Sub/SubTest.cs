@@ -17,7 +17,7 @@
 *     17 JUL 2017 jcs  Build 34: Cleaned up
 *     12 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: bds
-*     28 JUL 2020 jcs  Build 44: -tapeDir
+*     11 SEP 2020 jcs  Build 44: -tapeDir; -query
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -161,11 +161,12 @@ class SubTest : rtEdgeSubscriber
    public static int Main(String[] args) 
    {
       try {
-         SubTest  sub;
-         int      i, nt, argc, tRun;
-         bool     bMF, aOK, bds, bTape;
-         string[] tkrs;
-         string   s, svr, usr, svc, tkr, t0, t1;
+         SubTest     sub;
+         int         i, nt, argc, tRun;
+         bool        bMF, aOK, bds, bTape, bQry;
+         string[]    tkrs;
+         MDDRecDef[] dbTkrs;
+         string      s, svr, usr, svc, tkr, t0, t1;
 
          /////////////////////
          // Quickie checks
@@ -186,6 +187,7 @@ class SubTest : rtEdgeSubscriber
          bMF   = false;
          bds   = false;
          bTape = true;
+         bQry  = false;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -h   <Source : host:port or TapeFile> ] \\ \n";
@@ -196,7 +198,8 @@ class SubTest : rtEdgeSubscriber
             s += "       [ -t1  <TapeSliceEndTime> ] \\ \n";
             s += "       [ -r   <AppRunTime> ] \\ \n";
             s += "       [ -bds <true> ] \\ \n";
-            s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
+            s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
+            s += "       [ -query <true to dump d/b directory> ]  \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
             Console.Write( "      -h       : {0}\n", svr );
@@ -207,7 +210,8 @@ class SubTest : rtEdgeSubscriber
             Console.Write( "      -t1      : <empty>\n" );
             Console.Write( "      -r       : {0}\n", tRun );
             Console.Write( "      -bds     : {0}\n", bds );
-            Console.Write( "      -tapeDir : {0}\n", bds );
+            Console.Write( "      -tapeDir : {0}\n", bTape );
+            Console.Write( "      -query   : {0}\n", bQry );
             return 0;
          }
 
@@ -241,6 +245,8 @@ class SubTest : rtEdgeSubscriber
                bds = ( args[++i] == "true" );
             else if ( args[i] == "-tapeDir" )
                bTape = ( args[++i] == "true" );
+            else if ( args[i] == "-query" )
+               bQry = ( args[++i] == "true" );
          }
          Console.WriteLine( rtEdge.Version() );
          sub = new SubTest( svr, usr, !bMF );
@@ -248,6 +254,22 @@ class SubTest : rtEdgeSubscriber
          if ( !bMF )
             Console.WriteLine( "BINARY" );
          Console.WriteLine( sub.Start() );
+         /*
+          * Tape Query??
+          */
+         if ( bQry ) {
+            dbTkrs = sub.Query()._recs;
+            Console.WriteLine( "Service,Ticker,NumMsg," );
+            for ( i=0; i<dbTkrs.Length; i++ ) {
+               Console.Write( dbTkrs[i]._pSvc + "," );
+               Console.Write( dbTkrs[i]._pTkr + "," );
+               Console.WriteLine( dbTkrs[i]._interval );
+            }
+            sub.FreeResult();
+         }
+         /*
+          * Subscribe onward ...
+          */
          nt = ( tkrs != null ) ? tkrs.Length : 0;
          if ( bds )
             for ( i=0; i<nt; sub.OpenBDS( svc, tkrs[i++], 0 ) );

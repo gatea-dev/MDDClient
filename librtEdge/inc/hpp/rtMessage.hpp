@@ -9,7 +9,7 @@
 *      5 MAR 2016 jcs  Build 32: Dump(); edg_permQuery
 *     12 OCT 2017 jcs  Build 36
 *      8 FEB 2020 jcs  Build 42: IntMap for _dataLVC
-*     28 JUL 2020 jcs  Build 44: IsRecovering()
+*      3 SEP 2020 jcs  Build 44: IsRecovering(); StreamID()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -142,6 +142,16 @@ public:
 	double MsgTime()
 	{
 	   return data()._tMsg;
+	}
+
+	/**
+	 * \brief Returns Stream ID
+	 *
+	 * \return Stream ID
+	 */
+	int StreamID()
+	{
+	   return data()._StreamID;
 	}
 
 	/**

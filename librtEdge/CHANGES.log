@@ -13,9 +13,16 @@ Known Bugs
 
 Features To Add
 ---------------
+1) Query tickers from tape:
+   - Just re-use CDB_Query() / CDB_FreeQuery()
+
+2) BDS : Add / Del :
+   - "~~SYM_ADD~~" / "~~SYM_DEL~~"
+   - "~~SYM_LIST~~" for backwards compatibility
+   - OnSymbol( ..., bool bAdd ) 
 
 
-Build 44 20-07-xx
+Build 44 20-09-11
 -----------------
 1) ioctl_tapeDirection
    - Subscribe -tapeDir
@@ -27,13 +34,18 @@ Build 44 20-07-xx
    - C++  : Field.GetAsDate() / GetAsTime() : Use _r64, not GetAsDouble()
    - .NET : Fill in rtEdgeField.GetAsDateTime() guts
    - .NET : rtEdgeData._MsgTime
-/*
-2) BDS : Add / Del :
-   - "~~SYM_ADD~~" / "~~SYM_DEL~~"
-   - "~~SYM_LIST~~" for backwards compatibility
-   - OnSymbol( ..., bool bAdd ) 
- */
 
+4) Message.StreamID()
+
+5) Thread Names:
+   - ioctl_setThreadName / ioctl_getThreadName
+   - Channel.SetThreadName() / GetThreadName()
+
+6) Query tickers from tape:
+   - CDBRecDef -> MDDRecDef
+   - CDBQuery  -> MDDResult
+   - CDB_Query() -> MDD_Query()
+   - CDB_FreeQry() -> MDD_FreeResult()
 
 Build 43 20-04-29
 -----------------

@@ -28,7 +28,7 @@
 *     13 OCT 2017 jcs  Build 36: TapeChannel
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
-*     28 JUL 2020 jcs  Build 44: _bTapeDir
+*     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -300,6 +300,7 @@ public:
 	const char *err();
 	u_int64_t  *tapeIdxDb();
 	bool        HasTicker( const char *, const char *, int & );
+	MDDResult   Query();
 
 	// Operations
 public:

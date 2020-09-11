@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *     13 NOV 2014 jcs  Created.
 *      2 OCT 2015 jcs  Build 32: CDBTable / ViewTable()
+*     10 SEP 2020 jcs  Build 44: MDDResult
 *
-*  (c) 1994-2015 Gatea, Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <ChartDB.h>
@@ -149,21 +150,22 @@ void CDBTable::Clear()
 
 ////////////////////////////////////////////////
 //
-//       c l a s s   C D B R e c R e f
+//       c l a s s   M D D R e c R e f
 //
 ////////////////////////////////////////////////
 
 /////////////////////////////////
 // Constructor / Destructor
 /////////////////////////////////
-CDBRecRef::CDBRecRef( ::CDBRecDef rec ) :
-   _rec( &rec ),
+MDDRecDef::MDDRecDef( ::MDDRecDef rec ) :
    _svc( gcnew String( rec._pSvc ) ),
-   _tkr( gcnew String( rec._pTkr ) )
+   _tkr( gcnew String( rec._pTkr ) ),
+   _Fid( rec._fid ),
+   _Interval( rec._interval )
 {
 }
 
-CDBRecRef::~CDBRecRef()
+MDDRecDef::~MDDRecDef()
 {
    _svc = nullptr;
    _tkr = nullptr;
@@ -172,20 +174,20 @@ CDBRecRef::~CDBRecRef()
 
 ////////////////////////////////////////////////
 //
-//       c l a s s   C D B Q u e r y
+//       c l a s s   M D D R e s u l t
 //
 ////////////////////////////////////////////////
 
 /////////////////////////////////
 // Constructor / Destructor
 /////////////////////////////////
-CDBQuery::CDBQuery( ::CDBQuery &qry ) :
+MDDResult::MDDResult( ::MDDResult &qry ) :
    _qry( qry ),
    _rdb( nullptr )
 {
 }
 
-CDBQuery::~CDBQuery()
+MDDResult::~MDDResult()
 {
    _rdb = nullptr;
 }
@@ -203,7 +205,7 @@ CDBQuery::~CDBQuery()
 /////////////////////////////////
 ChartDB::ChartDB( String ^file, String ^admin ) :
    _cdb( new RTEDGE::ChartDB( _pStr( file ), _pStr( admin ) ) ),
-   _qryAll( new ::CDBQuery() ),
+   _qryAll( new ::MDDResult() ),
    _qry( gcnew CDBData( this ) ),
    _tbl( gcnew CDBTable( this ) )
 {
@@ -259,15 +261,15 @@ void ChartDB::Free()
    _tbl->Clear();
 }
 
-CDBQuery ^ChartDB::Query()
+MDDResult ^ChartDB::Query()
 {
    *_qryAll = _cdb->Query();
-   return gcnew CDBQuery( *_qryAll );
+   return gcnew MDDResult( *_qryAll );
 }
 
-void ChartDB::FreeQry()
+void ChartDB::FreeResult()
 {
-   _cdb->FreeQry();
+   _cdb->FreeResult();
 }
 
 

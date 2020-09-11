@@ -16,6 +16,7 @@
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *      9 FEB 2020 jcs  Build 42: Full namespace; Channel.SetHeartbeat()
 *     29 APR 2020 jcs  Build 43: _BDS_PFX
+*      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -701,6 +702,37 @@ public:
 	   tid = 0;
 	   ::rtEdge_ioctl( _cxt, ioctl_getThreadId, &tid );
 	   return tid;
+	}
+
+	/**
+	 * \brief Set thread name : viewable in top
+	 *
+	 * Only valid if this is called from the pub/sub Channel thread
+	 *
+	 * \param name - Thread name
+	 * \see GetThreadName()
+	 */
+	const char *SetThreadName( const char *name )
+	{
+	   if ( IsValid() )
+	      ::rtEdge_ioctl( _cxt, ioctl_setThreadName, (void *)name );
+	   return GetThreadName();
+	}
+
+	/**
+	 * \brief Get thread name set from SetThreadName()
+	 *
+	 * \return Thread name, or empty string if not set
+	 * \see SetThreadName()
+	 */
+	const char *GetThreadName()
+	{
+	   const char *name;
+
+	   name = "";
+	   if ( IsValid() )
+	      ::rtEdge_ioctl( _cxt, ioctl_getThreadName, (void *)name );
+	   return name;
 	}
 
 	/**

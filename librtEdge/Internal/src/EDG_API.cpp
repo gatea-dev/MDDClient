@@ -33,6 +33,7 @@
 *     20 JAN 2018 jcs  Build 39: Lock LVC during Snapshot / SnapAll()
 *      6 MAR 2018 jcs  Build 40: OS_XxxThread()
 *      6 APR 2020 jcs  Build 43: rtEdge_Destroy : thr().Stop()
+*      7 SEP 2020 jcs  Build 44: MDD_Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -1014,12 +1015,15 @@ CDB_Context CDB_Initialize( const char *pFile,
    return rtn;
 }
 
-CDBQuery CDB_Query( CDB_Context cxt )
+MDDResult MDD_Query( CDB_Context cxt )
 {
-   GLchtDb *lvc;
-   Logger  *lf;
-   CDBQuery rtn;
-   double   d0, d1;
+   GLchtDb     *cdb;
+   EdgChannel  *edg;
+   TapeChannel *tape;
+   Logger      *lf;
+   MDDResult    rtn;
+   double       d0, d1;
+   int          iCxt;
 
    // Logging; Find GLchtDb
 
@@ -1029,17 +1033,20 @@ CDBQuery CDB_Query( CDB_Context cxt )
 
    // Operation : Create, if not found
 
+   iCxt = (int)cxt;
    ::memset( &rtn, 0, sizeof( rtn ) );
-   if ( (lvc=_GetCDB( (int)cxt )) )
-      rtn = lvc->Query();
+   if ( (cdb=_GetCDB( iCxt )) )
+      rtn = cdb->Query();
+   else if ( (edg=_GetSub( iCxt )) && (tape=edg->tape()) )
+      rtn = tape->Query();
    d1         = dNow();
    rtn._dSnap = ( d1-d0 );
    return rtn;
 }
 
-void CDB_FreeQry( CDBQuery *q )
+void MDD_FreeResult( MDDResult *q )
 {
-   CDBRecDef *rr;
+   MDDRecDef *rr;
 
    if ( q ) {
       if ( (rr=q->_recs) )

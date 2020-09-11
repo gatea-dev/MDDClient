@@ -11,7 +11,7 @@
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     13 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: BDS
-*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
+*     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -22,6 +22,7 @@
 #include <rtEdge.h>
 #include <ByteStream.h>
 #include <Chain.h>
+#include <ChartDB.h>
 #include <Data.h>
 #include <Schema.h>
 #endif // DOXYGEN_OMIT
@@ -155,6 +156,7 @@ private:
 	bool                          _bBinary;
 	rtEdgeData                   ^_qry;
 	rtEdgeField                  ^_fldGet;
+	::MDDResult                  *_qryAll;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -558,6 +560,23 @@ public:
 	 * \return Current values in rtEdgeData
 	 */  
 	rtEdgeData ^QueryCache( String ^svc, String ^tkr );
+
+
+	////////////////////////////////////
+	// Database Directory Query
+	////////////////////////////////////
+
+	/**
+	 * \brief Query ChartDB for complete list of tickers
+	 *
+	 * \return Complete list of tickers in MDDResult object
+	 */
+	MDDResult ^Query();
+
+	/**
+	 * \brief Release resources associated with last call to Query().
+	 */
+	void FreeResult();
 
 
 	/////////////////////////////////

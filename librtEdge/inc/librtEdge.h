@@ -19,7 +19,7 @@
 *     21 JAN 2018 jcs  Build 39: CockpitAttr._cxtLVC
 *      6 MAR 2018 jcs  Build 40: OS_StartThread / OS_StopThread()
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
-*     28 JUL 2020 jcs  Build 44: ioctl_normalTapeDir
+*      7 SEP 2020 jcs  Build 44: ioctl_normalTapeDir; ioctl_xxxThreadName
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -288,6 +288,19 @@ typedef enum {
     */
    ioctl_getThreadProcessor = 20,
    /**
+    * \brief Ties this thread / channel to specific CPU core
+    *
+    * \param (void *)val - Pointer to integer containing CPU core to tie to.
+    * Default is 0 - Don't tie to any CPU.
+    */
+   ioctl_setThreadName      = 21,
+   /**
+    * \brief Gets the CPU core we tied to via ioctl_setThreadProcessor
+    *
+    * \param (void *)val - Pointer to integer to receive CPU we are tied to.
+    */
+   ioctl_getThreadName      = 22,
+   /**
     * \brief Loads pre-built data payload to be published via next call
     * to rtEdge_Publish().
     *
@@ -306,13 +319,13 @@ typedef enum {
     *
     * \param (void *)val - Pointer to pre-build payload in rtPreBuiltBUF
     */
-   ioctl_setPubDataPayload  = 21,
+   ioctl_setPubDataPayload  = 23,
    /**
     * \brief Gets view on current contents of input buffer for debugging.
     *
     * \param (void *)val - Pointer to rtBUF to view input buffer
     */
-   ioctl_getInputBuffer     = 22,
+   ioctl_getInputBuffer     = 24,
    /**
     * \brief Retrieves bool describing if channel is snapshot (true) or 
     * streaming (false)
@@ -326,7 +339,7 @@ typedef enum {
     *
     * \param (void *)val - Pointer to bool; true if snap; false if streaming
     */
-   ioctl_isSnapChan         = 23,
+   ioctl_isSnapChan         = 25,
    /**
     * \brief Allow / Disallow strict interpretation of publisher message 
     * type in rtEdge_Publish():
@@ -341,7 +354,7 @@ typedef enum {
     * \param (void *)val - 1 to use user-supplied message type; 0 to have 
     * library determine edg_image or edg_update.  Default is 0.
     */
-   ioctl_setUserPubMsgTy    = 24,
+   ioctl_setUserPubMsgTy    = 26,
    /**
     * \brief Allow / Disallow the library timer to call out to your
     * application every second or so via the following callbacks:
@@ -370,7 +383,7 @@ typedef enum {
     * \see rtEdgePubAttr::_openCbk
     * \param (void *)val - 1 to fire idle timer; 0 to not fire.  Default is 0.
     */
-   ioctl_setIdleTimer       = 25,
+   ioctl_setIdleTimer       = 27,
    /**
     * \brief Defines the publication channel authentication string required 
     * from rtEdgeCache3.
@@ -383,7 +396,7 @@ typedef enum {
     *
     * \param (void *)val - String = Authentication token
     */
-   ioctl_setPubAuthToken    = 26,
+   ioctl_setPubAuthToken    = 28,
    /**
     * \brief Retrieves the authentication token that was sent by the 
     * rtEdgeCache3 configured as a controlled device to this publication 
@@ -395,7 +408,7 @@ typedef enum {
     *
     * \param (void *)val - String = Authentication string
     */
-   ioctl_getPubAuthToken    = 27,
+   ioctl_getPubAuthToken    = 29,
    /**
     * \brief Enable / Disable supplying perms for this publication channel
     * set via rtEdge_PubInit().
@@ -404,14 +417,14 @@ typedef enum {
     *
     * \param (void *)val - 1 to enable; 0 to disable; Default = 0
     */
-   ioctl_enablePerm         = 28,
+   ioctl_enablePerm         = 30,
    /**
     * \brief Retrieves the thread ID of the librtEdge thread associated
     * with the rtEdge_Context
     *
     * \param (void *)val - Pointer to u_int64_t
     */
-   ioctl_getThreadId        = 29,
+   ioctl_getThreadId        = 31,
    /**
     * \brief Enable / Disable user-defined StreamID; If enabled, the 
     * user-defined argument passed to rtEdge_Subscribe() is interpreted
@@ -419,7 +432,7 @@ typedef enum {
     *
     * \param (void *)val - 1 to enable; 0 to disable; Default = 0
     */
-   ioctl_userDefStreamID    = 30,
+   ioctl_userDefStreamID    = 32,
    /**
     * \brief Sets the direction messages - tape (reverse) or chronological -
     * when pumping from tape.
@@ -430,7 +443,7 @@ typedef enum {
     *
     * \param (void *)val - 1 to pump in tape (reverse) order; 0 in chronological; Default is 1
     */
-   ioctl_tapeDirection     = 31
+   ioctl_tapeDirection     = 33
 } rtEdgeIoctl;
 
 /**
@@ -799,39 +812,56 @@ typedef struct {
    char     _bBinary;
 } LVCDataAll;
 
-/***********
- * ChartDB *
- ***********/
+
+/**********************
+ * Chart / Tape Query *
+ **********************/
 /**
- * \struct CDBRecDef
- * \brief ChartDB database record definition returned in a CDBQuery
- * struct from CDB_Query().
+ * \struct MDDRecDef
+ * \brief Database record definition returned in a MDDResult.
+ *
+ * MD-Direct has 2 components that return a record definitions which you
+ * may query via MDD_Query():
+ * + ChartDB 
+ * + Tape 
+ *
+ * Once completed, you must free the result via MDD_FreeResult()
  */
 typedef struct {
    /** \brief DB record Service name (e.g. BLOOMBERG or IDN_RDF) */
    const char *_pSvc;
    /** \brief DB record Ticker name (e.g., EUR CURNCY or CSCO.OQ */
    const char *_pTkr;
-   /** \brief Field ID being recorded (e.g., 6 = LAST; 22 = BID, etc. */
+   /** \brief Field ID being recorded if ChartDB (e.g., 6 = LAST; 22 = BID) */
    int         _fid;
-   /** \brief Recording interval in seconds */
+   /** \brief ChartDB : Recording interval in secs; Tape : NumMsg */
    int         _interval;
-} CDBRecDef;
+} MDDRecDef;
 
 /**
- * \struct CDBQuery
- * \brief ChartDB database directory returned from CDB_Query() and freed
- * via CDB_FreeQry().
+ * \struct MDDResult
+ * \brief Database directory returned from MDD_Query()
+ *
+ * MD-Direct has 2 components that return a record definitions which you
+ * may query via MDD_Query():
+ * + ChartDB
+ * + Tape
+ *
+ * Once completed, you must free the result via MDD_FreeResult()  
  */
 typedef struct {
    /** \brief List of DB records; List size = _nRec */
-   CDBRecDef *_recs;
+   MDDRecDef *_recs;
    /** \brief List size of _recs */
    int        _nRec;
    /** \brief Time required to snap this DB directory */
    double     _dSnap;
-} CDBQuery;
+} MDDResult;
 
+
+/***********
+ * ChartDB *
+ ***********/
 /**
  * \struct CDBData
  * \brief Current time-series data for a single ticker from ChartDB returned
@@ -1686,6 +1716,27 @@ void LVC_FreeAll( LVCDataAll *data );
 void LVC_Destroy( LVC_Context cxt );
 
 
+/**********************
+ * Chart / Tape Query *
+ **********************/
+/**
+ * \brief Query ChartDB or Tape for directory of all tickers in the DB.
+ * 
+ * When done with the result, free the MDDResult struct via MDD_FreeResult().
+ * 
+ * \param cxt - ChartDB context from CDB_Initialize()
+ * \return Directory in MDDResult struct
+ */
+MDDResult MDD_Query( CDB_Context cxt );
+   
+/**
+ * \brief Release resources associated with last call to CDB_Query()
+ *
+ * \param res - MDDResult struct returned from call to CDB_Query().
+ */
+void MDD_FreeResult( MDDResult *res );
+
+
 /*****************************
  * Snapshot Series - ChartDB * 
  ****************************/
@@ -1697,23 +1748,6 @@ void LVC_Destroy( LVC_Context cxt );
  * \return Initialized context for CDB_Query(), CDB_View(), etc.
  */
 CDB_Context CDB_Initialize( const char *pFile, const char *pAdmin );
-
-/**
- * \brief Query ChartDB for directory of all tickers in the DB.
- *
- * When done with the result, free the CDBQuery struct via CDB_FreeQry(). 
- *
- * \param cxt - ChartDB context from CDB_Initialize()
- * \return Directory in CDBQuery struct
- */
-CDBQuery CDB_Query( CDB_Context cxt );
-
-/**
- * \brief Release resources associated with last call to CDB_Query()
- *
- * \param qry - CDBQuery struct returned from call to CDB_Query().
- */
-void CDB_FreeQry( CDBQuery *qry );
 
 /**
  * \brief Retrieve time series from ChartDB database

@@ -13,7 +13,7 @@
 *     12 OCT 2017 jcs  Build 36: StartTape()
 *     10 DEC 2018 jcs  Build 41: _bStrMtx
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
-*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
+*     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -112,10 +112,12 @@ public:
 
 	   SetCache( false );
 	   ::memset( &_attr, 0, sizeof( _attr ) );
+	   ::memset( &_qryAll, 0, sizeof( _qryAll ) );
 	}
 
 	virtual ~SubChannel()
 	{
+	   FreeResult();
 	   Stop();
 	   ::mddFieldList_Free( _msgSchema );
 	}
@@ -417,6 +419,31 @@ public:
 	   _bTapeDir = bTapeDir;
 	   if ( _cxt )
 	      ::rtEdge_ioctl( _cxt, ioctl_tapeDirection, (void *)_bTapeDir );
+	}
+
+
+	////////////////////////////////////
+	// Database Directory Query
+	////////////////////////////////////
+	/**
+	 * \brief Query ChartDB for directory of all tickers
+	 *
+	 * \return ::MDDResult struct with list of all tickers
+	 */
+	::MDDResult Query()
+	{
+	   FreeResult();
+	   _qryAll = ::MDD_Query( _cxt );
+	   return _qryAll;
+	}
+
+	/**
+	 * \brief Release resources associated with the last call to Query().
+	 */
+	void FreeResult()
+	{
+	   ::MDD_FreeResult( &_qryAll );
+	   ::memset( &_qryAll, 0, sizeof( _qryAll ) );
 	}
 
 
@@ -938,6 +965,7 @@ private:
 	Mutex        _bStrMtx;
 	Chains       _chainDb;
 	SymLists     _symListDb;
+	::MDDResult  _qryAll;
 
 
 	////////////////////////////////////

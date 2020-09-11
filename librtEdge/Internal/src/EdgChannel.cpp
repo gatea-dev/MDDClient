@@ -17,7 +17,7 @@
 *     10 JUL 2018 jcs  Build 40: Meow
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
-*     28 JUL 2020 jcs  Build 44: _bTapeDir
+*     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -1512,6 +1512,27 @@ bool TapeChannel::HasTicker( const char *svc,
       return true;
    }
    return false;
+}
+
+MDDResult TapeChannel::Query()
+{
+   TapeRecDb &v = _tdb;
+   MDDResult  q;
+   MDDRecDef *rr;
+   size_t     i, nr;
+
+   ::memset( &q, 0, sizeof( q ) );
+   nr = v.size();
+   rr = new MDDRecDef[nr];
+   for ( i=0; i<nr; i++ ) {
+      rr[i]._pSvc     = v[i]->_svc;
+      rr[i]._pTkr     = v[i]->_tkr;
+      rr[i]._fid      = 0;
+      rr[i]._interval = v[i]->_nMsg;
+   }
+   q._recs = rr;
+   q._nRec = (int)i;
+   return q;
 }
 
 

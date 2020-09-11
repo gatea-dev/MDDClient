@@ -12,7 +12,7 @@
 *     13 OCT 2017 jcs  Build 36: Tape
 *     10 DEC 2018 jcs  Build 41: VS2017
 *     29 APR 2020 jcs  Build 43: BDS 
-*     28 JUL 2020 jcs  Build 44: SetTapeDirection()
+*     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -155,7 +155,8 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
    _user( user ),
    _bBinary( false ),
    _qry( gcnew rtEdgeData() ),
-   _fldGet( gcnew rtEdgeField() )
+   _fldGet( gcnew rtEdgeField() ),
+   _qryAll( new ::MDDResult() )
 {
   _chan = _sub;
 }
@@ -168,7 +169,8 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
    _user( user ),
    _bBinary( bBinary ),
    _qry( gcnew rtEdgeData() ),
-   _fldGet( gcnew rtEdgeField() )
+   _fldGet( gcnew rtEdgeField() ),
+   _qryAll( new ::MDDResult() )
 {
   _chan = _sub;
 }
@@ -176,6 +178,7 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
 rtEdgeSubscriber::~rtEdgeSubscriber()
 {
    Stop();
+   delete _qryAll;
    delete _sub;
    _sub    = (librtEdgePRIVATE::SubChannel *)0;
    _hosts  = nullptr;
@@ -432,6 +435,21 @@ rtEdgeData ^rtEdgeSubscriber::QueryCache( String ^svc, String ^tkr )
    if ( (msg=_sub->QueryCache( pSvc, pTkr )) )
       _qry->Set( *msg );
    return _qry;
+}
+
+
+////////////////////////////////////
+// Database Directory Query
+////////////////////////////////////
+MDDResult ^rtEdgeSubscriber::Query()
+{
+   *_qryAll = _sub->Query();
+   return gcnew MDDResult( *_qryAll );
+}
+
+void rtEdgeSubscriber::FreeResult()
+{
+   _sub->FreeResult();
 }
 
 

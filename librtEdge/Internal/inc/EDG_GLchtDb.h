@@ -7,8 +7,9 @@
 *     20 OCT 2010 jcs  Created (OVERWRITE from REAL ChartDB!!!).
 *     12 NOV 2014 jcs  Build 28: RTEDGE_PRIVATE
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
+*     10 SEP 2020 jcs  Build 44: MDDResult
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_CHARTDB_DB_H
 #define __EDGLIB_CHARTDB_DB_H
@@ -54,7 +55,8 @@ public:
    CDBint _nUpd;        // Number of Updates
    CDBint _tDead;       // Time of Last Drop; _bAlive == ( _tDead < _tUpd )
 //   float  _data[_nTck];
-};
+
+}; // class GLchtDbHdr
 
 
 /////////////////////////////////////////
@@ -79,7 +81,7 @@ public:
 
 	GLchtDbHdr &db();
 	RecMap     &recs();
-	CDBQuery    Query();
+	MDDResult   Query();
 	CDBData     GetItem( const char *, const char *, int );
 	void        AddTicker( const char *, const char *, int );
 	void        DelTicker( const char *, const char *, int );
@@ -88,7 +90,8 @@ public:
 private:
 	void   Load();
 	string MapKey( const char *, const char *, int );
-};
+
+}; // class GLchtDb
 
 } // namespace RTEDGE_PRIVATE
 

@@ -11,7 +11,7 @@
 *     13 JAN 2019 jcs  Build 41: -bytestream; -csv; -csvF
 *     20 FEB 2019 jcs  Build 42: -renko
 *     30 APR 2019 jcs  Build 43: -bds
-*     28 JUL 2020 jcs  Build 44: -tapeDir
+*     10 SEP 2020 jcs  Build 44: -tapeDir -query
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -391,9 +391,11 @@ int main( int argc, char **argv )
    FILE       *fp;
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *r0, *r1, *r2;
    char       *pa, *cp, *rp, sTkr[K];
-   bool        bCfg, aOK, bBin, bStr, bTape;
+   bool        bCfg, aOK, bBin, bStr, bTape, bQry;
    string      s;
    int         i, nt, tRun;
+   ::MDDResult res; 
+   ::MDDRecDef rd;
 
    /////////////////////
    // Quickie checks
@@ -414,6 +416,7 @@ int main( int argc, char **argv )
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    bStr  = false;
    bTape = true;
+   bQry  = false;
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -h  <Source : host:port or TapeFile> ] \\ \n";
@@ -430,6 +433,7 @@ int main( int argc, char **argv )
       s += "       [ -renko <FID,BoxSize[,Mult]>\n";
       s += "       [ -bds true ] \\ \n";
       s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
+      s += "       [ -query <true to dump directory, if available> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -446,6 +450,7 @@ int main( int argc, char **argv )
       printf( "      -renko   : <empty>\n" );
       printf( "      -bds     : %s\n", ch._bds ? "YES" : "NO" );
       printf( "      -tapeDir : %s\n", bTape   ? "YES" : "NO" );
+      printf( "      -query   : %s\n", bQry    ? "YES" : "NO" );
       return 0;
    }
 
@@ -504,6 +509,10 @@ int main( int argc, char **argv )
          pa    = argv[++i];
          bTape = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
       }
+      else if ( !::strcmp( argv[i], "-query" ) ) {
+         pa   = argv[++i];
+         bQry = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
+      }
    }
    printf( "%s\n", ch.Version() );
    ch.SetBinary( bStr || bBin );
@@ -512,6 +521,18 @@ int main( int argc, char **argv )
    printf( "%s\n", pc ? pc : "" );
    if ( !ch.IsValid() )
       return 0;
+
+   // Tape Query??
+
+   if ( bQry ) {
+      printf( "Service,Ticker,NumMsg,\n" );
+      res = ch.Query();
+      for ( i=0; i<res._nRec; i++ ) {
+         rd = res._recs[i];
+         printf( "%s,%s,%d\n", rd._pSvc, rd._pTkr, rd._interval );
+      }
+      ch.FreeResult();
+   }
 
    // Open Items; Run until user kills us
 

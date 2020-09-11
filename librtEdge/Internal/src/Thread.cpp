@@ -10,8 +10,9 @@
 *      2 JUL 2015 jcs  Build 31: SetThreadProcessor(); Socket._log
 *     15 APR 2016 jcs  Build 32: EDG_Internal.h; tid()
 *      6 MAR 2018 jcs  Build 40: _fcn / _arg
+*      7 SEP 2020 jcs  Build 44: SetName()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -133,6 +134,41 @@ int Thread::GetThreadProcessor()
       rtn = CPU_ISSET( i, &set ) ? i : 0;
 #endif // WIN32
    return rtn;
+}
+
+#define TASK_COMM_LEN 16
+#if !defined(WIN32)
+#include <sys/prctl.h>
+#endif // !defined(WIN32)
+
+int Thread::SetName( const char *name )
+{
+   int rc;
+
+   // Pre-condition : This thread
+
+   rc = 0;
+   if ( _tid != CurrentThreadID() )
+      return EINVAL;
+#if !defined(WIN32)
+   char sname[K];
+
+   // Max Name len = 16 bytes; Truncate if required
+
+   string::assign( name );
+   strcpy( sname, name );
+   sname[TASK_COMM_LEN] = '\0';
+
+   // Set and forget
+
+   rc = ::prctl( PR_SET_NAME, sname ) ? errno : 0;
+#endif // !defined(WIN32)
+   return rc;
+}
+
+const char *Thread::GetName()
+{
+   return data();
 }
 
 

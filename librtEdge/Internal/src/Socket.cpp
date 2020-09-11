@@ -22,6 +22,7 @@
 *     26 MAY 2017 jcs  Build 34: WireMold64
 *      6 DEC 2018 jcs  Build 41: VS2017
 *     12 FEB 2020 jcs  Build 42: _tHbeat
+*      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -545,6 +546,13 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
          thr().SetThreadProcessor( *p32 );
       case ioctl_getThreadProcessor:
          *p32 = thr().GetThreadProcessor();
+         return true;
+      case ioctl_setThreadName:
+         if ( pArg )
+            thr().SetName( pArg );
+      case ioctl_getThreadName:
+         if ( pArg )
+            pArg = (char *)thr().GetName();
          return true;
       case ioctl_getInputBuffer:
          b  = (rtBUF *)arg;

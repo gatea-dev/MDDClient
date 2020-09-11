@@ -12,7 +12,7 @@
 *     11 JAN 2018 jcs  Build 39: Leak : _FreeHeap()
 *     10 DEC 2018 jcs  Build 41: VS2017
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
-*     11 AUG 2020 jcs  Build 44: _MsgTime
+*      3 SEP 2020 jcs  Build 44: _MsgTime; _StreamID
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -193,6 +193,12 @@ public:
 	      mike   = ( r64  - tv_sec ) * 1000000.0;
 	      return rtEdge::FromUnixTime( tv_sec, (long)mike );
 	   }
+	}
+
+	/** \brief Returns unique Stream ID */
+	property int _StreamID
+	{
+	   int get() { return _msg->StreamID(); }
 	}
 
 	/** \brief Returns name of service supplying this update */

@@ -7,8 +7,9 @@
 *     20 OCT 2010 jcs  Created (OVERWRITE from REAL ChartDB!!!).
 *     12 NOV 2014 jcs  Build 28: -Wall
 *     20 MAR 2016 jcs  Build 32: Linux compatibility in libmddWire
+*     10 SEP 2020 jcs  Build 44: MDDResult
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -70,13 +71,13 @@ RecMap &GLchtDb::recs()
    return _recs;
 }
 
-CDBQuery GLchtDb::Query()
+MDDResult GLchtDb::Query()
 {
    Locker           lck( _mtx );
    RecMap          &v = recs();
    RecMap::iterator it;
-   CDBQuery         q;
-   CDBRecDef       *rr, rd;
+   MDDResult        q;
+   MDDRecDef       *rr, rd;
    GLchtDbItem     *rec;
    char            *bp, *rp;
    int              i, nr, off;
@@ -84,7 +85,7 @@ CDBQuery GLchtDb::Query()
    ::memset( &q, 0, sizeof( q ) );
    bp = data();
    nr = v.size();
-   rr = new CDBRecDef[nr];
+   rr = new MDDRecDef[nr];
    for ( i=0,it=v.begin(); it!=v.end(); i++,it++ ) {
       off = (*it).second;
       if ( !off )

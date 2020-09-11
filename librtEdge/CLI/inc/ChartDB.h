@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *     13 NOV 2014 jcs  Created.
 *     13 OCT 2015 jcs  Build 32: CDBTable / ViewTable()
+*     10 SEP 2020 jcs  Build 44: MDDResult
 *
-*  (c) 1994-2014 Gatea, Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -411,28 +412,29 @@ namespace librtEdge
 
 	////////////////////////////////////////////////
 	//
-	//       c l a s s   C D B R e c R e f
+	//       c l a s s   M D D R e c R e f
 	//
 	////////////////////////////////////////////////
 
 	/**
-	 * \class CDBRecRef
+	 * \class MDDRecDef
 	 * \brief Definition of a single record in the ChartDB database
 	 */
-	public ref class CDBRecRef
+	public ref class MDDRecDef
 	{
 	private:
-		::CDBRecDef *_rec;
-		String      ^_svc;
-		String      ^_tkr;
+		String ^_svc;
+		String ^_tkr;
+		int     _Fid;
+		int     _Interval;
 
 		/////////////////////////////////
 		// Constructor / Destructor
 		/////////////////////////////////
 		/** \brief Constructor */
 	public:
-		CDBRecRef( ::CDBRecDef );
-		~CDBRecRef();
+		MDDRecDef( ::MDDRecDef );
+		~MDDRecDef();
 
 
 		/////////////////////////////////
@@ -442,53 +444,45 @@ namespace librtEdge
 		/** \brief Returns name of service supplying this update */
 		property String ^_pSvc
 		{
-			String ^get() {
-				if ( _svc == nullptr )
-					_svc = gcnew String( _rec->_pSvc );
-				return _svc;
-			}
+			String ^get() { return _svc; }
 		}
 
 		/** \brief Returns ticker name of this update */
 		property String ^_pTkr
 		{
-			String ^get() {
-				if ( _tkr == nullptr )
-					 _tkr = gcnew String( _rec->_pTkr );
-				return _tkr;
-			}
+			String ^get() { return _tkr; }
 		}
 
 		/** \brief Returns time-series field ID */
-		property u_int _fid
+		property int _fid
 		{
-			u_int get() { return (u_int)_rec->_fid; } 
+			int get() { return _Fid; }
 		}
 
 		/** \brief Returns time-series interval */
-		property u_int _interval
+		property int _interval
 		{
-			u_int get() { return (u_int)_rec->_interval; } 
+			int get() { return _Interval; }
 		}
 
-	};  // class CDBRecRef
+	};  // class MDDRecDef
 
 
 	////////////////////////////////////////////////
 	//
-	//        c l a s s   C D B Q u e r y
+	//        c l a s s   M D D R e s u l t
 	//
 	////////////////////////////////////////////////
 
 	/**
-	 * \class CDBQuery
+	 * \class MDDResult
 	 * \brief Complete list of tickers in the ChartDB time-series DB
 	 */
-	public ref class CDBQuery
+	public ref class MDDResult
 	{
 	private: 
-		::CDBQuery         &_qry;
-		array<CDBRecRef ^> ^_rdb;
+		::MDDResult         &_qry;
+		array<MDDRecDef ^> ^_rdb;
 
 		/////////////////////////////////
 		// Constructor / Destructor
@@ -496,8 +490,8 @@ namespace librtEdge
 
 		/** \brief Constructor */
 	public:
-		CDBQuery( ::CDBQuery & );
-		~CDBQuery();
+		MDDResult( ::MDDResult & );
+		~MDDResult();
 
 
 		/////////////////////////////////
@@ -505,18 +499,18 @@ namespace librtEdge
 		/////////////////////////////////
 	public:
 		/** \brief Returns Field List from this update */
-		property array<CDBRecRef ^> ^_recs
+		property array<MDDRecDef ^> ^_recs
 		{
-			array<CDBRecRef ^> ^get() {
+			array<MDDRecDef ^> ^get() {
 				u_int i, nf;
 
 				// Create once per query
 
 				nf = _nRec;
 				if ( _rdb == nullptr ) {
-					_rdb = gcnew array<CDBRecRef ^>( nf );
+					_rdb = gcnew array<MDDRecDef ^>( nf );
 					for ( i=0; i<nf; i++ )
-						_rdb[i] = gcnew CDBRecRef( _qry._recs[i] );
+						_rdb[i] = gcnew MDDRecDef( _qry._recs[i] );
 				} 
 				return _rdb;
 			}
@@ -534,7 +528,7 @@ namespace librtEdge
 			double get() { return _qry._dSnap; } 
 		}
 
-	};  // class CDBQuery
+	};  // class MDDResult
 
 
 
@@ -551,7 +545,7 @@ namespace librtEdge
 	{
 	private: 
 		RTEDGE::ChartDB *_cdb;
-		::CDBQuery      *_qryAll;
+		::MDDResult      *_qryAll;
 		CDBData         ^_qry;
 		CDBTable        ^_tbl;
 
@@ -609,14 +603,14 @@ namespace librtEdge
 		/** 
 		 * \brief Query ChartDB for complete list of tickers
 		 *   
-		 * \return Complete list of tickers in CDBQuery object
+		 * \return Complete list of tickers in MDDResult object
 		 */  
-		CDBQuery ^Query();
+		MDDResult ^Query();
 
 		/**
 		 * \brief Release resources associated with last call to Query().
 		 */
-		void FreeQry();
+		void FreeResult();
 
 
 		////////////////////////////////////
@@ -663,6 +657,7 @@ namespace librtEdge
 
 		/** \brief Backwards compatibility */
 		void Destroy();
+
 	};  // class ChartDB
 
 } // namespace librtEdge

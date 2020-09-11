@@ -10,8 +10,9 @@
 *     24 APR 2015 jcs  Build 31: SetThreadProcessor()
 *     15 APR 2016 jcs  Build 32: EDG_Internal.h; tid()
 *      6 MAR 2018 jcs  Build 40: _fcn / _arg
+*      7 SEP 2020 jcs  Build 44: SetName()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_THREAD_H
 #define __EDGLIB_THREAD_H
@@ -28,7 +29,7 @@ class Socket;
 /////////////////////////////////////////
 // Thread
 /////////////////////////////////////////
-class Thread
+class Thread : public string
 {
 protected:
 	rtEdgeThreadFcn _fcn;
@@ -47,12 +48,14 @@ public:
 
 	// Access / Operations
 
-	Pump     &pump();
-	pthread_t tid();
-	bool      IsOurThread();
-	bool      IsRunning();
-	int       SetThreadProcessor( int );
-	int       GetThreadProcessor();
+	Pump       &pump();
+	pthread_t   tid();
+	bool        IsOurThread();
+	bool        IsRunning();
+	int         SetThreadProcessor( int );
+	int         GetThreadProcessor();
+	int         SetName( const char * );
+	const char *GetName();
 
 	// Thread Shit
 
