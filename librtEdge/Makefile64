@@ -17,8 +17,9 @@
 #     13 JUL 2017 jcs  Build 34: OS_xxx
 #     22 AUG 2017 jcs  Build 35: Cockpit
 #      6 JUN 2018 jcs  Build 35: Bridge
+#     14 MAY 2020 jcs  Build 44: git-ready
 #
-# (c) 1994-2018 Gatea Ltd.
+# (c) 1994-2020 Gatea Ltd.
 #######################################################
 
 ## Linux
@@ -82,7 +83,7 @@ all:	librtEdge$(BITS) Publish Subscribe etc move_objs
 #etc:	Correlate PubSub TradeLog CrossMkt
 etc:	
 
-librtEdge$(BITS):	clear $(OBJS)
+librtEdge$(BITS):	mkdir clear $(OBJS)
 	ar cr ./lib/$@.a $(OBJS)
 
 #############
@@ -183,6 +184,9 @@ topCPU: clear topCPU.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
+
+mkdir:
+	mkdir -p ./obj ./lib ./$(BIN_DIR)
 
 move_objs:
 	mv *.o ./obj
