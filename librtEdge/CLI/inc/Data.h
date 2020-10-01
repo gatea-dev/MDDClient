@@ -13,6 +13,7 @@
 *     10 DEC 2018 jcs  Build 41: VS2017
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
 *      3 SEP 2020 jcs  Build 44: _MsgTime; _StreamID
+*     30 SEP 2020 jcs  Build 45: _rawView / _rawLen
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -287,6 +288,27 @@ public:
 	      return _raw;
 	   }
 	}
+
+	/** \brief Returns view of raw message */
+	property IntPtr _rawView
+	{
+	   IntPtr get() {
+	      ::rtEdgeData &d = _msg->data();
+
+	      return IntPtr( (void *)d._rawData );
+	   }
+	}
+
+	/** \brief Returns length of raw message */
+	property int _rawLen
+	{
+	   int get() {
+	      ::rtEdgeData &d = _msg->data();
+
+	      return d._rawLen;
+	   }
+	}
+
 
 
 	/////////////////////////////////

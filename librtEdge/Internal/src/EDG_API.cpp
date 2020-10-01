@@ -4,24 +4,7 @@
 *
 *  REVISION HISTORY:
 *     21 JUL 2009 jcs  Created.
-*      2 SEP 2010 jcs  Build  6: LVC
-*     18 SEP 2010 jcs  Build  7: LVC admin channel
-*     22 SEP 2010 jcs  Build  8: Publication Channel
-*      1 OCT 2010 jcs  Build  8a:time_t, not long
-*     30 DEC 2010 jcs  Build  9: LVCData._dSnap; LVC_SetFilter()
-*     13 JAN 2011 jcs  Build 10: LVC_View() / LVC_ViewAll()
-*     12 JUL 2011 jcs  Build 14: rtEdge_XxxField()
-*     29 JUL 2011 jcs  Build 15: rtEdge_GetSchema()
-*     20 JAN 2012 jcs  Build 17: Log : strlen( pFile ); FieldByID()
-*     20 MAR 2012 jcs  Build 18: rtEdge_Conflate() / rtEdge_Dispatch()
-*     22 APR 2012 jcs  Build 19: rtFIELD, not FIELD
-*     20 OCT 2012 jcs  Build 20: ChartDB
-*     15 NOV 2012 jcs  Build 21: rtEdge_CPU()
-*     14 FEB 2013 jcs  Build 24: rtEdge_ioctl()
-*      7 MAY 2013 jcs  Build 25: rtBUF
-*     10 JUL 2013 jcs  Build 26: rtEdge_PubInitSchema(); int rtEdge_Publish()
-*     11 JUL 2013 jcs  Build 26a:rtEdge_SetMonStats()
-*     12 NOV 2014 jcs  Build 28: GLlvcLock; rtEdge_MapFile; RTEDGE_PRIVATE
+*     . . .
 *      8 JAN 2015 jcs  Build 29: int rtEdge_Unsubscribe(); srand()
 *     20 JUN 2015 jcs  Build 31: rtEdge_PubGetData()
 *      6 FEB 2016 jcs  Build 32: Linux compatibility in libmddWire; Binary LVC
@@ -34,6 +17,7 @@
 *      6 MAR 2018 jcs  Build 40: OS_XxxThread()
 *      6 APR 2020 jcs  Build 43: rtEdge_Destroy : thr().Stop()
 *      7 SEP 2020 jcs  Build 44: MDD_Query()
+*     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -553,6 +537,23 @@ int rtEdge_Read( rtEdge_Context cxt, double dWait, rtEdgeRead *rd )
 
    if ( (edg=_GetSub( (int)cxt )) )
       return edg->Read( dWait, *rd );
+   return 0;
+}
+
+int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data )
+{
+   EdgChannel *edg;
+   Logger     *lf;
+
+   // Logging; Find EdgChannel
+
+   if ( (lf=Socket::_log) )
+      lf->logT( 3, "rtEdge_Parse()\n" );
+
+   // Operation : Create, if not found
+
+   if ( (edg=_GetSub( (int)cxt )) )
+      return edg->ParseOnly( *data );
    return 0;
 }
 

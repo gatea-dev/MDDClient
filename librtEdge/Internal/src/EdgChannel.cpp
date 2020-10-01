@@ -18,6 +18,7 @@
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
+*     16 SEP 2020 jcs  Build 45: ParseOnly()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -31,6 +32,9 @@ using namespace RTEDGE_PRIVATE;
 //                 c l a s s      E d g C h a n n e l
 //
 /////////////////////////////////////////////////////////////////////////////
+
+static rtBuf64     _zBuf  = { (char *)0, 0 }; 
+static rtBUF       _zBUF  = { (char *)0, 0 };
 
 ////////////////////////////////////////////
 // Constructor / Destructor
@@ -319,6 +323,36 @@ rtEdgeData EdgChannel::GetCache( int StreamID )
 ////////////////////////////////////////////
 // Operations
 ////////////////////////////////////////////
+int EdgChannel::ParseOnly( rtEdgeData &d )
+{
+   /*
+    * Don't want libmddWire to Free /  Alloc mddFieldList : Check below
+    */
+   mddFieldList    fl  = { (mddField *)d._flds, 0, d._rawLen };
+   mddWire_Context cxt = _tape ? _tape->mdd() : _mdd;
+   mddMsgBuf       inp = { (char *)d._rawData, (u_int)d._rawLen, NULL };
+   mddWireMsg      w;
+   mddMsgHdr       h;
+   int             nh, nb;
+
+   // 1) Set it up ...
+
+   w._dt     = mddDt_FieldList;
+   w._flds   = fl;
+   w._svc    = _zBUF;
+   w._tkr    = _zBUF;
+   ::memset( &h, 0, sizeof( h ) );
+
+   // 2) ... then parse
+
+   nh  = ::mddSub_ParseHdr( cxt, inp, &h );
+   nb  = ::mddSub_ParseMsg( cxt, inp, &w );
+   fl  = w._flds;
+assert( fl._nFld <= d._nFld );
+   d._nFld = fl._nFld;
+   return d._nFld;
+}
+
 int EdgChannel::Subscribe( const char *pSvc, 
                            const char *pTkr, 
                            void       *arg )
@@ -1424,8 +1458,6 @@ void EdgRec::_Parse()
 
 static const char *t_ALL  = "*";
 static const char *t_SEP  = "|";
-static rtBuf64     _zBuf  = { (char *)0, 0 };
-static rtBUF       _zBUF  = { (char *)0, 0 };
 static int _thSz          = sizeof( GLrecTapeHdr );
 static int _rSz           = sizeof( GLrecTapeRec );
 static int _mSz8          = sizeof( GLrecTapeMsg );
@@ -1448,7 +1480,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _tdb(),
    _wl(),
    _dead(),
-   _cxt( ::mddSub_Initialize() ),
+   _mdd( ::mddSub_Initialize() ),
    _fl( ::mddFieldList_Alloc( K ) ),
    _err(),
    _nSub( 0 ),
@@ -1457,7 +1489,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _bRun( false ),
    _bInUse( false )
 {
-   ::mddWire_SetProtocol( _cxt, mddProto_Binary );
+   ::mddWire_SetProtocol( _mdd, mddProto_Binary );
 }
 
 TapeChannel::~TapeChannel()
@@ -1472,13 +1504,18 @@ TapeChannel::~TapeChannel()
    _dead.clear();
    Unload();
    ::mddFieldList_Free( _fl );
-   ::mddSub_Destroy( _cxt );
+   ::mddSub_Destroy( _mdd );
 }
 
 
 ////////////////////////////////////
 // Access
 ////////////////////////////////////
+mddWire_Context TapeChannel::mdd()
+{
+   return _mdd;
+}
+
 const char *TapeChannel::pTape()
 {
    return _attr._pSvrHosts;
@@ -1541,23 +1578,29 @@ MDDResult TapeChannel::Query()
 ////////////////////////////////////
 int TapeChannel::Subscribe( const char *svc, const char *tkr )
 {
-   string s;
-   time_t t0, t1;
-   char  *ps, *p0, *p1, *rp;
-   int    ix;
+   string         s;
+   struct timeval tmp;
+   double         d0, d1;
+   char          *ps, *p0, *p1, *rp;
+   int            ix;
 
    // Special Case : Run baby
 
    if ( !::strcmp( svc, pTape() ) ) {
       if ( ::strcmp( tkr, t_ALL ) ) {
-         s          = tkr;
-         ps         = (char *)s.data();
-         p0         = ::strtok_r( ps,   t_SEP, &rp );
-         p1         = ::strtok_r( NULL, t_SEP, &rp );
-         t0         = _str2tv( p0 );
-         t1         = p1 ? _str2tv( p1 ) : _t1.tv_sec;
-         _t0.tv_sec = gmin( t0, t1 );
-         _t1.tv_sec = gmax( t0, t1 );
+         s   = tkr;
+         ps  = (char *)s.data();
+         p0  = ::strtok_r( ps,   t_SEP, &rp );
+         p1  = ::strtok_r( NULL, t_SEP, &rp );
+         _t0 = _str2tv( p0 );
+         _t1 = p1 ? _str2tv( p1 ) : _t0;
+         d0  = Logger::Time2dbl( _t0 );
+         d1  = Logger::Time2dbl( _t1 );
+         if ( d1 < d0 ) {
+            tmp = _t0;
+            _t0 = _t1;
+            _t1 = tmp;
+         }
       }
       _bRun = true;
       return 0;
@@ -1604,17 +1647,25 @@ bool TapeChannel::Load()
    string        s;
    char         *bp, *cp;
    int           i, nr, rSz;
+   bool          bReMap;
    static char   _bDeepCopy = 0;
 
    // Pre-condition(s)
 
-   Unload();
-   _tape = ::rtEdge_MapFile( (char *)pTape(), _bDeepCopy );
+   bReMap = ( _tape._data != (char *)0 );
+   if ( bReMap )
+      _tape = ::rtEdge_RemapFile( _tape );
+   else {
+      Unload();
+      _tape = ::rtEdge_MapFile( (char *)pTape(), _bDeepCopy );
+   }
    if ( !_tape._dLen ) {
       _err  = "Can not map file ";
       _err += pTape();
       return false;
    }
+   if ( bReMap )
+      return true;
 
    /*
     * Header
@@ -1721,6 +1772,7 @@ int TapeChannel::PumpTicker( int ix )
    off     = rec->_loc;
    nMsg    = rec->_nMsg;
    _PumpDead();
+#ifdef FUCK_THIS
    if ( _t1.tv_sec != INFINITEs  ) {
       rp  = (char *)rec;
       rp += _rSz;
@@ -1730,6 +1782,7 @@ int TapeChannel::PumpTicker( int ix )
       idx = _tapeIdx( _t1 );
       off = tapeIdxDb()[idx];
    }
+#endif // FUCK_THIS
    for ( i=0,n=0; _bRun && off; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
@@ -1754,7 +1807,8 @@ int TapeChannel::PumpTicker( int ix )
                }
             }
          }
-         odb.push_back( off );
+         if ( _InTimeRange( *msg ) )
+            odb.push_back( off );
       }
       else
          n   += _PumpOneMsg( *msg, m, true );
@@ -1894,8 +1948,8 @@ bool TapeChannel::_ParseFieldList( mddBuf raw )
 
    // Parse : Header 1st, then full enchilada
 
-   nh  = ::mddSub_ParseHdr( _cxt, inp, &h );
-   nb  = ::mddSub_ParseMsg( _cxt, inp, &w );
+   nh  = ::mddSub_ParseHdr( _mdd, inp, &h );
+   nb  = ::mddSub_ParseMsg( _mdd, inp, &w );
    _fl = w._flds;
    nf  = _fl._nFld;
    for ( i=0; i<nf; i++ ) {
@@ -2088,21 +2142,39 @@ int TapeChannel::_RecSiz()
    return _rSz + ( _hdr->_numSecIdxR * _ixSz );
 }
 
-time_t TapeChannel::_str2tv( char *hms )
+struct timeval TapeChannel::_str2tv( char *hms )
 {
-   struct tm *tm, lt;
-   time_t     t;
-   char      *h, *m, *s, *rp;
+   struct tm     *tm, lt;
+   struct timeval tv;
+   time_t         t;
+   char          *h, *m, *s, *u, *z, *rp;
+   size_t         sz, mul;
 
    // File Create Time
 
-   t          = _hdr->_tCreate;
-   tm         = ::localtime_r( (time_t *)&t, &lt );
-   h          = ::strtok_r( hms,  ":", &rp );
-   m          = ::strtok_r( NULL, ":", &rp );
-   s          = ::strtok_r( NULL, ":", &rp );
+   z   = (char *)"0";
+   t   = _hdr->_tCreate;
+   tm  = ::localtime_r( (time_t *)&t, &lt );
+   h   = ::strtok_r( hms,  ":", &rp );
+   m   = h ? ::strtok_r( NULL, ":", &rp ) : z;
+   s   = m ? ::strtok_r( NULL, ":", &rp ) : z;
+   u   = s ? ::strtok_r( NULL, ".", &rp ) : z;
+   sz  = strlen( u );
+   mul = 1;
+   switch( sz ) {
+      case 0:
+      case 1:  mul = 100000; break;
+      case 2:  mul = 10000;  break;
+      case 3:  mul = 1000;   break;
+      case 4:  mul = 100;    break;
+      case 5:  mul = 10;     break;
+      default: mul = 1;      break;
+   }
    lt.tm_hour = h ? atoi( h ) : 0;
    lt.tm_min  = m ? atoi( m ) : 0;
    lt.tm_sec  = s ? atoi( s ) : 0;
-   return ::mktime( &lt );
+   tv.tv_sec  = ::mktime( &lt );
+   tv.tv_usec = u ? atoi( u ) : 0;
+   tv.tv_usec = WithinRange( 0, tv.tv_usec * mul, 999999 );
+   return tv;
 }

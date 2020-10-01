@@ -5,19 +5,7 @@
 *
 *  REVISION HISTORY:
 *     21 JUL 2009 jcs  Created.
-*     17 AUG 2009 jcs  Build  2: OnIdle()
-*     23 SEP 2010 jcs  Build  8: MF Stuff in Internal.h
-*     11 MAY 2011 jcs  Build 12: .NET : _con, _usr
-*     12 JUL 2011 jcs  Build 14: _pAttrDict / EdgFldDef
-*     29 JUL 2011 jcs  Build 15: GetSchema()
-*     20 JAN 2012 jcs  Build 17: SetFieldAttr()
-*     20 MAR 2012 jcs  Build 18: Conflate() / Dispatch()
-*     22 APR 2012 jcs  Build 19: rtFIELD, not FIELD
-*     14 FEB 2013 jcs  Build 24: Ioctl()
-*      7 MAY 2013 jcs  Build 25: _bNativeFld; Schema
-*     10 JUL 2013 jcs  Build 26: Schema for sub and pub
-*     11 JUL 2013 jcs  Build 26a:rtEdgeChanStats
-*     16 SEP 2013 jcs  Build 27: Polymorphic _Time2Native()
+*     . . .
 *     12 NOV 2014 jcs  Build 28: libmddWire; _cxt; -Wall
 *     13 DEC 2014 jcs  Build 29: int Unsubscribe()
 *      6 JUL 2015 jcs  Build 31: GLHashMap
@@ -29,6 +17,7 @@
 *     13 JAN 2019 jcs  Build 41: TapeChannel._schema
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
+*     16 SEP 2020 jcs  Build 45: ParseOnly()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -125,6 +114,7 @@ public:
 
 	// Operations
 
+	int  ParseOnly( rtEdgeData & );
 	int  Subscribe( const char *, const char *, void * );
 	int  Unsubscribe( const char *, const char * );
 	int  Unsubscribe( int );
@@ -280,7 +270,7 @@ private:
 	TapeRecDb       _tdb;
 	TapeWatchList   _wl;
 	DeadTickers     _dead;
-	mddWire_Context _cxt;
+	mddWire_Context _mdd;
 	mddFieldList    _fl;
 	string          _err;
 	int             _nSub;
@@ -296,11 +286,12 @@ public:
 
 	// Access
 public:
-	const char *pTape();
-	const char *err();
-	u_int64_t  *tapeIdxDb();
-	bool        HasTicker( const char *, const char *, int & );
-	MDDResult   Query();
+	mddWire_Context mdd();
+	const char     *pTape();
+	const char     *err();
+	u_int64_t      *tapeIdxDb();
+	bool            HasTicker( const char *, const char *, int & );
+	MDDResult       Query();
 
 	// Operations
 public:
@@ -314,21 +305,21 @@ public:
 
 	// Helpers
 private:
-	bool      _InTimeRange( GLrecTapeMsg & );
-	bool      _IsWatched( GLrecTapeMsg & );
-	int       _LoadSchema();
-	bool      _ParseFieldList( mddBuf );
-	int       _PumpDead();
-	void      _PumpStatus( GLrecTapeMsg &, const char *, rtEdgeType ty=edg_recovering );
-	int       _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
-	string    _Key( const char *, const char * );
-	int       _get32( u_char * );
-	u_int64_t _get64( u_char * );
-	int       _tapeIdx( struct timeval );
-	int       _SecIdx( struct timeval, GLrecTapeRec * );
-	u_int64_t _DbHdrSize( int, int, int );
-	int       _RecSiz();
-	time_t    _str2tv( char * );
+	bool           _InTimeRange( GLrecTapeMsg & );
+	bool           _IsWatched( GLrecTapeMsg & );
+	int            _LoadSchema();
+	bool           _ParseFieldList( mddBuf );
+	int            _PumpDead();
+	void           _PumpStatus( GLrecTapeMsg &, const char *, rtEdgeType ty=edg_recovering );
+	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
+	string         _Key( const char *, const char * );
+	int            _get32( u_char * );
+	u_int64_t      _get64( u_char * );
+	int            _tapeIdx( struct timeval );
+	int            _SecIdx( struct timeval, GLrecTapeRec * );
+	u_int64_t      _DbHdrSize( int, int, int );
+	int            _RecSiz();
+	struct timeval _str2tv( char * );
 
 };  // class TapeChannel
 

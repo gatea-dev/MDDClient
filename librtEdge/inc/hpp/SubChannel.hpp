@@ -14,6 +14,7 @@
 *     10 DEC 2018 jcs  Build 41: _bStrMtx
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
+*     17 SEP 2020 jcs  Build 45: Parse()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -95,6 +96,8 @@ public:
 	   _bTapeDir( false ),
 	   _msg( (Message *)0 ),
 	   _msgQ( (Message *)0 ),
+	   _msgP( (Message *)0 ),
+	   _flParse( ::mddFieldList_Alloc( K ) ),
 	   _msgSchema( ::mddFieldList_Alloc( K ) ),
 	   _bStrDb(),
 	   _bStrMtx(),
@@ -113,12 +116,14 @@ public:
 	   SetCache( false );
 	   ::memset( &_attr, 0, sizeof( _attr ) );
 	   ::memset( &_qryAll, 0, sizeof( _qryAll ) );
+	   ::memset( &_dParse, 0, sizeof( _dParse ) );
 	}
 
 	virtual ~SubChannel()
 	{
 	   FreeResult();
 	   Stop();
+	   ::mddFieldList_Free( _flParse );
 	   ::mddFieldList_Free( _msgSchema );
 	}
 
@@ -467,8 +472,11 @@ public:
 	      delete _msg;
 	   if ( _msgQ )
 	      delete _msgQ;
+	   if ( _msgP )
+	      delete _msgP;
 	   _msg  = (Message *)0;
 	   _msgQ = (Message *)0;
+	   _msgP = (Message *)0;
 	}
 
 
@@ -745,6 +753,57 @@ public:
 
 
 	////////////////////////////////////
+	// Parse Only
+	////////////////////////////////////
+public:
+	/**
+	 * \brief Parse a raw message : NOT THREAD SAFE
+	 *
+	 * You normally call Parse() on Tape channels where you have stored
+	 * the raw buffer from your callback.
+	 *
+	 * \param data - Raw data to parse
+	 * \return Message containing parsed results
+	 */
+	Message *Parse( const char *data, int dLen )
+	{
+	   rtEdgeData &d = _dParse;
+
+	   // Pre-condition
+
+	   if ( !IsValid() )
+	      return (Message *)0;
+	   
+	   // 1 field per byte is conservative
+
+	   ::memset( &d, 0, sizeof( d ) );
+	   if ( _flParse._nAlloc < dLen ) {
+	      ::mddFieldList_Free( _flParse );
+	      _flParse = ::mddFieldList_Alloc( dLen );
+	   }
+
+	   // Set up struct
+
+	   d._flds    = (rtFIELD *)_flParse._flds;
+	   d._nFld    = _flParse._nAlloc;
+	   d._rawData = data;
+	   d._rawLen  = dLen;
+
+	   // Parse and return
+
+	   if ( ::rtEdge_Parse( _cxt, &d ) ) {
+	      if ( !_msgP ) {
+	         _msgP = new Message( _cxt );
+	         _msgP->SetParseOnly( true );
+	      }
+	      _msgP->Set( &d, &_msgSchema );
+	      return _msgP;
+	   }
+	   return (Message *)0;
+	}
+
+
+	////////////////////////////////////
 	// Asynchronous Callbacks
 	////////////////////////////////////
 protected:
@@ -958,8 +1017,11 @@ private:
 	bool         _bUsrStreamID;
 	bool         _bTapeDir;
 	Message     *_msg;
-	Message     *_msgQ;   // QueryCache()
+	Message     *_msgQ;     // QueryCache()
+	Message     *_msgP;     // Parse()
+	mddFieldList _flParse;  // Parse()
 	rtEdgeData   _qry;
+	rtEdgeData   _dParse;
 	mddFieldList _msgSchema;
 	ByteStreams  _bStrDb;
 	Mutex        _bStrMtx;

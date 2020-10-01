@@ -13,6 +13,7 @@
 *     10 DEC 2018 jcs  Build 41: VS2017
 *     29 APR 2020 jcs  Build 43: BDS 
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
+*     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -156,7 +157,8 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
    _bBinary( false ),
    _qry( gcnew rtEdgeData() ),
    _fldGet( gcnew rtEdgeField() ),
-   _qryAll( new ::MDDResult() )
+   _qryAll( new ::MDDResult() ),
+   _parse( gcnew rtEdgeData() )
 {
   _chan = _sub;
 }
@@ -170,7 +172,8 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
    _bBinary( bBinary ),
    _qry( gcnew rtEdgeData() ),
    _fldGet( gcnew rtEdgeField() ),
-   _qryAll( new ::MDDResult() )
+   _qryAll( new ::MDDResult() ),
+   _parse( gcnew rtEdgeData() )
 {
   _chan = _sub;
 }
@@ -185,6 +188,7 @@ rtEdgeSubscriber::~rtEdgeSubscriber()
    _user   = nullptr;
    _qry    = nullptr;
    _fldGet = nullptr;
+   _parse  = nullptr;
 }
 
 
@@ -452,5 +456,33 @@ void rtEdgeSubscriber::FreeResult()
    _sub->FreeResult();
 }
 
+
+////////////////////////////////////
+// Parse Only
+////////////////////////////////////
+rtEdgeData ^rtEdgeSubscriber::Parse( array<byte> ^data )
+{
+   RTEDGE::Message *msg;
+   ::rtBUF          b;
+
+   b = _memcpy( data );
+   _parse->Clear();
+   if ( (msg=_sub->Parse( b._data, b._dLen )) )
+      _parse->Set( *msg );
+   return _parse;
+}
+
+rtEdgeData ^rtEdgeSubscriber::ParseView( IntPtr vw, int dLen )
+{
+   RTEDGE::Message *msg;
+   ::rtBUF          b;
+
+   b._data = (char *)vw.ToPointer();
+   b._dLen = dLen;
+   _parse->Clear();
+   if ( (msg=_sub->Parse( b._data, b._dLen )) )
+      _parse->Set( *msg );
+   return _parse;
+}
 
 } // namespace librtEdge

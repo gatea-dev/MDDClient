@@ -22,6 +22,21 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
+Build 45 20-09-30
+-----------------
+1) Parse only:
+   - rtEdge_Parse()
+   - SubChannel.Parse()
+   - Message.SetParseOnly()
+
+2) Time Slice:
+   - TapeChannel._str2tv() in mikes
+
+3) CLI :
+   - rtEdgeData._rawView / _rawLen 
+
+
+
 Build 44 20-09-11
 -----------------
 1) ioctl_tapeDirection

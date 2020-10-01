@@ -12,6 +12,7 @@
 *     13 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: BDS
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
+*     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -157,6 +158,7 @@ private:
 	rtEdgeData                   ^_qry;
 	rtEdgeField                  ^_fldGet;
 	::MDDResult                  *_qryAll;
+	rtEdgeData                   ^_parse;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -577,6 +579,34 @@ public:
 	 * \brief Release resources associated with last call to Query().
 	 */
 	void FreeResult();
+
+
+	////////////////////////////////////
+	// Parse Only
+	////////////////////////////////////
+public:
+	/**
+	 * \brief Parse a raw message
+	 *
+	 * You normally call Parse() on Tape channels where you have stored
+	 * the raw buffer from your callback.
+	 *
+	 * \param data - Raw data to parse
+	 * \return rtEdgeData containing parsed results
+	 */
+	rtEdgeData ^Parse( array<byte> ^data );
+
+	/**
+	 * \brief Parse a "view" of the raw message
+	 *
+	 * You normally call ParseView() on Tape channels where you have stored
+	 * the raw buffer from your callback.
+	 *
+	 * \param vw - Pointer to raw message on Tape
+	 * \param len - Length of the vw
+	 * \return rtEdgeData containing parsed results
+	 */
+	rtEdgeData ^ParseView( IntPtr vw, int len );
 
 
 	/////////////////////////////////

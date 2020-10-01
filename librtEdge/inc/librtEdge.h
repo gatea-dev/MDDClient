@@ -20,6 +20,7 @@
 *      6 MAR 2018 jcs  Build 40: OS_StartThread / OS_StopThread()
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *      7 SEP 2020 jcs  Build 44: ioctl_normalTapeDir; ioctl_xxxThreadName
+*     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -1486,6 +1487,40 @@ int rtEdge_Dispatch( rtEdge_Context cxt, int maxUpd, double dWait );
  * \return Non-zero if update read; 0 if not
  */
 int rtEdge_Read( rtEdge_Context cxt, double dWait, rtEdgeRead *data );
+
+
+/* Subscription - Parse Only */
+
+/**
+ * \brief Parse a raw message
+ *
+ * You normally call rtEdge_Parse() on Tape channels where you have stored 
+ * the raw buffer from your callback.  The data format is implied by the 
+ * rtEdge_Context you pass in as 1st argument.
+ *
+ * You are responsible for passing in an rtEdgeData struct as follows:
+ * Field | Value
+ * --- | ---
+ * _flds | Pre-allocated rtFIELD array to accept parsed results
+ * _nFld | Max Number of fields available in _flds
+ * _rawData | Raw data buffer
+ * _rawLen | Raw data length
+ * Others | Zero
+ *
+ * Upon return, the rtEdgeData buffer is filled as follows:
+ * Field | Value
+ * --- | ---
+ * _flds | Parsed rtFIELD array
+ * _nFld | Number of parsed rtFIELD's in _flds
+ * _rawData | Unchanged
+ * _rawLen | Unchanged
+ * Others | Unchanged (zero) 
+ *
+ * \param cxt - Subscription Channel Context from rtEdge_Initialize()
+ * \param data - Data to parse; Parsed results
+ * \return rtEdgeData._nFld
+ */
+int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data );
 
 
 /****************

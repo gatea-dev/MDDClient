@@ -10,6 +10,7 @@
 *     12 OCT 2017 jcs  Build 36
 *      8 FEB 2020 jcs  Build 42: IntMap for _dataLVC
 *      3 SEP 2020 jcs  Build 44: IsRecovering(); StreamID()
+*     17 SEP 2020 jcs  Build 45: SetParseOnly
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -67,7 +68,8 @@ protected:
 	   _dataLVC( (LVCData *)0 ),
 	   _offsLVC(),
 	   _schema( (mddFieldList *)0 ),
-	   _dump()
+	   _dump(),
+	   _parseFids( (IntMap *)0 )
 	{
 	   rtFIELD _z;
 
@@ -75,7 +77,10 @@ protected:
 	   _fld.Set( *this, IsLVC(), _cxt, _z, rtFld_undef );
 	}
 
-	virtual ~Message() { ; }
+	virtual ~Message()
+	{
+	   _ClearFidMap();
+	}
 
 	/**
 	 * \brief Called by SubChannel to reuse this message
@@ -89,6 +94,7 @@ protected:
 	   _dataLVC = (LVCData *)0;
 	   _schema  = schema;
 	   _offsLVC.clear();
+	   _BuildFidMap();
 	   reset();
 	   return *this;
 	}
@@ -107,6 +113,18 @@ protected:
 	   _offsLVC.clear();
 	   reset();
 	   return *this;
+	}
+
+	/**
+	 * \brief Called by Tape-based SubChannel.Parse() 
+	 *
+	 * \param bParseOnly - true to set; false to disable 
+	 */ 
+	void SetParseOnly( bool bParseOnly )
+	{
+	   if ( _parseFids )
+	      delete _parseFids;
+	   _parseFids = bParseOnly ? new IntMap() : (IntMap *)0;
 	}
 
 
@@ -446,25 +464,6 @@ public:
 	   _dump = buf;
 	   return _dump.data();
 	}
-#ifdef OBSOLETE
-	const char *Dump()
-	{
-	   char        buf[K];
-	   const char *pd, *pm;
-	   std::string dt;
-
-	   pd = pDateTimeMs( dt, MsgTime() );
-	   pm = MsgType();
-	   sprintf( buf, "%s {%s} (%s,%s)\n", pd, pm, Service(), Ticker() ); 
-	   _dump = buf;
-	   for ( reset(); (*this)(); ) {
-	      _dump += field()->Dump( true );
-	      _dump += "\n";
-	   }
-	   _dump += "\n";
-	   return _dump.data();
-	}
-#endif // OBSOLETE
 
 
 	////////////////////////////////////
@@ -525,8 +524,22 @@ public:
 	   // Build _offsLVC once, then search
 
 	   bOK = false;
-	   if ( _data )
-	      bOK = ( _fld.Get( fid ).Fid() != 0 );
+	   if ( _data ) {
+	      if ( _parseFids ) {
+	         IntMap &idb = *_parseFids;
+
+	         bOK = ( (it=idb.find( fid )) != idb.end() );
+	         if ( bOK ) {
+	            off = (*it).second;
+	            fdb = _data->_flds;
+	            nf  = _data->_nFld;
+	            f   = fdb[off];
+	            _fld.Set( *this, false, _cxt, f, f._type );
+	         }
+	      }
+	      else
+	         bOK = ( _fld.Get( fid ).Fid() != 0 );
+	   }
 	   else if ( _dataLVC ) {
 	      /*
 	       * Once per message
@@ -552,6 +565,38 @@ public:
 	}
 
 
+	////////////////////////////////////
+	// Helpers
+	////////////////////////////////////
+private:
+	void _BuildFidMap()
+	{
+	   int i, fid;
+
+	   // Pre-condition
+
+	   if ( !_parseFids || !_data )
+	      return;
+
+	   // OK to continue
+
+	   IntMap     &idb = *_parseFids;
+	   rtEdgeData &d  = *_data;
+
+	   _ClearFidMap();
+	   for ( i=0; i<d._nFld; i++ ) {
+	      fid      = d._flds[i]._fid;
+	      idb[fid] = i;
+	   }
+	}
+
+	void _ClearFidMap()
+	{
+	   if ( _parseFids )
+	      _parseFids->clear();
+	}
+
+
 	////////////////////////
 	// private Members
 	////////////////////////
@@ -564,6 +609,7 @@ private:
 	IntMap         _offsLVC;
 	mddFieldList  *_schema;
 	std::string    _dump;
+	IntMap        *_parseFids;
 
 };  // class Message
 
