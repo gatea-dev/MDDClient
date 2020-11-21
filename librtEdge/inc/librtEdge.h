@@ -21,6 +21,7 @@
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *      7 SEP 2020 jcs  Build 44: ioctl_normalTapeDir; ioctl_xxxThreadName
 *     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
+*     22 OCT 2020 jcs  Build 46: rtEdge_PumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -1463,7 +1464,6 @@ rtEdgeData rtEdge_GetCacheByStreamID( rtEdge_Context cxt, int StreamID );
  */
 void rtEdge_Conflate( rtEdge_Context cxt, char enable );
 
-
 /**
  * \brief "Push" conflated updates into your application.
  *
@@ -1521,6 +1521,41 @@ int rtEdge_Read( rtEdge_Context cxt, double dWait, rtEdgeRead *data );
  * \return rtEdgeData._nFld
  */
 int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data );
+
+
+/* Subscription - Tape only */
+
+/**
+ * \brief Pump All Messages from Tape between either 2 offsets or 2 timestamps
+ *
+ * You receive asynchronous market data updates in the rtEdgeAttr::_dataCbk
+ * function you passed into rtEdge_Initialize() and are notified of completion
+ * when rtEdgeData._ty == edg_streamDone.
+ *
+ * \param cxt - Subscription Channel Context from rtEdge_Initialize()
+ * \param off0 - Beginning offset, or 0 for beginning of tape
+ * \param off1 - Ending offset, or <= 0 for end of tape
+ * \param tm0 - Beginning time, or NULL to pump from offsets
+ * \param tm1 - Ending time, or NULL to pump from offsets
+ * \return Unique Tape Pumping ID; Kill pump via rtEdge_StopPumpTape()
+ * \see rtEdge_StopPumpTape()
+ */
+int rtEdge_PumpTape( rtEdge_Context cxt, 
+                     u_int64_t      off0, 
+                     u_int64_t      off1,
+                     const char    *tm1,
+                     const char    *tm2 );
+
+/**
+ * \brief Stop pumping from tape
+ *
+ * \param cxt - Subscription Channel Context from rtEdge_Initialize()
+ * \param pumpID - Pump ID returned from rtEdge_PumpTape()
+ * \return 1 if stopped; 0 if invalid Pump ID
+ * \see rtEdge_PumpTape()
+ */
+int rtEdge_StopPumpTape( rtEdge_Context cxt, int pumpID );
+
 
 
 /****************

@@ -17,6 +17,7 @@
 *      9 FEB 2020 jcs  Build 42: Full namespace; Channel.SetHeartbeat()
 *     29 APR 2020 jcs  Build 43: _BDS_PFX
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
+*     21 NOV 2020 jcs  Build 46: IsStopping()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -522,7 +523,8 @@ protected:
 	   _cxtThr( (Thread_Context)0 ),
 	   _tHbeat( 60 ),
 	   _bIdleCbk( false ),
-	   _bCache( false )
+	   _bCache( false ),
+	   _bStopping( false )
 	{ ; }
 
 	/** \brief Destructor. */
@@ -555,6 +557,16 @@ public:
 	bool IsValid()
 	{
 	   return( _cxt != (rtEdge_Context)0 );
+	}
+
+	/**
+	 * \brief Return true if Stop() has been or is being called
+	 *
+	 * \return true if Stop() has been or is being called
+	 */
+	bool IsStopping()
+	{
+	   return _bStopping;
 	}
 
 	/**
@@ -905,6 +917,7 @@ public:
 	 */
 	virtual void Stop()
 	{
+	   _bStopping = true;
 	   StopThread();
 	   if ( _cxt ) {
 	      if ( _bPub )
@@ -954,6 +967,7 @@ protected:
 	int            _tHbeat;
 	bool           _bIdleCbk;
 	bool           _bCache;
+	bool           _bStopping;
 
 
 	////////////////////////////////////

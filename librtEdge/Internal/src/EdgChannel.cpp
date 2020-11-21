@@ -19,6 +19,7 @@
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
+*     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -50,6 +51,7 @@ EdgChannel::EdgChannel( rtEdgeAttr     attr,
    _recs(),
    _schema( (rtEdgeData *)0 ),
    _subscrID( 61202 ),
+   _pumpID( 3381 ),
    _recU( (EdgRec *)0 ),
    _bConflate( false ),
    _bSnapChan( false ),
@@ -466,6 +468,25 @@ void EdgChannel::Close( EdgRec &rec )
    Write( b._data, b._dLen );
    rec._bOpn   = false;
    st._nClose += 1;
+}
+
+int EdgChannel::PumpTape( u_int64_t   off0, 
+                          u_int64_t   off1, 
+                          const char *tm0, 
+                          const char *tm1 )
+{
+   Locker lck( _mtx );
+
+   // TODO ...
+
+   return _pumpID++;
+}
+
+int EdgChannel::StopPumpTape( int pumpID )
+{
+   // TODO ...
+
+   return 1;
 }
 
 
@@ -1750,13 +1771,12 @@ int TapeChannel::PumpTicker( int ix )
 {
    GLrecTapeRec *rec;
    GLrecTapeMsg *msg;
-   char         *bp, *cp, *rp, sts[K];
-   u_int64_t    *idb;
+   char         *bp, *cp, sts[K];
    mddBuf        m;
    Offsets       odb;
    u_int64_t     off, diff, nMsg;
    size_t        i, j, nr;
-   int           n, mSz, idx, pct;
+   int           n, mSz, pct;
    static int    _pct[] = { 10, 25, 50, 75 };
 
    // Pre-condition(s)
@@ -1772,17 +1792,6 @@ int TapeChannel::PumpTicker( int ix )
    off     = rec->_loc;
    nMsg    = rec->_nMsg;
    _PumpDead();
-#ifdef FUCK_THIS
-   if ( _t1.tv_sec != INFINITEs  ) {
-      rp  = (char *)rec;
-      rp += _rSz;
-      idb = (u_int64_t *)rp;
-      idx = _SecIdx( _t1, rec );
-      for ( off=idb[idx]; !off && idx; off=idb[--idx] );
-      idx = _tapeIdx( _t1 );
-      off = tapeIdxDb()[idx];
-   }
-#endif // FUCK_THIS
    for ( i=0,n=0; _bRun && off; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;

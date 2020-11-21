@@ -61,7 +61,7 @@
     <WarningLevel>4</WarningLevel>
     <DebugType>full</DebugType>
     <ErrorReport>prompt</ErrorReport>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>.\</OutputPath>
@@ -82,12 +82,12 @@
     <WarningLevel>4</WarningLevel>
     <DebugType>none</DebugType>
     <ErrorReport>prompt</ErrorReport>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="librtEdgeCLI32">
-      <Name>librtEdgeCLI32</Name>
-      <HintPath>..\..\lib\librtEdgeCLI32.dll</HintPath>
+    <Reference Include="librtEdgeCLI64">
+      <Name>librtEdgeCLI64</Name>
+      <HintPath>..\..\lib64\librtEdgeCLI64.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <Name>MSCorLib</Name>

@@ -18,6 +18,7 @@
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
+*     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -64,6 +65,7 @@ protected:
 	rtEdgeData    *_schema;
 	rtEdgeData     _zzz;
 	int            _subscrID;
+	int            _pumpID;
 	rtFIELD        _flds[MAX_FLD];
 	rtFIELD        _fldsU[MAX_FLD];
 	EdgRec        *_recU;
@@ -120,6 +122,8 @@ public:
 	int  Unsubscribe( int );
 	void Open( EdgRec & );
 	void Close( EdgRec & );
+	int  PumpTape( u_int64_t, u_int64_t, const char *, const char * ); 
+	int  StopPumpTape( int );
 
 	// Operations - Conflation
 
@@ -165,6 +169,7 @@ public:
 	static void _OnIdle( void * );
 
 }; // class EdgChannel
+
 
 /////////////////////////////////////////
 // rtEdgeCache Service

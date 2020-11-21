@@ -11,8 +11,9 @@
 *     12 JUN 2013 jcs  Build 18: GetAsString()
 *     10 FEB 2016 jcs  Build 32: Binary / Performance
 *     12 JAN 2018 jcs  Build 39: main_MEM()
+*     20 NOV 2020 jcs  Build 46: Beefed up : arg switches
 *
-*  (c) 1994-2018 Gatea, Ltd.
+*  (c) 1994-2020 Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.IO;
@@ -98,7 +99,7 @@ class LVCTest
 
 
    ////////////////////////////////
-   // main()
+   // Main Functions
    ////////////////////////////////
    public static int Main_ADMIN(String[] args) 
    {
@@ -115,131 +116,152 @@ class LVCTest
       return 0;
    }
  
-   public static int Main_DUMP(String[] args) 
+   public static void Dump( LVC lvc, String svc, String[] tkrs )
    {
-      try {
-         LVC        lvc;
-         LVCData    ld;
-         LVCDataAll la;
-         int        i, nf, argc;
-         double     dUs, d0, dd;
-         string     pLVC, pMs, ty, dmpTkr;
+      LVCData    ld;
+      LVCDataAll la;
+      int        i, nf, argc;
+      double     dUs, d0, dd;
+      string     pLVC, pMs, ty, dmpTkr;
 
-         // [ <file> [ <dumpTkr> ] ]
+      // LVC - All Tickers; Dump BID if found ...
 
-         argc   = args.Length;
-         pLVC   = "C:\\Gatea\\RealTime\\cache.lvc";
-         dmpTkr = "undefined";
-         for ( i=0; i<argc; i++ ) {
-            switch( i ) {
-               case 0: pLVC   = args[i]; break;
-               case 1: dmpTkr = args[i]; break;
-            }
-         }
-         Console.WriteLine( rtEdge.Version() );
-
-         // LVC - All Tickers; Dump BID if found ...
-
-         lvc = new LVC( pLVC );
-         la  = lvc.ViewAll();
-         ty  = la.IsBinary ? "BIN" : "MF";
-         dUs = la._dSnap * 1000.0;
-         pMs = dUs.ToString( "F1" );
-         Console.WriteLine( "{0}-SNAP {1} tkrs in {2}mS", ty, la._nTkr, pMs );
-         d0 = LVC.TimeNs();
-         nf = 0;
-         for ( i=0; i<la._nTkr; i++ ) {
-            ld  = la._tkrs[i];
-            if ( la.IsBinary )
-               nf += IterateBinFields( ld );
-            else
-               nf += IterateMFFields( ld );
-            if ( ld._pTkr == dmpTkr )
-               Dump( ld );
-         }
-         dd  = 1000.0 * ( LVC.TimeNs() - d0 );
-         pMs = dd.ToString( "F1" );
-         Console.WriteLine( "{0}-ITER {1} tkrs in {2}mS", ty, la._nTkr, pMs );
-         lvc.Destroy();
+      la  = lvc.ViewAll();
+      ty  = la.IsBinary ? "BIN" : "MF";
+      dUs = la._dSnap * 1000.0;
+      pMs = dUs.ToString( "F1" );
+      Console.WriteLine( "{0}-SNAP {1} tkrs in {2}mS", ty, la._nTkr, pMs );
+      d0 = LVC.TimeNs();
+      nf = 0;
+      for ( i=0; i<la._nTkr; i++ ) {
+         ld  = la._tkrs[i];
+         if ( la.IsBinary )
+            nf += IterateBinFields( ld );
+         else
+            nf += IterateMFFields( ld );
+         if ( ld._pTkr == dmpTkr )
+            Dump( ld );
       }
-      catch( Exception e ) {
-         Console.WriteLine( "Exception: " + e.Message );
-      }
-      return 0;
+      dd  = 1000.0 * ( LVC.TimeNs() - d0 );
+      pMs = dd.ToString( "F1" );
+      Console.WriteLine( "{0}-ITER {1} tkrs in {2}mS", ty, la._nTkr, pMs );
    }
  
-   public static int Main_MEM(String[] args) 
+   public static void Snap( LVC lvc, int nSnp )
    {
-      try {
-         LVC        lvc;
-         LVCDataAll la;
-         int        i, argc, nSnp;
-         uint       nt;
-         double     d0, dd;
-         string     pLVC, pd;
+      LVCDataAll la;
+      int        i, argc;
+      uint       nt;
+      double     d0, dd;
+      string     pLVC, pd;
 
-         // [ <file> [ <dumpTkr> ] ]
-
-         argc = args.Length;
-         pLVC = "C:\\Gatea\\RealTime\\cache.lvc";
-         nSnp = 1;
-         for ( i=0; i<argc; i++ ) {
-            switch( i ) {
-               case 0: pLVC   = args[i]; break;
-               case 1: nSnp = Convert.ToInt32( args[i] ); break;
-            }
-         }
-         Console.WriteLine( rtEdge.Version() );
-
-         // 2 ViewAll() tests
-
-         /*
-          * Test 1 : 1 LVC(); Multiple ViewAll()'s
-          */
-         Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
-         Console.WriteLine( "1st test : Hit <ENTER> to start ..." );
-         Console.ReadLine();
-         d0  = rtEdge.TimeNs();
-         lvc = new LVC( pLVC );
-         nt = 0;
-         for ( i=0; i<nSnp; i++ ) {
-            la = lvc.ViewAll();
-            nt = la._nTkr;
-         }
-         lvc.Destroy();
-         dd = rtEdge.TimeNs() - d0;
-         pd = dd.ToString( "F1" );
-         Console.WriteLine( "1st : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
-         /*
-          * Test 2 : new LVC() each ViewAll()
-          */
-         Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
-         Console.WriteLine( "2nd test : Hit <ENTER> to start ..." );
-         Console.ReadLine();
-         d0  = rtEdge.TimeNs();
-         for ( i=0; i<nSnp; i++ ) {
-            lvc = new LVC( pLVC );
-            la  = lvc.ViewAll();
-            nt  = la._nTkr;
-            lvc.Destroy();
-         }
-         dd = rtEdge.TimeNs() - d0;
-         pd = dd.ToString( "F1" );
-         Console.WriteLine( "2nd : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
-         Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
-         Console.WriteLine( "Hit <ENTER> to terminate ..." );
-         Console.ReadLine();
-         return 0;
+      /*
+       * Test 1 : 1 LVC(); Multiple ViewAll()'s
+       */
+      Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
+      Console.WriteLine( "1st test : Hit <ENTER> to start ..." );
+      Console.ReadLine();
+      d0 = rtEdge.TimeNs();
+      nt = 0;
+      for ( i=0; i<nSnp; i++ ) {
+         la = lvc.ViewAll();
+         nt = la._nTkr;
       }
-      catch( Exception e ) {
-         Console.WriteLine( "Exception: " + e.Message );
+      dd = rtEdge.TimeNs() - d0;
+      pd = dd.ToString( "F1" );
+      Console.WriteLine( "1st : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
+      /*
+       * Test 2 : new LVC() each ViewAll()
+       */
+      Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
+      Console.WriteLine( "2nd test : Hit <ENTER> to start ..." );
+      Console.ReadLine();
+      d0  = rtEdge.TimeNs();
+      for ( i=0; i<nSnp; i++ ) {
+         la  = lvc.ViewAll();
+         nt  = la._nTkr;
       }
-      return 0;
+      dd = rtEdge.TimeNs() - d0;
+      pd = dd.ToString( "F1" );
+      Console.WriteLine( "2nd : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
+      Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
    }
 
-   public static int Main(String[] args) 
+
+   ////////////////////////////////
+   // main()
+   ////////////////////////////////
+   public static int Main( String[] args ) 
    {
-      return Main_MEM( args );
+      LVC    lvc;
+      String db, ty, svc, tkr;
+
+      /////////////////////
+      // Quickie checks
+      /////////////////////
+      argc = args.Length;
+      if ( argc > 0 && ( args[0] == "--version" ) ) {
+         Console.WriteLine( rtEdge.Version() );
+         return 0;
+      }
+      db    = "./db/cache.lvc";
+      ty    =  "DUMP";
+      nSnp  = 0;
+      svc   = null;
+      tkr   = null;
+      if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
+         s  = "Usage: %s \\ \n";
+         s += "       [ -db  <LVC d/b file> ] \\ \n";
+         s += "       [ -ty  <Type : DUMP | SNAP | ... > ] \\ \n";
+         s += "       [ -s   <Service> ] \\ \n";
+         s += "       [ -t   <Ticker : CSV or Filename> ] \\ \n";
+         Console.WriteLine( s );
+         Console.Write( "   Defaults:\n" );
+         Console.Write( "      -db      : {0}\n", db );
+         Console.Write( "      -ty      : {0}\n", ty );
+         Console.Write( "      -s       : <empty>\n" );
+         Console.Write( "      -t       : <empty>\n" );
+         return 0;
+      }
+
+      /////////////////////
+      // cmd-line args
+      /////////////////////
+      tRun  = 0;
+      for ( i=0; i<argc; i++ ) {
+         aOK = ( i+1 < argc );
+         if ( !aOK )
+            break; // for-i
+         if ( args[i] == "-db" )
+            db = args[++i];
+         else if ( args[i] == "-ty" )
+            ty = args[++i];
+         else if ( args[i] == "-s" )
+            svc = args[++i];
+         else if ( args[i] == "-t" ) {
+            tkr = args[++i];
+            tkrs = ReadLines( tkr );
+            if ( tkrs == null )
+               tkrs = tkr.Split(',');
+         }
+      }
+      Console.WriteLine( rtEdge.Version() );
+      lvc = new LVC( db );
+      /*
+       * By Type
+       */
+      try {
+         if ( ( ty == "SNAP" ) && ( nSnp > 0 ) )
+            Snap( lvc, nSnp );
+         else
+            Dump( lvc );
+      } catch( Exception e ) {
+         Console.WriteLine( "Exception: " + e.Message );
+      }
+      Console.WriteLine( "Hit <ENTER> to terminate ..." );
+      Console.ReadLine();
+      lvc.Destroy();
+      Console.WriteLine( "Done!!" );
    }
 
 }

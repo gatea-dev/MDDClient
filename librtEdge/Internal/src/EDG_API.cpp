@@ -18,6 +18,7 @@
 *      6 APR 2020 jcs  Build 43: rtEdge_Destroy : thr().Stop()
 *      7 SEP 2020 jcs  Build 44: MDD_Query()
 *     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
+*     22 OCT 2020 jcs  Build 46: rtEdge_PumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -486,7 +487,7 @@ rtEdgeData rtEdge_GetCacheByStreamID( rtEdge_Context cxt, int StreamID )
 
 
 //////////////////////////////
-// Conflation - Subscribe
+// Subscribe : Conflation
 //////////////////////////////
 void rtEdge_Conflate( rtEdge_Context cxt, char conflate )
 {
@@ -540,6 +541,10 @@ int rtEdge_Read( rtEdge_Context cxt, double dWait, rtEdgeRead *rd )
    return 0;
 }
 
+
+//////////////////////////////
+// Subscribe : Parse Only
+//////////////////////////////
 int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data )
 {
    EdgChannel *edg;
@@ -554,6 +559,48 @@ int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data )
 
    if ( (edg=_GetSub( (int)cxt )) )
       return edg->ParseOnly( *data );
+   return 0;
+}
+
+
+//////////////////////////////
+// Subscribe : Tape
+//////////////////////////////
+int rtEdge_PumpTape( rtEdge_Context cxt, 
+                     u_int64_t      off0,
+                     u_int64_t      off1,
+                     const char    *tm1,
+                     const char    *tm2 )
+{
+   EdgChannel *edg;
+   Logger     *lf;
+
+   // Logging; Find EdgChannel
+
+   if ( (lf=Socket::_log) )
+      lf->logT( 3, "rtEdge_PumpTape()\n" );
+
+   // Operation : Create, if not found
+
+   if ( (edg=_GetSub( (int)cxt )) )
+      return edg->PumpTape( off0, off1, tm1, tm2 );
+   return 0;
+}
+
+int rtEdgeStop_PumpTape( rtEdge_Context cxt, int pumpID )
+{
+   EdgChannel *edg;
+   Logger     *lf;
+
+   // Logging; Find EdgChannel
+
+   if ( (lf=Socket::_log) )
+      lf->logT( 3, "rtEdge_StopPumpTape()\n" );
+
+   // Operation : Create, if not found
+
+   if ( (edg=_GetSub( (int)cxt )) )
+      return edg->StopPumpTape( pumpID );
    return 0;
 }
 

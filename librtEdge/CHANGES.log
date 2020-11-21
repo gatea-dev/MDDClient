@@ -22,6 +22,18 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
+Build 46 20-11-21
+-----------------
+1) Fusion /Tape :
+   - rtEdge_PumpTapeXxxx()
+   - Query All between 2 timestamps / or offset 
+   - Register callback every X msg 
+   - Fusion : Table Upload
+
+2) Pumping from tape in Python:
+   - Channel.IsStopping()
+
+
 Build 45 20-09-30
 -----------------
 1) Parse only:
