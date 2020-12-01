@@ -30,6 +30,11 @@ goto Done
       del /f /s /q Release64 lib64 bin64
       cd ..
    )
+   if exist py (
+      cd py
+      del /f /s /q Release64 lib64 bin64
+      cd ..
+   )
    cd ../
    EXIT /B 0
 :Done

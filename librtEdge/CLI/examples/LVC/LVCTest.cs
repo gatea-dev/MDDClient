@@ -16,6 +16,7 @@
 *  (c) 1994-2020 Gatea, Ltd.
 ******************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 using librtEdge;
 
@@ -24,11 +25,35 @@ class LVCTest
    ////////////////////////////////
    // Helpers
    ////////////////////////////////
+   static private string[] ReadLines( string pf )
+   {
+      TextReader fp;
+      string     s, ss;
+      string[]   rtn;
+
+      // Pre-condition
+
+      rtn = null;
+      if ( !File.Exists( pf ) )
+         return rtn;
+
+      // Open / Read
+
+      ss = "";
+      fp = File.OpenText( pf );
+      while( (s=fp.ReadLine()) != null ) {
+         ss += s; ss += "\n";
+      }
+      fp.Close();
+      rtn = ss.Split('\n');
+      return rtn;
+   }
+
    private static int IterateBinFields( LVCData ld )
    {
       rtEdgeField f;
 //      DateTime    dtTm;;
-      string      s;
+      String      s;
       double      r64;
       float       r32;
       int         i32;
@@ -56,104 +81,108 @@ class LVCTest
       return nf;
    }
 
-   private static int IterateMFFields( LVCData ld )
+   private static void DumpTkr( LVCData ld, int[] fids )
    {
-      rtEdgeField f;
-//      DateTime    dtTm;
-      string      s;
-      double      r64;
-      float       r32;
-      int         i32;
-      long        i64;
-      int         i, nf, fid;
+      rtEdgeField[] flds;
+      rtEdgeField   fld;
+      String        svc, tkr, val, csv;
+      int           i, nf;
 
-      nf = ld._flds.Length;
-      for ( i=0; i<nf; i++ ) {
-         f   = ld._flds[i];
-         fid = f.Fid();
-         s   = f.GetAsString( false );
-         switch( f.Type() ) {
-            case rtFldType.rtFld_string: break;
-            case rtFldType.rtFld_int:    Int32.TryParse( s, out i32 ); break;
-            case rtFldType.rtFld_double: Double.TryParse( s, out r64 ); break;
-            case rtFldType.rtFld_date:
-            case rtFldType.rtFld_time:
-            case rtFldType.rtFld_timeSec: Int64.TryParse( s, out i64 ); break;
-//            case rtFldType.rtFld_timeSec: dtTm = f.GetAsDateTime(); break;
-            case rtFldType.rtFld_float:   Single.TryParse( s, out r32 ); break;
-            case rtFldType.rtFld_int8:    Int32.TryParse( s, out i32 ); break;
-            case rtFldType.rtFld_int16:   Int32.TryParse( s, out i32 ); break;
-            case rtFldType.rtFld_int64:   Int64.TryParse( s, out i64 ); break;
-         }
+      svc  = ld._pSvc;
+      tkr  = ld._pTkr;
+      flds = ld._flds;
+      nf   = flds.Length;
+      if ( fids == null ) {
+         Console.WriteLine( "{0},{1} {2} fields", svc, tkr, nf );
+         for ( i=0; i<nf; flds[i++].DumpToConsole() );
       }
-      return nf;
-   }
-
-   private static void Dump( LVCData ld )
-   {
-      int i;
-
-      Console.WriteLine( "{0},{1}", ld._pSvc, ld._pTkr );
-      for ( i=0; i<ld._flds.Length; ld._flds[i++].DumpToConsole() );
+      else {
+         csv = svc + ',' + tkr + ',' +  nf.ToString() + ',';
+         for ( i=0; i<fids.Length; i++ ) {
+            fld  = ld.GetField( fids[i] );
+            val  = ( fld != null ) ? fld.GetAsString( false ) : "-";
+            val += ",";
+            csv += val;
+         }
+         Console.WriteLine( csv );
+      }
    }
 
 
    ////////////////////////////////
    // Main Functions
    ////////////////////////////////
-   public static int Main_ADMIN(String[] args) 
+   public static void Dump( LVC      lvc, 
+                            String   svc, 
+                            String[] tkrs, 
+                            String[] flds )
    {
-      try {
-         LVCAdmin adm = new LVCAdmin( "localhost:8775" );
+      LVCDataAll   la;
+      rtEdgeSchema sch;
+      int          i, nf, nt, fid;
+      double       d0, dUs;
+      String       pFld, pMs, hdr;
+      bool         bAll, bCSV;
+      int[]        fids;
 
-         Console.WriteLine( rtEdge.Version() );
-         adm.AddTicker( "a", "b" );
-         return 0;
+      /*
+       * 1) CSV?  Dump Field Names
+       */
+      bAll = ( tkrs != null );
+      bCSV = ( flds != null );
+      sch  = lvc.schema();
+      fids = null;
+      hdr  = null;
+      if ( bCSV ) {
+         hdr = "Service,Ticker,NumFld,";
+         nf  = flds.Length;
+         fids = new int[nf];
+         for ( i=0; i<nf; i++ ) {
+            if ( !Int32.TryParse( flds[i], out fid ) )
+               fid = sch.Fid( flds[i] );
+            fids[i] = fid;
+            pFld    = sch.Name( fid );
+            if ( pFld.Length == 0 )
+               pFld = fid.ToString();
+            pFld += ",";
+            hdr += pFld;
+         }
       }
-      catch( Exception e ) {
-         Console.WriteLine( "Exception: " + e.Message );
+      /*
+       * 2) All??
+       */
+      if ( bAll ) {
+         la  = lvc.ViewAll();
+         nt  = (int)la._nTkr;
+         dUs = la._dSnap * 1000.0;
+         pMs = dUs.ToString( "F1" );
+         Console.WriteLine( "{0} tkrs snapped in {1}mS", nt, pMs );
+         if ( hdr != null )
+            Console.WriteLine( hdr );
+         for ( i=0; i<nt; DumpTkr( la._tkrs[i], fids ), i++ );
       }
-      return 0;
+      else {
+         List<LVCData> lld = new List<LVCData>();
+
+         nt = tkrs.Length;
+         d0 = LVC.TimeNs();
+         for ( i=0; i<nt; lld.Add( lvc.View( svc, tkrs[i++] ) ) );
+         dUs = ( LVC.TimeNs() - d0 ) * 1000.0;
+         pMs = dUs.ToString( "F1" );
+         Console.WriteLine( "{0} tkrs snapped in {1}mS", nt, pMs );
+         if ( hdr != null )
+            Console.WriteLine( hdr );
+         for ( i=0; i<nt; DumpTkr( lld[i], fids ), i++ );
+      }
    }
  
-   public static void Dump( LVC lvc, String svc, String[] tkrs )
-   {
-      LVCData    ld;
-      LVCDataAll la;
-      int        i, nf, argc;
-      double     dUs, d0, dd;
-      string     pLVC, pMs, ty, dmpTkr;
-
-      // LVC - All Tickers; Dump BID if found ...
-
-      la  = lvc.ViewAll();
-      ty  = la.IsBinary ? "BIN" : "MF";
-      dUs = la._dSnap * 1000.0;
-      pMs = dUs.ToString( "F1" );
-      Console.WriteLine( "{0}-SNAP {1} tkrs in {2}mS", ty, la._nTkr, pMs );
-      d0 = LVC.TimeNs();
-      nf = 0;
-      for ( i=0; i<la._nTkr; i++ ) {
-         ld  = la._tkrs[i];
-         if ( la.IsBinary )
-            nf += IterateBinFields( ld );
-         else
-            nf += IterateMFFields( ld );
-         if ( ld._pTkr == dmpTkr )
-            Dump( ld );
-      }
-      dd  = 1000.0 * ( LVC.TimeNs() - d0 );
-      pMs = dd.ToString( "F1" );
-      Console.WriteLine( "{0}-ITER {1} tkrs in {2}mS", ty, la._nTkr, pMs );
-   }
- 
-   public static void Snap( LVC lvc, int nSnp )
+   public static void PerfTest( LVC lvc, int nSnp )
    {
       LVCDataAll la;
-      int        i, argc;
+      int        i;
       uint       nt;
       double     d0, dd;
-      string     pLVC, pd;
+      String     pd;
 
       /*
        * Test 1 : 1 LVC(); Multiple ViewAll()'s
@@ -193,8 +222,11 @@ class LVCTest
    ////////////////////////////////
    public static int Main( String[] args ) 
    {
-      LVC    lvc;
-      String db, ty, svc, tkr;
+      LVC      lvc;
+      String   db, svc, tkr, fld, s;
+      String[] tkrs, flds;
+      bool     bPrf, aOK;
+      int      i, argc;
 
       /////////////////////
       // Quickie checks
@@ -204,57 +236,62 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      db    = "./db/cache.lvc";
-      ty    =  "DUMP";
-      nSnp  = 0;
-      svc   = null;
-      tkr   = null;
+      db   = "./db/cache.lvc";
+      bPrf = false;
+      svc  = "ultrafeed";
+      tkr  = "IBM";
+      fld  = null;
+      flds = null;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db  <LVC d/b file> ] \\ \n";
-         s += "       [ -ty  <Type : DUMP | SNAP | ... > ] \\ \n";
+         s += "       [ -p   <Performance : Snap All> ] \\ \n";
          s += "       [ -s   <Service> ] \\ \n";
-         s += "       [ -t   <Ticker : CSV or Filename> ] \\ \n";
+         s += "       [ -t   <Ticker : CSV or Filename or *> ] \\ \n";
+         s += "       [ -f   <Fields : CSV or Filename or *> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", db );
-         Console.Write( "      -ty      : {0}\n", ty );
+         Console.Write( "      -ty      : {0}\n", bPrf );
          Console.Write( "      -s       : <empty>\n" );
          Console.Write( "      -t       : <empty>\n" );
+         Console.Write( "      -f       : <empty>\n" );
          return 0;
       }
 
       /////////////////////
       // cmd-line args
       /////////////////////
-      tRun  = 0;
       for ( i=0; i<argc; i++ ) {
          aOK = ( i+1 < argc );
          if ( !aOK )
             break; // for-i
          if ( args[i] == "-db" )
             db = args[++i];
-         else if ( args[i] == "-ty" )
-            ty = args[++i];
+         else if ( args[i] == "-p" )
+            bPrf = true;
          else if ( args[i] == "-s" )
             svc = args[++i];
-         else if ( args[i] == "-t" ) {
+         else if ( args[i] == "-t" )
             tkr = args[++i];
-            tkrs = ReadLines( tkr );
-            if ( tkrs == null )
-               tkrs = tkr.Split(',');
-         }
+         else if ( args[i] == "-f" )
+            fld = args[++i];
       }
+      tkrs = ReadLines( tkr );
+      if ( tkrs == null )
+         tkrs = tkr.Split(',');
+      if ( fld != null )
+         flds = fld.Split(',');
       Console.WriteLine( rtEdge.Version() );
       lvc = new LVC( db );
       /*
        * By Type
        */
       try {
-         if ( ( ty == "SNAP" ) && ( nSnp > 0 ) )
-            Snap( lvc, nSnp );
+         if ( bPrf )
+            PerfTest( lvc, 2 );
          else
-            Dump( lvc );
+            Dump( lvc, svc, tkrs, flds );
       } catch( Exception e ) {
          Console.WriteLine( "Exception: " + e.Message );
       }
@@ -262,6 +299,6 @@ class LVCTest
       Console.ReadLine();
       lvc.Destroy();
       Console.WriteLine( "Done!!" );
+      return 0;
    }
-
 }

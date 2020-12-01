@@ -22,6 +22,20 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
+Build 47 20-11-xx
+-----------------
+1) Normal Tape Dir (reverse) : No streamDone
+
+2) Pump Time Slice from Tape:
+   - TapeChannel._str2tv() : Bug in calculating mikes
+   - TapeChannel._InTimeRange() : mikes too : DUH!!
+
+3) String field from tape:
+   - RTEDGE::Field::GetAsString() : deep copy to _s
+
+4) SubChannel.StartTapeSliceSample()
+
+
 Build 46 20-11-21
 -----------------
 1) Fusion /Tape :

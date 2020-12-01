@@ -1,0 +1,245 @@
+/******************************************************************************
+*
+*  LocklessFifo
+*     Templatized single reader / single writer lockless fifo
+*
+*  REVISION HISTORY:
+*      9 SEP 2014 jcs  Created.
+*      3 FEB 2016 jcs  push_view()
+*     29 AUG 2016 jcs  push_pos() / pop_pos()
+*      2 OCT 2016 jcs  _WIN64
+*
+*  (c) 1994-2016, Gatea Ltd.
+******************************************************************************/
+#ifndef __LOCKLESS_FIFO_H
+#define __LOCKLESS_FIFO_H
+#ifdef WIN32
+typedef unsigned int uint32_t;
+#else
+#include <stdint.h>
+#endif // WIN32
+
+///////////////////////////////////////////
+// Lock-free FIFO
+///////////////////////////////////////////
+template <class T>
+class LocklessFifo
+{
+protected:
+   uint32_t           capacity_mask_;
+   uint32_t           dflt_size_;
+   uint32_t           dflt_max_;
+   volatile uint32_t  push_;  // written by push, read by pop and is_empty
+   volatile uint32_t  pop_;   // written by pop, read by push and is_empty
+   uint32_t          *size_;
+   uint32_t          *max_;
+   T                 *buf_;
+
+   // Constructor / Destructor
+public:
+   LocklessFifo( uint32_t );
+   ~LocklessFifo();
+
+   // Access
+
+   T       *guts();
+   uint32_t size();
+   uint32_t capacity();
+   uint32_t push_pos();
+   uint32_t pop_pos();
+   bool     is_empty();
+   bool     is_full();
+
+   // Operations
+public:
+   void set_pointers( uint32_t *, uint32_t * );
+   T    pop_view();
+   T    push_view();
+   T    push();
+   bool push_back( T );
+   bool push_front( T );
+   bool pop( T * );
+
+   // Helpers
+private:
+   void _UpdateQsiz( uint32_t, uint32_t );
+};
+
+
+////////////////////////////////////////////////////////////////////////////
+//
+//              c l a s s      L o c k l e s s F i f o
+//
+////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////
+// Constructor / Destructor
+//////////////////////////////////////////
+template <class T>
+LocklessFifo<T>::LocklessFifo( uint32_t capacity ) :
+   capacity_mask_( 0 ),
+   dflt_size_( 0 ),
+   dflt_max_( 0 ),
+   push_( 0 ),
+   pop_( 0 ),
+   size_( (uint32_t *)0 ),
+   max_( (uint32_t *)0 ),
+   buf_( (T *)0 )
+{
+   int cap, cap2;
+
+   /*
+    * Round capacity up to nearest power of 2 so we can use faster
+    * mask rather than a divide
+    */
+   cap  = !capacity ? 1 : capacity;
+   cap2 = (int)::pow( 2.0, ::ceil( ::log( (double)cap ) / ::log( 2.0 ) ) );
+   capacity_mask_ = cap2 - 1;
+   buf_           = new T[cap2];
+   set_pointers( &dflt_size_, &dflt_max_ );
+}
+
+template <class T>
+LocklessFifo<T>::~LocklessFifo()
+{
+   delete[] buf_;
+}
+
+
+///////////////////////////////////////////
+// Access
+///////////////////////////////////////////
+template <class T>
+T *LocklessFifo<T>::guts()
+{
+   return buf_;
+}
+
+template <class T>
+uint32_t LocklessFifo<T>::size()
+{
+   return *size_;
+}
+
+template <class T>
+uint32_t LocklessFifo<T>::capacity()
+{
+   return capacity_mask_;
+}
+
+template <class T>
+uint32_t LocklessFifo<T>::push_pos()
+{
+   return push_;
+}
+
+template <class T>
+uint32_t LocklessFifo<T>::pop_pos()
+{
+   return pop_;
+}
+
+template <class T>
+bool LocklessFifo<T>::is_empty()
+{
+   return( push_ == pop_ );
+}
+
+template <class T>
+bool LocklessFifo<T>::is_full()
+{
+   uint32_t ins;
+   bool     rtn;
+
+   ins = ( push_+1 ) & capacity_mask_;
+   rtn = ( pop_ == ins );
+   return rtn;
+}
+
+
+///////////////////////////////////////////
+// Operations
+///////////////////////////////////////////
+template <class T>
+void LocklessFifo<T>::set_pointers( uint32_t *pSize, uint32_t *pMax )
+{
+   size_ = pSize;
+   max_  = pMax;
+}
+
+template <class T>
+T LocklessFifo<T>::pop_view()
+{
+   return buf_[pop_];
+}
+
+template <class T>
+T LocklessFifo<T>::push_view()
+{
+   if ( !is_full() )
+      return buf_[push_];
+   return (T)0;
+}
+
+template <class T>
+T LocklessFifo<T>::push()
+{
+   T rtn;
+
+   rtn = (T)0;
+   if ( !is_full() ) {
+      rtn   = buf_[push_];
+      push_ = ( push_+1 ) & capacity_mask_;
+      _UpdateQsiz( push_, pop_ );
+   }
+   return rtn;
+}
+
+template <class T>
+bool LocklessFifo<T>::push_back( T x )
+{
+   if ( !is_full() ) {
+      buf_[push_] = x;
+      push_       = ( push_+1 ) & capacity_mask_;
+      _UpdateQsiz( push_, pop_ );
+      return true;
+   }
+   return false;
+}
+
+template <class T>
+bool LocklessFifo<T>::push_front( T x )
+{
+   if ( !is_empty() ) {
+      buf_[pop_] = x;
+      return true;
+   }
+   return false;
+}
+
+template <class T>
+bool LocklessFifo<T>::pop( T *xp )
+{
+   if ( !is_empty() ) {
+      *xp  = buf_[pop_];
+      pop_ = ( pop_+1 ) & capacity_mask_;
+      _UpdateQsiz( push_, pop_ );
+      return true;
+   }
+   return false;
+}
+
+///////////////////////////////////////////
+// Helpers
+///////////////////////////////////////////
+template <class T>
+void LocklessFifo<T>::_UpdateQsiz( uint32_t qi, uint32_t qo )
+{
+   uint32_t qSz;
+
+   qSz = capacity_mask_;
+   *size_ = ( qi>=qo ) ? qi-qo : qSz-qo+qi;
+   *max_  = gmax( *max_, *size_ );
+}
+
+#endif // __LOCKLESS_FIFO_H

@@ -15,6 +15,7 @@
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     17 SEP 2020 jcs  Build 45: Parse()
+*     29 NOV 2020 jcs  Build 47: StartTapeSliceSample()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -35,6 +36,7 @@ class Schema;
 class SubChannel;  // Forward declaration for bSubInit_ / schans_
 
 static const char *_tape_all = "*";
+static const char *_dflt_fld = "6";
 static bool        bSubInit_ = false;
 static SubChannel *schans_[_MAX_CHAN];
 
@@ -340,6 +342,43 @@ public:
 
 	   tkr += "|";
 	   tkr += tEnd;
+	   if ( _attr._bTape )
+	      Subscribe( pSvrHosts(), tkr.data(), (void *)0 );
+	}
+
+	/**
+	 * \brief Pump data from the tape between the given start and end times
+	 * at specific interval and specific field(s)
+	 *
+	 * Messages from the tape are pumped as follows: 
+	 * + All messages are pumped from tape into an internal Last Value Cache (LVC)
+	 * + At the tInterval, a new message is pumped from LVC into OnData()
+	 * + All messages are delivered to your app via OnData() or OnDead() 
+	 * + All messages are delivered in the library thread for this channel
+	 * + If you Subscribe()'ed to any tickers, only those are pumped
+	 * + If you did not Subscribe(), then ALL tickers are pumped
+	 *
+	 * \param tStart - Start time
+	 * \param tEnd - End time
+	 * \param tInterval - Interval in seconds
+	 * \param pFlds - CSV list of Field IDs or Names of interest
+	 */
+	void StartTapeSliceSample( const char *tStart,
+	                           const char *tEnd,
+	                           int         tInterval,
+	                           const char *pFlds )
+	{
+	   std::string tkr;
+	   char        buf[K];
+
+	   sprintf( buf, "%d", tInterval ? tInterval : 60 );
+	   tkr  = tStart ? tStart : "00:00:00";
+	   tkr += "|";
+	   tkr += tEnd ? tEnd : "23:59:59.999999";
+	   tkr += "|";
+	   tkr += buf;
+	   tkr += "|";
+	   tkr += pFlds ? pFlds : _dflt_fld;
 	   if ( _attr._bTape )
 	      Subscribe( pSvrHosts(), tkr.data(), (void *)0 );
 	}

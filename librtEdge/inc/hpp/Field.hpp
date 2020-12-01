@@ -14,6 +14,7 @@
 *      8 FEB 2020 jcs  Build 42: public Set( Schema &, ... )
 *     16 MAR 2020 jcs  Build 43: _StripTrailing0()
 *     12 AUG 2020 jcs  Build 44: Date/Time : _r64, not GetAsDouble()
+*     27 NOV 2020 jcs  Build 47: GetAsString() : Deep copy string to _s
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -659,7 +660,8 @@ public:
 	         rtn = "";
 	         sz  = b._dLen;
 	         if ( sz > 0 ) {
-	            rtn = b._data;
+	            _s.assign( b._data, b._dLen );
+	            rtn = _s.data();
 	            cp  = (char *)rtn;
 	            cp += sz;
 	            *cp = '\0';

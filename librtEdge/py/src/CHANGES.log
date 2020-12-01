@@ -1,0 +1,163 @@
+rtInC Python Plug-in Library
+----------------------------
+
+Features To Add
+---------------
+
+
+Build  3  20-11-xx
+------------------
+1) SnapTape()
+
+
+Build  2  20-11-18
+------------------
+1) LVCGetTickers 
+
+2) QueryTape()
+
+
+Build 23  19-04-03 (Really Build 1 for MDDirect)
+------------------------------------------------
+1) VS2017.32
+   - Renamed to MDDirect
+   - No mo TS1, PermSvr, RMDS
+   - No mo Library.cpp / Library.h
+
+======================================================
+
+Build 22  16-03-16
+------------------
+1) RTEDGE::SubChannel
+
+
+Build 21  16-01-20
+------------------
+1) Upgraded librtEdge / libmddWire
+   - static libs
+   - rtEdge_Context returned by library on all callbacks
+   - No mo SubChan._cbkID / _chanID
+
+
+Build 20  14-08-02
+------------------
+1) libmddWire:
+   - mddFieldList_Alloc() / mddFieldList_Free()
+
+
+Build 19  14-03-31
+------------------
+1) mddFld_string fields > 32 bytes:
+   - Field._ToASCII() : Set cp = bp = _InitBuf() - DUH!!
+
+
+Build 18  14-01-31
+------------------
+1) Multiple subscription channels (Big re-write):
+   - Record._cxt
+   - Library.cpp
+   - Channel.cpp
+   - class SubChan
+
+2) Non-conflated channel
+
+
+Build 17  13-09-26
+------------------
+1) libmddWire:
+   - Binary Data
+   - Field.ToAscii( rtField & )
+
+
+Build 16  13-08-27
+------------------
+1) libPermSvr
+
+2) librtEdge Build 26a
+   - MD-DirectMon
+   - Publication Schema (not used)
+
+
+Build 15  13-05-10
+------------------
+1) librtEdge Build 25
+   - rtVALUE / rtBUF
+
+
+Build 14  13-02-23
+------------------
+1) TS1
+
+
+Build 13  13-02-21
+------------------
+1) RMDSAPI
+
+
+Build 12  13-02-15
+------------------
+1) MemSize() / CPU()
+
+
+Build 11  13-01-21
+------------------
+1) _RecOpen() : ReverseLocker(); Schema type
+
+
+Build 10  12-10-10
+------------------
+1) rtFIELD; EDGAPI
+
+
+Build  9  12-04-14
+------------------
+1) Clean-up : No mo _bMdUpd / _mdUpds
+
+2) Book.cpp memory leak:
+   - bFirst = !_bids.size() - DUH! 
+
+
+Build  8  12-03-10
+------------------
+1) Publish
+
+2) Don't truncate last byte FS
+
+
+Build  7  12-03-06
+------------------
+1) Propogate EVT_STS
+
+
+Build  6  12-02-20
+------------------
+1) EVT_STS
+
+2) Field._name
+
+
+Build  5  11-10-04
+------------------
+1) rtInC
+
+
+Build  4  11-04-22
+------------------
+1) Book.cpp
+
+
+Build  3  11-04-15
+------------------
+1) HasMethod()
+
+2) _ReadSubEvent()
+
+
+Build  2  11-04-11
+------------------
+1) Connection / Service Events
+
+
+Build  1  11-04-07
+------------------
+1) Created

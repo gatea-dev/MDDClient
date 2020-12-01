@@ -61,6 +61,12 @@ goto Done
       devenv /build %BLD_TYPE% %MK%CLI64.sln /project %MK%CLI64
       cd ..\..
    )
+   if exist py\%VS% ( 
+      cd py\%VS%
+      set PYTHONPATH=C:\Python27
+      devenv /build Release MDDirect.sln /project MDDirect
+      cd ..\..
+   )
    cd ..
    EXIT /B 0
 

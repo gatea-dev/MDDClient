@@ -19,6 +19,7 @@
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
+*     27 NOV 2020 jcs  Build 47: TapeSlice
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -28,6 +29,8 @@
 #include <EDG_GLrecDb.h>
 
 #define MAX_FLD 128*K
+
+typedef vector<int>        FIDs;
 
 namespace RTEDGE_PRIVATE
 {
@@ -42,6 +45,7 @@ class Logger;
 class Schema;
 class Socket;
 class TapeChannel;
+class TapeSlice;
 
 typedef hash_map<string, EdgSvc *>    SvcMap;
 typedef hash_map<string, EdgRec *>    RecByNameMap;
@@ -251,11 +255,9 @@ private:
 
 
 
-////////////////////////////////////////////////
-//
-//     c l a s s   T a p e C h a n n e l
-//
-////////////////////////////////////////////////
+/////////////////////////////////////////
+// Tape Channel
+/////////////////////////////////////////
 
 typedef hash_map<string, int>   TapeRecords;
 typedef vector<GLrecTapeRec *>  TapeRecDb;
@@ -279,8 +281,7 @@ private:
 	mddFieldList    _fl;
 	string          _err;
 	int             _nSub;
-	struct timeval  _t0;
-	struct timeval  _t1;
+	TapeSlice      *_slice;
 	volatile bool   _bRun;
 	volatile bool   _bInUse;
 
@@ -291,6 +292,8 @@ public:
 
 	// Access
 public:
+	EdgChannel     &edg();
+	GLrecTapeHdr   &hdr();
 	mddWire_Context mdd();
 	const char     *pTape();
 	const char     *err();
@@ -324,9 +327,39 @@ private:
 	int            _SecIdx( struct timeval, GLrecTapeRec * );
 	u_int64_t      _DbHdrSize( int, int, int );
 	int            _RecSiz();
-	struct timeval _str2tv( char * );
 
 };  // class TapeChannel
+
+
+/////////////////////////////////////////
+// Tape Slice
+/////////////////////////////////////////
+class TapeSlice
+{
+public:
+	TapeChannel   &_tape;
+	double         _td0;
+	double         _td1;
+	struct timeval _t0;
+	struct timeval _t1;
+	int            _tInterval;
+	FIDs           _fids;
+
+	// Constructor / Destructor
+public:
+	TapeSlice( TapeChannel &, const char * );
+
+	// Access
+public:
+	bool IsSampled();
+	bool InTimeRange( GLrecTapeMsg & );
+	bool CanPump( GLrecTapeMsg & );
+
+	// Helpers
+private:
+	struct timeval _str2tv( char * );
+
+};  // class TapeSlice
 
 } // namespace RTEDGE_PRIVATE
 

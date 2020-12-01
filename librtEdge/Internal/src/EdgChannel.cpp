@@ -20,6 +20,7 @@
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
+*     22 NOV 2020 jcs  Build 47: StreamDone : both ways
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -1505,8 +1506,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _fl( ::mddFieldList_Alloc( K ) ),
    _err(),
    _nSub( 0 ),
-   _t0( _zT ),
-   _t1( _eT ),
+   _slice( (TapeSlice *)0 ),
    _bRun( false ),
    _bInUse( false )
 {
@@ -1526,12 +1526,24 @@ TapeChannel::~TapeChannel()
    Unload();
    ::mddFieldList_Free( _fl );
    ::mddSub_Destroy( _mdd );
+   if ( _slice )
+      delete _slice;
 }
 
 
 ////////////////////////////////////
 // Access
 ////////////////////////////////////
+EdgChannel &TapeChannel::edg()
+{
+   return _chan;
+}
+
+GLrecTapeHdr &TapeChannel::hdr()
+{
+   return *_hdr;
+}
+
 mddWire_Context TapeChannel::mdd()
 {
    return _mdd;
@@ -1599,30 +1611,13 @@ MDDResult TapeChannel::Query()
 ////////////////////////////////////
 int TapeChannel::Subscribe( const char *svc, const char *tkr )
 {
-   string         s;
-   struct timeval tmp;
-   double         d0, d1;
-   char          *ps, *p0, *p1, *rp;
-   int            ix;
+   int ix;
 
    // Special Case : Run baby
 
    if ( !::strcmp( svc, pTape() ) ) {
-      if ( ::strcmp( tkr, t_ALL ) ) {
-         s   = tkr;
-         ps  = (char *)s.data();
-         p0  = ::strtok_r( ps,   t_SEP, &rp );
-         p1  = ::strtok_r( NULL, t_SEP, &rp );
-         _t0 = _str2tv( p0 );
-         _t1 = p1 ? _str2tv( p1 ) : _t0;
-         d0  = Logger::Time2dbl( _t0 );
-         d1  = Logger::Time2dbl( _t1 );
-         if ( d1 < d0 ) {
-            tmp = _t0;
-            _t0 = _t1;
-            _t1 = tmp;
-         }
-      }
+      if ( ::strcmp( tkr, t_ALL ) )
+         _slice = new TapeSlice( *this, tkr );
       _bRun = true;
       return 0;
    }
@@ -1723,6 +1718,7 @@ int TapeChannel::Pump()
 {
    TapeWatchList::iterator it;
    GLrecTapeMsg           *msg;
+   struct timeval          t0;
    char                   *bp, *cp;
    mddBuf                  m;
    u_int64_t               off;
@@ -1746,9 +1742,10 @@ int TapeChannel::Pump()
 
    bp  = _tape._data;
    off = _hdr->_hdrSiz;
+   t0  = _slice ? _slice->_t0 : _zT;
    _PumpDead();
-   if ( _t0.tv_sec ) {
-      idx = _tapeIdx( _t0 );
+   if ( t0.tv_sec ) {
+      idx = _tapeIdx( t0 );
       off = tapeIdxDb()[idx];
    }
    for ( n=0; !_nSub && _bRun && off<_tape._dLen; ) {
@@ -1840,8 +1837,7 @@ int TapeChannel::PumpTicker( int ix )
       m._dLen = msg->_msgLen - mSz;
       n      += _PumpOneMsg( *msg, m, true );
    }
-   if ( nr )
-      _PumpStatus( *msg, "Stream Complete", edg_streamDone );
+   _PumpStatus( *msg, "Stream Complete", edg_streamDone );
    _bRun   = false;
    _bInUse = false;
 
@@ -1870,7 +1866,7 @@ void TapeChannel::Unload()
 ////////////////////////////////////
 bool TapeChannel::_InTimeRange( GLrecTapeMsg &m )
 {
-   return InRange( _t0.tv_sec, m._tv_sec, _t1.tv_sec );
+   return _slice ? _slice->InTimeRange( m ) : true;
 }
 
 bool TapeChannel::_IsWatched( GLrecTapeMsg &m )
@@ -2034,9 +2030,9 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
 
    if ( !_InTimeRange( msg ) ) {
       if ( bRev )
-         _bRun &= ( msg._tv_sec >= _t0.tv_sec );
+         _bRun &= ( msg._tv_sec >= _slice->_t0.tv_sec );
       else
-         _bRun &= ( msg._tv_sec <= _t1.tv_sec );
+         _bRun &= ( msg._tv_sec <= _slice->_t1.tv_sec );
       return 0;
    }
    if ( !_IsWatched( msg ) )
@@ -2051,7 +2047,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    ::memset( &d, 0, sizeof( d ) );
 
    // Fill in rtEdgeData and dispatch
-
+// TODO _slice->CanPump() ...
    ix          = msg._dbIdx;
    d._tMsg     = Logger::Time2dbl( tv );
    d._pSvc     = _tdb[ix]->_svc;
@@ -2151,24 +2147,118 @@ int TapeChannel::_RecSiz()
    return _rSz + ( _hdr->_numSecIdxR * _ixSz );
 }
 
-struct timeval TapeChannel::_str2tv( char *hms )
+
+/////////////////////////////////////////////////////////////////////////////
+//
+//                 c l a s s      T a p e S l i c e
+//
+/////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Constructor / Destructor
+////////////////////////////////////////////
+TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
+   _tape( tape ),
+   _td0( Logger::Time2dbl( _zT ) ),
+   _td1( Logger::Time2dbl( _eT ) ),
+   _t0( _zT ),
+   _t1( _eT ),
+   _tInterval( 0 ),
+   _fids()
 {
+   string         s( tkr );
+   struct timeval tmp;
+   char          *ps, *p0, *p1, *p2, *p3, *rp;
+   int            fid;
+
+   // tStart|tEnd|tInteral|FIDs
+
+   ps   = (char *)s.data();
+   p0   = ::strtok_r( ps,   t_SEP, &rp );
+   p1   = ::strtok_r( NULL, t_SEP, &rp );
+   p2   = p1 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)"0";
+   p3   = p2 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)"";
+   /*
+    * tStart, tEnd
+    */
+   _t0  = _str2tv( p0 );
+   _t1  = p1 ? _str2tv( p1 ) : _t0;
+   _td0 = Logger::Time2dbl( _t0 );
+   _td1 = Logger::Time2dbl( _t1 );
+   if ( _td1 < _td0 ) {
+      tmp  = _t0;
+      _t0  = _t1;
+      _t1  = tmp;
+      _td0 = Logger::Time2dbl( _t0 );
+      _td1 = Logger::Time2dbl( _t1 );
+   }
+   /*
+    * tInterval, FIDs
+    */
+   string    ss( p3 );
+   mddField *fDef;
+
+   _tInterval = atoi( p3 );
+   ps = (char *)s.data();
+   for ( p0=::strtok_r( ps, ",", &rp ); p0; p0=::strtok_r( NULL, ",", &rp ) ) {
+      if ( (fid=atoi( p0 )) )
+         _fids.push_back( fid );
+      else if ( (fDef=_tape.edg().GetDef( p0 )) )
+         _fids.push_back( (int)fDef->_fid );
+   }
+}
+
+////////////////////////////////////
+// Access
+////////////////////////////////////
+bool TapeSlice::IsSampled()
+{
+   return( ( _tInterval > 0 ) && ( _fids.size() > 0 ) );
+}
+
+bool TapeSlice::InTimeRange( GLrecTapeMsg &m )
+{
+   struct timeval tv = { m._tv_sec, m._tv_usec };
+   double         dt;
+
+   dt = Logger::Time2dbl( tv );
+   return InRange( _td0, dt, _td1 );
+}
+
+bool TapeSlice::CanPump( GLrecTapeMsg &m )
+{
+   // TODO : LVC / _tInterval, etc.
+
+   return true;
+}
+
+
+////////////////////////////////////
+// Helpers
+////////////////////////////////////
+struct timeval TapeSlice::_str2tv( char *hmsU )
+{
+   string         ss( hmsU );
    struct tm     *tm, lt;
    struct timeval tv;
    time_t         t;
-   char          *h, *m, *s, *u, *z, *rp;
+   char          *ps, *hms, *h, *m, *s, *u, *z, *rp;
    size_t         sz, mul;
+   const char    *_SEP1 = ".";
+   const char    *_SEP2 = ":";
 
    // File Create Time
 
    z   = (char *)"0";
-   t   = _hdr->_tCreate;
+   t   = _tape.hdr()._tCreate;
    tm  = ::localtime_r( (time_t *)&t, &lt );
-   h   = ::strtok_r( hms,  ":", &rp );
-   m   = h ? ::strtok_r( NULL, ":", &rp ) : z;
-   s   = m ? ::strtok_r( NULL, ":", &rp ) : z;
-   u   = s ? ::strtok_r( NULL, ".", &rp ) : z;
-   sz  = strlen( u );
+   ps  = (char *)ss.data();
+   hms = ::strtok_r( ps,   _SEP1, &rp );
+   u   = ::strtok_r( NULL, _SEP1, &rp );
+   h   = ::strtok_r( hms,  _SEP2, &rp );
+   m   = h ? ::strtok_r( NULL, _SEP2, &rp ) : z;
+   s   = m ? ::strtok_r( NULL, _SEP2, &rp ) : z;
+   sz  = u ? strlen( u ) : 0;
    mul = 1;
    switch( sz ) {
       case 0:
@@ -2187,3 +2277,4 @@ struct timeval TapeChannel::_str2tv( char *hms )
    tv.tv_usec = WithinRange( 0, tv.tv_usec * mul, 999999 );
    return tv;
 }
+
