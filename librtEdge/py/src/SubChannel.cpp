@@ -8,7 +8,7 @@
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: OnStreamDone()
-*     22 NOV 2020 jcs  Build  3: SnapTape()
+*      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *
 *  (c) 1994-2020 Gatea, Ltd.
 ******************************************************************************/
@@ -285,19 +285,14 @@ PyObject *MDDpySubChan::QueryTape()
    return rc;
 }
 
-PyObject *MDDpySubChan::SnapTape( const char *svc, 
-                                  const char *tkr, 
-                                  const char *flds,
-                                  int         maxRow,
-                                  double      tmout,
-                                  const char *t0,
-                                  const char *t1 )
+PyObject *MDDpySubChan::SnapTape( PyTapeSnapQry &qry )
 {
-   PyTapeSnap snp( *this, svc, tkr, flds, maxRow );
+   PyTapeSnap snp( *this, qry );
    PyObjects &ldb = snp._objs;
    PyObject  *rc;
    double     d0, age;
    size_t     i, n;
+   int        tInt;
 
    // Pre-condition
 
@@ -307,14 +302,20 @@ PyObject *MDDpySubChan::SnapTape( const char *svc,
     * Sleep in 10 milli chunks
     */
    _snap = &snp;
-   Subscribe( svc, tkr, 0 );
-   if ( t0 && t1 )
-      StartTapeSlice( t0, t1 );
+   Subscribe( qry._svc, qry._tkr, 0 );
+   if ( qry._t0 && qry._t1 ) {
+      if ( (tInt=qry._tSample) && qry._flds ) {
+         SetTapeDirection( false );
+         StartTapeSliceSample( qry._t0, qry._t1, tInt, qry._flds );
+      }
+      else
+         StartTapeSlice( qry._t0, qry._t1 );
+   }
    else
       StartTape();
    d0  = TimeNs();
    age = 0.0;
-   for ( ; age<tmout && !snp._bDone; ) {
+   for ( ; age<qry._tmout && !snp._bDone; ) {
       Sleep( 0.010 );
       age = TimeNs() - d0;
    }
@@ -817,23 +818,19 @@ void PyByteStream::OnSubscribeComplete()
 ///////////////////////////////
 // Constructor / Destructor
 ///////////////////////////////
-PyTapeSnap::PyTapeSnap( MDDpySubChan &ch, 
-                        const char   *svc,
-                        const char   *tkr,
-                        const char   *flds,
-                        int           maxRow ) :
+PyTapeSnap::PyTapeSnap( MDDpySubChan &ch, PyTapeSnapQry &qry ) :
    _ch( ch ),
-   _svc( svc ),
-   _tkr( tkr ),
+   _svc( qry._svc ),
+   _tkr( qry._tkr ),
    _fids(),
-   _maxRow( maxRow ),
+   _maxRow( qry._maxRow ),
    _objs(),
    _bDone( false ),
    _uFld()
 {
    RTEDGE::Schema   &sch = _ch.schema();
    RTEDGE::FieldDef *fDef;
-   string            s( flds );
+   string            s( qry._flds );
    char             *cp, *rp;
    int               fid;
 

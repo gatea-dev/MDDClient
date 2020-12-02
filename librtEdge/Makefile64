@@ -196,6 +196,7 @@ clear:
 
 clean:
 	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
+	( cd py ; ./linux64/clean.bash )
 
 %.o:  Internal/src/%.cpp
 	$(CPP) $(CPPFLAGS) $<

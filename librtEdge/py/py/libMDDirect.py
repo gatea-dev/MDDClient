@@ -109,7 +109,15 @@ MDDirect.pyd as integer
       else:        iDir = 0
       return MDDirect.SetTapeDir( self._cxt, iDir )
 
-   def SnapTape( self, svc, tkr, flds, maxRow, tmout=2.5, t0=None, t1=None ):
+   def SnapTape( self, 
+                 svc, 
+                 tkr, 
+                 flds, 
+                 maxRow, 
+                 tmout   = 2.5, 
+                 t0      = None, 
+                 t1      = None,
+                 tSample = 0 ):
       """rtEdgeSubscribe.SnapTape() snaps full tape or slice of tape for a 
 single ( Service, Ticker ) stream.  If slice, the Tape Slice Start / End times 
 is formatted as [YYYY-MM-DD] HH:MM[:SS.mmm]
@@ -121,11 +129,20 @@ is formatted as [YYYY-MM-DD] HH:MM[:SS.mmm]
       \param tmout = Timeout in secs
       \param t0 - Tape Slice Start; None for all ticks
       \param t1 - Tape Slice End; None for all ticks
+      \param tSample - Sample time in seconds; 0 for all ticks
       \return [ [ ColHdr1, ColHdr2, ... ], [ row1 ], [ row2 ], ... ]
 """
       cxt = self._cxt
       if t0 and t1:
-         return MDDirect.SnapTape( cxt, svc, tkr, flds, maxRow, tmout, t0, t1 )
+         return MDDirect.SnapTape( cxt, 
+                                   svc, 
+                                   tkr, 
+                                   flds, 
+                                   maxRow, 
+                                   tmout, 
+                                   t0, 
+                                   t1, 
+                                   tSample )
       return MDDirect.SnapTape( cxt, svc, tkr, flds, maxRow, tmout )
 
    def QueryTape( self ):

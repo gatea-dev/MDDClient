@@ -8,7 +8,7 @@
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     19 NOV 2020 jcs  Build  2: LVCGetTickers()
-*     22 NOV 2020 jcs  Build  3: SnapTape()
+*      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *
 *  (c) 1994-2020 Gatea, Ltd.
 ******************************************************************************/
@@ -200,28 +200,26 @@ static PyObject *SnapTape( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
    PyObject     *rc;
-   const char   *svc, *tkr, *flds, *t0, *t1;
-   double        tmout;
-   int           rtn, cxt, maxRow;
+   PyTapeSnapQry qry;
+   int           rtn, cxt;
 
-   // Usage : SnapTape( cxt, svc, 'AAPL', flds, 1000, 2.5 [, t0, t1 ] )
+   // Usage : SnapTape( cxt, svc, tkr, flds, 1000, 2.5 [, t0, t1, [, tSample ] ] )
 
    rc  = (PyObject *)0;
-   t0  = (const char *)0;
-   t1  = (const char *)0;
-   rtn = PyArg_ParseTuple( args, "isssid|ss", 
+   ::memset( &qry, 0, sizeof( qry ) );
+   rtn = PyArg_ParseTuple( args, "isssid|ssi", 
                            &cxt, 
-                           &svc, 
-                           &tkr, 
-                           &flds, 
-                           &maxRow, 
-                           &tmout,
-                           &t0,
-                           &t1 );
+                           &qry._svc, 
+                           &qry._tkr, 
+                           &qry._flds, 
+                           &qry._maxRow, 
+                           &qry._tmout,
+                           &qry._t0,
+                           &qry._t1,
+                           &qry._tSample );
    if ( rtn && (ch=_GetSub( cxt )) )
-      rc = ch->SnapTape( svc, tkr, flds, maxRow, tmout, t0, t1 );
+      rc = ch->SnapTape( qry );
    return rc ? rc : _PyReturn( Py_None );
-
 }
 
 static PyObject *QueryTape( PyObject *self, PyObject *args )

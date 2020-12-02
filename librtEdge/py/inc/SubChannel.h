@@ -8,7 +8,7 @@
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: Tape; OnStreamDone()
-*     22 NOV 2020 jcs  Build  3: SnapTape()
+*      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *
 *  (c) 1994-2020 Gatea, Ltd.
 ******************************************************************************/
@@ -25,6 +25,7 @@ class MDDPY::Schema;
 class rtMsg;
 class PyByteStream;
 class PyTapeSnap;
+class PyTapeSnapQry;
 
 typedef hash_map<int, PyByteStream *>    ByteStreamByOid;
 typedef hash_map<string, PyByteStream *> ByteStreamByName;
@@ -67,8 +68,7 @@ public:
 	PyObject   *Read( double );
 	PyObject   *GetData( const char *, const char *, int * );
 	PyObject   *QueryTape();
-	PyObject   *SnapTape( const char *, const char *, const char *, 
-	               int, double, const char *, const char * );
+	PyObject   *SnapTape( PyTapeSnapQry & );
 
 	// RTEDGE::SubChannel Notifications
 protected:
@@ -126,6 +126,24 @@ protected:
 
 
 /////////////////////////////////////////
+// Tape Snap Request
+/////////////////////////////////////////
+class PyTapeSnapQry
+{
+public:
+	const char *_svc;
+	const char *_tkr;
+	const char *_flds;
+	int         _maxRow;
+	double      _tmout;
+	const char *_t0;
+	const char *_t1;
+	int         _tSample;
+
+}; // class PyTapeSnapQry
+
+
+/////////////////////////////////////////
 // Tape Snap
 /////////////////////////////////////////
 class PyTapeSnap
@@ -142,7 +160,7 @@ public:
 
 	// Constructor / Destructor
 public:
-	PyTapeSnap( MDDpySubChan &, const char *, const char *, const char *, int );
+	PyTapeSnap( MDDpySubChan &, PyTapeSnapQry & );
 	~PyTapeSnap();
 
 	// RTEDGE::Channel Notifications

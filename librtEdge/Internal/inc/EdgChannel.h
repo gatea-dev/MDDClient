@@ -361,7 +361,7 @@ public:
 public:
 	bool IsSampled();
 	bool InTimeRange( GLrecTapeMsg & );
-	bool CanPump( rtEdgeData & );
+	bool CanPump( int, rtEdgeData & );
 
 	// Helpers
 private:

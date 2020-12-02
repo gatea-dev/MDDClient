@@ -2077,7 +2077,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    d._rawLen   = m._dLen;
    d._StreamID = ix;
    if ( _slice ) {
-      for ( n=0; _slice->CanPump( d ); n++ ) {
+      for ( n=0; _slice->CanPump( n, d ); n++ ) {
          if ( _attr._dataCbk )
             (*_attr._dataCbk)( _chan.cxt(), d );
          d._flds = (rtFIELD *)_fl._flds;
@@ -2262,7 +2262,7 @@ bool TapeSlice::InTimeRange( GLrecTapeMsg &m )
    return InRange( _td0, dt, _td1 );
 }
 
-bool TapeSlice::CanPump( rtEdgeData &d )
+bool TapeSlice::CanPump( int nDup, rtEdgeData &d )
 {
    time_t tMsg;
 
@@ -2271,7 +2271,7 @@ bool TapeSlice::CanPump( rtEdgeData &d )
    if ( !InRange( _td0, d._tMsg, _td1 ) )
       return false;
    if ( !IsSampled() )
-      return true;
+      return( nDup == 0 );
 
    /*
     * 1) Cache
