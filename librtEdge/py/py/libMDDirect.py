@@ -1,20 +1,17 @@
 #!/usr/bin/python
 #################################################################
 #
-#  librtEdge.py
+#  libMDDirect.py
 #     MDDirect add-in driver
 #
 #  REVISION HISTORY:
 #      3 APR 2019 jcs  Created.
 #     18 NOV 2020 jcs  rtEdgeSchema
+#      1 DEC 2020 jcs  Renamed to libMDDirect
 #
 #  (c) 1994-2020, Gatea Ltd.
 #################################################################
-try:    ## Python 3.x
-    import MDDirect64 as MDDirect
-    raw_input = input
-except: ## Python 2.x
-    import MDDirect
+import MDDirect
 import math, time, threading
 
 _UNDEF = 'Undefined'

@@ -12,6 +12,7 @@
 *     20 FEB 2019 jcs  Build 42: -renko
 *     30 APR 2019 jcs  Build 43: -bds
 *     10 SEP 2020 jcs  Build 44: -tapeDir -query
+*      1 DEC 2020 jcs  Build 47: -ti
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -23,21 +24,6 @@ using namespace RTEDGE;
 using namespace std;
 
 static void *arg_ = (void *)"User-supplied argument";
-
-#if defined(K)
-#undef K
-#endif // K
-#if !defined(hash_map)
-#if !defined(_GLIBCXX_UNORDERED_MAP) && !defined(WIN32)
-#include <tr1/unordered_map>
-#define hash_map tr1::unordered_map
-#else
-#include <unordered_map>
-#define hash_map unordered_map
-#endif // !defined(_GLIBCXX_UNORDERED_MAP)
-#endif // defined(hash_map)
-
-#define K 1024
 
 class Renko
 {
@@ -389,11 +375,11 @@ int main( int argc, char **argv )
    Renko      &r = ch._Renko;
    const char *pc;
    FILE       *fp;
-   const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *r0, *r1, *r2;
+   const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
    char       *pa, *cp, *rp, sTkr[K];
    bool        bCfg, aOK, bBin, bStr, bTape, bQry;
    string      s;
-   int         i, nt, tRun;
+   int         i, nt, tRun, ti;
    ::MDDResult res; 
    ::MDDRecDef rd;
 
@@ -411,6 +397,8 @@ int main( int argc, char **argv )
    tkr   = NULL;
    t0    = NULL;
    t1    = NULL;
+   ti    = 0;
+   tf    = NULL;
    tRun  = 0;
    bBin  = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
@@ -425,6 +413,8 @@ int main( int argc, char **argv )
       s += "       [ -t  <Ticker : CSV or Filename> ] \\ \n";
       s += "       [ -t0 <TapeSliceStartTime> ] \\ \n";
       s += "       [ -t1 <TapeSliceEndTime> ] \\ \n";
+      s += "       [ -ti <TapeSlice Sample Interval> ] \\ \n";
+      s += "       [ -tf <CSV TapeSlice Sample Fields> ] \\ \n";
       s += "       [ -r  <AppRunTime> ] \\ \n";
       s += "       [ -p  <Protocol MF|BIN> ] \\ \n";
       s += "       [ -bstr <If included, bytestream> ] \\ \n";
@@ -442,6 +432,8 @@ int main( int argc, char **argv )
       printf( "      -t       : <empty>\n" );
       printf( "      -t0      : <empty>\n" );
       printf( "      -t1      : <empty>\n" );
+      printf( "      -ti      : %d\n", ti );
+      printf( "      -tf      : <empty>\n" );
       printf( "      -r       : %d\n", tRun );
       printf( "      -p       : %s\n", bBin ? "BIN" : "MF" );
       printf( "      -bstr    : %s\n", bStr ? "YES" : "NO" );
@@ -473,6 +465,10 @@ int main( int argc, char **argv )
          t0  = argv[++i];
       else if ( !::strcmp( argv[i], "-t1" ) )
          t1  = argv[++i];
+      else if ( !::strcmp( argv[i], "-ti" ) )
+         ti  = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-tf" ) )
+         tf  = argv[++i];
       else if ( !::strcmp( argv[i], "-r" ) )
          tRun = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-p" ) )
@@ -574,8 +570,12 @@ int main( int argc, char **argv )
       for ( i=0; i<nt; ch.Subscribe( svc, tkrs[i++]->data(), arg_ ) );
    pt = ch.IsSnapshot() ? "snap again" : "stop";
    if ( ch.IsTape() ) {
-      if ( t0 && t1 )
-         ch.StartTapeSlice( t0, t1 );
+      if ( t0 && t1 ) {
+         if ( ti && tf )
+            ch.StartTapeSliceSample( t0, t1, ti, tf );
+         else 
+            ch.StartTapeSlice( t0, t1 );
+      }
       else
          ch.StartTape();
    }

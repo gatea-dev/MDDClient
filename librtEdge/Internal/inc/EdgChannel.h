@@ -30,7 +30,8 @@
 
 #define MAX_FLD 128*K
 
-typedef vector<int>        FIDs;
+typedef vector<int>    FIDs;
+typedef hash_set<int>  FIDSet;
 
 namespace RTEDGE_PRIVATE
 {
@@ -259,11 +260,12 @@ private:
 // Tape Channel
 /////////////////////////////////////////
 
-typedef hash_map<string, int>   TapeRecords;
-typedef vector<GLrecTapeRec *>  TapeRecDb;
-typedef hash_map<int, int>      TapeWatchList;
-typedef hash_map<int, string *> DeadTickers;
-typedef vector<u_int64_t>       Offsets;
+typedef hash_map<string, rtFIELD> FieldMapByName;
+typedef hash_map<string, int>     TapeRecords;
+typedef vector<GLrecTapeRec *>    TapeRecDb;
+typedef hash_map<int, int>        TapeWatchList;
+typedef hash_map<int, string *>   DeadTickers;
+typedef vector<u_int64_t>         Offsets;
 
 class TapeChannel
 {
@@ -271,6 +273,7 @@ private:
 	EdgChannel     &_chan;
 	rtEdgeAttr      _attr;
 	FieldMap        _schema;
+	FieldMapByName  _schemaByName;
 	rtBuf64         _tape;
 	GLrecTapeHdr   *_hdr;
 	TapeRecords     _rdb;
@@ -299,6 +302,7 @@ public:
 	const char     *err();
 	u_int64_t      *tapeIdxDb();
 	bool            HasTicker( const char *, const char *, int & );
+	int             GetFieldID( const char * );
 	MDDResult       Query();
 
 	// Operations
@@ -340,10 +344,14 @@ public:
 	TapeChannel   &_tape;
 	double         _td0;
 	double         _td1;
+	time_t         _tSnap;
 	struct timeval _t0;
 	struct timeval _t1;
 	int            _tInterval;
+	FieldMap       _LVC;
 	FIDs           _fids;
+	FIDSet         _fidSet;
+	rtFIELD        _flds[MAX_FLD];
 
 	// Constructor / Destructor
 public:
@@ -353,11 +361,12 @@ public:
 public:
 	bool IsSampled();
 	bool InTimeRange( GLrecTapeMsg & );
-	bool CanPump( GLrecTapeMsg & );
+	bool CanPump( rtEdgeData & );
 
 	// Helpers
 private:
 	struct timeval _str2tv( char * );
+	void           _Cache( rtEdgeData & );
 
 };  // class TapeSlice
 

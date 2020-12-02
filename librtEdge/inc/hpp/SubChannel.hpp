@@ -371,6 +371,13 @@ public:
 	   std::string tkr;
 	   char        buf[K];
 
+	   // Pre-condition
+
+	   if ( !tInterval || !pFlds )
+	      return StartTapeSlice( tStart, tEnd );
+
+	   // OK : Tape Slice Sample
+
 	   sprintf( buf, "%d", tInterval ? tInterval : 60 );
 	   tkr  = tStart ? tStart : "00:00:00";
 	   tkr += "|";

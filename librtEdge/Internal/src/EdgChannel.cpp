@@ -1496,6 +1496,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _chan( chan ),
    _attr( chan.attr() ),
    _schema(),
+   _schemaByName(),
    _tape( _zBuf ),
    _hdr( (GLrecTapeHdr *)0 ),
    _rdb(),
@@ -1582,6 +1583,18 @@ bool TapeChannel::HasTicker( const char *svc,
       return true;
    }
    return false;
+}
+
+int TapeChannel::GetFieldID( const char *fldName )
+{
+   FieldMapByName          &ndb = _schemaByName;
+   FieldMapByName::iterator it;
+   string                   s( fldName );
+   int                      fid;
+
+   it  = ndb.find( s );
+   fid = ( it != ndb.end() ) ? (*it).second._fid : 0;
+   return fid;
 }
 
 MDDResult TapeChannel::Query()
@@ -1881,14 +1894,15 @@ bool TapeChannel::_IsWatched( GLrecTapeMsg &m )
 
 int TapeChannel::_LoadSchema()
 {
-   FieldMap          &sdb = _schema;
-   FieldMap::iterator it;
-   GLrecDictEntry    *de;
-   rtEdgeData         d;
-   char              *bp, *cp;
-   rtFIELD           *fdb, f;
-   rtBUF             &b = f._val._buf;
-   int                i, nd, ni, nr, dSz, iSz;
+   FieldMap       &sdb = _schema;
+   FieldMapByName &ndb = _schemaByName;
+   GLrecDictEntry *de;
+   rtEdgeData      d;
+   char           *bp, *cp;
+   rtFIELD        *fdb, f;
+   rtBUF          &b = f._val._buf;
+   int             i, nd, ni, nr, dSz, iSz;
+   string          s;
 
    // Pre-condition(s)
 
@@ -1921,8 +1935,11 @@ int TapeChannel::_LoadSchema()
       /*
        * Schema Lookup - Persistent
        */
-      if ( (it=sdb.find( f._fid )) == sdb.end() )
+      s = f._name;
+      if ( sdb.find( f._fid ) == sdb.end() )
          sdb[f._fid] = f;
+      if ( ndb.find( s ) == ndb.end() )
+         ndb[s] = f;
    }
    d._flds = fdb;
    d._nFld = nd;
@@ -2024,7 +2041,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
 {
    rtEdgeData     d;
    struct timeval tv;
-   int            ix;
+   int            ix, n;
 
    // Pre-condition(s)
 
@@ -2047,7 +2064,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    ::memset( &d, 0, sizeof( d ) );
 
    // Fill in rtEdgeData and dispatch
-// TODO _slice->CanPump() ...
+
    ix          = msg._dbIdx;
    d._tMsg     = Logger::Time2dbl( tv );
    d._pSvc     = _tdb[ix]->_svc;
@@ -2059,9 +2076,21 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    d._rawData  = m._data;
    d._rawLen   = m._dLen;
    d._StreamID = ix;
-   if ( _attr._dataCbk )
-      (*_attr._dataCbk)( _chan.cxt(), d );
-   return 1;
+   if ( _slice ) {
+      for ( n=0; _slice->CanPump( d ); n++ ) {
+         if ( _attr._dataCbk )
+            (*_attr._dataCbk)( _chan.cxt(), d );
+         d._flds = (rtFIELD *)_fl._flds;
+         d._nFld = _fl._nFld;
+      }
+      return n;
+   }
+   else {
+      n = 1;
+      if ( _attr._dataCbk )
+         (*_attr._dataCbk)( _chan.cxt(), d );
+   }
+   return n;
 }
 
 string TapeChannel::_Key( const char *svc, const char *tkr )
@@ -2161,10 +2190,13 @@ TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
    _tape( tape ),
    _td0( Logger::Time2dbl( _zT ) ),
    _td1( Logger::Time2dbl( _eT ) ),
+   _tSnap( 0 ),
    _t0( _zT ),
    _t1( _eT ),
    _tInterval( 0 ),
-   _fids()
+   _LVC(),
+   _fids(),
+   _fidSet()
 {
    string         s( tkr );
    struct timeval tmp;
@@ -2176,8 +2208,8 @@ TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
    ps   = (char *)s.data();
    p0   = ::strtok_r( ps,   t_SEP, &rp );
    p1   = ::strtok_r( NULL, t_SEP, &rp );
-   p2   = p1 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)"0";
-   p3   = p2 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)"";
+   p2   = p1 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)0;
+   p3   = p2 ? ::strtok_r( NULL, t_SEP, &rp ) : (char *)0;
    /*
     * tStart, tEnd
     */
@@ -2192,21 +2224,26 @@ TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
       _td0 = Logger::Time2dbl( _t0 );
       _td1 = Logger::Time2dbl( _t1 );
    }
+   if ( !p2 || !p3 )
+      return;
    /*
     * tInterval, FIDs
     */
-   string    ss( p3 );
-   mddField *fDef;
+   FIDSet &fdb = _fidSet;
+   string  ss( p3 );
 
-   _tInterval = atoi( p3 );
-   ps = (char *)s.data();
+   _tInterval = atoi( p2 );
+   ps = (char *)ss.data();
    for ( p0=::strtok_r( ps, ",", &rp ); p0; p0=::strtok_r( NULL, ",", &rp ) ) {
-      if ( (fid=atoi( p0 )) )
+      if ( !(fid=atoi( p0 )) )
+         fid = _tape.GetFieldID( p0 );
+      if ( fid && ( fdb.find( fid ) == fdb.end() ) ) {
          _fids.push_back( fid );
-      else if ( (fDef=_tape.edg().GetDef( p0 )) )
-         _fids.push_back( (int)fDef->_fid );
+         fdb.insert( fid );
+      }
    }
 }
+
 
 ////////////////////////////////////
 // Access
@@ -2225,10 +2262,46 @@ bool TapeSlice::InTimeRange( GLrecTapeMsg &m )
    return InRange( _td0, dt, _td1 );
 }
 
-bool TapeSlice::CanPump( GLrecTapeMsg &m )
+bool TapeSlice::CanPump( rtEdgeData &d )
 {
-   // TODO : LVC / _tInterval, etc.
+   time_t tMsg;
 
+   // Pre-condition(s)
+
+   if ( !InRange( _td0, d._tMsg, _td1 ) )
+      return false;
+   if ( !IsSampled() )
+      return true;
+
+   /*
+    * 1) Cache
+    * 2) Determine if next interval; If so, advance _tSnap and ...
+    */
+   _Cache( d );
+   tMsg = (time_t)d._tMsg;
+   if ( _tSnap ) {
+      if ( ( _tSnap+_tInterval ) > tMsg )
+         return false;
+      _tSnap += _tInterval;
+   }
+   else
+      _tSnap = tMsg - ( tMsg % _tInterval );
+   /*
+    * 3) ... Pump
+    */
+   FieldMap::iterator it;
+   size_t             i, n;
+   int                nf;
+
+   d._flds = _flds;
+   d._nFld = 0;
+   n       = _fids.size();
+   for ( i=0,nf=0; i<n; i++ ) {
+      if ( (it=_LVC.find( _fids[i] )) != _LVC.end() )
+         d._flds[nf++] = (*it).second;
+   }
+   d._tMsg = _tSnap;
+   d._nFld = nf;
    return true;
 }
 
@@ -2276,5 +2349,19 @@ struct timeval TapeSlice::_str2tv( char *hmsU )
    tv.tv_usec = u ? atoi( u ) : 0;
    tv.tv_usec = WithinRange( 0, tv.tv_usec * mul, 999999 );
    return tv;
+}
+
+void TapeSlice::_Cache( rtEdgeData &d )
+{
+   FIDSet  &fdb = _fidSet;
+   rtFIELD  f;
+   int      i, fid;
+
+   for ( i=0; i<d._nFld; i++ ) {
+      f   = d._flds[i];
+      fid = f._fid;
+      if ( fdb.find( fid ) != fdb.end() )
+         _LVC[fid] = f;
+   }
 }
 
