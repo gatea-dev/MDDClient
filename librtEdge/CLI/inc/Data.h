@@ -14,6 +14,7 @@
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
 *      3 SEP 2020 jcs  Build 44: _MsgTime; _StreamID
 *     30 SEP 2020 jcs  Build 45: _rawView / _rawLen
+*      3 DEC 2020 jcs  Build 47: _TapePos
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -200,6 +201,12 @@ public:
 	property int _StreamID
 	{
 	   int get() { return _msg->StreamID(); }
+	}
+
+	/** \brief Returns tape position, if pumping from tape */
+	property long _TapePos
+	{
+	   long get() { return _msg->TapePos(); }
 	}
 
 	/** \brief Returns name of service supplying this update */

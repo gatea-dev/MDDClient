@@ -37,11 +37,15 @@ Build 47 20-11-xx
 
 5) py
 
+6) Fusion:
+   - rtEdgeData._tapePos
+   - int rtEdge_PumpTape( NumMsg, off0, tStart )
+
 
 Build 46 20-11-21
 -----------------
 1) Fusion /Tape :
-   - rtEdge_PumpTapeXxxx()
+   - rtEdge_PumpTape()
    - Query All between 2 timestamps / or offset 
    - Register callback every X msg 
    - Fusion : Table Upload

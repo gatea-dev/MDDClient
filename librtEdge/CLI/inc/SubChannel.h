@@ -13,6 +13,7 @@
 *     29 APR 2020 jcs  Build 43: BDS
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
+*      3 DEC 2020 jcs  Build 47: PumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -579,6 +580,37 @@ public:
 	 * \brief Release resources associated with last call to Query().
 	 */
 	void FreeResult();
+
+
+	////////////////////////////////////
+	// Tape Only
+	////////////////////////////////////
+public:
+	/**
+	 * \brief Pump slice of Messages from Tape starting at specific offset.
+	 *
+	 * You receive asynchronous market data updates in the OnData() and are
+	 * notified of completion in OnStreamDone().
+	 *
+	 * To pump a 'slice', you will need to store the rtEdgeData.TapePos() from
+	 * the last message received in previous call to PumpTape(), then use this
+	 * as the off0 in next call to PumpTape().
+	 *
+	 * \param off0 - Beginning offset, or 0 for beginning of tape
+	 * \param nMsg - Number of msgs to pump; 0 for all
+	 * \return Unique Tape Pumping ID; Kill pump via StopPumpTape()
+	 * \see StopPumpTape()
+	 */
+	int PumpTape( long off0, int nMsg );
+
+	/**
+	 * \brief Stop pumping from tape
+	 *
+	 * \param pumpID - Pump ID returned from rtEdge_PumpTape()
+	 * \return 1 if stopped; 0 if invalid Pump ID
+	 * \see PumpTape()
+	 */
+	int StopPumpTape( int pumpID );
 
 
 	////////////////////////////////////

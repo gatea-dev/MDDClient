@@ -14,6 +14,7 @@
 *     29 APR 2020 jcs  Build 43: BDS 
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
+*      3 DEC 2020 jcs  Build 47: PumpTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -483,6 +484,20 @@ rtEdgeData ^rtEdgeSubscriber::ParseView( IntPtr vw, int dLen )
    if ( (msg=_sub->Parse( b._data, b._dLen )) )
       _parse->Set( *msg );
    return _parse;
+}
+
+
+////////////////////////////////////
+// Tape Only
+////////////////////////////////////
+int rtEdgeSubscriber::PumpTape( long off0, int nMsg )
+{
+   return _sub->PumpTape( off0, nMsg );
+}
+
+int rtEdgeSubscriber::StopPumpTape( int pumpID )
+{
+   return _sub->StopPumpTape( pumpID );
 }
 
 } // namespace librtEdge

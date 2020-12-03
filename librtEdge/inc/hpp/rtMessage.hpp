@@ -11,6 +11,7 @@
 *      8 FEB 2020 jcs  Build 42: IntMap for _dataLVC
 *      3 SEP 2020 jcs  Build 44: IsRecovering(); StreamID()
 *     17 SEP 2020 jcs  Build 45: SetParseOnly
+*      3 DEC 2020 jcs  Build 47: TapePos()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -170,6 +171,16 @@ public:
 	int StreamID()
 	{
 	   return data()._StreamID;
+	}
+
+	/**
+	 * \brief Returns Tape Position, if pumping from tape
+	 *
+	 * \return Tape Position, if pumping from tape
+	 */
+	int TapePos()
+	{
+	   return data()._TapePos;
 	}
 
 	/**

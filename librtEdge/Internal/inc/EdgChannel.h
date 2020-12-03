@@ -127,7 +127,7 @@ public:
 	int  Unsubscribe( int );
 	void Open( EdgRec & );
 	void Close( EdgRec & );
-	int  PumpTape( u_int64_t, u_int64_t, const char *, const char * ); 
+	int  PumpTape( u_int64_t, int );
 	int  StopPumpTape( int );
 
 	// Operations - Conflation

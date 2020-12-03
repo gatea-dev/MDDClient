@@ -471,10 +471,7 @@ void EdgChannel::Close( EdgRec &rec )
    st._nClose += 1;
 }
 
-int EdgChannel::PumpTape( u_int64_t   off0, 
-                          u_int64_t   off1, 
-                          const char *tm0, 
-                          const char *tm1 )
+int EdgChannel::PumpTape( u_int64_t off0, int nMsg )
 {
    Locker lck( _mtx );
 
