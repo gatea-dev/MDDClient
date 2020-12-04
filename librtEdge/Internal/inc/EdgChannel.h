@@ -19,7 +19,7 @@
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
-*     27 NOV 2020 jcs  Build 47: TapeSlice
+*      3 DEC 2020 jcs  Build 47: TapeSlice
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -284,6 +284,7 @@ private:
 	mddFieldList    _fl;
 	string          _err;
 	int             _nSub;
+	Mutex           _sliceMtx;
 	TapeSlice      *_slice;
 	volatile bool   _bRun;
 	volatile bool   _bInUse;
@@ -305,6 +306,11 @@ public:
 	int             GetFieldID( const char * );
 	MDDResult       Query();
 
+	// PumpTape
+public:
+	int PumpTape( u_int64_t, int );
+	int StopPumpTape( int );
+
 	// Operations
 public:
 	int  Subscribe( const char *, const char * );
@@ -323,6 +329,7 @@ private:
 	bool           _ParseFieldList( mddBuf );
 	int            _PumpDead();
 	void           _PumpStatus( GLrecTapeMsg &, const char *, rtEdgeType ty=edg_recovering );
+	int            _PumpSlice( u_int64_t, int );
 	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
 	string         _Key( const char *, const char * );
 	int            _get32( u_char * );
@@ -342,20 +349,35 @@ class TapeSlice
 {
 public:
 	TapeChannel   &_tape;
+	long           _ID;
+	bool           _bByTime;
+	/*
+	 * _bByTime
+	 */
 	double         _td0;
 	double         _td1;
 	time_t         _tSnap;
 	struct timeval _t0;
 	struct timeval _t1;
 	int            _tInterval;
-	FieldMap       _LVC;
 	FIDs           _fids;
 	FIDSet         _fidSet;
+	/*
+	 * !_bByTime
+	 */
+	u_int64_t      _off0;
+	int            _NumMsg;
+	/*
+	 * LVC
+	 */
+	FieldMap       _LVC;
 	rtFIELD        _flds[MAX_FLD];
 
 	// Constructor / Destructor
 public:
 	TapeSlice( TapeChannel &, const char * );
+	TapeSlice( TapeChannel &, u_int64_t, int );
+	TapeSlice( const TapeSlice & );
 
 	// Access
 public:

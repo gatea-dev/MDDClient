@@ -20,7 +20,7 @@
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
-*     22 NOV 2020 jcs  Build 47: StreamDone : both ways
+*      3 DEC 2020 jcs  Build 47: StreamDone : both ways
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -473,20 +473,13 @@ void EdgChannel::Close( EdgRec &rec )
 
 int EdgChannel::PumpTape( u_int64_t off0, int nMsg )
 {
-   Locker lck( _mtx );
-
-   // TODO ...
-
-   return _pumpID++;
+   return _tape ? _tape->PumpTape( off0, nMsg ) : 0;
 }
 
 int EdgChannel::StopPumpTape( int pumpID )
 {
-   // TODO ...
-
-   return 1;
+   return _tape ? _tape->StopPumpTape( pumpID ) : 0;
 }
-
 
 
 ////////////////////////////////////////////
@@ -1504,6 +1497,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _fl( ::mddFieldList_Alloc( K ) ),
    _err(),
    _nSub( 0 ),
+   _sliceMtx(),
    _slice( (TapeSlice *)0 ),
    _bRun( false ),
    _bInUse( false )
@@ -1524,6 +1518,9 @@ TapeChannel::~TapeChannel()
    Unload();
    ::mddFieldList_Free( _fl );
    ::mddSub_Destroy( _mdd );
+
+   Locker lck( _sliceMtx );
+
    if ( _slice )
       delete _slice;
 }
@@ -1617,6 +1614,46 @@ MDDResult TapeChannel::Query()
 
 
 ////////////////////////////////////
+// PumpTape
+////////////////////////////////////
+int TapeChannel::PumpTape( u_int64_t off0, int nMsg )
+{
+   Locker lck( _sliceMtx );
+
+   // Pre-condition(s)
+
+   if ( _slice || _bRun || _bInUse )
+      return 0;
+
+   // OK to continue
+
+   _slice = new TapeSlice( *this, off0, nMsg );
+   _bRun  = true;
+   return _slice->_ID;
+}
+
+int TapeChannel::StopPumpTape( int id )
+{
+   // Pre-condition
+   {
+      Locker lck( _sliceMtx );
+
+      if ( !_slice || ( _slice->_ID != id ) )
+         return 0;
+   }
+   // 2) Wait for slice to end
+
+   for ( ; _bRun; ::rtEdge_Sleep( 0.100 ) );
+
+   Locker lck( _sliceMtx );
+
+   delete _slice;
+   _slice = (TapeSlice *)0;
+   return id;
+}
+
+
+////////////////////////////////////
 // Operations
 ////////////////////////////////////
 int TapeChannel::Subscribe( const char *svc, const char *tkr )
@@ -1626,6 +1663,8 @@ int TapeChannel::Subscribe( const char *svc, const char *tkr )
    // Special Case : Run baby
 
    if ( !::strcmp( svc, pTape() ) ) {
+      Locker lck( _sliceMtx );
+
       if ( ::strcmp( tkr, t_ALL ) )
          _slice = new TapeSlice( *this, tkr );
       _bRun = true;
@@ -1747,9 +1786,18 @@ int TapeChannel::Pump()
       it = _wl.begin();
       return PumpTicker( (*it).first );
    }
+   /*
+    * PumpTpe( off, nMsg )??
+    */
+   {
+      Locker lck( _sliceMtx );
 
-   // All Tickers
-
+      if ( _slice && !_slice->_bByTime )
+         return _PumpSlice( _slice->_off0, _slice->_NumMsg );
+   }
+   /*
+    * All Tickers??
+    */
    bp  = _tape._data;
    off = _hdr->_hdrSiz;
    t0  = _slice ? _slice->_t0 : _zT;
@@ -2030,8 +2078,53 @@ void TapeChannel::_PumpStatus( GLrecTapeMsg &msg,
    d._pTkr     = _tdb[ix]->_tkr;
    d._pErr     = sts;
    d._ty       = ty;
+   d._TapePos  = (char *)&msg - _tape._data;
    if ( _attr._dataCbk )
       (*_attr._dataCbk)( _chan.cxt(), d );
+}
+
+int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
+{
+   GLrecTapeHdr  &h  = hdr();
+   Sentinel      &ss = h._sentinel;
+   GLrecTapeMsg  *msg;
+   char          *bp, *cp;
+   mddBuf         m;
+   u_int64_t      off;
+   int            i, n, mSz;
+
+   // 1) Quick offset check : Are 1st 5 msgs valid?
+
+   for ( i=0,off=off0; i<5 && off<_tape._dLen; i++ ) {
+      cp   = bp+off;
+      msg  = (GLrecTapeMsg *)cp;
+      mSz  = msg->_bLast4 ? _mSz4 : _mSz8;
+      off += msg->_msgLen;
+      /*
+       * Requires valid a) dbIdx and b) Timestamp
+       */
+      if ( !InRange( 0, msg->_dbIdx, h._numRec ) )
+         return 0;
+      if ( !InRange( ss._tStart, msg->_tv_sec, h._curTime.tv_sec ) )
+         return 0;
+   }
+
+   // Pump up to nMsg
+
+   for ( i=0,off=off0; _bRun && off<_tape._dLen && i<nMsg; i++ ) {
+      cp      = bp+off;
+      msg     = (GLrecTapeMsg *)cp;
+      mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
+      m._data = cp + mSz;
+      n      += _PumpOneMsg( *msg, m, false );
+      off    += msg->_msgLen;
+   }
+   _bRun   = false;
+   _bInUse = false;
+
+   // Return number pumped
+
+   return n;
 }
 
 int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
@@ -2073,6 +2166,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    d._rawData  = m._data;
    d._rawLen   = m._dLen;
    d._StreamID = ix;
+   d._TapePos  = (char *)&msg - _tape._data;
    if ( _slice ) {
       for ( n=0; _slice->CanPump( n, d ); n++ ) {
          if ( _attr._dataCbk )
@@ -2180,20 +2274,26 @@ int TapeChannel::_RecSiz()
 //
 /////////////////////////////////////////////////////////////////////////////
 
+static long _NumSlice = 1;
+
 ////////////////////////////////////////////
 // Constructor / Destructor
 ////////////////////////////////////////////
 TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
    _tape( tape ),
+   _ID( ATOMIC_INC( &_NumSlice ) ),
+   _bByTime( true ),
    _td0( Logger::Time2dbl( _zT ) ),
    _td1( Logger::Time2dbl( _eT ) ),
    _tSnap( 0 ),
    _t0( _zT ),
    _t1( _eT ),
    _tInterval( 0 ),
-   _LVC(),
    _fids(),
-   _fidSet()
+   _fidSet(),
+   _off0( 0 ),
+   _NumMsg( 0 ),
+   _LVC()
 {
    string         s( tkr );
    struct timeval tmp;
@@ -2239,6 +2339,42 @@ TapeSlice::TapeSlice( TapeChannel &tape, const char *tkr ) :
          fdb.insert( fid );
       }
    }
+}
+
+TapeSlice::TapeSlice( TapeChannel &tape, u_int64_t off0, int NumMsg ) :
+   _tape( tape ),
+   _ID( ATOMIC_INC( &_NumSlice ) ),
+   _bByTime( false ),
+   _td0( Logger::Time2dbl( _zT ) ),
+   _td1( Logger::Time2dbl( _eT ) ),
+   _tSnap( 0 ),
+   _t0( _zT ),
+   _t1( _eT ),
+   _tInterval( 0 ),
+   _fids(),
+   _fidSet(),
+   _off0( off0 ),
+   _NumMsg( NumMsg ),
+   _LVC()
+{
+}
+
+TapeSlice::TapeSlice( const TapeSlice &c ) :
+   _tape( c._tape ),
+   _ID( c._ID ),
+   _bByTime( c._bByTime ),
+   _td0( c._td0 ),
+   _td1( c._td1 ),
+   _tSnap( c._tSnap ),
+   _t0( c._t0 ),
+   _t1( c._t1 ),
+   _tInterval( c._tInterval ),
+   _fids(),
+   _fidSet(),
+   _off0( c._off0 ),
+   _NumMsg( c._NumMsg ),
+   _LVC()
+{
 }
 
 
