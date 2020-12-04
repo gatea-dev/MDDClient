@@ -39,13 +39,13 @@ Build 47 20-11-xx
 
 6) Fusion:
    - rtEdgeData._tapePos
-   - int rtEdge_PumpTape( NumMsg, off0, tStart )
+   - int rtEdge_StartPumpFullTape( NumMsg, off0, tStart )
 
 
 Build 46 20-11-21
 -----------------
 1) Fusion /Tape :
-   - rtEdge_PumpTape()
+   - rtEdge_StartPumpFullTape()
    - Query All between 2 timestamps / or offset 
    - Register callback every X msg 
    - Fusion : Table Upload

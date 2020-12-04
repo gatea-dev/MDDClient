@@ -21,7 +21,7 @@
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *      7 SEP 2020 jcs  Build 44: ioctl_normalTapeDir; ioctl_xxxThreadName
 *     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
-*     22 OCT 2020 jcs  Build 46: rtEdge_PumpTape()
+*     22 OCT 2020 jcs  Build 46: rtEdge_StartPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_Data._TapePos
 *
 *  (c) 1994-2020 Gatea Ltd.
@@ -1536,26 +1536,27 @@ int rtEdge_Parse( rtEdge_Context cxt, rtEdgeData *data );
  * when rtEdgeData._ty == edg_streamDone.
  *
  * To pump a 'slice', you will need to store the rtEdgeData._TapePos from the 
- * last message received in previous call to rtEdge_PumpTape(), then use this
- * value as the off0 argument to next call to rtEdge_PumpTape().
+ * last message received in previous call to rtEdge_StartPumpFullTape(), 
+ * then use this value as the off0 argument to next call to 
+ * rtEdge_StartPumpFullTape().
  *
  * \param cxt - Subscription Channel Context from rtEdge_Initialize()
  * \param off0 - Beginning offset; 0 for beginning of tape
  * \param nMsg - Number of msgs to pump; 0 for all
- * \return Unique Tape Pumping ID; Kill pump via rtEdge_StopPumpTape()
- * \see rtEdge_StopPumpTape()
+ * \return Unique Tape Pumping ID; Kill pump via rtEdge_StopPumpFullTape()
+ * \see rtEdge_StopPumpFullTape()
  */
-int rtEdge_PumpTape( rtEdge_Context cxt, u_int64_t off0, int nMsg );
+int rtEdge_StartPumpFullTape( rtEdge_Context cxt, u_int64_t off0, int nMsg );
 
 /**
  * \brief Stop pumping from tape
  *
  * \param cxt - Subscription Channel Context from rtEdge_Initialize()
- * \param pumpID - Pump ID returned from rtEdge_PumpTape()
+ * \param pumpID - Pump ID returned from rtEdge_StartPumpFullTape()
  * \return 1 if stopped; 0 if invalid Pump ID
- * \see rtEdge_PumpTape()
+ * \see rtEdge_StartPumpFullTape()
  */
-int rtEdge_StopPumpTape( rtEdge_Context cxt, int pumpID );
+int rtEdge_StopPumpFullTape( rtEdge_Context cxt, int pumpID );
 
 
 

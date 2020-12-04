@@ -471,14 +471,14 @@ void EdgChannel::Close( EdgRec &rec )
    st._nClose += 1;
 }
 
-int EdgChannel::PumpTape( u_int64_t off0, int nMsg )
+int EdgChannel::StartPumpFullTape( u_int64_t off0, int nMsg )
 {
-   return _tape ? _tape->PumpTape( off0, nMsg ) : 0;
+   return _tape ? _tape->StartPumpFullTape( off0, nMsg ) : 0;
 }
 
-int EdgChannel::StopPumpTape( int pumpID )
+int EdgChannel::StopPumpFullTape( int pumpID )
 {
-   return _tape ? _tape->StopPumpTape( pumpID ) : 0;
+   return _tape ? _tape->StopPumpFullTape( pumpID ) : 0;
 }
 
 
@@ -1616,7 +1616,7 @@ MDDResult TapeChannel::Query()
 ////////////////////////////////////
 // PumpTape
 ////////////////////////////////////
-int TapeChannel::PumpTape( u_int64_t off0, int nMsg )
+int TapeChannel::StartPumpFullTape( u_int64_t off0, int nMsg )
 {
    Locker lck( _sliceMtx );
 
@@ -1632,7 +1632,7 @@ int TapeChannel::PumpTape( u_int64_t off0, int nMsg )
    return _slice->_ID;
 }
 
-int TapeChannel::StopPumpTape( int id )
+int TapeChannel::StopPumpFullTape( int id )
 {
    // Pre-condition
    {
@@ -1860,14 +1860,14 @@ int TapeChannel::PumpTicker( int ix )
 #else
             sprintf( sts, "Reversing about %ld msgs", nMsg );
 #endif // (_MSC_VER >= 1910)
-            _PumpStatus( *msg, sts );
+            _PumpStatus( msg, sts );
          }
          else {
             for ( j=0; j<4; j++ ) {
                pct = 100 - _pct[j];
                if ( i == ( nMsg / pct ) ) {
                   sprintf( sts, "%d%% msgs reversed", _pct[j] );
-                  _PumpStatus( *msg, sts );
+                  _PumpStatus( msg, sts );
                }
             }
          }
@@ -1895,7 +1895,7 @@ int TapeChannel::PumpTicker( int ix )
       m._dLen = msg->_msgLen - mSz;
       n      += _PumpOneMsg( *msg, m, true );
    }
-   _PumpStatus( *msg, "Stream Complete", edg_streamDone );
+   _PumpStatus( msg, "Stream Complete", edg_streamDone );
    _bRun   = false;
    _bInUse = false;
 
@@ -2062,9 +2062,10 @@ int TapeChannel::_PumpDead()
    return n;
 }
 
-void TapeChannel::_PumpStatus( GLrecTapeMsg &msg, 
+void TapeChannel::_PumpStatus( GLrecTapeMsg *msg, 
                                const char   *sts,
-                               rtEdgeType    ty )
+                               rtEdgeType    ty,
+                               u_int64_t     off )
 {
    rtEdgeData d;
    int        ix;
@@ -2072,13 +2073,13 @@ void TapeChannel::_PumpStatus( GLrecTapeMsg &msg,
    // Fill in rtEdgeData and dispatch
 
    ::memset( &d, 0, sizeof( d ) );
-   ix          = msg._dbIdx;
+   ix          = msg ? msg->_dbIdx : 0;
    d._tMsg     = Logger::Time2dbl( Logger::tvNow() );
    d._pSvc     = _tdb[ix]->_svc;
    d._pTkr     = _tdb[ix]->_tkr;
    d._pErr     = sts;
    d._ty       = ty;
-   d._TapePos  = (char *)&msg - _tape._data;
+   d._TapePos  = off;
    if ( _attr._dataCbk )
       (*_attr._dataCbk)( _chan.cxt(), d );
 }
@@ -2095,6 +2096,9 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
 
    // 1) Quick offset check : Are 1st 5 msgs valid?
 
+   bp = _tape._data;
+   if ( !off0 )
+      off0 += h._hdrSiz;
    for ( i=0,off=off0; i<5 && off<_tape._dLen; i++ ) {
       cp   = bp+off;
       msg  = (GLrecTapeMsg *)cp;
@@ -2109,7 +2113,7 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
          return 0;
    }
 
-   // Pump up to nMsg
+   // Pump up to nMsg ...
 
    for ( i=0,off=off0; _bRun && off<_tape._dLen && i<nMsg; i++ ) {
       cp      = bp+off;
@@ -2119,6 +2123,13 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
       n      += _PumpOneMsg( *msg, m, false );
       off    += msg->_msgLen;
    }
+   /*
+    * ... plus streamDone w/ offset = **NEXT** msg 
+    */
+   off = ( off < _tape._dLen ) ? off : 0;
+   cp  = off ? bp + off : (char *)0;
+   msg = (GLrecTapeMsg *)cp;
+   _PumpStatus( msg, "Stream Complete", edg_streamDone, off );
    _bRun   = false;
    _bInUse = false;
 

@@ -12,7 +12,7 @@
 *     20 FEB 2019 jcs  Build 42: -renko
 *     30 APR 2019 jcs  Build 43: -bds
 *     10 SEP 2020 jcs  Build 44: -tapeDir -query
-*      1 DEC 2020 jcs  Build 47: -ti
+*      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -265,13 +265,16 @@ public:
    virtual void OnDead( Message &msg, const char *err )
    {
       string      s;
+      u_int64_t   off;
       const char *tm, *svc, *tkr, *mt;
 
       tm  = pDateTimeMs( s, msg.MsgTime() );
       mt  = msg.MsgType();
       svc = msg.Service();
       tkr = msg.Ticker();
-      ::fprintf( stdout, "[%s] %s ( %s,%s ) :%s\n", tm, mt, svc, tkr, err );
+      ::fprintf( stdout, "[%s] %s ( %s,%s ) :%s", tm, mt, svc, tkr, err );
+      if ( (off=msg.TapePos()) )
+         ::fprintf( stdout, "; Pos=%ld", off );
       _flush();
    }
 
@@ -379,7 +382,8 @@ int main( int argc, char **argv )
    char       *pa, *cp, *rp, sTkr[K];
    bool        bCfg, aOK, bBin, bStr, bTape, bQry;
    string      s;
-   int         i, nt, tRun, ti;
+   u_int64_t   s0;
+   int         i, nt, tRun, ti, sn;
    ::MDDResult res; 
    ::MDDRecDef rd;
 
@@ -399,6 +403,8 @@ int main( int argc, char **argv )
    t1    = NULL;
    ti    = 0;
    tf    = NULL;
+   s0    = 0;
+   sn    = 0;
    tRun  = 0;
    bBin  = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
@@ -415,6 +421,8 @@ int main( int argc, char **argv )
       s += "       [ -t1 <TapeSliceEndTime> ] \\ \n";
       s += "       [ -ti <TapeSlice Sample Interval> ] \\ \n";
       s += "       [ -tf <CSV TapeSlice Sample Fields> ] \\ \n";
+      s += "       [ -s0 <TapeSlice Start Offset> ] \\ \n";
+      s += "       [ -sn <TapeSlice NumMsg> ] \\ \n";
       s += "       [ -r  <AppRunTime> ] \\ \n";
       s += "       [ -p  <Protocol MF|BIN> ] \\ \n";
       s += "       [ -bstr <If included, bytestream> ] \\ \n";
@@ -434,6 +442,8 @@ int main( int argc, char **argv )
       printf( "      -t1      : <empty>\n" );
       printf( "      -ti      : %d\n", ti );
       printf( "      -tf      : <empty>\n" );
+      printf( "      -s0      : %ld\n", s0 );
+      printf( "      -sn      : %d\n", sn );
       printf( "      -r       : %d\n", tRun );
       printf( "      -p       : %s\n", bBin ? "BIN" : "MF" );
       printf( "      -bstr    : %s\n", bStr ? "YES" : "NO" );
@@ -469,6 +479,10 @@ int main( int argc, char **argv )
          ti  = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-tf" ) )
          tf  = argv[++i];
+      else if ( !::strcmp( argv[i], "-s0" ) )
+         s0  = atol( argv[++i] );
+      else if ( !::strcmp( argv[i], "-sn" ) )
+         sn  = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-r" ) )
          tRun = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-p" ) )
@@ -576,6 +590,8 @@ int main( int argc, char **argv )
          else 
             ch.StartTapeSlice( t0, t1 );
       }
+      else if ( sn )
+         ch.StartPumpFullTape( s0, sn );
       else
          ch.StartTape();
    }

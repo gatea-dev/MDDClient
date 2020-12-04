@@ -13,7 +13,7 @@
 *     29 APR 2020 jcs  Build 43: BDS
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
-*      3 DEC 2020 jcs  Build 47: PumpTape()
+*      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -593,24 +593,24 @@ public:
 	 * notified of completion in OnStreamDone().
 	 *
 	 * To pump a 'slice', you will need to store the rtEdgeData.TapePos() from
-	 * the last message received in previous call to PumpTape(), then use this
-	 * as the off0 in next call to PumpTape().
+	 * the last message received in previous call to StartPumpFullTape(), 
+	 * then use this as the off0 in next call to StartPumpFullTape().
 	 *
 	 * \param off0 - Beginning offset, or 0 for beginning of tape
 	 * \param nMsg - Number of msgs to pump; 0 for all
-	 * \return Unique Tape Pumping ID; Kill pump via StopPumpTape()
-	 * \see StopPumpTape()
+	 * \return Unique Tape Pumping ID; Kill pump via StopPumpFullTape()
+	 * \see StopPumpFullTape()
 	 */
-	int PumpTape( long off0, int nMsg );
+	int StartPumpFullTape( long off0, int nMsg );
 
 	/**
 	 * \brief Stop pumping from tape
 	 *
-	 * \param pumpID - Pump ID returned from rtEdge_PumpTape()
+	 * \param pumpID - Pump ID returned from rtEdge_PumpFullTape()
 	 * \return 1 if stopped; 0 if invalid Pump ID
-	 * \see PumpTape()
+	 * \see StartPumpFullTape()
 	 */
-	int StopPumpTape( int pumpID );
+	int StopPumpFullTape( int pumpID );
 
 
 	////////////////////////////////////

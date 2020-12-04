@@ -178,7 +178,7 @@ public:
 	 *
 	 * \return Tape Position, if pumping from tape
 	 */
-	int TapePos()
+	u_int64_t TapePos()
 	{
 	   return data()._TapePos;
 	}

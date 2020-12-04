@@ -18,7 +18,7 @@
 *     12 FEB 2020 jcs  Build 42: bool Ioctl()
 *     10 SEP 2020 jcs  Build 44: _bTapeDir; TapeChannel.Query()
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
-*     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
+*     22 OCT 2020 jcs  Build 46: XxxPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: TapeSlice
 *
 *  (c) 1994-2020 Gatea Ltd.
@@ -127,8 +127,8 @@ public:
 	int  Unsubscribe( int );
 	void Open( EdgRec & );
 	void Close( EdgRec & );
-	int  PumpTape( u_int64_t, int );
-	int  StopPumpTape( int );
+	int  StartPumpFullTape( u_int64_t, int );
+	int  StopPumpFullTape( int );
 
 	// Operations - Conflation
 
@@ -308,8 +308,8 @@ public:
 
 	// PumpTape
 public:
-	int PumpTape( u_int64_t, int );
-	int StopPumpTape( int );
+	int StartPumpFullTape( u_int64_t, int );
+	int StopPumpFullTape( int );
 
 	// Operations
 public:
@@ -328,7 +328,7 @@ private:
 	int            _LoadSchema();
 	bool           _ParseFieldList( mddBuf );
 	int            _PumpDead();
-	void           _PumpStatus( GLrecTapeMsg &, const char *, rtEdgeType ty=edg_recovering );
+	void           _PumpStatus( GLrecTapeMsg *, const char *, rtEdgeType ty=edg_recovering, u_int64_t off=0 );
 	int            _PumpSlice( u_int64_t, int );
 	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
 	string         _Key( const char *, const char * );
