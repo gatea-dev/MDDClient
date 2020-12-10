@@ -22,9 +22,15 @@
 # (c) 1994-2020 Gatea Ltd.
 #######################################################
 
+## Warnings
+
+WARN       = -Wall
+WARN      += -Wno-write-strings
+WARN      += -Wno-unused-but-set-variable
+
 ## Linux
 
-SOFLAGS   = -fPIC -rdynamic -Wall
+SOFLAGS   = -fPIC -rdynamic $(WARN)
 BITS      =64
 ARCH      = -m$(BITS)
 BIN_DIR   = bin$(BITS)
@@ -196,7 +202,6 @@ clear:
 
 clean:
 	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
-	( cd py ; ./linux64/clean.bash )
 
 %.o:  Internal/src/%.cpp
 	$(CPP) $(CPPFLAGS) $<
