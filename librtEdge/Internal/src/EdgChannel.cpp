@@ -1618,18 +1618,26 @@ MDDResult TapeChannel::Query()
 ////////////////////////////////////
 int TapeChannel::StartPumpFullTape( u_int64_t off0, int nMsg )
 {
-   Locker lck( _sliceMtx );
+   int    rc;
+   {
+      Locker lck( _sliceMtx );
 
-   // Pre-condition(s)
+      // Pre-condition(s)
 
-   if ( _slice || _bRun || _bInUse )
-      return 0;
+      if ( _slice || _bRun || _bInUse )
+         return 0;
 
-   // OK to continue
+      // OK to continue
 
-   _slice = new TapeSlice( *this, off0, nMsg );
-   _bRun  = true;
-   return _slice->_ID;
+      _slice = new TapeSlice( *this, off0, nMsg );
+      rc     = _slice->_ID;
+      _bRun  = true;
+   }
+   /*
+    * Wait for slice to kick off
+    */
+//   for ( ; !_bInUse; ::rtEdge_Sleep( 0.025 ) );
+   return rc;
 }
 
 int TapeChannel::StopPumpFullTape( int id )
@@ -1640,10 +1648,11 @@ int TapeChannel::StopPumpFullTape( int id )
 
       if ( !_slice || ( _slice->_ID != id ) )
          return 0;
+      _bRun = false;
    }
    // 2) Wait for slice to end
 
-   for ( ; _bRun; ::rtEdge_Sleep( 0.100 ) );
+   for ( ; _bInUse; ::rtEdge_Sleep( 0.100 ) );
 
    Locker lck( _sliceMtx );
 
@@ -1781,7 +1790,8 @@ int TapeChannel::Pump()
 
    // One ticker??
 
-   _bInUse = true;
+   TapeRun run( *this );
+
    if ( (nt=_wl.size()) == 1 ) {
       it = _wl.begin();
       return PumpTicker( (*it).first );
@@ -1811,11 +1821,10 @@ int TapeChannel::Pump()
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
+      m._dLen = msg->_msgLen - mSz;
       n      += _PumpOneMsg( *msg, m, false );
       off    += msg->_msgLen;
    }
-   _bRun   = false;
-   _bInUse = false;
 
    // Return number pumped
 
@@ -1841,7 +1850,6 @@ int TapeChannel::PumpTicker( int ix )
 
    // One Ticker
 
-   _bInUse = true;
    bp      = _tape._data;
    rec     = _tdb[ix];
    off     = rec->_loc;
@@ -1896,8 +1904,6 @@ int TapeChannel::PumpTicker( int ix )
       n      += _PumpOneMsg( *msg, m, true );
    }
    _PumpStatus( msg, "Stream Complete", edg_streamDone );
-   _bRun   = false;
-   _bInUse = false;
 
    // Return number pumped
 
@@ -2115,11 +2121,12 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
 
    // Pump up to nMsg ...
 
-   for ( i=0,off=off0; _bRun && off<_tape._dLen && i<nMsg; i++ ) {
+   for ( i=0,n=0,off=off0; _bRun && off<_tape._dLen && i<nMsg; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
+      m._dLen = msg->_msgLen - mSz;
       n      += _PumpOneMsg( *msg, m, false );
       off    += msg->_msgLen;
    }

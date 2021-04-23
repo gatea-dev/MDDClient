@@ -18,6 +18,7 @@
 *     12 OCT 2017 jcs  Build 36: Tape
 *     29 APR 2020 jcs  Build 43: bds
 *     11 SEP 2020 jcs  Build 44: -tapeDir; -query
+*      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *
 *  (c) 1994-2020 Gatea Ltd.
 ******************************************************************************/
@@ -162,11 +163,12 @@ class SubTest : rtEdgeSubscriber
    {
       try {
          SubTest     sub;
-         int         i, nt, argc, tRun;
+         int         i, nt, argc, tRun, ti, sn;
          bool        bMF, aOK, bds, bTape, bQry;
          string[]    tkrs;
          MDDRecDef[] dbTkrs;
-         string      s, svr, usr, svc, tkr, t0, t1;
+         string      s, svr, usr, svc, tkr, t0, t1, tf;
+         long        s0;
 
          /////////////////////
          // Quickie checks
@@ -183,6 +185,10 @@ class SubTest : rtEdgeSubscriber
          tkrs  = null;
          t0    = null;
          t1    = null;
+         ti    = 0;
+         tf    = null;
+         s0    = 0;
+         sn    = 0;
          tRun  = 0;
          bMF   = false;
          bds   = false;
@@ -196,6 +202,10 @@ class SubTest : rtEdgeSubscriber
             s += "       [ -t   <Ticker : CSV or Filename> ] \\ \n";
             s += "       [ -t0  <TapeSliceStartTime> ] \\ \n";
             s += "       [ -t1  <TapeSliceEndTime> ] \\ \n";
+            s += "       [ -ti <TapeSlice Sample Interval> ] \\ \n";
+            s += "       [ -tf <CSV TapeSlice Sample Fields> ] \\ \n";
+            s += "       [ -s0 <TapeSlice Start Offset> ] \\ \n";
+            s += "       [ -sn <TapeSlice NumMsg> ] \\ \n";
             s += "       [ -r   <AppRunTime> ] \\ \n";
             s += "       [ -bds <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
@@ -208,6 +218,10 @@ class SubTest : rtEdgeSubscriber
             Console.Write( "      -t       : <empty>\n" );
             Console.Write( "      -t0      : <empty>\n" );
             Console.Write( "      -t1      : <empty>\n" );
+            Console.Write( "      -ti      : ${0}\n", ti );
+            Console.Write( "      -tf      : <empty>\n" );
+            Console.Write( "      -s0      : ${0}\n", s0 );
+            Console.Write( "      -sn      : ${0}\n", sn );
             Console.Write( "      -r       : {0}\n", tRun );
             Console.Write( "      -bds     : {0}\n", bds );
             Console.Write( "      -tapeDir : {0}\n", bTape );
@@ -239,6 +253,14 @@ class SubTest : rtEdgeSubscriber
                t0  = args[++i];
             else if ( args[i] == "-t1" )
                t1  = args[++i];
+            else if ( args[i] == "-ti" )
+               ti = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-tf" )
+               tf  = args[++i];
+            else if ( args[i] == "-s0" )
+               s0 = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-sn" )
+               sn = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-r" )
                tRun = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-bds" )
@@ -277,8 +299,14 @@ class SubTest : rtEdgeSubscriber
             for ( i=0; i<nt; sub.Subscribe( svc, tkrs[i++], 0 ) );
          if ( sub.IsTape() ) {
             Console.WriteLine( "Pumping tape ..." );
-            if ( ( t0 != null ) && ( t1 != null ) )
-               sub.StartTapeSlice( t0, t1 );
+            if ( ( t0 != null ) && ( t1 != null ) ) {
+               if ( ( ti != 0 ) && ( tf != null ) )
+                  sub.StartTapeSliceSample( t0, t1, ti, tf );
+               else
+                  sub.StartTapeSlice( t0, t1 );
+            }
+            else if ( ( sn != 0 ) )
+               sub.StartPumpFullTape( s0, sn );
             else
                sub.StartTape();
          }

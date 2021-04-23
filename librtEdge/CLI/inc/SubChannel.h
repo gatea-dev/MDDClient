@@ -249,6 +249,28 @@ public:
 	 */
 	void StartTapeSlice( String ^tStart, String ^tEnd );
 
+	/**
+	 * \brief Pump data from the tape between the given start and end times
+	 * at specific interval and specific field(s)
+	 *
+	 * Messages from the tape are pumped as follows:
+	 * + All messages are pumped from tape into an internal Last Value Cache (LVC)
+	 * + At the tInterval, a new message is pumped from LVC into OnData()
+	 * + All messages are delivered to your app via OnData() or OnDead()
+	 * + All messages are delivered in the library thread for this channel
+	 * + If you Subscribe()'ed to any tickers, only those are pumped
+	 * + If you did not Subscribe(), then ALL tickers are pumped
+	 *
+	 * \param tStart - Start time
+	 * \param tEnd - End time
+	 * \param tInterval - Interval in seconds
+	 * \param pFlds - CSV list of Field IDs or Names of interest
+	 */
+	void StartTapeSliceSample( String ^tStart,
+	                           String ^tEnd,
+	                           int     tInterval,
+	                           String ^pFlds );
+
 	/** \brief Stop pumping data from tape */
 	void StopTape();
 
@@ -601,7 +623,7 @@ public:
 	 * \return Unique Tape Pumping ID; Kill pump via StopPumpFullTape()
 	 * \see StopPumpFullTape()
 	 */
-	int StartPumpFullTape( long off0, int nMsg );
+	int StartPumpFullTape( u_int64_t off0, int nMsg );
 
 	/**
 	 * \brief Stop pumping from tape

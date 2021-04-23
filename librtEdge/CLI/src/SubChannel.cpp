@@ -223,6 +223,17 @@ void rtEdgeSubscriber::StartTapeSlice( String ^tStart, String ^tEnd )
    _sub->StartTapeSlice( _pStr( tStart ), _pStr( tEnd ) );
 }
 
+void rtEdgeSubscriber::StartTapeSliceSample( String ^tStart, 
+                                             String ^tEnd, 
+                                             int     tInt, 
+                                             String ^pFlds )
+{
+   const char *t0 = _pStr( tStart );
+   const char *t1 = _pStr( tEnd );
+
+   _sub->StartTapeSliceSample( t0, t1, tInt, _pStr( pFlds ) );
+}
+
 void rtEdgeSubscriber::StopTape()
 {
    _sub->StopTape();
@@ -490,7 +501,7 @@ rtEdgeData ^rtEdgeSubscriber::ParseView( IntPtr vw, int dLen )
 ////////////////////////////////////
 // Tape Only
 ////////////////////////////////////
-int rtEdgeSubscriber::StartPumpFullTape( long off0, int nMsg )
+int rtEdgeSubscriber::StartPumpFullTape( u_int64_t off0, int nMsg )
 {
    return _sub->StartPumpFullTape( off0, nMsg );
 }

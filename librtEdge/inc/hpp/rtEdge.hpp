@@ -18,11 +18,21 @@
 *     29 APR 2020 jcs  Build 43: _BDS_PFX
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *     21 NOV 2020 jcs  Build 46: IsStopping()
+*     23 APR 2021 jcs  Build 48: GetDstConn()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2021 Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_rtEdge_H
 #define __RTEDGE_rtEdge_H
+#ifdef WIN32
+#pragma warning(disable:4190)
+#define socklen_t int
+#else
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif // WIN32
+
 #include <string>
 #include <map>
 #include <vector>
@@ -524,7 +534,8 @@ protected:
 	   _tHbeat( 60 ),
 	   _bIdleCbk( false ),
 	   _bCache( false ),
-	   _bStopping( false )
+	   _bStopping( false ),
+	   _dstConn()
 	{ ; }
 
 	/** \brief Destructor. */
@@ -596,6 +607,50 @@ public:
 	      ::rtEdge_ioctl( _cxt, ioctl_getFd, &fd );
 	   return fd;
 	}
+
+	/**
+	 * \brief Return name of destination connection
+	 *
+	 * \return Name of destination connection
+	 */
+	const char *DstConnName()
+	{
+	   struct sockaddr_in dst;
+	   struct hostent    *h;
+	   struct in_addr     ip;
+	   uint32_t           addr;
+	   uint16_t           port;
+	   socklen_t          dSz;
+	   const char        *pd;
+	   char               sPort[K];
+	   int                fd;
+
+	   // Set once; Empty _dstConn implies disconnected
+
+	   if ( !(fd=GetSocket()) )
+	      _dstConn = "";
+	   else if ( !_dstConn.length() ) {
+	      dSz = sizeof( struct sockaddr );
+	      ::getpeername( fd, (struct sockaddr *)&dst, &dSz );
+	      addr = dst.sin_addr.s_addr;
+	      port = ntohs( dst.sin_port );
+	      h    = ::gethostbyaddr( (char *)&addr, sizeof( addr ), AF_INET );
+	      if ( h && h->h_name )
+	         _dstConn = h->h_name;
+	      else {
+	         ip.s_addr = addr;
+	         _dstConn  = ::inet_ntoa( ip );
+	      }
+	      sprintf( sPort, ":%d", port );
+	      _dstConn += sPort;
+	   }
+
+	   // Empty _dstConn implies disconnected
+
+	   pd = _dstConn.length() ? _dstConn.data() : "Not connected";
+	   return pd;
+	}
+
 
 	/**
 	 * \brief Set channel run-time stats
@@ -968,6 +1023,7 @@ protected:
 	bool           _bIdleCbk;
 	bool           _bCache;
 	bool           _bStopping;
+	std::string    _dstConn;
 
 
 	////////////////////////////////////

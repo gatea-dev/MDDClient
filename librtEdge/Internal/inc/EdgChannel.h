@@ -47,6 +47,7 @@ class Schema;
 class Socket;
 class TapeChannel;
 class TapeSlice;
+class TapeRun;
 
 typedef hash_map<string, EdgSvc *>    SvcMap;
 typedef hash_map<string, EdgRec *>    RecByNameMap;
@@ -269,6 +270,7 @@ typedef vector<u_int64_t>         Offsets;
 
 class TapeChannel
 {
+friend class TapeRun;
 private:
 	EdgChannel     &_chan;
 	rtEdgeAttr      _attr;
@@ -340,6 +342,30 @@ private:
 	int            _RecSiz();
 
 };  // class TapeChannel
+
+class TapeRun
+{
+private:
+	TapeChannel &_tape;
+
+	/////////////////////////////
+	// Constructor / Destructor
+	/////////////////////////////
+public:
+	TapeRun( TapeChannel &tape ) :
+	   _tape( tape )
+	{
+	   _tape._bRun   = true;
+	   _tape._bInUse = true;
+	}
+
+	~TapeRun()
+	{
+	   _tape._bRun   = false;
+	   _tape._bInUse = false;
+	}
+
+}; // TapeRun
 
 
 /////////////////////////////////////////

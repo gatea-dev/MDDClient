@@ -204,9 +204,9 @@ public:
 	}
 
 	/** \brief Returns tape position, if pumping from tape */
-	property long _TapePos
+	property u_int64_t _TapePos
 	{
-	   long get() { return _msg->TapePos(); }
+	   u_int64_t get() { return _msg->TapePos(); }
 	}
 
 	/** \brief Returns name of service supplying this update */
