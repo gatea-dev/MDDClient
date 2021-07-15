@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <ProjectGuid>{F696F117-9108-13F8-79D1-E39EC0B9E9F0}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Debug64\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Debug64\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\lib\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Release64\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>
+         ..\;..\inc;..\common;
+         ..\..\MD-Direct\libmddWire\inc;
+         ..\..\MD-Direct\librtEdge\inc;
+         ..\..\GFC\gl\inc;
+         ..\..\GFC\event\inc;
+         ..\..\GFC\xml\inc;
+         ..\..\GFC\rogue;
+         %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>..\Debug64\GateaRtdServer64.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>..\Debug64\</AssemblerListingLocation>
+      <ObjectFileName>..\Debug64\</ObjectFileName>
+      <ProgramDataBaseFileName>..\Debug64\</ProgramDataBaseFileName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+         ..\..\MD-Direct\libmddWire\Debug64\libmddWire64.lib;
+         ..\..\MD-Direct\librtEdge\Debug64\librtEdge64.lib;
+         ..\..\STATIC64\gl\lib\gld.lib;
+         ..\..\STATIC64\event\lib\eventd.lib;
+         ..\..\STATIC64\rogue\lib\rogued.lib;
+         pdh.lib;wsock32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
+      <OutputFile>..\Debug64\GateaRtdServer64.dll</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>..\GateaRtdServer64.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>..\Debug64\GateaRtdServer64.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\Debug64\GateaRtdServer64.lib</ImportLibrary>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TypeLibraryName>..\Debug64\GateaRtdServer64.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>
+         ..\;..\inc;..\common;
+         ..\..\MD-Direct\libmddWire\inc;
+         ..\..\MD-Direct\librtEdge\inc;
+         ..\..\GFC\gl\inc;
+         ..\..\GFC\event\inc;
+         ..\..\GFC\rogue;
+         %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>..\Release64\GateaRtdServer64.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>..\Release64\</AssemblerListingLocation>
+      <ObjectFileName>..\Release64\</ObjectFileName>
+      <ProgramDataBaseFileName>..\Release64\</ProgramDataBaseFileName>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+         ..\..\MD-Direct\libmddWire\lib\libmddWire64.lib;
+         ..\..\MD-Direct\librtEdge\lib\librtEdge64.lib;
+         ..\..\STATIC64\gl\lib\gl.lib;
+         ..\..\STATIC64\event\lib\event.lib;
+         ..\..\STATIC64\rogue\lib\rogue.lib;
+         pdb.lib;wsock32.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
+      <OutputFile>..\lib\GateaRtdServer64.dll</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>..\GateaRtdServer64.def</ModuleDefinitionFile>
+      <ProgramDatabaseFile>..\Release64\GateaRtdServer64.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\Release64\GateaRtdServer64.lib</ImportLibrary>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TypeLibraryName>..\Release64\GateaRtdServer64.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\DLL.cpp" />
+    <ClCompile Include="..\GateaServer.cpp" />
+    <ClCompile Include="..\src\Config.cpp" />
+    <ClCompile Include="..\src\Dictionary.cpp" />
+    <ClCompile Include="..\src\GLrtdRecord.cpp" />
+    <ClCompile Include="..\src\GLrtdSink.cpp" />
+    <ClCompile Include="..\src\GLrtdThread.cpp" />
+    <ClCompile Include="..\src\version.cpp" />
+    <ClCompile Include="..\common\IRtdServer_i.c" />
+    <ClCompile Include="..\common\RtdServer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\GateaRtdServer.def" />
+    <None Include="..\common\IRtdServer.tlb" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\common\IRtdServer.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">midl /out ../common "%(FullPath)" </Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../common/IRtdServer64.h;../common/IRtdServer64_i.c;../common/IRtdServer64_p.c;../common/IRtdServer64.tlb;../common/dlldata.c;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">midl /out ../common "%(FullPath)" </Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../common/IRtdServer64.h;../common/IRtdServer64_i.c;../common/IRtdServer64_p.c;../common/IRtdServer64.tlb;../common/dlldata.c;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\DLL.h" />
+    <ClInclude Include="..\GateaServer.h" />
+    <ClInclude Include="..\common\IRtdServer64.h" />
+    <ClInclude Include="..\common\RtdServer64.h" />
+    <ClInclude Include="..\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\GateaRtdServer64.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">\Projects\GateaRtdSvr;$(OUTDIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">\Projects\GateaRtdSvr;$(OUTDIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
