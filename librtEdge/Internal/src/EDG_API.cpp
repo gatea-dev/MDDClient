@@ -20,8 +20,9 @@
 *     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
 *     22 OCT 2020 jcs  Build 46: rtEdge_PumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_PumpFullTape() - Offset only
+*     23 JUL 2021 jcs  Build 49: No mo _MAX_ENG; XxxMap
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2021, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 #include <OS_cpu.h>
@@ -43,15 +44,19 @@ using namespace RTEDGE_PRIVATE;
  * the user may call an API after calling rtEdge_Destroy() and not crash 
  * the library if we are index-based; If object-based, we crash.
  */
+typedef hash_map<int, EdgChannel *> EdgChanMap;
+typedef hash_map<int, PubChannel *> PubChanMap;
+typedef hash_map<int, LVCDef *>     LVCDefMap;
+typedef hash_map<int, GLchtDb *>    ChartDbMap;
+typedef hash_map<int, Cockpit *>    CockpitMap;
+typedef hash_map<int, Thread *>     ThreadMap;
 
-#define _MAX_ENG 64*K
-
-static EdgChannel    *_subs[_MAX_ENG];
-static PubChannel    *_pubs[_MAX_ENG];
-static LVCDef        *_lvc[_MAX_ENG];
-static GLchtDb       *_cdb[_MAX_ENG];
-static Cockpit       *_cock[_MAX_ENG];
-static Thread        *_work[_MAX_ENG];
+static EdgChanMap     _subs;
+static PubChanMap     _pubs;
+static LVCDefMap      _lvc;
+static ChartDbMap     _cdb;
+static CockpitMap     _cock;
+static ThreadMap      _work;
 static long           _nCxt   = 1;
 static struct timeval _tStart = { 0,0 };
 
@@ -66,54 +71,72 @@ static void _Touch()
 
    _tStart = _tvNow();
    ::srand( _tStart.tv_sec );
-   ::memset( &_subs, 0, sizeof( _subs ) );
-   ::memset( &_pubs, 0, sizeof( _pubs ) );
-   ::memset( &_lvc, 0, sizeof( _lvc ) );
-   ::memset( &_cdb, 0, sizeof( _cdb ) );
-   ::memset( &_cock, 0, sizeof( _cock ) );
-   ::memset( &_work, 0, sizeof( _work ) );
 }
 
 static EdgChannel *_GetSub( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _subs[cxt];
-   return (EdgChannel *)0;
+   EdgChanMap          &edb = _subs;
+   EdgChanMap::iterator it;
+   EdgChannel          *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (EdgChannel *)0;
+   return rc;
 }
 
 static PubChannel *_GetPub( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _pubs[cxt];
-   return (PubChannel *)0;
+   PubChanMap          &edb = _pubs;
+   PubChanMap::iterator it;
+   PubChannel          *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (PubChannel *)0;
+   return rc;
 }
 
 static LVCDef *_GetLVC( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _lvc[cxt];
-   return (LVCDef *)0;
+   LVCDefMap          &edb = _lvc;
+   LVCDefMap::iterator it;
+   LVCDef             *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (LVCDef *)0;
+   return rc;
 }
 
 static GLchtDb *_GetCDB( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _cdb[cxt];
-   return (GLchtDb *)0;
+   ChartDbMap          &edb = _cdb;
+   ChartDbMap::iterator it;
+   GLchtDb             *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (GLchtDb *)0;
+   return rc;
 }
 
 static Cockpit *_GetCockpit( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _cock[cxt];
-   return (Cockpit *)0;
+   CockpitMap          &edb = _cock;
+   CockpitMap::iterator it;
+   Cockpit             *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (Cockpit *)0;
+   return rc;
 }
 
 static Thread *_GetThread( int cxt )
 {
-   if ( InRange( 0, cxt, _MAX_ENG-1 ) )
-      return _work[cxt];
-   return (Thread *)0;
+   ThreadMap          &edb = _work;
+   ThreadMap::iterator it;
+   Thread             *rc;
+
+   it = edb.find( cxt );
+   rc = ( it != edb.end() ) ? (*it).second : (Thread *)0;
+   return rc;
 }
 
 static int _GetPageSize()

@@ -22,10 +22,15 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
-Build 48 21-04-xx
+Build 49 21-07-xx
+-----------------
+1) No mo _MAX_ENG:
+   - LVCMap, ...
+
+
+Build 48 21-04-23
 -----------------
 1) Channel.DstConnName()
-
 
 
 Build 47 20-12-11
