@@ -1579,6 +1579,32 @@ double rtEdge_CPU()
 
 #ifdef WIN32
 #include <tlhelp32.h>
+
+// Hacked from psapi.h
+
+#if defined(_WIN64)
+#include <psapi.h>
+#else
+typedef struct {
+   DWORD  cb;
+   DWORD  PageFaultCount;
+   SIZE_T PeakWorkingSetSize;
+   SIZE_T WorkingSetSize;
+   SIZE_T QuotaPeakPagedPoolUsage;
+   SIZE_T QuotaPagedPoolUsage;
+   SIZE_T QuotaPeakNonPagedPoolUsage;
+   SIZE_T QuotaNonPagedPoolUsage;
+   SIZE_T PagefileUsage;
+   SIZE_T PeakPagefileUsage;
+} PROCESS_MEMORY_COUNTERS;
+#endif // defined(_WIN64)
+
+#define Win32MemArgs HANDLE, PROCESS_MEMORY_COUNTERS *, DWORD
+
+extern BOOL WINAPI GetProcessMemoryInfo( Win32MemArgs );
+
+typedef BOOL (WINAPI *GetMemInfo)( Win32MemArgs );
+
 #endif // WIN32
 
 int rtEdge_MemSize()
@@ -1613,38 +1639,29 @@ int rtEdge_MemSize()
    if ( fp )
       ::fclose( fp );
 #else
-   HANDLE      hProc;
-   DWORD       wMin, wMax;
-   BOOL        bRtn;
+   PROCESS_MEMORY_COUNTERS pmc;
+   HANDLE                  hProc;
+   SIZE_T                  wSz, pSz;
+   char                   *pf;
+   static Mutex            _libMtx;
+   static HINSTANCE        _hLib = (HINSTANCE)0;
+   static GetMemInfo       _fcn  = (GetMemInfo)0;
 
-   hProc = ::GetCurrentProcess();
-#if defined(_WIN64)
-   SIZE_T wMin64, wMax64;
+   // Once
+   {
+      Locker lck( _libMtx );
 
-   bRtn = ::GetProcessWorkingSetSize( hProc, &wMin64, &wMax64 );
-   wMin = wMin64;
-   wMax = wMax64;
-#else
-   bRtn  = ::GetProcessWorkingSetSize( hProc, &wMin, &wMax );
-#endif // defined(_WIN64)
-   memSz = (int)( ( wMin*pgSz ) / K );
-/*
-   pid       = ::GetCurrentProcessId();
-   hSnap     = ::CreateToolhelp32Snapshot( TH32CS_SNAPHEAPLIST, pid );
-   hl.dwSize = sizeof( hl );
-   if ( ::Heap32ListFirst( hSnap, &hl ) ) {
-      do {
-         ::memset( &he, 0, sizeof( he ) );
-         he.dwSize = sizeof( he );
-         if ( ::Heap32First( &he, pid, hl.th32HeapID ) ) {
-            do {
-               memSz += he.dwBlockSize;
-            } while( ::Heap32Next( &he ) );
-         }
-      } while( ::Heap32ListNext( hSnap, &hl ) );
+      if ( !_hLib && (_hLib=::LoadLibrary( "psapi.dll" )) ) {
+         pf   = "GetProcessMemoryInfo";
+         _fcn = (BOOL (WINAPI *)( Win32MemArgs ))::GetProcAddress( _hLib, pf );
+      }
    }
-   ::CloseHandle( hSnap );
- */
+   wSz   = 0;
+   pSz   = sizeof( pmc );
+   hProc = ::GetCurrentProcess();
+   if ( _fcn && (*_fcn)( hProc, &pmc, pSz ) )
+      wSz = pmc.WorkingSetSize / K;
+   memSz = wSz;
 #endif // !defined(WIN32)
    return memSz;
 }

@@ -7,8 +7,9 @@
 *     25 SEP 2017 jcs  Build 35: LVCAdmin
 *     12 JAN 2018 jcs  Build 39: main_MEM() 
 *     11 FEB 2020 jcs  Build 42: LVC Schema bug
+*     27 JUL 2021 jcs  Build 49: LVC Schema bug
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2021, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <stdio.h>
@@ -74,10 +75,12 @@ static int IterateAllFields( LVCAll &d, bool bin )
 //////////////////////////
 // main()
 //////////////////////////
-static void _ProgressBar( int i, int nd )
+static void _ProgressBar( LVC &lvc, int i, int nd )
 {
-   if ( i && !( i%nd ) )
-      printf( "." );
+   if ( i && !( i%nd ) ) {
+      printf( "[%06d] : Mem=%dKb\n", i+1, lvc.MemSize() );
+//      printf( "." );
+	}
    fflush( stdout );
 }
 
@@ -93,32 +96,38 @@ int main_MEM( int argc, char **argv )
    int    i, n, nd, nt;
    double d0, dd;
 
-   n = WithinRange( 1, atoi( argv[2] ), K*K );
+   n  = WithinRange( 1, atoi( argv[2] ), K*K );
+   nd = gmin( n / 10, 100 );
+/*
    printf( "1st test : Hit <ENTER> to start" );
    fflush( stdout ); getchar();
+ */
    d0 = rtEdge::TimeNs();
    {
       LVC lvc( argv[1] );
 
-      nd = n / 10;
-      for ( i=0; i<n; nt=lvc.ViewAll().Size(), _ProgressBar( i, nd ), i++ );
+      for ( i=0; i<n; nt=lvc.ViewAll().Size(), _ProgressBar( lvc, i, nd ), i++ );
    }
    dd = rtEdge::TimeNs() - d0;
    printf( "1st test : %d snaps; %d tkrs in %.1fs\n", i, nt, dd );
+/*
    printf( "2nd test : Hit <ENTER> to start" );
    fflush( stdout ); getchar();
+ */
    d0 = rtEdge::TimeNs();
    for ( i=0; i<n; i++ ) {
       LVC lvc( argv[1] );
 
       lvc.GetSchema();
       nt = lvc.ViewAll().Size();
-      _ProgressBar( i, nd );
+      _ProgressBar( lvc, i, nd );
    }
    dd = rtEdge::TimeNs() - d0;
    printf( "2nd test : %d snaps; %d tkrs in %.1fs\n", i, nt, dd );
+/*
    printf( "Hit <ENTER> to terminate" );
    fflush( stdout ); getchar();
+ */
    return 1;
 }
 
@@ -196,7 +205,7 @@ int main_ADMIN( int argc, char **argv )
 
 int main( int argc, char **argv )
 {
-//   return main_MEM( argc, argv );
-   return main_CACHE( argc, argv );
+   return main_MEM( argc, argv );
+//   return main_CACHE( argc, argv );
 }
 

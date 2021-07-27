@@ -27,6 +27,9 @@ Build 49 21-07-xx
 1) No mo _MAX_ENG:
    - LVCMap, ...
 
+2) rtEdge_MemSize() : WIN32 Bug Fix
+   - Use psapi.dll
+
 
 Build 48 21-04-23
 -----------------

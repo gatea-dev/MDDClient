@@ -18,7 +18,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using librtEdge;
+
+public class DataRecord
+{
+    public string Ticker { get; set; }
+    public double? Mid { get; set; }
+    public DateTime LastUpdated { get; set; }
+
+}
 
 class LVCTest 
 {
@@ -190,43 +199,126 @@ class LVCTest
       Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
       Console.WriteLine( "1st test : Hit <ENTER> to start ..." );
       Console.ReadLine();
-      d0 = rtEdge.TimeNs();
-      nt = 0;
+      var startTime = DateTime.Now;
+        nt = 0;
       for ( i=0; i<nSnp; i++ ) {
          la = lvc.ViewAll();
          nt = la._nTkr;
       }
-      dd = rtEdge.TimeNs() - d0;
-      pd = dd.ToString( "F1" );
-      Console.WriteLine( "1st : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
-      /*
-       * Test 2 : new LVC() each ViewAll()
-       */
-      Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
+      Console.WriteLine($"1st : {i} snaps; {nt} tkrs in {(DateTime.Now - startTime).TotalMilliseconds:0.0} ms");
+        /*
+         * Test 2 : new LVC() each ViewAll()
+         */
+        Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
       Console.WriteLine( "2nd test : Hit <ENTER> to start ..." );
       Console.ReadLine();
-      d0  = rtEdge.TimeNs();
+      startTime = DateTime.Now;
       for ( i=0; i<nSnp; i++ ) {
          la  = lvc.ViewAll();
          nt  = la._nTkr;
       }
-      dd = rtEdge.TimeNs() - d0;
-      pd = dd.ToString( "F1" );
-      Console.WriteLine( "2nd : {0} snaps; {1} tkrs in {2}s", i, nt, pd );
-      Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
+      Console.WriteLine($"2nd : {i} snaps; {nt} tkrs in {(DateTime.Now - startTime).TotalMilliseconds:0.0} ms");
+        Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
+   }
+
+   private const int FidLastUpdated = 5;
+   private const int FidLastPrice = 6;
+   private const int FidBid = 23;
+   private const int FidAsk = 26;
+
+
+   public static Dictionary<string, DataRecord> SnapData(string db)
+   {
+       var startTime = DateTime.Now;
+       var res = new Dictionary<string, DataRecord>();
+       DateTime time1;
+       using (var lvc = new LVC(db))
+       {
+           var la = lvc.ViewAll();
+           time1 = DateTime.Now;
+           foreach (var tickerData in la._tkrs)
+           {
+               if (!res.TryGetValue(tickerData._pTkr, out var dataRecord))
+               {
+                   dataRecord = new DataRecord { Ticker = tickerData._pTkr };
+                   res.Add(dataRecord.Ticker, dataRecord);
+               }
+
+               dataRecord.LastUpdated = Convert.ToDateTime(tickerData.GetField(FidLastUpdated).GetAsDateTime());
+               var bidField = tickerData.GetField(FidBid);
+               var askField = tickerData.GetField(FidAsk);
+               if (bidField != null && askField != null)
+                   dataRecord.Mid = (bidField.GetAsDouble() + askField.GetAsDouble()) / 2;
+               else if (bidField != null)
+                   dataRecord.Mid = bidField.GetAsDouble();
+               else if (askField != null)
+                   dataRecord.Mid = askField.GetAsDouble();
+               else
+               {
+                   var lastPxField = tickerData.GetField(FidLastPrice);
+                   if (lastPxField != null)
+                       dataRecord.Mid = lastPxField.GetAsDouble();
+               }
+           }
+       }
+       Console.WriteLine($"Snapped {res.Count} tickers in {(time1 - startTime).TotalMilliseconds:0.0} ms, processed in {(DateTime.Now - time1).TotalMilliseconds:0.0} ms");
+       return res;
+   }
+
+   public static void SnapAndCheck(string db, int nSnp, int tSleepMs )
+   {
+       // snap LVC and check value updates
+
+       Console.WriteLine("Snap & Check test : Hit <ENTER> to start ...");
+       Console.ReadLine();
+
+       var lastSnap = SnapData(db);
+       var i = 0;
+       while (nSnp <= 0 || i < nSnp)
+       {
+            Console.WriteLine($"Test # {++i} @ {DateTime.Now:yyyy-MM-dd HH:mm:ss.000}");
+            var newSnap = SnapData(db);
+            var testTicker = "ESU1 Index";
+            var record = newSnap.TryGetValue(testTicker, out var v) ? v : null;
+            if (record != null)
+                Console.WriteLine($"{testTicker}: Updated @ {record.LastUpdated:yyyy-MM-dd HH:mm:ss.000} Mid={record.Mid}");
+            var nNewTicker = 0;
+            var nGoneBad = 0;
+            var nUpdated = 0;
+            var nChangedValue = 0;
+            foreach (var kv in newSnap)
+            {
+                if (!lastSnap.TryGetValue(kv.Key, out var lastRecord))
+                    nNewTicker++;
+                else
+                {
+                    if (kv.Value.LastUpdated > lastRecord.LastUpdated)
+                        nUpdated++;
+
+                    if (kv.Value.Mid == null && lastRecord.Mid != null)
+                        nGoneBad++;
+                    else if (Math.Abs((kv.Value.Mid ?? 0) - (lastRecord.Mid ?? 0)) > 1e-8)
+                        nChangedValue++;
+                }
+            }
+            Console.WriteLine($"{nNewTicker} new tickers, {nGoneBad} gone bad, {nUpdated} updated, {nChangedValue} changed value.");
+
+            lastSnap = newSnap;
+            Thread.Sleep( tSleepMs );
+       }
    }
 
 
-   ////////////////////////////////
-   // main()
-   ////////////////////////////////
-   public static int Main( String[] args ) 
+    ////////////////////////////////
+    // main()
+    ////////////////////////////////
+    public static int Main( String[] args ) 
    {
       LVC      lvc;
       String   db, svc, tkr, fld, s;
       String[] tkrs, flds;
       bool     bPrf, aOK;
-      int      i, argc;
+      int      i, argc, slpMs;
 
       /////////////////////
       // Quickie checks
@@ -236,12 +328,14 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      db   = "./db/cache.lvc";
-      bPrf = false;
-      svc  = "ultrafeed";
-      tkr  = "IBM";
-      fld  = null;
-      flds = null;
+      db    = "./db/cache.lvc";
+      bPrf  = false;
+      var diff = false;
+      svc   = "ultrafeed";
+      tkr   = "IBM";
+      fld   = null;
+      flds  = null;
+      slpMs = 1000;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db  <LVC d/b file> ] \\ \n";
@@ -249,6 +343,7 @@ class LVCTest
          s += "       [ -s   <Service> ] \\ \n";
          s += "       [ -t   <Ticker : CSV or Filename or *> ] \\ \n";
          s += "       [ -f   <Fields : CSV or Filename or *> ] \\ \n";
+         s += "       [ -z   <tSleepMs> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", db );
@@ -256,6 +351,7 @@ class LVCTest
          Console.Write( "      -s       : <empty>\n" );
          Console.Write( "      -t       : <empty>\n" );
          Console.Write( "      -f       : <empty>\n" );
+         Console.Write( "      -z       : {0}\n", slpMs );
          return 0;
       }
 
@@ -268,6 +364,8 @@ class LVCTest
             break; // for-i
          if ( args[i] == "-db" )
             db = args[++i];
+         else if ( args[i] == "-diff" )
+            diff = true;
          else if ( args[i] == "-p" )
             bPrf = true;
          else if ( args[i] == "-s" )
@@ -276,6 +374,8 @@ class LVCTest
             tkr = args[++i];
          else if ( args[i] == "-f" )
             fld = args[++i];
+         else if ( args[i] == "-z" )
+            Int32.TryParse( args[++i], out slpMs );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
@@ -283,21 +383,30 @@ class LVCTest
       if ( fld != null )
          flds = fld.Split(',');
       Console.WriteLine( rtEdge.Version() );
-      lvc = new LVC( db );
+      lvc = diff ? null : new LVC( db );
       /*
        * By Type
        */
-      try {
-         if ( bPrf )
-            PerfTest( lvc, 2 );
-         else
-            Dump( lvc, svc, tkrs, flds );
-      } catch( Exception e ) {
-         Console.WriteLine( "Exception: " + e.Message );
+      try
+      {
+          if (diff)
+              SnapAndCheck(db, 0, slpMs);
+          else if (bPrf)
+              PerfTest(lvc, 2);
+          else
+              Dump(lvc, svc, tkrs, flds);
+      }
+      catch (Exception e)
+      {
+          Console.WriteLine(e.ToString());
+          Console.WriteLine(e.StackTrace);
+      }
+      finally
+      {
+          lvc?.Destroy();
       }
       Console.WriteLine( "Hit <ENTER> to terminate ..." );
       Console.ReadLine();
-      lvc.Destroy();
       Console.WriteLine( "Done!!" );
       return 0;
    }
