@@ -261,7 +261,8 @@ class LVCTest
                }
            }
        }
-       Console.WriteLine($"Snapped {res.Count} tickers in {(time1 - startTime).TotalMilliseconds:0.0} ms, processed in {(DateTime.Now - time1).TotalMilliseconds:0.0} ms");
+       Console.Write($"Snapped {res.Count} tickers in {(time1 - startTime).TotalMilliseconds:0.0} ms, processed in {(DateTime.Now - time1).TotalMilliseconds:0.0} ms; ");
+       Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
        return res;
    }
 

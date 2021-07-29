@@ -26,6 +26,7 @@ Build 49 21-07-xx
 -----------------
 1) No mo _MAX_ENG:
    - LVCMap, ...
+   - Memory Leak : XXX_Destroy() - erase( it ), not db[cxt] = NULL : DUH!!
 
 2) rtEdge_MemSize() : WIN32 Bug Fix
    - Use psapi.dll

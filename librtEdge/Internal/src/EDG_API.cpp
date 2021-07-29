@@ -259,17 +259,19 @@ const char *rtEdge_Start( rtEdge_Context cxt )
 
 void rtEdge_Destroy( rtEdge_Context cxt )
 {
-   EdgChannel      *edg;
-   Logger          *lf;
-   rtEdgeChanStats *st;
+   EdgChanMap::iterator it;
+   EdgChannel          *edg;
+   Logger              *lf;
+   rtEdgeChanStats     *st;
 
    // 1) EdgChannel object / Stats
 
-   if ( (edg=_GetSub( cxt )) ) {
+   if ( (it=_subs.find( cxt )) != _subs.end() ) {
+      edg = (*it).second;
       st  = &edg->stats();
       edg->thr().Stop();
+      _subs.erase( it );
       delete edg;
-      _subs[cxt] = (EdgChannel *)0;
 
       // Stats
 
@@ -1038,14 +1040,13 @@ void LVC_FreeAll( LVCDataAll *d )
 
 void LVC_Destroy( LVC_Context cxt )
 {
-   LVCDef *lvc;
-   Logger *lf;
+   Logger             *lf;
+   LVCDefMap::iterator it;
 
-   // GLlvcDb object
-
-   if ( (lvc=_GetLVC( cxt )) )
-      delete lvc; 
-   _lvc[cxt] = (LVCDef *)0; 
+   if ( (it=_lvc.find( cxt )) != _lvc.end() ) {
+      _lvc.erase( it );
+      delete (*it).second;
+   }
 
    // Logging
 
@@ -1206,14 +1207,15 @@ void CDB_DelTicker( CDB_Context cxt,
 
 void CDB_Destroy( CDB_Context cxt )
 {
-   GLchtDb *lvc;
-   Logger  *lf;
+   ChartDbMap::iterator it;
+   Logger              *lf;
 
    // GLchtDb object
 
-   if ( (lvc=_GetCDB( cxt )) )
-      delete lvc; 
-   _cdb[cxt] = (GLchtDb *)0; 
+   if ( (it=_cdb.find( cxt )) != _cdb.end() ) {
+      _cdb.erase( it );
+      delete (*it).second;
+   }
 
    // Logging
 
@@ -1289,14 +1291,15 @@ void Cockpit_Send( Cockpit_Context cxt, const char *msg )
 
 void Cockpit_Destroy( Cockpit_Context cxt )
 {
-   Cockpit *edg;
-   Logger  *lf;
+   CockpitMap::iterator it;
+   Logger              *lf;
 
    // Cockpit object
 
-   if ( (edg=_GetCockpit( cxt )) )
-      delete edg; 
-   _cock[cxt] = (Cockpit *)0; 
+   if ( (it=_cock.find( cxt )) != _cock.end() ) {
+      _cock.erase( it );
+      delete (*it).second;
+   }
 
    // Logging
 
