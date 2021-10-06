@@ -581,6 +581,7 @@ int main( int argc, char **argv )
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
    char       *pa, *cp, *rp, sTkr[K];
    bool        bCfg, aOK, bBin, bStr, bTape, bQry;
+   void       *arg;
    string      s;
    u_int64_t   s0;
    int         i, nt, tRun, ti, sn;
@@ -784,8 +785,10 @@ int main( int argc, char **argv )
    }
    else if ( ch._bds )
       for ( i=0; i<nt; ch.OpenBDS( svc, tkrs[i++]->data(), arg_ ) );
-   else
-      for ( i=0; i<nt; ch.Subscribe( svc, tkrs[i++]->data(), arg_ ) );
+   else {
+      arg = ch.IsTable() ? (void *)0 : arg_;
+      for ( i=0; i<nt; ch.Subscribe( svc, tkrs[i++]->data(), arg ) );
+   }
    pt = ch.IsSnapshot() ? "snap again" : "stop";
    if ( ch.IsTape() ) {
       if ( t0 && t1 ) {
