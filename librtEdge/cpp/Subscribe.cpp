@@ -13,12 +13,22 @@
 *     30 APR 2019 jcs  Build 43: -bds
 *     10 SEP 2020 jcs  Build 44: -tapeDir -query
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
+*      6 OCT 2021 jcs  Build 50: -table
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2021, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
 #include <vector>
+
+// http://ascii-table.com/ansi-escape-sequences.php
+
+#define _TICKER      "TICKER"
+#define _TKR_LEN     10
+#define _TKR_FMT     "%-10s"
+#define ANSI_CLEAR   "\033[H\033[m\033[J"
+#define ANSI_HOME    "\033[2;1H\033[K"
+#define ANSI_POS     "\033[%ld;%ldf"   // ( Row, Col )
 
 using namespace RTEDGE;
 using namespace std;
@@ -38,8 +48,11 @@ public:
 
 static Renko _zRenko = { 0, 0.0, 0.0, 1.0, (char *)"Black" };
 
+typedef hash_map<int, string>     ColFmtMap;
+typedef hash_map<int, size_t>     FidPosMap;
+typedef hash_set<int>             FidSet;
 typedef vector<int>               Fids;
-typedef hash_map<int, rtFIELD>    Fields;
+typedef hash_map<int, mddField>   Fields;
 typedef hash_map<string, Renko *> Renkos;
 
 /////////////////////////////////////
@@ -114,18 +127,26 @@ public:
 class MyChannel : public SubChannel
 {
 public:
-   RTEDGE::Field _uFld;
-   bool          _bDump;
-   bool          _bCSV;
-   bool          _bds;
-   bool          _bHdr;
-   bool          _bSnap;
-   int           _nUpd;
-   Fids          _csvFids;
-   Renko         _Renko;
-   Renkos        _rdb;
+   RTEDGE::Field   _uFld;
+   bool            _bDump;
+   bool            _bCSV;
+   bool            _bds;
+   bool            _bHdr;
+   bool            _bSnap;
+   int             _nUpd;
+   Fids            _csvFids;
+   RTEDGE::Strings _colFmt;
+   FidSet          _colFidSet;
+   FidPosMap       _fidPosMap;
+   ColFmtMap       _colFmtMap;
+   int             _eolFid;
+   char           *_pTbl;
+   Renko           _Renko;
+   Renkos          _rdb;
 
-   // Constructor
+   ///////////////////////////////////
+   // Constructor / Destructor
+   ///////////////////////////////////
 public:
    MyChannel() :
       _uFld(),
@@ -136,16 +157,32 @@ public:
       _bSnap( false ),
       _nUpd( 0 ),
       _csvFids(),
+      _colFmt(),
+      _colFidSet(),
+      _fidPosMap(),
+      _colFmtMap(),
+      _eolFid( 0 ),
+      _pTbl( (char *)0 ),
       _Renko( _zRenko ),
       _rdb()
    {
    }
 
+   ~MyChannel()
+   {
+      if ( _pTbl )
+         delete[] _pTbl;
+   }
 
    ///////////////////////////////////
-   // Mutator
+   // Access / Mutator
    ///////////////////////////////////
 public:
+   bool IsTable()
+   {
+      return( _colFmt.size() > 0 );
+   }
+
    void LoadCSVFids( char *fids )
    {
       Fids  &v = _csvFids;
@@ -162,6 +199,53 @@ public:
       }
    }
 
+
+   ///////////////////////////////////
+   // Operations
+   ///////////////////////////////////
+   void LoadTable( char *fids )
+   {
+      RTEDGE::Strings sdb;
+      string          s( fids );
+      char           *t1, *t2, fmt[K];
+      int             fid, wid;
+      size_t          pos;
+
+      // -table fid:colW,fid:colW,...,eolFid
+
+      t1 = (char *)s.data();
+      t1 = ::strtok( t1, "," );
+      for ( ; t1 ; t1=::strtok( NULL, "," ) )
+         sdb.push_back( string( t1 ) );
+      pos  = 1;
+      pos += _TKR_LEN;
+      for ( size_t i=0; !_eolFid && i<sdb.size(); i++ ) {
+         t1  = (char *)sdb[i].data();
+         t1  = ::strtok( t1, ":" );
+         t2  = ::strtok( NULL, ":" );
+         fid = atoi( t1 );
+         wid = t2 ? atoi( t2 ) : 0;
+         if ( !fid )
+            break; // for
+         if ( wid ) {
+            _csvFids.push_back( fid );
+            _colFidSet.insert( fid );
+            sprintf( fmt, "%%%ds", wid );
+            _colFmt.push_back( string( fmt ) );
+            _fidPosMap[fid] = pos;
+            _colFmtMap[fid] = string( fmt );
+            pos += ::abs( wid );
+            pos += 1; // " "
+         }
+         else
+            _eolFid = fid;
+      }
+
+      // All OK??
+
+      if ( IsTable() )
+         _pTbl = new char[K*K];
+   }
 
    ///////////////////////////////////
    // RTEDGE::SubChannel Notifications
@@ -183,9 +267,9 @@ public:
    {
       RTEDGE::Schema   &sch  = schema();
       Fids             &fids =_csvFids;
-      rtFIELD          *flds = msg.Fields();
+      mddField         *flds = (mddField *)msg.Fields();
       RTEDGE::FieldDef *def;
-      rtFIELD           f;
+      mddField          f;
       mddField         *w;
       Fields            fdb;
       Fields::iterator  it;
@@ -193,9 +277,13 @@ public:
       const char       *svc, *tkr, *pm, *tm;
       int               i, nf, fid;
 
-      // Renko?
+      // Table?? Renko??
 
-      if ( _Renko._Fid ) {
+      if ( IsTable() ) {
+         _OnTable( msg );
+         return;
+      }
+      else if ( _Renko._Fid ) {
          OnRenko( msg );
          return;
       }
@@ -304,6 +392,118 @@ public:
    // Private helpers
    //////////////////////////
 private:
+   void _OnTable( RTEDGE::Message &msg )
+   {
+      RTEDGE::Schema      &sch  = schema();
+      RTEDGE::Strings     &cfmt = _colFmt;
+      FidSet              &cols = _colFidSet;
+      FidPosMap           &pos  = _fidPosMap;
+      ColFmtMap           &cdb  = _colFmtMap;
+      mddField            *fdb  = (mddField *)msg.Fields();
+      FidPosMap::iterator it;
+      ColFmtMap::iterator ct;
+      RTEDGE::FieldDef   *def;
+      mddField            f;
+      Fields              row;
+      char               *cp;
+      const char         *pn, *fmt, *pf;
+      int                 i, nc, nf, fid;
+      size_t              nRow, nCol;
+
+      // Initial Image?  Header
+
+      cp   = _pTbl;
+      nc   = (int)cfmt.size();
+      nRow = (size_t)msg.arg();
+      if ( !_nUpd++ ) {
+         cp += sprintf( cp, ANSI_CLEAR );
+         cp += nRow ? sprintf( cp, _TKR_FMT, _TICKER ) : 0;
+         for ( i=0; i<nc; i++ ) {
+            fid = _csvFids[i];
+            def = sch.GetDef( fid );
+            pn  = def ? def->pName() : "undefined";
+            cp += sprintf( cp, cfmt[i].data(), pn );
+            cp += sprintf( cp, " " );
+         }
+      }
+      if ( nRow ) {
+         cp += sprintf( cp, ANSI_POS, nRow, (size_t)1 );
+         cp += sprintf( cp, _TKR_FMT, msg.Ticker() );
+      }
+      else
+         cp += sprintf( cp, ANSI_HOME );
+      nf  = msg.NumFields();
+
+      // One row at a time
+
+      for ( i=0; i<nf; i++ ) {
+         f   = fdb[i];
+         fid = f._fid;
+         if ( nRow ) {
+            if ( (it=pos.find( fid )) == pos.end() )
+               continue; // for-i
+            if ( (ct=cdb.find( fid )) == cdb.end() )
+               continue; // for-i
+            _uFld.Set( f );
+            nCol = (*it).second;
+            fmt  = (*ct).second.data();
+            pf   = _uFld.GetAsString();
+            cp  += sprintf( cp, ANSI_POS, nRow, nCol );
+            cp  += sprintf( cp, fmt, pf );
+            cp  += sprintf( cp, " " );
+         }
+         else {
+            if ( fid == _eolFid )
+               cp += _DumpRow( cp, row );
+            else if ( cols.find( fid ) != cols.end() )
+               row[fid] = f;
+         }
+      }
+      cp += nRow ? 0 : _DumpRow( cp, row );
+
+      // Dump it out
+
+      ::fwrite( _pTbl, cp-_pTbl, 1, stdout );
+      _flush();
+   }
+
+   int _DumpRow( char *bp, Fields &row )
+   {
+      RTEDGE::Strings &cfmt = _colFmt;
+      mddField         f;
+      Fields::iterator it;
+      char            *cp;
+      const char      *pf;
+      int              fid;
+      size_t           i, nc;
+
+      // Pre-condition
+
+      if ( !row.size() )
+         return 0;
+
+      // Rock on ...
+
+      cp = bp;
+      nc = cfmt.size();
+      for ( i=0; i<nc; i++ ) {
+         fid = _csvFids[i];
+         pf  = "-";
+         if ( (it=row.find( fid )) != row.end() ) {
+            f = (*it).second;
+            _uFld.Set( f );
+            pf = _uFld.GetAsString();
+         }
+         cp += sprintf( cp, cfmt[i].data(), pf );
+         cp += sprintf( cp, " " );
+      }
+
+      // CR, clear out row, return size
+
+      cp += sprintf( cp, "\n" );
+      row.clear();
+      return( cp - bp );
+   }
    void OnRenko( Message &msg )
    {
       Renko           *r;
@@ -432,6 +632,7 @@ int main( int argc, char **argv )
       s += "       [ -bds true ] \\ \n";
       s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
       s += "       [ -query <true to dump directory, if available> ] \\ \n";
+      s += "       [ -table fid:colW,fid:colW,...,eolFid ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -453,6 +654,7 @@ int main( int argc, char **argv )
       printf( "      -bds     : %s\n", ch._bds ? "YES" : "NO" );
       printf( "      -tapeDir : %s\n", bTape   ? "YES" : "NO" );
       printf( "      -query   : %s\n", bQry    ? "YES" : "NO" );
+      printf( "      -table   : <empty>\n" );
       return 0;
    }
 
@@ -523,6 +725,8 @@ int main( int argc, char **argv )
          pa   = argv[++i];
          bQry = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
       }
+      else if ( !::strcmp( argv[i], "-table" ) )
+         ch.LoadTable( argv[++i] );
    }
    printf( "%s\n", ch.Version() );
    ch.SetBinary( bStr || bBin );

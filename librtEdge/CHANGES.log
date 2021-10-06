@@ -22,7 +22,15 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
-Build 49 21-07-xx
+Build 50 21-10-xx
+-----------------
+1) CLI rtEdgeField.GetAsDateTime() memory leak
+   - rtEdgeField._dt : DUH !!
+
+2) Subscribe -table
+
+
+Build 49 21-07-29
 -----------------
 1) No mo _MAX_ENG:
    - LVCMap, ...

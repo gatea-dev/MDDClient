@@ -16,8 +16,9 @@
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     17 SEP 2020 jcs  Build 45: Parse()
 *      3 DEC 2020 jcs  Build 47: StartTapeSliceSample(); PumpFullTape()
+*      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2021, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_SubChannel_H
 #define __RTEDGE_SubChannel_H
@@ -809,6 +810,7 @@ public:
 	 * the raw buffer from your callback.
 	 *
 	 * \param data - Raw data to parse
+	 * \param dLen - Raw data length
 	 * \return Message containing parsed results
 	 */
 	Message *Parse( const char *data, int dLen )

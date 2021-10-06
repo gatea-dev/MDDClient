@@ -23,8 +23,9 @@
 *     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
 *     22 OCT 2020 jcs  Build 46: rtEdge_StartPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_Data._TapePos
+*      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2021, Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -489,7 +490,7 @@ typedef enum {
 typedef mddBuf   rtBUF;
 
 /**
- * \typedef rtBuf64
+ * \struct rtBuf64
  * \brief A 64-bit memory buffer - Not allocated
  */
 typedef struct {
