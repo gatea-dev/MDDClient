@@ -4,15 +4,16 @@
 *
 *  REVISION HISTORY:
 *     24 JAN 2015 jcs  Created.
+*     19 DEC 2021 jcs  Build 50: WIN64
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2021, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Mutex_H
 #define __RTEDGE_Mutex_H
 
 #ifdef WIN32
 #include <windows.h>
-#define pthread_t       u_long 
+#define pthread_t       u_int64_t 
 #define pthread_cond_t  HANDLE
 #define pthread_mutex_t CRITICAL_SECTION 
 #else
