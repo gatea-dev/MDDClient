@@ -22,7 +22,13 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
-Build 50 21-12-xx
+Build 51 22-01-xx
+-----------------
+1) rtProxy cores : Quick Start / Stop:
+   - volatile bool Thread._ready
+
+
+Build 50 21-12-14
 -----------------
 1) CLI rtEdgeField.GetAsDateTime() memory leak
    - rtEdgeField._dt : DUH !!

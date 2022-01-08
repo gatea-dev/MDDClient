@@ -11,8 +11,9 @@
 *     15 APR 2016 jcs  Build 32: EDG_Internal.h; tid()
 *      6 MAR 2018 jcs  Build 40: _fcn / _arg
 *      7 SEP 2020 jcs  Build 44: SetName()
+*      8 JAN 2022 jcs  Build 51: bool _ready
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -35,7 +36,7 @@ Thread::Thread() :
    _tid( (pthread_t)0 ),
    _hThr( (HANDLE)0 ),
    _pump(),
-   _ready()
+   _ready( false )
 {
    Start();
 }
@@ -47,7 +48,7 @@ Thread::Thread( rtEdgeThreadFcn fcn, void *arg ) :
    _tid( (pthread_t)0 ),
    _hThr( (HANDLE)0 ),
    _pump(),
-   _ready()
+   _ready( false )
 {
    Start();
 }
@@ -189,7 +190,6 @@ void Thread::Start()
 
 #ifdef WIN32
    _hThr = (HANDLE)::_beginthread( Thread::_thrProc, 0, (void *)this );
-   _ready.Connect();
 #else
    int            rtn;
    pthread_attr_t attr;
@@ -202,6 +202,7 @@ void Thread::Start()
                            this );             // argument
    ::pthread_attr_destroy( &attr );
 #endif // WIN32
+   for ( ; !_ready; );
 }
 
 void Thread::Stop()
@@ -235,9 +236,7 @@ void *Thread::Run()
    _tid = CurrentThreadID();
    if ( !_fcn )
       _pump.Start();
-#ifdef WIN32
-   _ready.Accept();
-#endif // WIN32
+   _ready = true;
 
    // Check every 0.1 sec
 
