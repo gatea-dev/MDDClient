@@ -75,7 +75,7 @@ def Version():
 #
 # The 1st argument to Start() defines your data source as follows:
 #
-# 1st Arg    | Data Source     Data Type
+# 1st Arg    | Data Source   | Data Type
 # ---------- | ------------- | ----------------------
 # host:port  | rtEdgeCache3  | Streaming real-time data
 # filename   | Tape File     | Recorded market data from tape
@@ -91,7 +91,7 @@ def Version():
 # The Tape File data source is specifically driven from this class as follows:
 #
 # API              | Action
-# ----------------   -------------------------
+# ---------------- | -------------------------
 # StartTape()      | Pump data for Subscribe()'ed tkrs until end of file
 # StartTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
 # StopTape()       | Stop Tape Pump
