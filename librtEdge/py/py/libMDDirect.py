@@ -81,6 +81,13 @@ except:
 # 
 # The objective is to have the same 'look and feel' as the MDDirect .NET API. 
 #
+# ### Compatibility with Different Python Interpreter Versions
+#
+# This libMDDirect.py module implements the import code shown above to load 
+# the correct MDDirectxy module based on the version of the Python interpreter 
+# you are using.  As such, your code written exclusively to libbMDDirect.py 
+# will remain portable across Python 2.7 and Python 3.9 interpreters.
+#
 
 #################################
 # Returns version and build info
@@ -841,6 +848,7 @@ contents
 # _byFid  | { fid1 : name1, fid2 : name2, ... }
 # _byName | { name1 : fid1, name2 : fid2, ... }
 #
+class rtEdgeSchema:
    #################################
    # Constructor
    #
