@@ -8,15 +8,16 @@
 *     20 MAR 2012 jcs  Build 18: WaitEvent( double )
 *     12 NOV 2014 jcs  Build 28: Semaphore; RTEDGE_PRIVATE
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
+*     25 JAN 2022 jcs  Build 51: pthread_t as 64-bit on WINxx
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_MUTEX_H
 #define __EDGLIB_MUTEX_H
 #include <EDG_Internal.h>
 
 #ifdef WIN32
-#define pthread_t       u_long 
+#define pthread_t       u_int64_t 
 #define pthread_cond_t  HANDLE
 #define pthread_mutex_t CRITICAL_SECTION 
 #else

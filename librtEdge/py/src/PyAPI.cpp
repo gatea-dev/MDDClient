@@ -9,8 +9,9 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     19 NOV 2020 jcs  Build  2: LVCGetTickers()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
+*     25 JAN 2022 jcs  Build  4: MDDirectxy
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -825,13 +826,13 @@ static PyMethodDef EdgeMethods[] =
 
 #ifdef _MDD_PYTHON3
 static PyModuleDef mddModule = { PyModuleDef_HEAD_INIT,
-                                 "MDDirect",
+                                 "MDDirect39",
                                  "MD-Direct for Python 3.x",
                                  -1,
                                  EdgeMethods
                                };
 
-PyMODINIT_FUNC PyInit_MDDirect( void )
+PyMODINIT_FUNC PyInit_MDDirect39( void )
 {
    _pMethods = EdgeMethods;
    ::memset( _subs, 0, sizeof( _subs ) );
@@ -839,11 +840,11 @@ PyMODINIT_FUNC PyInit_MDDirect( void )
    return PyModule_Create( &mddModule );
 } 
 #else
-PyMODINIT_FUNC initMDDirect( void )
+PyMODINIT_FUNC initMDDirect27( void )
 {
    _pMethods = EdgeMethods;
    ::memset( _subs, 0, sizeof( _subs ) );
    ::memset( _lvcs, 0, sizeof( _lvcs ) );
-   Py_InitModule( "MDDirect", EdgeMethods );
+   Py_InitModule( "MDDirect27", EdgeMethods );
 }
 #endif // _MDD_PYTHON3 

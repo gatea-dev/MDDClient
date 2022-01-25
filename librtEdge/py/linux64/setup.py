@@ -19,12 +19,12 @@ SRCS        = [ './src/Book.cpp',
                 './src/PyAPI.cpp',
                 './src/version.cpp' ]
  
-MDDirect = Extension( 'MDDirect',
+MDDirect = Extension( 'MDDirect27',
                        include_dirs       = INC_DIR,
                        library_dirs       = LIB_DIR,
                        libraries          = LIBS,
                        sources            = SRCS )
 
-setup( name        = 'MDDirect', 
+setup( name        = 'MDDirect27', 
        version     = '1.0', 
        ext_modules = [ MDDirect ] )

@@ -12,16 +12,24 @@
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
-import math, time, threading
-try:
-   import MDDirect
-except:
-   print 'MDDirect not found; Exitting ...'
-   sys.exit()
+import math, sys, time, threading
 
 _UNDEF = 'Undefined'
-## \endcond
 
+def Log( msg ):
+   sys.stdout.write( msg + '\n' )
+   sys.stdout.flush()
+
+try:
+   import MDDirect27 as MDDirect
+except:
+   try: 
+      import MDDirect39 as MDDirect
+   except: 
+      Log( 'MDDirect not found; Exitting ...' )
+      sys.exit()
+
+## \endcond
 
 ## @mainpage
 #
@@ -32,11 +40,32 @@ _UNDEF = 'Undefined'
 # + Streaming data from rtEdgeCache3 data distributor
 # + Snapped data from the Last Value Cache (LVC)
 # 
-# The library is wrapped as a C extension to Python via the following:
-# OS | Loadable Module
-# --- | ---
-# Linux64 | MDDirect.so
-# WIN64   | MDDirect.pyd
+# The library is wrapped as a C extension to Python depending on the 
+# version of Python linked via the following:
+#
+# OS | Python Version | Loadable Module
+# --- | --- | ---
+# Linux64 | 2.7 | MDDirect27.so
+# WIN64 | 3.9 | MDDirect39.pyd
+# Linux64 | 2.7 | MDDirect27.so
+# WIN64 | 3.9 | MDDirect39.pyd
+# 
+# You import the module depending on the version of your Python interpreter
+# as follows: 
+# \code
+#   import sys
+#
+#   try:
+#      import MDDirect27 as MDDirect
+#   except:
+#      try:
+#         import MDDirect39 as MDDirect
+#      except:
+#         sys.stdout.write( 'MDDirect not found; Exitting ...\n' )
+#         sys.exit()
+#
+#    sys.stdout.write( MDDirect.Version() )
+# \endcode
 # 
 # ### MDDirect Services in Python
 #
@@ -377,7 +406,7 @@ class rtEdgeSubscriber( threading.Thread ):
             sts       = ''
             data      = blob[4]
             dLen      = len( blob[4] )
-            print 'OnByteStream( %s,%s )' % ( svc, tkr )
+            Log( 'OnByteStream( %s,%s )' % ( svc, tkr ) )
          elif mt == MDDirectEnum.EVT_STS:
             msg._tUpd = blob[0]
             uoid      = blob[1]
