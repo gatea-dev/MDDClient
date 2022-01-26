@@ -9,6 +9,7 @@
 #     18 NOV 2020 jcs  rtEdgeSchema
 #      1 DEC 2020 jcs  Renamed to libMDDirect
 #     20 JAN 2022 jcs  doxygen
+#     26 JAN 2022 jcs  Bug fixes from ZB
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -606,7 +607,7 @@ class rtEdgeData:
    ########################
    def forth( self ):
       self._itr += 1
-      return field()
+      return self.field()
 
    ########################
    # Returns current rtEdgeField in the iteration or None if end
@@ -619,7 +620,7 @@ class rtEdgeData:
       nf  = len( fdb )
       rc  = None
       itr = self._itr
-      if ( 0 <= _itr ) and ( _itr < nf ):
+      if ( 0 <= itr ) and ( itr < nf ):
          ( fid, val, ty ) = fdb[itr]
          rc               = self._fld
          rc._Set( fid, val, ty, self._FieldName( fid ) )
@@ -643,7 +644,7 @@ class rtEdgeData:
       # OK to pull it out 
       #
       fld = None
-      if idb.has_key( reqFid ):
+      if reqFid in idb:
          fld         = self._fld
          ( val, ty ) = idb[reqFid]
          fld._Set( reqFid, val, ty, self._FieldName( reqFid ) )
@@ -675,24 +676,56 @@ class rtEdgeData:
 
 ## \cond
    #################################
-   # Helpers
+   # Set the message data contents from field list update:
+   #
+   # The real-time thread in MDDirect.pyd that services the real-time 
+   # data stream puts all fields received into a field list that is 
+   # returned to the Python thread calling MDDirect.Read() (and this method).
+   #
+   # To this end, the flds list in this method is ALL fields that have updated
+   # for this data stream.  As such, the bLVC param controls how this list
+   # of possibly duplicated fields is handled as follows:
+   #
+   # bLVC | Description
+   # --- | ---
+   # True | Use Last Field from list only
+   # False | All Fields
+   #
+   # @param svc : Service name (bloomberg)
+   # @param tkr : Ticker Name (AAPL US Equity)
+   # @param flds : [ [ fid1, val1 ], [ fid2, val2 ], ... ]
+   # @param bLVC : True last update; False for all fields
+   # @return self
    #################################
-   def _SetData( self, svc, tkr, flds ):
-      """rtEdgeData._SetData() is called by rtEdgeSubscriber to set the 
-message data contents.
-"""
-      self._svc   = svc
-      self._tkr   = tkr
-      self._byFid = {}
-      self._flds  = flds
-      self._itr   = -1
-      self._err   = ''
+   def _SetData( self, svc, tkr, flds, bLVC=True ):
+      self._svc  = svc
+      self._tkr  = tkr
+      self._itr  = -1
+      self._err  = ''
+      self._flds = []
+      idb        = {}
+      if bLVC:
+         for ( fid, val, ty ) in flds:
+            idb[fid] = ( val, ty )
+         fids = idb.keys()
+         fids.sort()
+         for fid in fids:
+            val         = idb[fid]
+            self._flds += [ [ fid, val[0], val[1] ] ]
+      else:
+         self._flds  = flds
+      self._byFid = idb
       return self
 
+   #################################
+   # Set the message error contents
+   #
+   # @param svc : Service name (bloomberg)
+   # @param tkr : Ticker Name (AAPL US Equity)
+   # @param err : Error Message
+   # @return self
+   #################################
    def _SetError( self, svc, tkr, err ):
-      """rtEdgeData._SetError() is called by rtEdgeSubscriber to set the 
-message error contents
-"""
       self._svc   = svc
       self._tkr   = tkr
       self._flds  = []
@@ -701,10 +734,14 @@ message error contents
       self._err   = err
       return self
 
+   #################################
+   # Return field name for Field ID from rtEdgeSubscriber Schema feeding us
+   #
+   # @param fid : Field ID
+   # @return rtEdgeSchema.GetFieldName()
+   # @see rtEdgeSchema.GetFieldName()
+   #################################
    def _FieldName( self, fid ):
-      """rtEdgeData._FieldName() finds field name from the schema in the 
-rtEdgeSubscriber feeding us.
-"""
       ddb = self._schema
       return ddb.GetFieldName( fid )
 ## \endcond
@@ -797,12 +834,14 @@ class rtEdgeField:
 
 ## \cond
    #################################
-   # Helpers
+   # Set field contents
+   #
+   # @param fid : Field ID
+   # @param val : Field Value
+   # @param ty : Field Type
+   # @param name : Field Name
    #################################
    def _Set( self, fid, val, ty, name ):
-      """rtEdgeField._Set() is called by rtEdgeData to set the field 
-contents
-"""
       self._fid  = fid
       self._val  = val
       self._type = ty
@@ -821,6 +860,9 @@ contents
       s   = ( i32 % 100 )
       v   = str( val )
       return
+      #
+      # Don't need this code : Shown for completeness
+      #
       if ty == MDDirectEnum._MDDPY_DT:      ## ( y * 10000 ) + ( m * 100 ) + d
          v = '%04d-%02d-%02d' % ( h, m, s )
       elif ty == MDDirectEnum._MDDPY_TM:    ## _MDDPY_TMSEC + mikes
@@ -911,6 +953,7 @@ class rtEdgeSchema:
    #################################
    # Return Name from FID
    #
+   # @param fid : Field ID
    # @return Name from FID
    #################################
    def GetFieldName( self, fid ):
@@ -927,9 +970,11 @@ class rtEdgeSchema:
 #      M D D i r e c t E n u m       #
 #                                    #
 ######################################
+## @class MDDirectEnum
+#
+# Hard-coded Enumerated Types from MDDirect addin library
+#
 class MDDirectEnum:
-   """Hard-coded Enumerated Types from MDDirect addin library
-"""
    #
    # Event Types
    #
