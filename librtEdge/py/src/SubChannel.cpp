@@ -748,9 +748,7 @@ PyObject *MDDpySubChan::_Get1stUpd()
          break;
    }
    pym = PyInt_FromLong( upd._mt );
-   rtn = ::PyList_Pack2( pym, pyd );
-   Py_DECREF( pym );
-   Py_DECREF( pyd );
+   rtn = ::PyTuple_Pack( 2, pym, pyd );
    return rtn;
 }
 

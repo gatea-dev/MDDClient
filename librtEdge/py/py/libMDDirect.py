@@ -14,7 +14,7 @@
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
-import math, sys, time, threading
+import gc, math, sys, time, threading
 
 _UNDEF = 'Undefined'
 
@@ -98,6 +98,17 @@ except:
 #################################
 def Version():
    return MDDirect.Version()
+
+
+#################################
+# Returns number of Python objects
+#
+# Useful for checking object leaks, if any
+#
+# @return Number of Python objects
+#################################
+def NumPyObjects():
+   return len( gc.get_objects() )
 
 ## \cond
 ######################################
@@ -551,8 +562,7 @@ class LVC:
       if not blob:
          return None
       msg       = rtEdgeData( self._schema )
-      print blob[0]
-      msg._tUpd = time.time()
+      msg._tUpd = blob[0]
       svc       = blob[1]
       tkr       = blob[2]
       flds      = blob[3:]

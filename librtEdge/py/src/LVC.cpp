@@ -51,7 +51,7 @@ PyObject *MDDpyLVC::PySchema()
       fld = sch.field();
       pyF = PyInt_FromLong( fld->Fid() );
       pyN = PyString_FromString( fld->Name() );
-      vdb.push_back( ::PyList_Pack2( pyF, pyN ) );
+      vdb.push_back( ::PyTuple_Pack( 2, pyF, pyN ) );
    }
    nf  = (int)vdb.size();
    rtn = ::PyList_New( nf );
@@ -76,7 +76,7 @@ PyObject *MDDpyLVC::PyGetTickers()
    for ( i=0; i<nm; i++ ) {
       pyS = PyString_FromString( mdb[i]->Service() );
       pyT = PyString_FromString( mdb[i]->Ticker() );
-      vdb.push_back( ::PyList_Pack2(  pyS, pyT ) );
+      vdb.push_back( ::PyTuple_Pack( 2, pyS, pyT ) );
    }
    rtn = ::PyList_New( nm );
    for ( i=0; i<nm; ::PyList_SetItem( rtn, i, vdb[i] ), i++ );
@@ -115,7 +115,7 @@ PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
       pyF = PyInt_FromLong( fld.Fid() );
       pyV = fld.GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      ::PyList_SetItem( rtn, i+3, ::PyList_Pack3( pyF, pyV, pyT ) );
+      ::PyList_SetItem( rtn, i+3, ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
    }
    return rtn;
 }

@@ -603,7 +603,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    ch = aRtn ? _GetSub( cxt ) : (MDDpySubChan *)0;
    if ( !ch ) {
       pyd = PyFloat_FromDouble( 0.0 );
-      rtn = ::PyList_Pack2(  pyd, Py_None );
+      rtn = ::PyTuple_Pack( 2,pyd, Py_None );
       Py_DECREF( pyd );
       return rtn;
    }
@@ -619,7 +619,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    data     = ch->GetData( svc, tkr, fids );
    dd       = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
    pyd      = PyFloat_FromDouble( dd );
-   rtn      = ::PyList_Pack2(  pyd, data );
+   rtn      = ::PyTuple_Pack( 2, pyd, data );
    Py_DECREF( pyd );
    if ( data )
       Py_DECREF( data );
@@ -693,7 +693,7 @@ static PyObject *GetCleanBook( PyObject *self, PyObject *args )
       dd    = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
       pyd   = PyFloat_FromDouble( dd );
       pyn   = PyInt_FromLong( 0 );
-      pyRtn = ::PyList_Pack7( Py_None, Py_None, pyBr, pyAr, lst, pyd, pyn );
+      pyRtn = ::PyTuple_Pack( 7, Py_None, Py_None, pyBr, pyAr, lst, pyd, pyn );
       Py_DECREF( pyBr );
       Py_DECREF( pyAr );
       Py_DECREF( pyd );
@@ -727,7 +727,7 @@ i = 0;
 
    // [ dBid, dAsk, br, ar, ecnKO, dLatency ]
 
-   pyRtn = ::PyList_Pack7( pyBid, pyAsk, pyBr, pyAr, lst, pyd, pyn );
+   pyRtn = ::PyTuple_Pack( 7, pyBid, pyAsk, pyBr, pyAr, lst, pyd, pyn );
    if ( br )
       Py_DECREF( pyBid );
    if ( ar )

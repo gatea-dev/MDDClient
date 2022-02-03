@@ -9,8 +9,6 @@ Build  5  22-02-xx
 ------------------
 1) LVCSnap() : Return _tUpd
 
-2) PyList everything; No mo PyTuple
-
 
 Build  4  22-01-25
 ------------------

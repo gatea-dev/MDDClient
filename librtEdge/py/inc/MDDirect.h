@@ -153,14 +153,9 @@ typedef LocklessFifo<Update>     UpdateFifo;
 
 // version.cpp
 
-extern void      m_breakpoint();
-extern int       strncpyz( char *, char *, int );
-extern int       atoin( char *, int );
-extern char     *MDDirectID();
-extern PyObject *PyList_Pack2( PyObject *, PyObject * );
-extern PyObject *PyList_Pack3( PyObject *, PyObject *, PyObject * );
-extern PyObject *PyList_Pack7( PyObject *, PyObject *, PyObject *, 
-                               PyObject *, PyObject *, PyObject *,
-                               PyObject * );
+extern void  m_breakpoint();
+extern int   strncpyz( char *, char *, int );
+extern int   atoin( char *, int );
+extern char *MDDirectID();
 
 #endif // _MDDPY_PYTHON_H

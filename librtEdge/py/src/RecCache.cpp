@@ -319,7 +319,7 @@ int Record::GetUpds( PyObjects &u )
       pyF = PyInt_FromLong( fld->Fid() );
       pyV = fld->GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      u.push_back( ::PyList_Pack3( pyF, pyV, pyT ) );
+      u.push_back( ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
       Py_DECREF( pyF );
       Py_DECREF( pyV );
       fld->ClearUpd();
@@ -403,7 +403,7 @@ int Schema::GetUpds( PyObjects &u )
       pyF = PyInt_FromLong( fid );
       pyV = PyString_FromString( pc );
       pyT = PyInt_FromLong( ty );
-      u.push_back( ::PyList_Pack3( pyF, pyV, pyT ) );
+      u.push_back( ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
       Py_DECREF( pyF );
       Py_DECREF( pyV );
       Py_DECREF( pyT );
