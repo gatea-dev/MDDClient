@@ -10,6 +10,7 @@
 *     19 NOV 2020 jcs  Build  2: LVCGetTickers()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *     25 JAN 2022 jcs  Build  4: MDDirectxy
+*      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -96,7 +97,7 @@ static PyObject *Version( PyObject *self, PyObject *args )
 static PyObject *Start( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *pHost, *pUser, *pc;
+   const char *pHost, *pUser;
    int         iBin, cxt;
    bool        bBin;
 
@@ -112,7 +113,7 @@ static PyObject *Start( PyObject *self, PyObject *args )
    // MD-Direct Subscription Channel
 
    ch         = new MDDpySubChan( pHost, pUser, bBin );
-   pc         = ch->Start( pHost, pUser );
+   ch->Start( pHost, pUser );
    cxt        = ch->cxt();
    _subs[cxt] = ch;
    return PyInt_FromLong( cxt );
@@ -121,7 +122,7 @@ static PyObject *Start( PyObject *self, PyObject *args )
 static PyObject *StartSlice( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *pHost, *pUser, *pc;
+   const char *pHost, *pUser;
    int         iBin, cxt;
    bool        bBin;
 
@@ -137,7 +138,7 @@ static PyObject *StartSlice( PyObject *self, PyObject *args )
    // MD-Direct Subscription Channel
 
    ch         = new MDDpySubChan( pHost, pUser, bBin );
-   pc         = ch->Start( pHost, pUser );
+   ch->Start( pHost, pUser );
    cxt        = ch->cxt();
    _subs[cxt] = ch;
    return PyInt_FromLong( cxt );
@@ -162,12 +163,10 @@ static PyObject *IsTape( PyObject *self, PyObject *args )
 static PyObject *SetTapeDir( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   bool        bTape;
    int         cxt, bDir;
 
-   // Usage : SetTapeDir( cxt, bTape )
+   // Usage : SetTapeDir( cxt, bDir )
 
-   bTape = false;
    if ( PyArg_ParseTuple( args, "ii", &cxt, &bDir ) ) {
       if ( (ch=_GetSub( cxt )) )
          ch->SetTapeDirection( bDir ? true : false );
@@ -604,7 +603,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    ch = aRtn ? _GetSub( cxt ) : (MDDpySubChan *)0;
    if ( !ch ) {
       pyd = PyFloat_FromDouble( 0.0 );
-      rtn = PyTuple_Pack( 2, pyd, Py_None );
+      rtn = ::PyList_Pack2(  pyd, Py_None );
       Py_DECREF( pyd );
       return rtn;
    }
@@ -620,7 +619,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    data     = ch->GetData( svc, tkr, fids );
    dd       = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
    pyd      = PyFloat_FromDouble( dd );
-   rtn      = PyTuple_Pack( 2, pyd, data );
+   rtn      = ::PyList_Pack2(  pyd, data );
    Py_DECREF( pyd );
    if ( data )
       Py_DECREF( data );
@@ -694,7 +693,7 @@ static PyObject *GetCleanBook( PyObject *self, PyObject *args )
       dd    = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
       pyd   = PyFloat_FromDouble( dd );
       pyn   = PyInt_FromLong( 0 );
-      pyRtn = PyTuple_Pack( 7, Py_None, Py_None, pyBr, pyAr, lst, pyd, pyn );
+      pyRtn = ::PyList_Pack7( Py_None, Py_None, pyBr, pyAr, lst, pyd, pyn );
       Py_DECREF( pyBr );
       Py_DECREF( pyAr );
       Py_DECREF( pyd );
@@ -705,6 +704,8 @@ static PyObject *GetCleanBook( PyObject *self, PyObject *args )
    // Parse Python List
 
    nf = PyList_Size( lst );
+   if ( nf == 0 )
+      m_breakpoint();
 i = 0;
 #ifdef TODO_KO_AS_STRING
    for ( i=0; i<nf; i++ ) {
@@ -726,13 +727,11 @@ i = 0;
 
    // [ dBid, dAsk, br, ar, ecnKO, dLatency ]
 
-   pyRtn = PyTuple_Pack( 7, pyBid, pyAsk, pyBr, pyAr, lst, pyd, pyn );
-   if ( br ) {
+   pyRtn = ::PyList_Pack7( pyBid, pyAsk, pyBr, pyAr, lst, pyd, pyn );
+   if ( br )
       Py_DECREF( pyBid );
-   }
-   if ( ar ) {
+   if ( ar )
       Py_DECREF( pyAsk );
-   }
    Py_DECREF( pyBr );
    Py_DECREF( pyAr );
    Py_DECREF( pyd );

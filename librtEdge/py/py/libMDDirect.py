@@ -10,6 +10,7 @@
 #      1 DEC 2020 jcs  Renamed to libMDDirect
 #     20 JAN 2022 jcs  doxygen
 #     26 JAN 2022 jcs  Bug fixes from ZB
+#      3 FEB 2022 jcs  MDDirect.LVCSnap() : Returns tUpd
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -385,6 +386,18 @@ class rtEdgeSubscriber( threading.Thread ):
 ## \cond
    #################################
    # (private) threading.Thread Interface
+   #
+   # MDDirect.Read() returns as follows:
+   #    EVT_UPD    : [ tUpd, oid, Svc, Tkr, nAgg, fld1, fld2, ... ]
+   #                    where fldN = [ fidN, valN, tyN ]
+   #    EVT_BYSTR  : [ tUpd, oid, Svc, Tkr, bytestream ]  
+   #    EVT_STS    : [ tUpd, oid, Svc, Tkr, sts ]
+   #    EVT_RECOV  : [ tUpd, oid, Svc, Tkr, sts ]
+   #    EVT_DONE   : [ tUpd, oid, Svc, Tkr, sts ]
+   #    EVT_CONN   : msg
+   #    EVT_SVC    : msg
+   #    EVT_SCHEMA : [ fld1, fld2, ... ]
+   #                    where fldN = [ fidN, valN, tyN ]
    #################################
    def run( self ):
       self._ready.set()
@@ -530,12 +543,20 @@ class LVC:
    # @see rtEdgeData
    ########################
    def Snap( self, svc, tkr ):
+      #
+      # blob = [ tUpd, Svc, Tkr, fld1, fld2, ... ]
+      #          where fldN = [ fidN, valN, tyN ]
+      #
       blob = MDDirect.LVCSnap( self._cxt, svc, tkr )
-      rtn  = None
-      if blob:
-         rtn = rtEdgeData( self._schema )
-         rtn._SetData( blob[0], blob[1], blob[2:] )
-      return rtn
+      if not blob:
+         return None
+      msg       = rtEdgeData( self._schema )
+      print blob[0]
+      msg._tUpd = time.time()
+      svc       = blob[1]
+      tkr       = blob[2]
+      flds      = blob[3:]
+      return msg._SetData( svc, tkr, flds, True )
 
    ########################
    # Close read-only LVC file
@@ -659,14 +680,31 @@ class rtEdgeData:
       return self._err
 
    ########################
+   # Return message header as one-line string
+   #
+   # @return Message header as one-line string
+   ########################
+   def DumpHdr( self ):
+      tm  = self.MsgTime()
+      svc = self._svc
+      tkr = self._tkr
+      nf  = self.NumFields()
+      return '%s [%s,%s] : %d fields' % ( tm, svc, tkr, nf )
+
+   ########################
    # Return message contents as a string, one field per line
    #
+   # @bHdr : True for DumpHdr(); False for fields only
    # @return Message contents as a string, one field per line
+   #
+   # @see DumpHdr()
    ########################
-   def Dump( self ):
+   def Dump( self, bHdr=True ):
       fdb  = self._flds
       fld  = self._fld
       s    = []
+      if bHdr:
+         s += [ self.DumpHdr() ]
       for ( fid, val, ty ) in fdb:
          fld._Set( fid, val, ty, self._FieldName( fid ) )
          pn = fld.Name()
@@ -698,6 +736,16 @@ class rtEdgeData:
    # @return self
    #################################
    def _SetData( self, svc, tkr, flds, bLVC=True ):
+      self._svc   = svc
+      self._tkr   = tkr
+      self._itr   = -1
+      self._err   = ''
+      self._byFid = { fid: (val, ty) for fid, val, ty in flds }
+      self._flds  = [ list( fld ) for fld in flds ] if bLVC else flds
+      return self
+
+## \cond
+   def _SetData_OBSOLETE( self, svc, tkr, flds, bLVC=True ):
       self._svc  = svc
       self._tkr  = tkr
       self._itr  = -1
@@ -716,6 +764,7 @@ class rtEdgeData:
          self._flds  = flds
       self._byFid = idb
       return self
+## \endcond
 
    #################################
    # Set the message error contents

@@ -25,7 +25,7 @@ char *MDDirectID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)MDDirect4py Build 4 " );
+      cp    += sprintf( cp, "@(#)MDDirect4py Build 5 " );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       cp    += sprintf( cp, "\n" );
       cp    += sprintf( cp, ::Py_GetVersion() );
@@ -40,7 +40,7 @@ char *MDDirectID()
 // Utility Functions
 ///////////////////////////////
 
-void breakpoint() { ; }
+void m_breakpoint() { ; }
 
 int strncpyz( char *dst, char *src, int bufSz )
 {
@@ -60,3 +60,41 @@ int atoin( char *str, int sz )
    return atoi( buf );
 }
 
+
+///////////////////////////////
+// Stupid, but effective
+///////////////////////////////
+PyObject *PyList_Pack2( PyObject *o0, PyObject *o1 )
+{
+   PyObject *rc = ::PyList_New( 2 );
+
+   ::PyList_SetItem( rc, 0, o0 );
+   ::PyList_SetItem( rc, 1, o1 );
+   return rc;
+}
+
+PyObject *PyList_Pack3( PyObject *o0, PyObject *o1, PyObject *o2 )
+{
+   PyObject *rc = ::PyList_New( 3 );
+
+   ::PyList_SetItem( rc, 0, o0 );
+   ::PyList_SetItem( rc, 1, o1 );
+   ::PyList_SetItem( rc, 2, o2 );
+   return rc;
+}
+
+PyObject *PyList_Pack7( PyObject *o0, PyObject *o1, PyObject *o2, 
+                        PyObject *o3, PyObject *o4, PyObject *o5, 
+                        PyObject *o6 )
+{
+   PyObject *rc = ::PyList_New( 7 );
+
+   ::PyList_SetItem( rc, 0, o0 );
+   ::PyList_SetItem( rc, 1, o1 );
+   ::PyList_SetItem( rc, 2, o2 );
+   ::PyList_SetItem( rc, 3, o3 );
+   ::PyList_SetItem( rc, 4, o4 );
+   ::PyList_SetItem( rc, 5, o5 );
+   ::PyList_SetItem( rc, 6, o6 );
+   return rc;
+}

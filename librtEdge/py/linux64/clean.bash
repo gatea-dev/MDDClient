@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/bin/rm -r -v ./build
+/bin/rm -rfv ./build

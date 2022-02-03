@@ -9,8 +9,9 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: Tape; OnStreamDone()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
+*      3 FEB 2022 jcs  Build  5: De-lint
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #ifndef __MDDPY_SUBCHAN_H
 #define __MDDPY_SUBCHAN_H
@@ -21,7 +22,7 @@ using namespace MDDPY;
 //////////////
 // Forwards
 //////////////
-class MDDPY::Schema;
+class Schema;
 class rtMsg;
 class PyByteStream;
 class PyTapeSnap;

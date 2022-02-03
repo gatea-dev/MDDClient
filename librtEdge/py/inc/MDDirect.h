@@ -9,8 +9,9 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     18 NOV 2020 jcs  Build  2: hash_map iff !defined
 *     22 NOV 2020 jcs  Build  3: PyObjects
+*      3 FEB 2022 jcs  Build  5: PyList_PackX()
 *     
-*  (c) 1994-2020 Gatea, Ltd.  
+*  (c) 1994-2022, Gatea, Ltd.  
 ******************************************************************************/
 #ifndef _MDDPY_PYTHON_H
 #define _MDDPY_PYTHON_H
@@ -152,9 +153,14 @@ typedef LocklessFifo<Update>     UpdateFifo;
 
 // version.cpp
 
-extern void  breakpoint();
-extern int   strncpyz( char *, char *, int );
-extern int   atoin( char *, int );
-extern char *MDDirectID();
+extern void      m_breakpoint();
+extern int       strncpyz( char *, char *, int );
+extern int       atoin( char *, int );
+extern char     *MDDirectID();
+extern PyObject *PyList_Pack2( PyObject *, PyObject * );
+extern PyObject *PyList_Pack3( PyObject *, PyObject *, PyObject * );
+extern PyObject *PyList_Pack7( PyObject *, PyObject *, PyObject *, 
+                               PyObject *, PyObject *, PyObject *,
+                               PyObject * );
 
 #endif // _MDDPY_PYTHON_H

@@ -9,12 +9,11 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     19 NOV 2020 jcs  Build  2: _bufcpy() : !bp
 *     22 NOV 2020 jcs  Build  3: PyObjects
+*      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
-
-using namespace MDDPY;
 
 #define _MDDPY_INT    1
 #define _MDDPY_DBL    2
@@ -32,6 +31,9 @@ using namespace MDDPY;
 static mddBuf   _zBuf = { (char *)0, 0 };
 static mddValue _zVal = { _zBuf };
 static mddField _zFld = { 0, _zVal, (const char *)0, mddFld_undef }; 
+
+namespace MDDPY
+{
 
 ///////////////////////////////
 // Constructor / Destructor
@@ -307,7 +309,6 @@ int Record::GetUpds( PyObjects &u )
 {
    Field    *fld;
    PyObject *pyF, *pyV, *pyT;
-   char     *pc;
    int       i, sz, ty;
 
    // Field Type : { _MDDPY_INT, _MDDPY_DBL, _MDDPY_STR }
@@ -315,11 +316,10 @@ int Record::GetUpds( PyObjects &u )
    sz = _upds.size();
    for ( i=0; i<sz; i++ ) {
       fld = _upds[i];
-      pc  = fld->data();
       pyF = PyInt_FromLong( fld->Fid() );
       pyV = fld->GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      u.push_back( PyTuple_Pack( 3, pyF, pyV, pyT ) );
+      u.push_back( ::PyList_Pack3( pyF, pyV, pyT ) );
       Py_DECREF( pyF );
       Py_DECREF( pyV );
       fld->ClearUpd();
@@ -403,7 +403,7 @@ int Schema::GetUpds( PyObjects &u )
       pyF = PyInt_FromLong( fid );
       pyV = PyString_FromString( pc );
       pyT = PyInt_FromLong( ty );
-      u.push_back( PyTuple_Pack( 3, pyF, pyV, pyT ) );
+      u.push_back( ::PyList_Pack3( pyF, pyV, pyT ) );
       Py_DECREF( pyF );
       Py_DECREF( pyV );
       Py_DECREF( pyT );
@@ -415,14 +415,12 @@ int Schema::GetUpds( PyObjects &u )
 void Schema::Update( rtEdgeData &d )
 {
    RTEDGE::Locker l( _mtx );
-   MDDPY::Record *rec;
    mddField      *fdb;
    int            i, nf;
 
    // Clear out existing; Add anew       
 
    Clear();
-   rec = (MDDPY::Record *)0;
    fdb = (mddField *)d._flds;
    nf  = d._nFld;
    for ( i=0; i<nf; _flds.push_back( new Field( fdb[i++], true ) ) );
@@ -437,4 +435,4 @@ void Schema::Clear()
    _flds.clear();
 }
 
-
+} // namespace MDDPY

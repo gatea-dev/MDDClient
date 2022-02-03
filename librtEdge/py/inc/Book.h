@@ -7,20 +7,22 @@
 *     22 APR 2011 jcs  Created.
 *      . . . 
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
-*     
-*  (c) 1994-2019 Gatea, Ltd.  
+*      3 FEB 2022 jcs  Build  5: De-lint
+*
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #ifndef _MDDPY_BOOK_H
 #define _MDDPY_BOOK_H
 #include <MDDirect.h>
 
+using namespace MDDPY;
 
 /////////////////
 // Forwards
 /////////////////
 class BookRow;
-class MDDPY::Field;
-class MDDPY::Record;
+class Field;
+class Record;
 
 /////////////////
 // Fixed Structs

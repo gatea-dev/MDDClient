@@ -9,8 +9,9 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: OnStreamDone()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
+*      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -240,7 +241,7 @@ PyObject *MDDpySubChan::GetData( const char *pSvc,
    RTEDGE::Locker l( _mtx );
    Book          *bk;
    PyObject      *rtn, *pyV;
-   Field         *fld;
+   MDDPY::Field  *fld;
    char          *pc;
    int            i, nf;
 
@@ -409,7 +410,7 @@ void MDDpySubChan::OnData( RTEDGE::Message &msg )
          idb[sid] = oid;
       }
       else
-         breakpoint();
+         m_breakpoint();
    }
 
    // Unconflated
@@ -673,6 +674,10 @@ PyObject *MDDpySubChan::_Get1stUpd()
    _bTapeUpd = false;
    switch( upd._mt ) {
       case EVT_UPD:
+         /*
+          * [ tUpd, oid, Svc, Tkr, nAgg, fld1, fld2, ... ]
+          *   where fldN = [ fidN, valN, tyN ]
+          */
          bk   = upd._bk;
          uoid = bk->_userReqID;
          nAgg = bk->_nUpd - 1;
@@ -688,6 +693,9 @@ PyObject *MDDpySubChan::_Get1stUpd()
          bk->_nUpd = 0;
          break;
       case EVT_BYSTR:
+         /*
+          * [ tUpd, oid, Svc, Tkr, bytestream ]
+          */
          bk    = upd._bk;
          b     = upd._bStr;
          uoid  = bk->_userReqID;
@@ -705,6 +713,9 @@ PyObject *MDDpySubChan::_Get1stUpd()
       case EVT_STS:
       case EVT_RECOV:
       case EVT_DONE:
+         /*
+          * [ tUpd, oid, Svc, Tkr, sts ]
+          */
          bk   = upd._bk;
          uoid = bk ? bk->_userReqID : -1;
          svc  = bk ? bk->pSvc() : "None";
@@ -737,7 +748,7 @@ PyObject *MDDpySubChan::_Get1stUpd()
          break;
    }
    pym = PyInt_FromLong( upd._mt );
-   rtn = PyTuple_Pack( 2, pym, pyd );
+   rtn = ::PyList_Pack2( pym, pyd );
    Py_DECREF( pym );
    Py_DECREF( pyd );
    return rtn;

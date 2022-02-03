@@ -9,8 +9,9 @@
 *     22 APR 2011 jcs  Created.
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
+*      3 FEB 2022 jcs  Build  5: De-lint
 *
-*  (c) 1994-2019 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -60,11 +61,11 @@ BookRow::BookRow( Book &bk, int nRow, bool bBid ) :
    _bk( bk ),
    _nRow( nRow ),
    _bBid( bBid ),
-   _fPrc( (Field *)0 ),
-   _fQty( (Field *)0 ),
-   _fECN( (Field *)0 ),
-   _fQteID( (Field *)0 ),
-   _fQteTm( (Field *)0 )
+   _fPrc( (MDDPY::Field *)0 ),
+   _fQty( (MDDPY::Field *)0 ),
+   _fECN( (MDDPY::Field *)0 ),
+   _fQteID( (MDDPY::Field *)0 ),
+   _fQteTm( (MDDPY::Field *)0 )
 {
    BookSchema &ss = bk._schema;
    int         fid;
@@ -137,7 +138,7 @@ bool BookRow::RateQuantity_InValidForProduction( int    minQty,
 ///////////////////////////////
 double BookRow::_Qte2LclTime()
 {
-   struct tm lt, *tm, qt;
+   struct tm lt, qt;
    char      buf[K], *pf;
    char     *pYMD, *pHMS, *pMs;
    int       qSz, tMs, nMs;
@@ -152,7 +153,7 @@ double BookRow::_Qte2LclTime()
    // Suck from string
 
    tNow = (time_t)dNow();
-   tm   = ::localtime_r( &tNow, &lt );
+   ::localtime_r( &tNow, &lt );
    pf   = _fQteTm->data();
    qSz  = strncpyz( buf, pf, _fQteTm->dLen() );
    pYMD = buf;
@@ -326,17 +327,17 @@ return false;
 
 void Book::AddBlacklist( BookRow & )
 {
-breakpoint();
+m_breakpoint();
 }
 
 void Book::DelBlacklist( BookRow & )
 {
-breakpoint();
+m_breakpoint();
 }
 
 void Book::UpdBlacklist( BookRow & )
 {
-breakpoint();
+m_breakpoint();
 }
 
 
@@ -371,6 +372,8 @@ BookRow *Book::get_suspicious_row( double dInversion,
 
    bid_qty  = br._bid->GetQty();
    ask_qty  = br._ask->GetQty();
+   if ( bid_qty >= ask_qty )
+      m_breakpoint();
    bid_rate = br._bid->GetPrc();
    ask_rate = br._ask->GetPrc();
    bid_age  = br._bid->QuoteAge();
