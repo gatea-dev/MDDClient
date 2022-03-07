@@ -194,7 +194,7 @@ public:
 	 * \param svc - Service Name
 	 * \param tkrs - Array of tickers to add
 	 */
-	void AddTickers( String ^svc, array<String ^> tkrs ):
+	void AddTickers( String ^svc, array<String ^> ^tkrs );
 
 	/**
 	 * \brief Delete existing ( svc,tkr ) record from LVC

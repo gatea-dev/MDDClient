@@ -179,10 +179,10 @@ void LVCAdmin::AddTicker( String ^svc, String ^tkr )
    _lvc->AddTicker( pSvc, pTkr );
 }
 
-void LVCAdmin::AddTickers( String ^svc, array<String ^> tkrs )
+void LVCAdmin::AddTickers( String ^svc, array<String ^> ^tkrs )
 {
    const char  *pSvc;
-   const char **pTkr;
+   const char **pTkrs;
    char        *bp;
    size_t       sz;
    int          i, nl;
@@ -194,13 +194,13 @@ void LVCAdmin::AddTickers( String ^svc, array<String ^> tkrs )
 
    // Safe to continue
 
-   pSvc = (const char *)_pStr( svc );
-   sz   = ( nl+4 ) * sizeof( const char * );
-   bp   = new char[sz];
-   pTkr = (const char **)bp;
-   for ( i=0; i<nl; pTkr[i] = (const char *)_pStr( tkrs[i] ), i++ );
-   pTkr[i] = (const char *)0; 
-   _lvc->AddTickers( pSvc, tkrs );
+   pSvc  = (const char *)_pStr( svc );
+   sz    = ( nl+4 ) * sizeof( const char * );
+   bp    = new char[sz];
+   pTkrs = (const char **)bp;
+   for ( i=0; i<nl; pTkrs[i] = (const char *)_pStr( tkrs[i] ), i++ );
+   pTkrs[i] = (const char *)0; 
+   _lvc->AddTickers( pSvc, pTkrs );
    delete[] bp;
 }
 

@@ -225,9 +225,9 @@ public:
 	void AddTickers( const char  *svc, 
 	                 const char **tkrs )
 	{
-	   string s;
-	   char   buf[K], *cp;
-	   int    i;
+	   std::string s;
+	   char        buf[K], *cp;
+	   int         i;
 
 	   for ( i=0; tkrs[i]; i++ ) {
 	      cp  = buf;
