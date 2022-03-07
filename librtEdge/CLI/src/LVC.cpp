@@ -6,8 +6,9 @@
 *     13 NOV 2014 jcs  Created.
 *     25 SEP 2017 jcs  Build 35: LVCAdmin
 *     11 JAN 2018 jcs  Build 39: Leak : FreeAll() in Destroy() 
+*      7 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
@@ -176,6 +177,31 @@ void LVCAdmin::AddTicker( String ^svc, String ^tkr )
    pSvc = (const char *)_pStr( svc );
    pTkr = (const char *)_pStr( tkr );
    _lvc->AddTicker( pSvc, pTkr );
+}
+
+void LVCAdmin::AddTickers( String ^svc, array<String ^> tkrs )
+{
+   const char  *pSvc;
+   const char **pTkr;
+   char        *bp;
+   size_t       sz;
+   int          i, nl;
+
+   // Pre-condition
+
+   if ( !(nl=tkrs->Length) )
+      return;
+
+   // Safe to continue
+
+   pSvc = (const char *)_pStr( svc );
+   sz   = ( nl+4 ) * sizeof( const char * );
+   bp   = new char[sz];
+   pTkr = (const char **)bp;
+   for ( i=0; i<nl; pTkr[i] = (const char *)_pStr( tkrs[i] ), i++ );
+   pTkr[i] = (const char *)0; 
+   _lvc->AddTickers( pSvc, tkrs );
+   delete[] bp;
 }
 
 void LVCAdmin::DelTicker( String ^svc, String ^tkr )

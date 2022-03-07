@@ -7,8 +7,9 @@
 *      5 FEB 2016 jcs  Build 32: IsBinary
 *     25 SEP 2017 jcs  Build 35: LVCAdmin.AddTicker()
 *     14 JAN 2018 jcs  Build 39: LVCSnap._nullFld
+*      7 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -183,9 +184,17 @@ public:
 	 * \brief Add new ( svc,tkr ) record from LVC
 	 *
 	 * \param svc - Service name
-	 * \param tkr - Ticker name; Comma-separated for multiple tickers
+	 * \param tkr - Ticker name
 	 */
 	void AddTicker( String ^svc, String ^tkr );
+
+	/**
+	 * \brief Add list of ( Service, Ticker ) to LVC
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 */
+	void AddTickers( String ^svc, array<String ^> tkrs ):
 
 	/**
 	 * \brief Delete existing ( svc,tkr ) record from LVC

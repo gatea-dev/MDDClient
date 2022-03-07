@@ -22,10 +22,12 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
-Build 51 22-01-xx
+Build 51 22-03-xx
 -----------------
 1) rtProxy cores : Quick Start / Stop:
    - volatile bool Thread._ready
+
+2) LVCAdmin.AddTickers()
 
 
 Build 50 21-12-14

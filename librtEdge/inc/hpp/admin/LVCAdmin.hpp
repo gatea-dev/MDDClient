@@ -6,8 +6,9 @@
 *  REVISION HISTORY:
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC
+*      7 MAR 2022 jcs  Build 51: AddTickers()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __LVCAdmin_H
 #define __LVCAdmin_H
@@ -211,6 +212,33 @@ public:
 	   cp += sprintf( cp, "/>\n" );
 	   Cockpit::Start( pAdmin() );  // TODO : LVC
 	   ::Cockpit_Send( cxt(), buf );
+	}
+
+	/**
+	 * \brief Add list of ( Service, Ticker ) to LVC
+	 *
+	 * This method automatically calls Start() to connect
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - NULL-terminated list of tickers
+	 */
+	void AddTickers( const char  *svc, 
+	                 const char **tkrs )
+	{
+	   string s;
+	   char   buf[K], *cp;
+	   int    i;
+
+	   for ( i=0; tkrs[i]; i++ ) {
+	      cp  = buf;
+	      cp += sprintf( cp, "<%s ", _CMD_ADD );
+	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
+	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkrs[i] );
+	      cp += sprintf( cp, "/>\n" );
+	      s  += buf;
+	   }
+	   Cockpit::Start( pAdmin() );  // TODO : LVC
+	   ::Cockpit_Send( cxt(), s.data() );
 	}
 
 	/**
