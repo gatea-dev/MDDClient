@@ -9,8 +9,9 @@
 *     12 OCT 2017 jcs  Build 36: rtBuf64
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: Sleep()
+*      7 MAR 2022 jcs  Build 51: doxygen 
 *
-*  (c) 1994-2018 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -34,9 +35,9 @@ using namespace System::Runtime::InteropServices;
  * ---- | --- | ----
  * Subscribe | rtEdgeCache3 | Consume real-time data
  * Publish | rtEdgeCache3 | Publish real-time data
- * Replay (64-bit only) | gateaRecorder | Pull out every recorded message for a day
+ * Tick-by-Tick | gateaRecorder | Pull out every recorded message for a day
  * Bulk Snapshot | LVC | Bulk snapshot (5000 tickers in under 1 millisecond)
- * Snap Time-Series | ChartDb | Snap chartable time-series historical data
+ * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
  */
 namespace librtEdge
 {

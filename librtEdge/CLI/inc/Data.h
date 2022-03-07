@@ -15,8 +15,9 @@
 *      3 SEP 2020 jcs  Build 44: _MsgTime; _StreamID
 *     30 SEP 2020 jcs  Build 45: _rawView / _rawLen
 *      3 DEC 2020 jcs  Build 47: _TapePos
+*      7 MAR 2022 jcs  Build 51: doxygen
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -712,7 +713,7 @@ public:
 	// Properties
 	/////////////////////////////////
 public:
-	/** \brief Returns name of service supplying this update */
+	/** \brief Returns snap time in seconds */
 	property double _dSnap
 	{
 	   double get() { return _all->dSnap(); }

@@ -11,6 +11,7 @@
 #     20 JAN 2022 jcs  doxygen
 #     26 JAN 2022 jcs  Bug fixes from ZB
 #      3 FEB 2022 jcs  MDDirect.LVCSnap() : Returns tUpd
+#     16 FEB 2022 jcs  Dump( bFldTy=false ); rtEdgeField.TypeName()
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -705,11 +706,12 @@ class rtEdgeData:
    # Return message contents as a string, one field per line
    #
    # @bHdr : True for DumpHdr(); False for fields only
+   # @bFldTy : True to show field type; False otherwise
    # @return Message contents as a string, one field per line
    #
    # @see DumpHdr()
    ########################
-   def Dump( self, bHdr=True ):
+   def Dump( self, bHdr=True, bFldTy=False ):
       fdb  = self._flds
       fld  = self._fld
       s    = []
@@ -719,7 +721,9 @@ class rtEdgeData:
          fld._Set( fid, val, ty, self._FieldName( fid ) )
          pn = fld.Name()
          pv = fld.GetAsString()
-         s += [ '   [%04d] %-14s : %s' % ( fld.Fid(), pn, pv ) ]
+         if bFldTy: ty = fld.TypeName()
+         else:      ty = ''
+         s += [ '   [%04d] %-14s : %s%s' % ( fld.Fid(), pn, ty, pv ) ]
       return '\n'.join( s )
 
 ## \cond
@@ -750,11 +754,12 @@ class rtEdgeData:
       self._tkr   = tkr
       self._itr   = -1
       self._err   = ''
-      self._byFid = { fid: (val, ty) for fid, val, ty in flds }
-      self._flds  = [ list( fld ) for fld in flds ] if bLVC else flds
+      bdb         = { fid: (val, ty) for fid, val, ty in flds }
+      self._byFid = bdb
+      self._flds  = [ ( fid, bdb[fid][0], bdb[fid][1] ) for fid in bdb.keys() ]
+##      self._flds  = [ list( fld ) for fld in flds ] if bLVC else flds
       return self
 
-## \cond
    def _SetData_OBSOLETE( self, svc, tkr, flds, bLVC=True ):
       self._svc  = svc
       self._tkr  = tkr
@@ -827,10 +832,17 @@ class rtEdgeField:
    # Constructor
    #################################
    def __init__( self ):
-      self._fid  = 0
-      self._val  = ''
-      self._type = MDDirectEnum._MDDPY_STR
-      self._name = _UNDEF
+      self._fid       = 0
+      self._val       = ''
+      self._type      = MDDirectEnum._MDDPY_STR
+      self._name      = _UNDEF
+      self._TypeNames = { MDDirectEnum._MDDPY_INT   : '(int) ',
+                          MDDirectEnum._MDDPY_DBL   : '(dbl) ',
+                          MDDirectEnum._MDDPY_STR   : '(str) ',
+                          MDDirectEnum._MDDPY_DT    : '(dat) ',
+                          MDDirectEnum._MDDPY_TM    : '(tim) ',
+                          MDDirectEnum._MDDPY_TMSEC : '(tms) '
+                        }
 
    #################################
    # Returns Field ID
@@ -847,6 +859,23 @@ class rtEdgeField:
    #################################
    def Name( self ):
       return self._name
+
+   #################################
+   # Returns string-ified Field Type from the following set:
+   # Enum | TypeName
+   # --- | ---
+   # _MDDPY_INT | (int)
+   # _MDDPY_DBL | (dbl)
+   # _MDDPY_STR | <str)
+   #
+   # @return string-ified Field Type from the following set:
+   #################################
+   def TypeName( self ):
+      ty  = self._type
+      tdb = self._TypeNames
+      try: rc = tdb[ty]
+      except: rc = '(%03d)' % ty
+      return rc
 
    #################################
    # Returns Field Type from the following set:

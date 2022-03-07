@@ -10,7 +10,7 @@
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
 *
-*  (c) 1994-2018 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <rtEdge.h>
@@ -32,7 +32,7 @@ char *librtEdgeCLIID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 47 ", GL64 );
+      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 51 ", GL64 );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s      = bp;
       sccsid = (char *)s.data();

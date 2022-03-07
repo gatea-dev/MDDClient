@@ -24,8 +24,9 @@
 *     22 OCT 2020 jcs  Build 46: rtEdge_StartPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_Data._TapePos
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
+*      7 MAR 2022 jcs  Build 51: doxygen
 *
-*  (c) 1994-2021, Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -37,9 +38,9 @@
  * ---- | --- | ----
  * Subscribe | rtEdgeCache3 | Consume real-time data
  * Publish | rtEdgeCache3 | Publish real-time data
- * Replay (64-bit only) | gateaRecorder | Pull out every recorded message for a day
+ * Tick-by-Tick | gateaRecorder | Pull out every recorded message for a day
  * Bulk Snapshot | LVC | Bulk snapshot (5000 tickers in under 1 millisecond)
- * Snap Time-Series | ChartDb | Snap chartable time-series historical data
+ * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
  */
 
 #ifndef __LIB_RTEDGE_H
