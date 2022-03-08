@@ -205,6 +205,15 @@ public:
 	{
 	   char buf[K], *cp;
 
+	   // Pre-condition(s)
+
+	   if ( !svc || !tkr )
+	      return;
+	   if ( !strlen( svc ) || !strlen( tkr ) )
+	      return;
+
+	   // Safe to add
+
 	   cp  = buf;
 	   cp += sprintf( cp, "<%s ", _CMD_ADD );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
@@ -229,7 +238,14 @@ public:
 	   char        buf[K], *cp;
 	   int         i;
 
+	   // Pre-condition(s)
+
+	   if ( !svc || !strlen( svc ) )
+	      return;
+
 	   for ( i=0; tkrs[i]; i++ ) {
+	      if ( !strlen( tkrs[i] ) )
+	         continue; // for-i
 	      cp  = buf;
 	      cp += sprintf( cp, "<%s ", _CMD_ADD );
 	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );

@@ -21,7 +21,7 @@ class LVCAdminTest
    ////////////////////////////////
    public static int Main( String[] args ) 
    {
-      LVCAdmin admin;
+      LVCAdmin lvc;
       String   svr, svc, tkrs;
       int      argc;
 
@@ -33,12 +33,13 @@ class LVCAdminTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      svr  = "gatea.com:7161";
-      svc  = "WARP_1";
-      tkrs =  ( argc > 0 ) ? args[0] : "ABBV,ABC,ABT,ACE,ACN,ACT,ADBE";
+      tkrs = ( argc > 0 ) ? args[0] : "ABBV,ABC,ABT,ACE,ACN,ACT,ADBE";
+      svc  = ( argc > 1 ) ? args[1] : "WARP_1";
+      svr  = ( argc > 2 ) ? args[2] : "gatea.com:8775";
       Console.WriteLine( rtEdge.Version() );
-      admin = new LVCAdmin( svr );
-      admin.AddTickers( svc, tkrs.Split(",") );
+      Console.WriteLine( "Connecting to {0} ...", svr );
+      lvc = new LVCAdmin( svr );
+      lvc.AddTickers( svc, tkrs.Split(',') );
       Console.WriteLine( "Hit <ENTER> to terminate ..." );
       Console.ReadLine();
       Console.WriteLine( "Done!!" );
