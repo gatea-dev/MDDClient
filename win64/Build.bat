@@ -21,7 +21,7 @@ FOR %%X in (libmddWire librtEdge) DO (
    echo Build %%X
    Call :BuildStuff64 %%X
    if exist %%X\CLI\lib64 (
-      cp -v %%X\CLI\lib64\*.dll ..\bin64
+      cp -v %%X\CLI\lib64\*.dll .\bin64
    )
 )
 goto Done
