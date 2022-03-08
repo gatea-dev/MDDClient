@@ -24,7 +24,7 @@ using librtEdge;
 public class DataRecord
 {
     public string Ticker { get; set; }
-    public double? Mid { get; set; }
+    public double Mid { get; set; }
     public DateTime LastUpdated { get; set; }
 
 }
@@ -404,7 +404,7 @@ class LVCTest
       }
       finally
       {
-          lvc?.Destroy();
+          lvc.Destroy();
       }
       Console.WriteLine( "Hit <ENTER> to terminate ..." );
       Console.ReadLine();
