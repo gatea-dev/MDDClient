@@ -23,9 +23,6 @@ FOR %%X in (libmddWire librtEdge) DO (
    if exist %%X\CLI\lib64 (
       cp -v %%X\CLI\lib64\*.dll ..\bin64
    )
-   :: #############################
-   :: ## No Python : OpenSource not installed 
-   :: #############################
 )
 goto Done
 
@@ -49,9 +46,6 @@ goto Done
       devenv /build %BLD_TYPE% %MK%CLI64.sln /project %MK%CLI64
       cd ..\..
    )
-   :: #############################
-   :: ## No Python : OpenSource not installed
-   :: #############################
    cd ..
    EXIT /B 0
 
