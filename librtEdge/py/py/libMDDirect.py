@@ -12,6 +12,7 @@
 #     26 JAN 2022 jcs  Bug fixes from ZB
 #      3 FEB 2022 jcs  MDDirect.LVCSnap() : Returns tUpd
 #     16 FEB 2022 jcs  Dump( bFldTy=false ); rtEdgeField.TypeName()
+#     16 MAR 2022 jcs  _MDDPY_INT64
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -837,6 +838,7 @@ class rtEdgeField:
       self._type      = MDDirectEnum._MDDPY_STR
       self._name      = _UNDEF
       self._TypeNames = { MDDirectEnum._MDDPY_INT   : '(int) ',
+                          MDDirectEnum._MDDPY_INT64 : '(i64) ',
                           MDDirectEnum._MDDPY_DBL   : '(dbl) ',
                           MDDirectEnum._MDDPY_STR   : '(str) ',
                           MDDirectEnum._MDDPY_DT    : '(dat) ',
@@ -865,6 +867,7 @@ class rtEdgeField:
    # Enum | TypeName
    # --- | ---
    # _MDDPY_INT | (int)
+   # _MDDPY_INT64 | (i64)
    # _MDDPY_DBL | (dbl)
    # _MDDPY_STR | <str)
    #
@@ -873,7 +876,7 @@ class rtEdgeField:
    def TypeName( self ):
       ty  = self._type
       tdb = self._TypeNames
-      try: rc = tdb[ty]
+      try:    rc = tdb[ty]
       except: rc = '(%03d)' % ty
       return rc
 
@@ -882,6 +885,7 @@ class rtEdgeField:
    # Enum | Type
    # --- | ---
    # _MDDPY_INT | Integer
+   # _MDDPY_INT64 | int64_t
    # _MDDPY_DBL | Double
    # _MDDPY_STR | String
    #
@@ -889,6 +893,14 @@ class rtEdgeField:
    #################################
    def Type( self ):
       return self._type
+
+   #################################
+   # Returns Field Value as 64-bit Integer, regardless of (native) data type
+   #
+   # @return Field Value as 64-bit Integer
+   #################################
+   def GetAsInt64( self ):
+      return long( self.GetAsDouble() )
 
    #################################
    # Returns Field Value as Integer, regardless of (native) data type
@@ -1088,4 +1100,5 @@ class MDDirectEnum:
    _MDDPY_DT    = 4    ## i32 = ( y * 10000 ) + ( m * 100 ) + d
    _MDDPY_TM    = 5    ## r64 = i32 + mikes
    _MDDPY_TMSEC = 6    ## i32 = ( h * 10000 ) + ( m * 100 ) + s
+   _MDDPY_INT64 = 7
 ## \endcond

@@ -10,6 +10,7 @@
 *     19 NOV 2020 jcs  Build  2: _bufcpy() : !bp
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
+*     16 MAR 2022 jcs  Build  6: _MDDPY_INT64
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -21,6 +22,7 @@
 #define _MDDPY_DT     4 // i32 = ( y * 10000) + ( m * 100 ) + d
 #define _MDDPY_TM     5 // r64 = i32 + mikes
 #define _MDDPY_TMSEC  6 // i32 = ( h * 10000) + ( m * 100 ) + s
+#define _MDDPY_INT64  7
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -113,7 +115,7 @@ PyObject *Field::GetValue( int &ty )
    double    r64;
    int       ymd;
 
-   // Field Type : { _MDDPY_INT, _MDDPY_DBL, _MDDPY_STR }
+   // Field Type : { _MDDPY_INT, _MDDPY_INT64, _MDDPY_DBL, _MDDPY_STR }
 
    py = Py_None;
    ty = _MDDPY_STR;
@@ -137,7 +139,7 @@ PyObject *Field::GetValue( int &ty )
          break;
       case mddFld_int64:
          py = PyInt_FromLong( v._i64 );
-         ty = _MDDPY_INT;
+         ty = _MDDPY_INT64;
          break;
       case mddFld_float:
          py = PyFloat_FromDouble( v._r32 );
@@ -311,11 +313,12 @@ int Record::GetUpds( PyObjects &u )
    PyObject *pyF, *pyV, *pyT;
    int       i, sz, ty;
 
-   // Field Type : { _MDDPY_INT, _MDDPY_DBL, _MDDPY_STR }
+   // Field Type : { _MDDPY_INT, _MDDPY_INT64, _MDDPY_DBL, _MDDPY_STR }
 
    sz = _upds.size();
    for ( i=0; i<sz; i++ ) {
       fld = _upds[i];
+      ty  = fld->type();
       pyF = PyInt_FromLong( fld->Fid() );
       pyV = fld->GetValue( ty );
       pyT = PyInt_FromLong( ty );
