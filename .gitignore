@@ -1,0 +1,13 @@
+*.o
+*.pyc
+__init__.py
+*.out
+*.?xq
+nohup.*
+Debug
+Release/*
+lib
+bin
+bin64
+build
+gennmtab

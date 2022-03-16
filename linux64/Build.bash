@@ -32,4 +32,10 @@ do
    echo ${LIB}
    cd ${GHOME}/${LIB}
    make -f Makefile64
+   if [ -d ./py/linux64 ]; then
+      cd ./py
+      ./linux64/mk.bash
+      cd ..
+      mv py//build/lib.linux-x86_64*/MDDirect27.so ${GHOME}/bin64
+   fi
 done
