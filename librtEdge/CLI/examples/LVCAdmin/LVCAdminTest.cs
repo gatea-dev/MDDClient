@@ -9,14 +9,13 @@
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using librtEdge;
 
 class LVCAdminTest
@@ -26,19 +25,21 @@ class LVCAdminTest
    ////////////////////////////////
    public static int Main( String[] args )
    {
-       var argc  = args.length;
-       var admin = new LVCAdmin(@"localhost:7161");
-       var file  = argc ? args[0] : "C:\TEMP\lvc-tickers.xml" );
+       var argc  = args.Length;
+       var admin = new LVCAdmin( "gatea.com:8775" );
+       var file  = ( argc>0 ) ? args[0] : "lvc-tickers.xml";
+       var shard = ( argc>1 ) ? Convert.ToInt32( args[1] ) : 5;
+       var slpMs = ( argc>2 ) ? Convert.ToInt32( args[2] ) : 1000;
        var tickerList = GetTickersFromFile( file );
 
        tickerList = tickerList.OrderBy(x => x).ToArray();
        int i = 0;
-       foreach (var t in Partition(tickerList, 5))
+       foreach (var t in Partition(tickerList, shard))
        {
-           Task.Delay(1000).Wait();
+           Task.Delay( slpMs ).Wait();
            Console.WriteLine($"Adding tickers={string.Join(",",t.ToArray())}...");
            admin.AddTickers("bloomberg", t.ToArray());
-           Task.Delay(1000).Wait();
+           Task.Delay( slpMs ).Wait();
            i+=5;
        }
  
@@ -60,26 +61,33 @@ class LVCAdminTest
  
        Task.Delay(2000).Wait();
        admin.Dispose();
+       return 0;
  
    } // Main()
  
-   private static string[] GetTickersFromFile(string fileName)
+   private static string[] GetTickersFromFile( string filename)
    {
-       var doc = new XmlDocument();
-       doc.Load(fileName);
- 
-       var tickers = new List<string>();
-       var items = doc.SelectNodes(".//Item");
-       if (items != null)
-       {
-           foreach (XmlNode i in items)
-           {
-               var ticker = i.Attributes["Name"];
-               tickers.Add(ticker.Value);
-           }
-       }
- 
-       return tickers.ToArray();
+      TextReader fp;
+      string     s, ss;
+      string[]   rtn;
+
+      // Pre-condition
+
+      rtn = null;
+      if ( !File.Exists( filename ) )
+         return rtn;
+
+      // Open / Read
+
+      ss = "";
+      fp = File.OpenText( filename );
+      while( (s=fp.ReadLine()) != null ) {
+         ss += s; ss += "\n";
+      }
+      fp.Close();
+      rtn = ss.Split('\n');
+      return rtn;
+
    } // GetTickersFromFile()
  
    private static double? GetDouble(LVCData tickerData, int fieldId)
