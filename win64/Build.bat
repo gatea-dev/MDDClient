@@ -23,6 +23,9 @@ FOR %%X in (libmddWire librtEdge) DO (
    if exist %%X\CLI\lib64 (
       cp -v %%X\CLI\lib64\*.dll .\bin64
    )
+   if exist %%X\py\bin64 (
+      cp -v %%X\py\bin64\*.pyd ..\bin64
+   )
 )
 goto Done
 
@@ -46,7 +49,12 @@ goto Done
       devenv /build %BLD_TYPE% %MK%CLI64.sln /project %MK%CLI64
       cd ..\..
    )
-   cd ..
+   if exist py\%VS% (
+      cd py\%VS%
+      devenv /build Release MDDirect.sln /project MDDirect27
+      devenv /build Release MDDirect.sln /project MDDirect39
+      cd ..\..
+   )
    EXIT /B 0
 
 :Done
