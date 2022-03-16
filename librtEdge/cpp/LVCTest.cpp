@@ -80,7 +80,7 @@ static void _ProgressBar( LVC &lvc, int i, int nd )
    if ( i && !( i%nd ) ) {
       printf( "[%06d] : Mem=%dKb\n", i+1, lvc.MemSize() );
 //      printf( "." );
-	}
+   }
    fflush( stdout );
 }
 
@@ -178,16 +178,21 @@ int main_ADMIN( int argc, char **argv )
 {
    // cmd-line args
 
-   if ( argc < 2 ) {
-      printf( "Usage : %s <host:port>; Exitting ...\n", argv[0] );
+   if ( argc < 3 ) {
+      printf( "Usage : %s <host:port> <ADD|DEL>; Exitting ...\n", argv[0] );
       return 0;
    }
 
-   LVCAdmin adm( argv[1] );
-   char     buf[K], *cmd, *svc, *tkr;
+   const char *ty;
+   char        buf[K], *cmd, *svc, *tkr;
+   bool        add;
 
-   printf( "Enter <ADD Service Ticker> or <DEL Service Ticker>" );
+   add = !::strcmp( argv[2], "ADD" );
+   ty  = add ? "ADD" : "DEL";
+   printf( "Enter <Ticker or File> to %s ...\n" );
    while( ::fgets( buf, K, stdin ) ) {
+      LVCAdmin    adm( argv[1] );
+
       ::strtok( buf, "\n" );
       cmd = ::strtok( buf,  " " );
       if ( !(svc=::strtok( NULL, " " )) )
@@ -195,7 +200,7 @@ int main_ADMIN( int argc, char **argv )
       if ( !(tkr=::strtok( NULL, " " )) )
          continue; // while
       printf( "%s_Ticker)( %s, %s )\n", cmd, svc, tkr );
-      if ( !::strcmp( cmd, "ADD" ) )
+      if ( add )
          adm.AddTicker( svc, tkr );
       else
          adm.DelTicker( svc, tkr );

@@ -8,8 +8,9 @@
 *      4 MAY 2015 jcs  Build 31: Fully-qualified std:: (compiler)
 *     17 FEB 2016 jcs  Build 32: SetUserPubMsgTy(); Watch._upd
 *     26 MAY 2017 jcs  Build 34: StartUDP()
+*     16 MAR 2022 jcs  Build 51: De-lint
 *
-*  (c) 1994-2017 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -378,9 +379,9 @@ _bBin = (cp=::getenv( "_JD_MF" )) ? false : true;
    if ( bUDP ) {
       ::fprintf( stdout, "%s\n", pub.StartConnectionless( pSvr, _LCL_PORT ) );
       StreamID = 1;
-      pub.AddWatch( "ticker1", (void *)StreamID++ );
-      pub.AddWatch( "ticker2", (void *)StreamID++ );
-      pub.AddWatch( "ticker3", (void *)StreamID++ );
+      pub.AddWatch( "ticker1", (VOID_PTR)StreamID++ );
+      pub.AddWatch( "ticker2", (VOID_PTR)StreamID++ );
+      pub.AddWatch( "ticker3", (VOID_PTR)StreamID++ );
    }
    else {
       pub.SetBinary( _bBin );

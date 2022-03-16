@@ -10,7 +10,7 @@
 *     19 NOV 2020 jcs  Build  2: _bufcpy() : !bp
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
-*     16 MAR 2022 jcs  Build  6: _MDDPY_INT64
+*     16 MAR 2022 jcs  Build  6: _MDDPY_NONE / _MDDPY_INT64
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -23,6 +23,7 @@
 #define _MDDPY_TM     5 // r64 = i32 + mikes
 #define _MDDPY_TMSEC  6 // i32 = ( h * 10000) + ( m * 100 ) + s
 #define _MDDPY_INT64  7
+#define _MDDPY_NONE   8
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -118,7 +119,7 @@ PyObject *Field::GetValue( int &ty )
    // Field Type : { _MDDPY_INT, _MDDPY_INT64, _MDDPY_DBL, _MDDPY_STR }
 
    py = Py_None;
-   ty = _MDDPY_STR;
+   ty = _MDDPY_NONE;
    switch( f._type ) {
       case mddFld_undef:
       case mddFld_string:
@@ -138,7 +139,7 @@ PyObject *Field::GetValue( int &ty )
          ty = _MDDPY_INT;
          break;
       case mddFld_int64:
-         py = PyInt_FromLong( v._i64 );
+         py = PyLong_FromLong( v._i64 );
          ty = _MDDPY_INT64;
          break;
       case mddFld_float:

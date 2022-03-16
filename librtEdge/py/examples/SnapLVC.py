@@ -8,6 +8,7 @@
 #     20 JAN 2022 jcs  Created
 #      3 FEB 2022 jcs  libMDDirect.NumPyObjects()
 #     17 FEB 2022 jcs  fids
+#     23 FEB 2022 jcs  rtData.Dump( bFldTy )
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -74,7 +75,8 @@ if __name__ == "__main__":
    if fids:
       hdr  = 'Service,Ticker,'
       for fid in fids:
-         hdr += lvc.GetFieldName( fid ) + ','
+         hdr += '%d,' % fid
+##         hdr += lvc.GetFieldName( fid ) + ','
       Log( hdr )
    try:
       run = True
@@ -89,7 +91,7 @@ if __name__ == "__main__":
                      except: val = '-'
                      dmp += val + ','
                else:
-                  dmp = rtData.Dump()
+                  dmp = rtData.Dump( bFldTy=True )
                Log( dmp )
             else:
                Log( '[%s,%s] : No fields' % ( svc, tkr ) )
