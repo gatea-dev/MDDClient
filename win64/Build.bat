@@ -55,6 +55,7 @@ goto Done
       devenv /build Release MDDirect.sln /project MDDirect39
       cd ..\..
    )
+   cd ..
    EXIT /B 0
 
 :Done
