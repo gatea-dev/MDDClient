@@ -10,11 +10,22 @@
 *     18 NOV 2020 jcs  Build  2: hash_map iff !defined
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: PyList_PackX()
+*     16 MAR 2022 jcs  Build  6: error C2760
 *     
 *  (c) 1994-2022, Gatea, Ltd.  
 ******************************************************************************/
 #ifndef _MDDPY_PYTHON_H
 #define _MDDPY_PYTHON_H
+/*
+ * Handle error C2760: syntax error: unexpected token 'identifier', 
+ * expected 'type specifier'
+ */
+#if defined(WIN32)
+typedef struct IUnknown IUnknown;
+#endif // defined(WIN32)
+/*
+ * Normal Headers follow the typedef
+ */
 #include <Python.h>
 #include <math.h>
 #include <stdio.h>

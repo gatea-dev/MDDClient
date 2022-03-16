@@ -205,7 +205,8 @@ int main_ADMIN( int argc, char **argv )
 
 int main( int argc, char **argv )
 {
-   return main_MEM( argc, argv );
+   return main_ADMIn( argc, argv );
+//   return main_MEM( argc, argv );
 //   return main_CACHE( argc, argv );
 }
 
