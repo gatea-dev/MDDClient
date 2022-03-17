@@ -34,6 +34,9 @@ Build 51 22-03-xx
    - PyLong_FromLong() : DUH!!
    - Empty field = None
 
+4) LVCAdmin.OnAdminXXX( bool bAdd, ... );
+   - Pass OnAdminXXX() into CLI / C#
+
 
 Build 50 21-12-14
 -----------------

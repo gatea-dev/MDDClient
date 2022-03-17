@@ -6,7 +6,7 @@
 *  REVISION HISTORY:
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC
-*      7 MAR 2022 jcs  Build 51: AddTickers()
+*     17 MAR 2022 jcs  Build 51: AddTickers()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -73,6 +73,16 @@ public:
 	   if ( !::strcmp( pn, _CMD_NAK ) )
 	      return lvcAdm_NAK;
 	   return lvcAdm_undefined;
+	}
+
+	/**
+	 * \brief Return true if ADD; false if DEL
+	 *
+	 * \return true if ADD; false if DEL
+	 */
+	bool IsAdd()
+	{
+	   return( ::strcmp( _msg.GetAttribute( _mdd_pType ), _CMD_ADD ) == 0 );
 	}
 
 	/**
@@ -288,7 +298,7 @@ public:
 	 * \brief Called asynchronously when an ACK message arrives on 
 	 * Cockpit channel.
 	 *
-	 * \param msgTy - Type of ACK : Add or Delete
+	 * \param bAdd - true if ADD; false if DEL
 	 * \param svc - Service Name
 	 * \param tkr - Ticker Name
 	 * \return true if you processed this msg; false to propogate to 
@@ -296,16 +306,14 @@ public:
 	 *
 	 * \see RTEDGE::Cockpit::OnData
 	 */
-	virtual bool OnAdminACK( LVCAdminMsgType msgTy,
-	                         const char     *svc,
-	                         const char     *tkr )
+	virtual bool OnAdminACK( bool bAdd, const char *svc, const char *tkr )
 	{ return false; }
 
 	/**
 	 * \brief Called asynchronously when an NAK message arrives on 
 	 * Cockpit channel.
 	 *
-	 * \param msgTy - Type of NAK : Add or Delete
+	 * \param bAdd - true if ADD; false if DEL
 	 * \param svc - Service Name
 	 * \param tkr - Ticker Name
 	 * \return true if you processed this msg; false to propogate to 
@@ -313,9 +321,7 @@ public:
 	 *
 	 * \see RTEDGE::Cockpit::OnData
 	 */
-	virtual bool OnAdminNAK( LVCAdminMsgType msgTy,
-	                         const char     *svc,
-	                         const char     *tkr )
+	virtual bool OnAdminNAK( bool bAdd, const char *svc, const char *tkr )
 	{ return false; }
 
 
@@ -334,9 +340,9 @@ protected:
 	      case lvcAdm_undefined:
 	         break;
 	      case lvcAdm_ACK:
-	         return OnAdminACK( e.MsgType(), e.Service(), e.Ticker() );
+	         return OnAdminACK( e.IsAdd(), e.Service(), e.Ticker() );
 	      case lvcAdm_NAK:
-	         return OnAdminNAK( e.MsgType(), e.Service(), e.Ticker() );
+	         return OnAdminNAK( e.IsAdd(), e.Service(), e.Ticker() );
 	   }
 	   return false;
 	}

@@ -6,12 +6,53 @@
 *     13 NOV 2014 jcs  Created.
 *     25 SEP 2017 jcs  Build 35: LVCAdmin
 *     11 JAN 2018 jcs  Build 39: Leak : FreeAll() in Destroy() 
-*      7 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers()
+*     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
+
+
+namespace librtEdgePRIVATE
+{  
+   
+////////////////////////////////////////////////
+// 
+//      c l a s s   L V C A d m i n C P P
+// 
+////////////////////////////////////////////////
+
+//////////////////////////
+// Constructor
+//////////////////////////
+LVCAdminCPP::LVCAdminCPP( ILVCAdmin ^cli, const char *admin ) :
+   RTEDGE::LVCAdmin( admin ),
+   _cli( cli )
+{   
+}   
+    
+LVCAdminCPP::~LVCAdminCPP()
+{   
+}   
+ 
+  
+//////////////////////////
+// Asynchronous Callbacks
+//////////////////////////
+bool LVCAdminCPP::OnAdminACK( bool bAdd, const char *svc, const char *tkr )
+{
+   _cli->OnAdminACK( bAdd, gcnew String( svc ), gcnew String( tkr ) );
+   return true;
+}
+
+bool LVCAdminCPP::OnAdminNAK( bool bAdd, const char *svc, const char *tkr )
+{
+   _cli->OnAdminNAK( bAdd, gcnew String( svc ), gcnew String( tkr ) );
+   return true;
+}
+
+} // namespace librtEdgePRIVATE
 
 
 namespace librtEdge
@@ -149,16 +190,34 @@ _heapmin();
 /////////////////////////////////
 // Constructor / Destructor
 /////////////////////////////////
-LVCAdmin::LVCAdmin( String ^admin ) :
-   _lvc( new RTEDGE::LVCAdmin( _pStr( admin ) ) )
+LVCAdmin::LVCAdmin() :
+   _lvc( (librtEdgePRIVATE::LVCAdminCPP *)0 )
 {
+}
+
+LVCAdmin::LVCAdmin( String ^admin ) :
+   _lvc( (librtEdgePRIVATE::LVCAdminCPP *)0 )
+{
+   Start( admin );
 }
 
 LVCAdmin::~LVCAdmin()
 {
    if ( _lvc )
       delete _lvc;
-   _lvc = (RTEDGE::LVCAdmin *)0;
+   _lvc = (librtEdgePRIVATE::LVCAdminCPP *)0;
+}
+
+
+/////////////////////////////////
+// Operations
+/////////////////////////////////
+void LVCAdmin::Start( String ^admin )
+{
+   // Once
+
+   if ( !_lvc )
+      _lvc = new librtEdgePRIVATE::LVCAdminCPP( this, _pStr( admin ) );
 }
 
 

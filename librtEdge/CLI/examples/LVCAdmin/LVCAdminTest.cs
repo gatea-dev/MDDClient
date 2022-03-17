@@ -18,15 +18,41 @@ using System.Text;
 using System.Threading.Tasks;
 using librtEdge;
 
-class LVCAdminTest
+class LVCAdminTest : LVCAdmin
 {
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+   public LVCAdminTest( string admin ) :
+      base( admin )
+   {
+   }
+
+   ////////////////////////////////
+   // LVCAdmin Interface
+   ////////////////////////////////
+   public override void OnAdminACK( bool bAdd, string svc, string tkr )
+   {
+      string ty = bAdd ? "ADD" : "DEL";
+
+      Console.WriteLine( "ACK.{0} : ( {1}, {2} )", ty, svc, tkr );
+   }
+
+   public override void OnAdminNAK( bool bAdd, string svc, string tkr )
+   {
+      string ty = bAdd ? "ADD" : "DEL";
+
+      Console.WriteLine( "NAK.{0} : ( {1}, {2} )", ty, svc, tkr );
+   }
+
+
    ////////////////////////////////
    // main()
    ////////////////////////////////
    public static int Main( String[] args )
    {
        var argc  = args.Length;
-       var admin = new LVCAdmin( "gatea.com:8775" );
+       var admin = new LVCAdminTest( "gatea.com:8775" );
        var file  = ( argc>0 ) ? args[0] : "lvc-tickers.xml";
        var shard = ( argc>1 ) ? Convert.ToInt32( args[1] ) : 5;
        var slpMs = ( argc>2 ) ? Convert.ToInt32( args[2] ) : 1000;

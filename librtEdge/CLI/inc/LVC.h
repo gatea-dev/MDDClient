@@ -7,7 +7,7 @@
 *      5 FEB 2016 jcs  Build 32: IsBinary
 *     25 SEP 2017 jcs  Build 35: LVCAdmin.AddTicker()
 *     14 JAN 2018 jcs  Build 39: LVCSnap._nullFld
-*      7 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers()
+*     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -18,6 +18,68 @@
 #include <rtEdge.h>
 #include <Data.h>
 #include <Schema.h>
+#endif // DOXYGEN_OMIT
+
+#ifndef DOXYGEN_OMIT
+namespace librtEdgePRIVATE
+{
+////////////////////////////////////////////////
+//
+//       c l a s s   I L V C A d m i n
+//
+////////////////////////////////////////////////
+/**
+ * \class ILVCAdmin
+ * \brief Abstract class to handle the 2 LVCAdmin channel events
+ */
+public interface class ILVCAdmin
+{
+	// ILVCAdmin Interface
+public:
+	virtual void OnAdminACK( bool, String ^, String ^ ) abstract;
+	virtual void OnAdminNAK( bool, String ^, String ^ ) abstract;
+
+}; // ILVCAdmin
+
+
+////////////////////////////////////////////////
+//
+//      c l a s s   L V C A d m i n C P P
+//
+////////////////////////////////////////////////
+
+/**
+ * \class LVCAdminCPP
+ * \brief RTEDGE::LVCAdmin sub-class to hook 2 virtual methods
+ * from native librtEdge library and dispatch to .NET consumer.
+ */
+class LVCAdminCPP : public RTEDGE::LVCAdmin
+{
+private:
+	gcroot < ILVCAdmin ^ > _cli;
+
+	// Constructor
+public:
+	/**
+	 * \brief Constructor for class to hook native events from
+	 * native librtEdge library and pass to .NET consumer via
+	 * the ILVCAdmin interface.
+	 *
+	 * \param cli - Event receiver - ILVCAdmin::OnAdminACK(), etc.
+	 * \param pAdmin - host:port of LVC admin channel
+	 */
+	LVCAdminCPP( ILVCAdmin ^cli, const char *admin );
+	~LVCAdminCPP();
+
+	// Asynchronous Callbacks
+protected:
+	virtual bool OnAdminACK( bool, const char *, const char * );
+	virtual bool OnAdminNAK( bool, const char *, const char * );
+
+}; // class LVCAdminCPP
+
+}  // namespace librtEdgePRIVATE
+
 #endif // DOXYGEN_OMIT
 
 namespace librtEdge
@@ -147,17 +209,27 @@ public:
  * \class LVC
  * \brief Admin channel to LVC
  */
-public ref class LVCAdmin : public rtEdge
+public ref class LVCAdmin : public rtEdge,
+                            public librtEdgePRIVATE::ILVCAdmin
 {
-protected: 
-	RTEDGE::LVCAdmin *_lvc;
+protected:
+	librtEdgePRIVATE::LVCAdminCPP *_lvc;
 
 	/////////////////////////////////
 	// Constructor / Destructor
 	/////////////////////////////////
 public:
+	/** 
+	 * \brief Constructor 
+	 *
+	 * Initiate LVCAdmin connection by calling Start()
+	 *
+	 * \see Start()
+	 */
+	LVCAdmin();
+
 	/**
-	 * \brief Constructor.
+	 * \brief Constructor 
 	 *
 	 * \param pAdmin - host:port of LVC admin channel
 	 */
@@ -167,6 +239,18 @@ public:
 	 * \brief Destructor.  Cleans up internally.
 	 */
 	~LVCAdmin();
+
+
+	/////////////////////////////////
+	// Operations
+	/////////////////////////////////
+public:
+	/**
+	 * \brief Initiate LVC admin connection
+	 *
+	 * \param pAdmin - host:port of LVC admin channel
+	 */
+	void Start( String ^pAdmin );
 
 
 	////////////////////////////////////
@@ -203,6 +287,43 @@ public:
 	 * \param tkr - Ticker name; Comma-separated for multiple tickers
 	 */
 	void DelTicker( String ^svc, String ^tkr );
+
+
+	/////////////////////////////////
+	// ILVCAdmin interface
+	/////////////////////////////////
+public:
+	/**
+	 * \brief Called asynchronously when an ACK message arrives on
+	 * LVCAdmin channel.
+	 *
+	 * Override this method in your C# application to take action when
+	 * the LVC ACK's an AddTicker() or DelTicker()
+	 *
+	 * \param bAdd - true if ADD; false if DEL
+	 * \param svc - Service Name
+	 * \param tkr - Ticker Name
+	 * \see AddTicker()
+	 * \see AddTickers()
+	 * \see DelTicker()
+	 */
+	virtual void OnAdminACK( bool bAdd, String ^svc, String ^tkr ) { ; }
+
+	/**
+	 * \brief Called asynchronously when an NAK message arrives on
+	 * LVCAdmin channel.
+	 *
+	 * Override this method in your C# application to take action when
+	 * the LVC NAK's an AddTicker() or DelTicker()
+	 *
+	 * \param bAdd - true if ADD; false if DEL
+	 * \param svc - Service Name
+	 * \param tkr - Ticker Name
+	 * \see AddTicker()
+	 * \see AddTickers()
+	 * \see DelTicker()
+	 */
+	virtual void OnAdminNAK( bool, String ^, String ^ ) { ; }
 
 };  // class LVCAdmin
 

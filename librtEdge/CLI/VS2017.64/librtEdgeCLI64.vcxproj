@@ -115,15 +115,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\rtEdge.cpp" />
-    <ClCompile Include="..\src\OS.cpp" />
+    <ClCompile Include="..\src\LVC.cpp" />
     <ClCompile Include="..\src\ByteStream.cpp" />
     <ClCompile Include="..\src\Chain.cpp" />
     <ClCompile Include="..\src\ChartDB.cpp" />
     <ClCompile Include="..\src\Data.cpp" />
     <ClCompile Include="..\src\Field.cpp" />
-    <ClCompile Include="..\src\LVC.cpp" />
+    <ClCompile Include="..\src\OS.cpp" />
     <ClCompile Include="..\src\PubChannel.cpp" />
+    <ClCompile Include="..\src\rtEdge.cpp" />
     <ClCompile Include="..\src\Schema.cpp" />
     <ClCompile Include="..\src\SubChannel.cpp" />
     <ClCompile Include="..\src\Update.cpp" />
