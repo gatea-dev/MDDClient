@@ -52,7 +52,7 @@ class LVCAdminTest : LVCAdmin
    public static int Main( String[] args )
    {
        var argc  = args.Length;
-       var admin = new LVCAdminTest( "gatea.com:8775" );
+       var admin = new LVCAdminTest( "localhost:8775" );
        var file  = ( argc>0 ) ? args[0] : "lvc-tickers.xml";
        var shard = ( argc>1 ) ? Convert.ToInt32( args[1] ) : 5;
        var slpMs = ( argc>2 ) ? Convert.ToInt32( args[2] ) : 1000;

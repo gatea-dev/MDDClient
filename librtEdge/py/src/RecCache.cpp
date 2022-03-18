@@ -139,7 +139,7 @@ PyObject *Field::GetValue( int &ty )
          ty = _MDDPY_INT;
          break;
       case mddFld_int64:
-         py = PyLong_FromLong( v._i64 );
+         py = PyLong_FromLongLong( v._i64 );
          ty = _MDDPY_INT64;
          break;
       case mddFld_float:

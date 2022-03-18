@@ -177,18 +177,22 @@ public:
 
    void PubTkr( Watch &w )
    {
-      Locker  lck( _mtx );
-      Update &u = upd();
-      rtBUF  *pb;
-      bool    bImg;
-      int     i, fid;
-      double  dv;
+      Locker    lck( _mtx );
+      Update   &u = upd();
+      rtBUF    *pb;
+      bool      bImg;
+      int       fid;
+      u_int64_t i64;
 
       fid  = 6;
       bImg = ( w._rtl == 1 );
+      i64  = 7723845300000; 
       u.Init( w.tkr(), w._arg, bImg );
       u.AddField(  fid++, (double)2500000.12 );
+      u.AddField(  fid++, i64 );
+      u.Publish();
       pb = (rtBUF *)0;
+/*
       if ( !bImg ) {
          u.AddField( fid++, w._rtl );
          u.AddField( fid++, (int)TimeSec() );
@@ -197,6 +201,8 @@ public:
          u.Publish();
       }
       else  {
+         double dv = 870.123;
+
          u.AddField( fid++, w._rtl );
          u.AddField( fid++, (int)TimeSec() );
          u.AddField( fid, "Duplicate 1" );
@@ -206,8 +212,7 @@ public:
          u.AddField( fid++, ::rand() % 10000 );
          u.AddField( 70, "+10 43/64" );
          fid = 10000;
-         dv  = 870.123;
-         for ( i=0; i<10; i++, dv+=100.0 ) {
+         for ( int i=0; i<10; i++, dv+=100.0 ) {
             u.AddField( fid++, dv );
             u.AddField( fid++, -dv );
          }
@@ -220,6 +225,7 @@ public:
          u.Publish();
          ::fprintf( stdout, "IMAGE  %s\n", w.tkr() ); ::fflush( stdout );
       }
+ */
       w._rtl += 1;
    }
 
