@@ -15,7 +15,7 @@
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *      6 OCT 2021 jcs  Build 50: -table
 *
-*  (c) 1994-2021, Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>

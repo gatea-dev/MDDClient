@@ -9,8 +9,9 @@
 *     14 JAN 2018 jcs  Build 39: _name
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
+*     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -234,7 +235,7 @@ public:
 	 *
 	 * \return Field Value as 64-bit long
 	 */
-	long GetAsInt64();
+	long long GetAsInt64();
 
 	/**
 	 * \brief Returns field value as float

@@ -37,6 +37,9 @@ Build 51 22-03-xx
 4) LVCAdmin.OnAdminXXX( bool bAdd, ... );
    - Pass OnAdminXXX() into CLI / C#
 
+5) 64-bit C#:
+   - long long rtEdgeField.GetAsInt64(), not 1 long
+
 
 Build 50 21-12-14
 -----------------

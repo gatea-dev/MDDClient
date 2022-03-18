@@ -9,8 +9,9 @@
 *     11 JAN 2018 jcs  Build 39: _IncObj() / _DecObj()
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
+*     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Field.h>
@@ -163,7 +164,7 @@ int rtEdgeField::GetAsInt32()
    return _fld->GetAsInt32();
 }
 
-long rtEdgeField::GetAsInt64()
+long long rtEdgeField::GetAsInt64()
 {
    return _fld->GetAsInt64();
 }
