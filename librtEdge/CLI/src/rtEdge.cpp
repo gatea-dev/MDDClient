@@ -32,7 +32,7 @@ char *librtEdgeCLIID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 51 ", GL64 );
+      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 52 ", GL64 );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s      = bp;
       sccsid = (char *)s.data();

@@ -7,8 +7,9 @@
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink() 
 *      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
 *     29 APR 2020 jcs  Build 43: Moved IrtEdgePubUpdate in here
+*     24 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -17,6 +18,8 @@
 #include <Field.h>
 #include <Data.h>
 #endif // DOXYGEN_OMIT
+
+#ifndef DOXYGEN_OMIT
 
 using namespace librtEdgePRIVATE;
 
@@ -49,12 +52,16 @@ public:
 	virtual void AddFieldAsDouble( int, double ) abstract;
 	virtual void AddFieldAsByteStream( int, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( int, DateTime ^ ) abstract;
+	virtual void AddFieldAsDate( int, DateTime ^ ) abstract;
+	virtual void AddFieldAsTime( int, DateTime ^ ) abstract;
 	virtual void AddFieldAsString( String ^, String ^ ) abstract;
 	virtual void AddFieldAsInt32( String ^, int ) abstract;
 	virtual void AddFieldAsInt64( String ^, long ) abstract;
 	virtual void AddFieldAsDouble( String ^, double ) abstract;
 	virtual void AddFieldAsByteStream( String ^, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( String ^, DateTime ^ ) abstract;
+	virtual void AddFieldAsDate( String ^, DateTime ^ ) abstract;
+	virtual void AddFieldAsTime( String ^, DateTime ^ ) abstract;
 
 	// IrtEdgePublisher Interface - Field
 public:
@@ -63,6 +70,7 @@ public:
 
 };  // class IrtEdgePubUpdate
 
+#endif // DOXYGEN_OMIT
 
 ////////////////////////////////////////////////
 //
@@ -315,12 +323,28 @@ public:
 	virtual void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add date-time field to update
+	 * \brief Add date-time field to update as DateTime
 	 *
 	 * \param fid - Field ID
 	 * \param dt - Field value as DateTime
 	 */
 	virtual void AddFieldAsDateTime( int fid, DateTime ^dt );
+
+	/**
+	 * \brief Add date-time field to update as Date
+	 *
+	 * \param fid - Field ID
+	 * \param dt - Field value as DateTime
+	 */
+	virtual void AddFieldAsDate( int fid, DateTime ^dt );
+
+	/**
+	 * \brief Add date-time field to update as Time
+	 *
+	 * \param fid - Field ID
+	 * \param dt - Field value as DateTime
+	 */
+	virtual void AddFieldAsTime( int fid, DateTime ^dt );
 
 	/**
 	 * \brief Add string field to update
@@ -390,12 +414,28 @@ public:
 	virtual void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add date-time field to update
+	 * \brief Add date-time field to update as MDD DateTime
 	 *
 	 * \param pFld - Field Name
 	 * \param dt - Field value as DateTime
 	 */
 	virtual void AddFieldAsDateTime( String ^pFld, DateTime ^dt );
+
+	/**
+	 * \brief Add date-time field to update as MDD Date
+	 *
+	 * \param pFld - Field Name
+	 * \param dt - Field value as DateTime
+	 */
+	virtual void AddFieldAsDate( String ^pFld, DateTime ^dt );
+
+	/**
+	 * \brief Add date-time field to update as MDD Time
+	 *
+	 * \param pFld - Field Name
+	 * \param dt - Field value as DateTime
+	 */
+	virtual void AddFieldAsTime( String ^pFld, DateTime ^dt );
 
 
 	/////////////////////////////////
@@ -436,6 +476,29 @@ public:
 	                          int              linkNum,
 	                          bool             bFinal,
 	                          array<String ^> ^links );
+
+#ifndef DOXYGEN_OMIT
+	/////////////////////////////////
+	// Helpers : Conversion
+	/////////////////////////////////
+protected:
+	RTEDGE::rtDateTime _ConvertDateTime( DateTime ^cli )
+	{
+	   RTEDGE::rtDateTime cpp;
+	   RTEDGE::rtDate    &dt = cpp._date;
+	   RTEDGE::rtTime    &tm = cpp._time;
+
+	   dt._year   = cli->Year;
+	   dt._month  = cli->Month - 1;
+	   dt._mday   = cli->Day;
+	   tm._hour   = cli->Hour; 
+	   tm._minute = cli->Minute;
+	   tm._second = cli->Second;
+	   tm._micros = cli->Millisecond * 1000;
+	   return cpp;
+	}
+
+#endif //  DOXYGEN_OMIT
 
 }; // class rtEdgePubUpdate
 

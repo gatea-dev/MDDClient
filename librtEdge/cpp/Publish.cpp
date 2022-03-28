@@ -177,19 +177,23 @@ public:
 
    void PubTkr( Watch &w )
    {
-      Locker    lck( _mtx );
-      Update   &u = upd();
-      rtBUF    *pb;
-      bool      bImg;
-      int       fid;
-      u_int64_t i64;
+      Locker         lck( _mtx );
+      Update        &u = upd();
+      rtBUF         *pb;
+      bool           bImg;
+      int            fid;
+      u_int64_t      i64;
+      struct timeval tv;
 
-      fid  = 6;
-      bImg = ( w._rtl == 1 );
-      i64  = 7723845300000; 
+      fid        = 6;
+      bImg       = ( w._rtl == 1 );
+      tv.tv_sec  = TimeSec();
+      tv.tv_usec = 0;
+      i64        = 7723845300000; 
       u.Init( w.tkr(), w._arg, bImg );
       u.AddField(  fid++, (double)2500000.12 );
       u.AddField(  fid++, i64 );
+      u.AddField(  fid++, unix2rtDateTime( tv ) );
       u.Publish();
       pb = (rtBUF *)0;
 /*

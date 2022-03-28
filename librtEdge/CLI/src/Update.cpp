@@ -6,8 +6,9 @@
 *     13 NOV 2014 jcs  Created.
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink()
 *      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
+*     28 MAR 2022 jcs  Build 52: AddFieldAsDateTime() filled in
 *
-*  (c) 1994-2015 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Update.h>
@@ -216,6 +217,17 @@ void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
 
 void rtEdgePubUpdate::AddFieldAsDateTime( int fid, DateTime ^dt )
 {
+   _upd.AddField( fid, _ConvertDateTime( dt ) );
+}
+
+void rtEdgePubUpdate::AddFieldAsDate( int fid, DateTime ^dt )
+{
+   _upd.AddField( fid, _ConvertDateTime( dt )._date );
+}
+
+void rtEdgePubUpdate::AddFieldAsTime( int fid, DateTime ^dt )
+{
+   _upd.AddField( fid, _ConvertDateTime( dt )._time );
 }
 
 void rtEdgePubUpdate::AddFieldAsString( String ^pFld, String ^str )
@@ -288,6 +300,22 @@ void rtEdgePubUpdate::AddFieldAsDateTime( String ^pFld, DateTime ^dt )
 
    if ( (fid=_pub->GetFid( pFld )) )
       AddFieldAsDateTime( fid, dt );
+}
+
+void rtEdgePubUpdate::AddFieldAsDate( String ^pFld, DateTime ^dt )
+{
+   int fid;
+
+   if ( (fid=_pub->GetFid( pFld )) )
+      AddFieldAsDate( fid, dt );
+}
+
+void rtEdgePubUpdate::AddFieldAsTime( String ^pFld, DateTime ^dt )
+{
+   int fid;
+
+   if ( (fid=_pub->GetFid( pFld )) )
+      AddFieldAsTime( fid, dt );
 }
 
 

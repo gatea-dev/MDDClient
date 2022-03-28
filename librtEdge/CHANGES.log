@@ -22,7 +22,15 @@ Features To Add
    - OnSymbol( ..., bool bAdd ) 
 
 
-Build 51 22-03-xx
+Build 52 22-03-xx
+-----------------
+1) C# rtEdgePublisher : 
+   - rtEdgePubUpdate::AddFieldAsDateTime guts : DUH!!
+   - rtEdgePubUpdate::AddFieldAsDate()
+   - rtEdgePubUpdate::AddFieldAsTime()
+
+
+Build 51 22-03-18
 -----------------
 1) rtProxy cores : Quick Start / Stop:
    - volatile bool Thread._ready
