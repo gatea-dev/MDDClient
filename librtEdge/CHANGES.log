@@ -29,7 +29,8 @@ Build 52 22-03-xx
    - rtEdgePubUpdate::AddFieldAsDate()
    - rtEdgePubUpdate::AddFieldAsTime()
 
-2) Unpacked libmddWire FieldList:
+2) ****************** NEW LIBMDDWIRE ******************
+   - Unpacked libmddWire FieldList
    - mddIoctl_unpacked
 
 
