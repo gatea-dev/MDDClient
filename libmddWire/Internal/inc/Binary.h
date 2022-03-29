@@ -9,8 +9,9 @@
 *      4 JUN 2014 jcs  Build  7: mddFld_real / mddFld_bytestream
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
+*     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __MDD_BINARY_H
 #define __MDD_BINARY_H
@@ -55,9 +56,12 @@ public:
 	static double _dMidNt;
 	static double _ymd_mul;
 
+private:
+	bool _bPackFlds;
+
 	// Constructor / Destructor
 public:
-	Binary();
+	Binary( bool );
 	~Binary();
 
 	// Access / Operations
@@ -90,6 +94,11 @@ public:
 	int Set( u_char *, double, double );
 	int Set( u_char *, mddReal );
 
+	// Wire Protocol - Unpacked
+protected:
+	int _Get_unpacked( u_char *, mddField &, bool ); 
+	int _Set_unpacked( u_char *, mddField ); 
+
 	// Helpers
 private:
 	u_int  _TimeNow();
@@ -98,7 +107,8 @@ private:
 	int    _u_unpack( u_char *, u_int64_t & /* , bool */ );
 	int    _u_pack( u_char *, u_int );
 	int    _u_pack( u_char *, u_int64_t, bool & );
-};
+
+}; // class Binary
 
 
 #ifdef TODO

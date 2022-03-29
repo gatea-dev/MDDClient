@@ -13,8 +13,9 @@
 *     13 SEP 2015 jcs  Build 10: localtime_r / strtok_r
 *     12 OCT 2015 jcs  Build 10a:_pUser -> _mdd_pUser; mddWire_dumpField
 *     16 APR 2016 jcs  Build 11: _mdd_pAuth, etc.
+*     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 /** 
  * \mainpage libmddWire API Reference Manual
@@ -24,6 +25,7 @@
 
 #ifndef __LIB_MDD_WIRE_H
 #define __LIB_MDD_WIRE_H
+#include <math.h>
 #include <time.h>
 #include <sys/types.h>
 
@@ -80,13 +82,14 @@ typedef enum {
  */
 typedef enum {
    /** 
-    * \brief Parse mddProto_MF msgs in libmddWire
-    *  + Only used for mddProtocol == mddProto_MF
-    *  + Set to 1 to parse incoming msg in libmddWire, returning mddFieldList
-    *  + Set to 0 to return raw message only in mddWireMsg::mddBuf
-    *  + Default is 1
+    * \brief Publish mddProto_Binary FieldLists as unpacked values
+    *
+    *  + Only used for mddProtocol == mddProto_Binary
+    *  + Only used for publishing
+    *  + Subscription
+    *  + Default is 0
     */
-   mddIoctl_parse          = 0,
+   mddIoctl_unpacked        = 0,
    /** 
     * \brief Convert mddProto_MF string fields to native fields based on schema.
     *  + Only used for mddProtocol == mddProto_MF
@@ -971,14 +974,14 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
       mddValue v = f._val;                                          \
       mddBuf   b = v._buf;                                          \
       double   r64;                                                 \
-      int      fSz, ymd;                                            \
+      int      fSz, ymd, hms;                                       \
                                                                     \
       switch( f._type ) {                                           \
          case mddFld_undef:                                         \
             strcpy( buf, "???" );                                   \
             break;                                                  \
          case mddFld_string:                                        \
-            fSz = gmin( b._dLen, K-1 );                            \
+            fSz = gmin( b._dLen, K-1 );                             \
             ::memcpy( buf, b._data, fSz );                          \
             buf[fSz] = '\0';                                        \
             break;                                                  \
@@ -989,19 +992,29 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
             sprintf( buf, "%.6f", v._r64 );                         \
             break;                                                  \
          case mddFld_date:                                          \
+         {                                                          \
+            char *dp = buf;                                         \
+                                                                    \
             r64 = v._r64 / 1000000.0;                               \
             ymd = (int)r64;                                         \
-            sprintf( buf, "%04d-%02d-%02d",                         \
+            r64 = ::fmod( v._r64, 1000000.0 );                      \
+            hms = (int)r64;                                         \
+            dp += sprintf( dp, "%04d-%02d-%02d",                    \
                ymd/10000, ( ymd/100 ) % 100, ymd%100 );             \
+            if ( !hms )                                             \
+               break;                                               \
+            dp += sprintf( dp, "%02d:%02d:%02d",                    \
+               hms/10000, ( hms/100 ) % 100, hms%100 );             \
             break;                                                  \
+         }                                                          \
          case mddFld_time:                                          \
             sprintf( buf, "%.6f", v._r64 );                         \
             break;                                                  \
          case mddFld_timeSec:                                       \
-            ymd = (int)v._r64;                                      \
-            r64 = ( v._r64 - ymd ) * 1000;                          \
+            hms = (int)v._r64;                                      \
+            r64 = ( v._r64 - hms ) * 1000;                          \
             sprintf( buf, "%02d:%02d:%02d.%03d",                    \
-               ymd/10000, ( ymd/100 ) % 100, ymd%100, (int)r64 );   \
+               hms/10000, ( hms/100 ) % 100, hms%100, (int)r64 );   \
             break;                                                  \
          case mddFld_float:                                         \
             sprintf( buf, "%.4f", v._r32 );                         \

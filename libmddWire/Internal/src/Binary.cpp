@@ -14,8 +14,9 @@
 *     12 NOV 2014 jcs  Build  8: -Wall
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_dNow(); MDW_Internal.h
+*     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 
@@ -128,7 +129,8 @@ double Binary::_ymd_mul = 1000000.0;
 ////////////////////////////////////////////
 // Constructor / Destructor
 ////////////////////////////////////////////
-Binary::Binary()
+Binary::Binary( bool bPackFlds ) :
+   _bPackFlds( bPackFlds )
 {
 }
 
@@ -190,12 +192,21 @@ int Binary::Get( u_char *bp, mddField &f )
    u_char   *cp, ty;
    bool      bNeg, bUnpack;
 
+   // Common header : Packed or Unpacked
+
    cp      = bp;
    cp     += Get( cp, ty );
    cp     += _u_unpack( cp, f._fid );
    f._type = (mddFldType)( ty & 0x7f );
    bNeg    = ( ty & _NEG8 ) == _NEG8;
    bUnpack = ( ty & UNPACKED_BINFLD ) == UNPACKED_BINFLD;
+
+   // Contents differ : Packed vs Unpacked
+
+   if ( bUnpack ) {
+      cp += _Get_unpacked( cp, f, bNeg );
+      return( cp-bp );
+   }
    switch( f._type ) {
       case mddFld_undef:
          break;
@@ -376,16 +387,27 @@ int Binary::Set( u_char *bp, mddBinHdr &h, bool bLenOnly )
 int Binary::Set( u_char *bp, mddField f )
 {
    mddValue &v = f._val;
-   u_char   *cp;
+   u_char   *cp, ty;
    u_int     i32;
    u_int64_t i64;
    float     r32;
    double    r64;
    bool      bNeg, bPack;
 
-   cp  = bp;
-   cp += Set( cp, (u_char)f._type );
-   cp += _u_pack( cp, f._fid );
+   // Common header : Packed or Unpacked
+
+   cp    = bp;
+   ty    = (u_char)f._type;
+   ty   |= _bPackFlds ? 0 : UNPACKED_BINFLD;
+   *cp++ = ty;
+   cp   += _u_pack( cp, f._fid );
+
+   // Contents differ : Packed vs Unpacked
+
+   if ( !_bPackFlds ) { 
+      cp += _Set_unpacked( cp, f ); 
+      return( cp-bp );
+   }
    switch( f._type ) {
       case mddFld_undef:
          break;
@@ -528,6 +550,168 @@ int Binary::Set( u_char *bp, mddReal r )
    cp   += Set( cp, r.value );
    *cp++ = r.hint;
    *cp++ = r.isBlank;
+   return( cp-bp );
+}
+
+
+/////////////////////////////////////
+// Wire Protocol - Unpacked
+/////////////////////////////////////
+#define _COPY_EITHER( v, cp, bSet )  \
+   do {                              \
+      void *pv = (void *)&v;         \
+      void *d  = bSet ? cp : pv;     \
+      void *s  = bSet ? pv : cp;     \
+                                     \
+      ::memcpy( d, s, sizeof( v ) ); \
+      cp += sizeof( v );             \
+   } while( 0 )
+
+#define _COPY_SET( v, cp ) _COPY_EITHER( v, cp, true )
+#define _COPY_GET( v, cp ) _COPY_EITHER( v, cp, false )
+
+int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
+{
+   mddValue &v = f._val;
+   mddReal  &r = v._real;
+   u_char   *cp, ty;
+   u_int32_t i32;
+   u_int64_t i64;
+
+   cp      = bp;
+   ty      = (u_char)f._type;
+   ty     &= ~UNPACKED_BINFLD;
+   f._type = (mddFldType)ty;
+   switch( f._type ) {
+      case mddFld_undef:
+         break;
+      case mddFld_string:
+         cp += Get( cp, v._buf );
+         break;
+      case mddFld_int32:
+         _COPY_GET( v._i32, cp );
+         if ( bNeg )
+            v._i32 |= 0x80000000L;
+         break;
+      case mddFld_double:
+         _COPY_GET( i64, cp );
+         v._r64 = _d_div * i64;
+         if ( bNeg )
+            v._r64 = -v._r64;
+         break;
+      case mddFld_date:
+         _COPY_GET( i64, cp );
+         v._r64 = _dt_mul * i64;
+         break;
+      case mddFld_time:
+      case mddFld_timeSec:
+         _COPY_GET( i32, cp );
+         v._r64 = i32;
+         break;
+      case mddFld_float:
+         _COPY_GET( i32, cp );
+         v._r32  = _f_div * i32;
+         if ( bNeg )
+            v._r32 = -v._r32;
+         break;
+      case mddFld_int8:
+         _COPY_GET( v._i8, cp );
+         break;
+      case mddFld_int16:
+         _COPY_GET( v._i16, cp );
+         break;
+      case mddFld_int64:
+         _COPY_GET( v._i64, cp );
+/*
+ * TODO : ::int64_t instead of u_int64_t??
+ *
+         if ( bNeg )
+            v._i64 = -v._i64;
+ */
+         break;
+      case mddFld_real:
+         _COPY_GET( r.value, cp );
+         r.hint    = *cp++;
+         r.isBlank = *cp++;
+         break;
+      case mddFld_bytestream:
+         cp += Get( cp, v._buf );
+         break;
+   }
+   return( cp-bp );
+}
+
+int Binary::_Set_unpacked( u_char *bp, mddField f )
+{
+   mddValue &v = f._val;
+   mddReal  &r = v._real;
+   u_char   *cp;
+   u_int     i32;
+   u_int64_t i64;
+   float     r32;
+   double    r64;
+   bool      bNeg;
+
+   cp   = bp;
+   bNeg = false;
+   switch( f._type ) {
+      case mddFld_undef:
+         break;
+      case mddFld_string:
+         cp += Set( cp, v._buf );
+         break;
+      case mddFld_int32:
+         bNeg = ( v._i32 & _NEG32 ) == _NEG32;
+         i32  = ( v._i32 & _MSK32 );
+         _COPY_SET( i32, cp );
+         break;
+      case mddFld_double:
+         bNeg = ( v._r64 < 0.0 );
+         r64  = bNeg ? -v._r64 : v._r64;
+         r64 *= _d_mul;
+         i64  = (u_int64_t)r64;
+         _COPY_SET( i64, cp );
+         break;
+      case mddFld_date:
+         v._r64 *= _dt_div;
+         i64     = (u_int64_t)v._r64;
+         _COPY_SET( i64, cp );
+         break;
+      case mddFld_time:
+      case mddFld_timeSec:
+         r64 = ::fmod( v._r64, _ymd_mul );
+         r32 = r64;
+         i32 = r32;
+         _COPY_SET( i32, cp );
+         break;
+      case mddFld_float:
+         bNeg = ( v._r32 < 0.0 );
+         r32  = bNeg ? -v._r32 : v._r32;
+         r32 *= _f_mul;
+         i32  = (u_int)r32;
+         _COPY_SET( i32, cp );
+         break;
+      case mddFld_int8:
+         _COPY_SET( v._i8, cp );
+         break;
+      case mddFld_int16:
+         _COPY_SET( v._i16, cp );
+         break;
+      case mddFld_int64:
+         bNeg = ( v._i64 & _NEG64 ) == _NEG64;
+         i64  = ( v._i64 & _MSK64 );
+         _COPY_SET( i64, cp );
+         break;
+      case mddFld_real:
+         cp += Set( cp, v._real );
+         break;
+      case mddFld_bytestream:
+         _COPY_SET( r.value, cp );
+         *cp++ = r.hint;
+         *cp++ = r.isBlank;
+         break;
+   }
+   *bp |= bNeg ? _NEG8 : 0;
    return( cp-bp );
 }
 

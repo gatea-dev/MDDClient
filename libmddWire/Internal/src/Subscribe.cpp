@@ -11,8 +11,9 @@
 *     17 JAN 2015 jcs  Build  9: _MF_str2dbl(); _MF_ParseHdr() : slop
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
+*     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -587,7 +588,7 @@ int Subscribe::_Binary_Parse( mddMsgBuf b, mddWireMsg &r )
 
    // 2) Full Header
 
-   Binary bin;
+   Binary bin( false );  // Let the message tell us packing
 
    bp  = (u_char *)b._data;
    cp  = bp;
@@ -673,7 +674,7 @@ int Subscribe::_Binary_ParseHdr( mddMsgBuf b, mddMsgHdr &r )
 
    // Pack into mddMsgHdr
 
-   Binary bin;
+   Binary bin( false );  // Let the message tell us packing
 
    _InitMsgHdr( r, h._len, h._mt, h._dt );
    r._bPack  = h._bPack;
@@ -687,7 +688,7 @@ int Subscribe::_Binary_ParseHdr( mddMsgBuf b, mddMsgHdr &r )
 int Subscribe::_Binary_ParseHdr( mddMsgBuf b, mddBinHdr &h )
 {
    u_char *bp, *cp;
-   Binary  bin;
+   Binary  bin( false );  // Let the message tell us packing
    u_int   mSz;
 
    bp = (u_char *)b._data;

@@ -21,8 +21,9 @@
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
 *      3 DEC 2020 jcs  Build 47: StreamDone : both ways
+*     29 MAR 2022 jcs  Build 52: ioctl_unpacked
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -598,11 +599,6 @@ bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
    pbArg = (bool *)arg; 
    pArg  = (char *)arg; 
    switch( ctl ) {
-      case ioctl_parse:
-      case ioctl_nativeField:
-      case ioctl_fixedLibrary:
-         ::mddWire_ioctl( _mdd, (mddIoctl)ctl, arg );
-         return true;
       case ioctl_rawData:
          _bRawData = bArg;
          return true;

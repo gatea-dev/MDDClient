@@ -25,6 +25,7 @@
 *      3 DEC 2020 jcs  Build 47: rtEdge_Data._TapePos
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *      7 MAR 2022 jcs  Build 51: doxygen
+*     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -112,11 +113,15 @@ typedef long Thread_Context;
  */
 typedef enum {
    /**
-    * \brief Parse messages in libmddWire library
+    * \brief Publish mddProto_Binary FieldLists as unpacked values
     *
-    * \param (void *)val - 1 to parse; 0 to not parse; Default = 1
+    * + Only used for Binary Protocol
+    * + Only used for publishing
+    * + Subscription
+    * + Default is 0
+    * \param (void *)val - 1 for unpacked; 0 for packed; Default = 0
     */
-   ioctl_parse              = mddIoctl_parse,
+   ioctl_unpacked           = mddIoctl_unpacked,
    /**
     * \brief Convert string fields to native fields based on schema.
     *

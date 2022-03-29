@@ -10,8 +10,9 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
 *     16 APR 2016 jcs  Build 11: mddMt_query is XML in Publish.BuildMsg()
+*     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -523,7 +524,7 @@ mddBuf Publish::_Binary_Build( mddMsgHdr  m,
    mddBinHdr h;
    mddField  f;
    mddBuf   &b = f._val._buf;
-   Binary    bin;
+   Binary    bin( _bPackFlds );
    bool      bHdr;
    char     *bp;
    u_char   *cp;
@@ -598,7 +599,7 @@ mddBuf Publish::_Binary_Build( mddMsgHdr  m,
 
 mddBuf Publish::_Binary_SetHdrTag( u_int iTag, mddBuf &bld )
 {
-   Binary    bin;
+   Binary    bin( _bPackFlds );
    mddBinHdr h;
    u_char   *cp;
 

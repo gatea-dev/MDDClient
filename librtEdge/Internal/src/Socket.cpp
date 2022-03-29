@@ -23,8 +23,9 @@
 *      6 DEC 2018 jcs  Build 41: VS2017
 *     12 FEB 2020 jcs  Build 42: _tHbeat
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
+*     29 MAR 2022 jcs  Build 52: mddWire ioctl's here
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -502,6 +503,11 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
    pbArg = (bool *)arg;
    pArg  = (char *)arg;
    switch( ctl ) {
+      case ioctl_unpacked:
+      case ioctl_nativeField:
+      case ioctl_fixedLibrary:
+         ::mddWire_ioctl( _mdd, (mddIoctl)ctl, arg );
+         return true;
       case ioctl_getStats:
          rtn  = (rtEdgeChanStats **)arg;
          *rtn = _st;

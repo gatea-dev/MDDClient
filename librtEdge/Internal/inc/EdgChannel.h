@@ -20,8 +20,9 @@
 *     16 SEP 2020 jcs  Build 45: ParseOnly()
 *     22 OCT 2020 jcs  Build 46: XxxPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: TapeSlice
+*     29 MAR 2022 jcs  Build 52: ioctl_unpacked
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_CHANNEL_H
 #define __EDGLIB_CHANNEL_H

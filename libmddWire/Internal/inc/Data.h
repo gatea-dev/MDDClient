@@ -8,8 +8,9 @@
 *     12 OCT 2013 jcs  Build  3: LoadLibrary(), etc.
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_GLxml.h; MDW_Internal.h
+*     29 MAR 2022 jcs  Build 13: _bUnpacked
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __MDD_DATA_H
 #define __MDD_DATA_H
@@ -58,6 +59,7 @@ protected:
 	bool        _bOurSchema;
 	GLxml       _xml;
 	string      _xName;
+	bool        _bPackFlds;
 	bool        _bParseInC;
 	bool        _bNativeFld;
 	mddBldBuf   _mf;

@@ -9,6 +9,7 @@
 *     17 FEB 2016 jcs  Build 32: SetUserPubMsgTy(); Watch._upd
 *     26 MAY 2017 jcs  Build 34: StartUDP()
 *     16 MAR 2022 jcs  Build 51: De-lint
+*     29 MAR 2022 jcs  Build 52: ::getenv( "__JD_UNPACKED" )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -18,8 +19,6 @@
 #define _LCL_PORT  4321
 
 using namespace RTEDGE;
-
-static bool _bBin;
 
 ////////////////////
 //
@@ -179,57 +178,27 @@ public:
    {
       Locker         lck( _mtx );
       Update        &u = upd();
-      rtBUF         *pb;
+      rtDateTime     dtTm;
       bool           bImg;
       int            fid;
       u_int64_t      i64;
+      double         r64;
       struct timeval tv;
 
       fid        = 6;
       bImg       = ( w._rtl == 1 );
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
+      dtTm       = unix2rtDateTime( tv );
       i64        = 7723845300000; 
+      r64        = 123456789.123456;
       u.Init( w.tkr(), w._arg, bImg );
-      u.AddField(  fid++, (double)2500000.12 );
+      u.AddField(  fid++, r64 );
       u.AddField(  fid++, i64 );
-      u.AddField(  fid++, unix2rtDateTime( tv ) );
+      u.AddField(  fid++, dtTm );
+      u.AddField(  fid++, dtTm._date );
+      u.AddField(  fid++, dtTm._time );
       u.Publish();
-      pb = (rtBUF *)0;
-/*
-      if ( !bImg ) {
-         u.AddField( fid++, w._rtl );
-         u.AddField( fid++, (int)TimeSec() );
-         u.AddField( fid++, "BID" );
-         u.AddField( fid++, ::rand() % 10000 );
-         u.Publish();
-      }
-      else  {
-         double dv = 870.123;
-
-         u.AddField( fid++, w._rtl );
-         u.AddField( fid++, (int)TimeSec() );
-         u.AddField( fid, "Duplicate 1" );
-         u.AddField( fid, "Hi Mom" );
-         u.AddField( fid, "Duplicate 2" );
-         u.AddField( fid++, "BID" );
-         u.AddField( fid++, ::rand() % 10000 );
-         u.AddField( 70, "+10 43/64" );
-         fid = 10000;
-         for ( int i=0; i<10; i++, dv+=100.0 ) {
-            u.AddField( fid++, dv );
-            u.AddField( fid++, -dv );
-         }
-         u.AddField( fid++, "0" );
-         u.AddField( fid++, "0" );
-         u.AddField( fid++, "BLOOMBERG|VGH5 INDEX|LAST_PRICE" );
-         u.AddField( fid++, "3236" );
-         u.AddField( fid++, "NULL" );
-         u.AddField( fid++, "0" );
-         u.Publish();
-         ::fprintf( stdout, "IMAGE  %s\n", w.tkr() ); ::fflush( stdout );
-      }
- */
       w._rtl += 1;
    }
 
@@ -345,8 +314,6 @@ int main( int argc, char **argv )
    bool        bUDP;
    rtBuf64     chn;
 
-_bBin = (cp=::getenv( "_JD_MF" )) ? false : true;
-
    // Quickie check
 
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
@@ -384,6 +351,7 @@ _bBin = (cp=::getenv( "_JD_MF" )) ? false : true;
       cp       = ::strtok( NULL, "\n" );
    }
    lnks[nl] = NULL;
+   pub.SetUnPacked( ::getenv( "__JD_UNPACKED" ) != (char *)0 );
    pub.SetChain( lnks, nl );
    ::fprintf( stdout, "%s\n", pub.Version() );
    if ( bUDP ) {
@@ -394,7 +362,7 @@ _bBin = (cp=::getenv( "_JD_MF" )) ? false : true;
       pub.AddWatch( "ticker3", (VOID_PTR)StreamID++ );
    }
    else {
-      pub.SetBinary( _bBin );
+      pub.SetBinary( true );
       pub.SetHeartbeat( 60 );
       pub.SetHeartbeat( 15 );
       pub.SetPerms( true );

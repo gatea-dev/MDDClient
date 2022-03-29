@@ -16,8 +16,9 @@
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
 *     29 APR 2020 jcs  Build 43: OnOpenBDS()
 *     26 JUN 2020 jcs  Build 44: De-lint
+*     29 MAR 2022 jcs  Build 52: _bUnPacked
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_PubChannel_H
 #define __RTEDGE_PubChannel_H
@@ -73,6 +74,7 @@ public:
 	   _bPerms( false ),
 	   _bUserMsgTy( false ),
 	   _bRandom( false ),
+	   _bUnPacked( false ),
 	   _hopCnt( 0 ),
 	   _upd( (Update *)0 )
 	{
@@ -235,6 +237,7 @@ public:
 	      ::rtEdge_ioctl( _cxt, ioctl_setPubAuthToken, (void *)pAuthToken() );
 	   SetHeartbeat( _tHbeat );
 	   SetIdleCallback( _bIdleCbk );
+	   SetUnPacked( _bUnPacked );
 	   return ::rtEdge_PubStart( _cxt );
 	}
 
@@ -286,18 +289,44 @@ public:
 	   ::rtEdge_PubInitSchema( _cxt, _schemaCbk );
 	   ::rtEdge_ioctl( _cxt, ioctl_binary, (void *)_bBinary );
 	   SetIdleCallback( _bIdleCbk );
+	   SetUnPacked( _bUnPacked );
 	   return ::rtEdge_PubStart( _cxt );
 	}
 
 	/**
 	 * \brief Requests channel be set in binary
 	 *
-	 *
 	 * \param bBin - true to set to binary; Else ASCII (default)
 	 */
 	void SetBinary( bool bBin )
 	{
 	   _bBinary = bBin;
+	}
+
+	/**
+	 * \brief Return true if field lists published unpacked; false if packed
+	 *
+	 * Only valid for binary publication channels
+	 *
+	 * \return true if field lists published unpacked; false if packed
+	 */
+	bool IsUnPacked()
+	{
+	   return _bUnPacked;
+	}
+
+	/**
+	 * \brief Enables / Disables packing of field lists in Binary
+	 *
+	 * Only valid for binary publication channels
+	 *
+	 * \param bUnPacked - true to publish unpacked; Else packed (default)
+	 */
+	void SetUnPacked( bool bUnPacked )
+	{
+	   _bUnPacked = bUnPacked;
+	   if ( IsValid() )
+	      ::rtEdge_ioctl( _cxt, ioctl_unpacked, (void *)_bUnPacked );
 	}
 
 	/**
@@ -816,6 +845,7 @@ private:
 	bool          _bPerms;
 	bool          _bUserMsgTy;
 	bool          _bRandom;
+	bool          _bUnPacked;
 	size_t        _hopCnt;
 	Update       *_upd;
 

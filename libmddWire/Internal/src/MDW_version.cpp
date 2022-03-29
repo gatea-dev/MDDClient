@@ -25,7 +25,7 @@ char *libmddWireID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)libmddWire %s Build 12 ", GL64 );
+      cp    += sprintf( cp, "@(#)libmddWire %s Build 13 ", GL64 );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s      = bp;
       sccsid = (char *)s.data();

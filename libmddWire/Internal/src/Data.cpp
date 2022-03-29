@@ -1,5 +1,4 @@
-/******************************************************************************
-*
+/****************************************************************************** *
 *  Data.cpp
 *     MD-Direct data base class
 *
@@ -10,8 +9,9 @@
 *     17 JAN 2015 jcs  Build  9: _XML_Parse() : h = b._hdr if non-zero
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
+*     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -44,6 +44,7 @@ Data::Data( bool bPub ) :
    _bOurSchema( true ),
    _xml(),
    _xName(),
+   _bPackFlds( true ),
    _bParseInC( true ),
    _bNativeFld( false ),
    _hLib( (HINSTANCE)0 ),
@@ -94,7 +95,7 @@ mddBuf Data::Ping()
    mddBuf      r;
    mddBinHdr   bh;
    mddProtocol pro;
-   Binary      bin;
+   Binary      bin( _bPackFlds );
    int         bSz;
    u_char     *bp;
 
@@ -140,8 +141,8 @@ void Data::Ioctl( mddIoctl ctl, void *arg )
 
    bArg = ( arg != (void *)0 );
    switch( ctl ) {
-      case mddIoctl_parse:       _bParseInC   = bArg; break;
-      case mddIoctl_nativeField: _bNativeFld  = bArg; break;
+      case mddIoctl_unpacked:    _bPackFlds   = !bArg; break;
+      case mddIoctl_nativeField: _bNativeFld  = bArg;  break;
       case mddIoctl_fixedLibrary:
          if ( (pCfg=(char *)arg) )
             LoadFixedLibrary( pCfg );

@@ -13,8 +13,9 @@
 *      4 DEC 2017 jcs  Build 39: _MAX_FLOAT
 *      6 MAR 2018 jcs  Build 40: Reset()
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
+*     29 MAR 2022 jcs  Build 52: pub.IsUnPacked()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Update_H
 #define __RTEDGE_Update_H
@@ -184,16 +185,17 @@ public:
 	   rtFIELD  rf;
 	   rtVALUE &v   = rf._val;
 	   double  &r64 = f._val._r64;
-	   bool     bDbl;
+	   bool     bDbl, bPacked;
 
 	   // bbPortal3 uses this API
 
+	   bPacked = !_pub.IsUnPacked();
 	   for ( i=0; i<fl._nFld; i++ ) {
 	      f        = fl._flds[i];
 	      rf._fid  = f._fid; 
 	      rf._name = f._name;
 	      bDbl     = ( f._type == mddFld_double );
-	      if ( bDbl && !InRange( -_MAX_DBL, r64, _MAX_DBL ) ) {
+	      if ( bDbl && bPacked && !InRange( -_MAX_DBL, r64, _MAX_DBL ) ) {
 	         if ( InRange( -_MAX_FLOAT, r64, _MAX_FLOAT ) ) {
 	            v._r32   = (float)r64;
 	            rf._type = rtFld_float;
@@ -344,9 +346,10 @@ public:
 	{
 	   rtFIELD  f;
 	   rtVALUE &v = f._val;
+	   bool     bPacked = !_pub.IsUnPacked();
 
-	   if ( !InRange( -_MAX_DBL, r64, _MAX_DBL ) ) {
-	      if ( InRange( -_MAX_FLOAT, r64, _MAX_FLOAT ) )
+	   if ( bPacked && !InRange( -_MAX_DBL, r64, _MAX_DBL ) ) {
+	      if ( bPacked && InRange( -_MAX_FLOAT, r64, _MAX_FLOAT ) )
 	         AddField( fid, (float)r64 );
 	      else
 	         AddField( fid, (u_int64_t)r64 );
