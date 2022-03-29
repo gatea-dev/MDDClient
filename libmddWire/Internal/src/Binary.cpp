@@ -575,7 +575,7 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
    mddValue &v = f._val;
    mddReal  &r = v._real;
    u_char   *cp, ty;
-   u_int32_t i32;
+   u_int     i32;
    u_int64_t i64;
 
    cp      = bp;
