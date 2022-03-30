@@ -35,6 +35,9 @@ Build 52 22-03-xx
 
 3) Field.GetAsDateTime()
 
+5) CLI : rtEdgePubUpdate.AddFieldAsInt64( int, long long )
+
+
 
 Build 51 22-03-18
 -----------------

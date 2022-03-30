@@ -247,7 +247,7 @@ DateTime ^rtEdgeField::GetAsDateTime()
    return dt;
 }
 
-#ifdef OBSOLETE_NATIVE_GetAsDateTime()
+#ifdef OBSOLETE_NATIVE_GetAsDateTime
 DateTime ^rtEdgeField::GetAsDateTime()
 {
    DateTime      ^dt, ^now;
@@ -281,7 +281,7 @@ DateTime ^rtEdgeField::GetAsDateTime()
    }
    return dt;
 }
-#endif // OBSOLETE_NATIVE_GetAsDateTime()
+#endif // OBSOLETE_NATIVE_GetAsDateTime
 
 
 /////////////////////////////////

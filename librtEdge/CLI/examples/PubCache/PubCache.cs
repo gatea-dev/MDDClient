@@ -100,12 +100,7 @@ class CacheField
          case FieldType.type_Undef:
             break;
          case FieldType.type_Int64:
-/*
- * Doesn't work : Don't know why yet
- *
             u.AddFieldAsInt64( _Fid, _i64 );
- */
-            u.AddFieldAsInt32( _Fid, (int)_i64 );
             break;
          case FieldType.type_Int32:
             u.AddFieldAsInt32( _Fid, _i32 ); 

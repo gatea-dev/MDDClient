@@ -7,7 +7,7 @@
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink() 
 *      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
 *     29 APR 2020 jcs  Build 43: Moved IrtEdgePubUpdate in here
-*     24 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
+*     30 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -48,7 +48,7 @@ public:
 public:
 	virtual void AddFieldAsString( int, String ^ ) abstract;
 	virtual void AddFieldAsInt32( int, int ) abstract;
-	virtual void AddFieldAsInt64( int, long ) abstract;
+	virtual void AddFieldAsInt64( int, long long ) abstract;
 	virtual void AddFieldAsDouble( int, double ) abstract;
 	virtual void AddFieldAsByteStream( int, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( int, DateTime ^ ) abstract;
@@ -56,7 +56,7 @@ public:
 	virtual void AddFieldAsTime( int, DateTime ^ ) abstract;
 	virtual void AddFieldAsString( String ^, String ^ ) abstract;
 	virtual void AddFieldAsInt32( String ^, int ) abstract;
-	virtual void AddFieldAsInt64( String ^, long ) abstract;
+	virtual void AddFieldAsInt64( String ^, long long ) abstract;
 	virtual void AddFieldAsDouble( String ^, double ) abstract;
 	virtual void AddFieldAsByteStream( String ^, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( String ^, DateTime ^ ) abstract;
@@ -296,7 +296,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i64 - Field value as 64-bit int
 	 */
-	virtual void AddFieldAsInt64( int fid, long i64 );
+	virtual void AddFieldAsInt64( int fid, long long i64 );
 
 	/**
 	 * \brief Add float field to update
@@ -387,7 +387,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param i64 - Field value as 64-bit int
 	 */
-	virtual void AddFieldAsInt64( String ^pFld, long i64 );
+	virtual void AddFieldAsInt64( String ^pFld, long long i64 );
 
 	/**
 	 * \brief Add float field to update

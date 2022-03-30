@@ -192,7 +192,7 @@ void rtEdgePubUpdate::AddFieldAsInt32( int fid, int i32 )
    _upd.AddField( fid, i32 );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt64( int fid, long i64 )
+void rtEdgePubUpdate::AddFieldAsInt64( int fid, long long i64 )
 {
    _upd.AddField( fid, i64 );
 }
@@ -262,7 +262,7 @@ void rtEdgePubUpdate::AddFieldAsInt32( String ^pFld, int i32 )
       AddFieldAsInt32( fid, i32 );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt64( String ^pFld, long i64 )
+void rtEdgePubUpdate::AddFieldAsInt64( String ^pFld, long long i64 )
 {
    int fid;
 
