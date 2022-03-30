@@ -9,7 +9,7 @@
 *     11 JAN 2018 jcs  Build 39: _IncObj() / _DecObj()
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
-*     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
+*     30 MAR 2022 jcs  Build 52: long long GetAsInt64(); Native GetAsDateTime()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -232,6 +232,24 @@ ByteStreamFld ^rtEdgeField::GetAsByteStream()
 
 DateTime ^rtEdgeField::GetAsDateTime()
 {
+   DateTime          ^dt;
+   RTEDGE::rtDateTime rDtTm = _fld->GetAsDateTime();
+   RTEDGE::rtDate    &rDt   = rDtTm._date;
+   RTEDGE::rtTime    &rTm   = rDtTm._time;
+
+   dt  = gcnew DateTime( _WithinRange( 0, rDt._year, 9999 ),
+                         _WithinRange( 1, rDt._month + 1, 12 ),
+                         _WithinRange( 1, rDt._mday, 31 ),
+                         _WithinRange( 0, rTm._hour, 23 ),
+                         _WithinRange( 0, rTm._minute, 59 ),
+                         _WithinRange( 0, rTm._second, 59 ),
+                         _WithinRange( 0, rTm._micros / 1000, 999 ) );
+   return dt;
+}
+
+#ifdef OBSOLETE_NATIVE_GetAsDateTime()
+DateTime ^rtEdgeField::GetAsDateTime()
+{
    DateTime      ^dt, ^now;
    ::rtFldType    ty;
    RTEDGE::rtDate rDt;
@@ -263,6 +281,7 @@ DateTime ^rtEdgeField::GetAsDateTime()
    }
    return dt;
 }
+#endif // OBSOLETE_NATIVE_GetAsDateTime()
 
 
 /////////////////////////////////

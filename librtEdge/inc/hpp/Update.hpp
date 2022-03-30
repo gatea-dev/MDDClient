@@ -21,10 +21,14 @@
 #define __RTEDGE_Update_H
 #include <hpp/rtEdge.hpp>
 
-// TODO : New libmddWire bumps this to 1750
-
-static double _MAX_DBL   =   879.0; // 879.6093022207 = 0x7ffffffffff 
-static double _MAX_FLOAT = 53000.0; // 53687.0911 = 0x1fffffff 
+#ifndef DOXYGEN_OMIT	
+/*
+ * TODO : New libmddWire bumps this to 1750
+ */
+static double _MIL       = 1000000.0;
+static double _MAX_DBL   =     879.0; // 879.6093022207 = 0x7ffffffffff 
+static double _MAX_FLOAT =   53000.0; // 53687.0911 = 0x1fffffff 
+#endif // DOXYGEN_OMIT	
 
 namespace RTEDGE
 {
@@ -380,7 +384,7 @@ public:
 	   f._fid  = fid;
 	   ymd     = ( dt._year*10000 ) + ( dt._month*100 ) + dt._mday;
 	   v._r64  = ymd;
-	   v._r64 *= 1000000.0;
+	   v._r64 *= _MIL;
 	   _Add( f );
 	}
 
@@ -441,7 +445,7 @@ public:
 	   ymd     = ( dt._year*10000 ) + ( dt._month*100 ) + dt._mday;
 	   hms     = ( tm._hour*10000 ) + ( tm._minute*100 ) + tm._second;
 	   v._r64  = ymd;
-	   v._r64 *= 1000000.0;
+	   v._r64 *= _MIL;
 	   v._r64 += hms;
 	   v._r64 += ( 0.000001 * tm._micros );;
 	   _Add( f );

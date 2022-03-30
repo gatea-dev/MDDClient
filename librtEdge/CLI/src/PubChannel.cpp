@@ -10,8 +10,9 @@
 *     15 APR 2016 jcs  Build 32: SetUserPubMsgTy(); OnIdle()
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     29 APR 2020 jcs  Build 43: BDS
+*     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <PubChannel.h>
@@ -222,6 +223,11 @@ void rtEdgePublisher::SetBinary( bool bBin )
    _pub->SetBinary( bBin );
 }
 
+void rtEdgePublisher::SetUnPacked( bool bUnPacked )
+{
+   _pub->SetUnPacked( bUnPacked );
+}
+
 void rtEdgePublisher::SetPerms( bool bPerms )
 {
    _pub->SetPerms( bPerms );
@@ -289,6 +295,11 @@ String ^rtEdgePublisher::pPubName()
 bool rtEdgePublisher::IsBinary()
 {
    return _pub->IsBinary();
+}
+
+bool rtEdgePublisher::IsUnPacked()
+{
+   return _pub->IsUnPacked();
 }
 
 void rtEdgePublisher::PubSetHopCount( int hopCnt )

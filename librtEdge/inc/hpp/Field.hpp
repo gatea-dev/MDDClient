@@ -15,14 +15,20 @@
 *     16 MAR 2020 jcs  Build 43: _StripTrailing0()
 *     12 AUG 2020 jcs  Build 44: Date/Time : _r64, not GetAsDouble()
 *     27 NOV 2020 jcs  Build 47: GetAsString() : Deep copy string to _s
+*     30 MAR 2022 jcs  Build 52: GetAsDateTime()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Field_H
 #define __RTEDGE_Field_H
 #include <hpp/rtEdge.hpp>
+#include <math.h>
 
-static double _MIL = 1000000.0;
+#ifndef DOXYGEN_OMIT
+static double f_MIL     =  1000000.0;
+static double _MIN_DATE = 20000101.0;
+static double _MIN_DTTM = ( f_MIL * _MIN_DATE );
+static double _MAX_TIME =   235959.999999;
 
 #if !defined(WithinRange)
 #define gmax( a,b )          ( ((a)>=(b)) ? (a) : (b) )
@@ -30,6 +36,7 @@ static double _MIL = 1000000.0;
 #define InRange( a,b,c )     ( ((a)<=(b)) && ((b)<=(c)) )
 #define WithinRange( a,b,c ) ( gmin( gmax((a),(b)), (c)) )
 #endif // !defined(WithinRange)
+#endif // DOXYGEN_OMIT
 
 namespace RTEDGE
 {
@@ -593,25 +600,56 @@ public:
 	}
 
 	/**
+	 * \brief Return field value interpreted as rtDateTime
+	 *
+	 * \return Field value interpreted as rtDateTime
+	 */
+	rtDateTime GetAsDateTime()
+	{
+	   rtDateTime dtTm;
+	   rtDate    &dt = dtTm._date;
+	   rtTime    &tm = dtTm._time;
+	   rtVALUE   &v  = _fld._val;
+	   double     r64 = v._r64;
+	   int        ymd;
+	   time_t     now;
+	   struct tm  lt;
+
+	   /*
+	    * 1) > _MIN_DTTM : YYYYMMDDHHMMSS.uuuuuu
+	    * 2) > _MIN_DATE : YYYYMMDD
+	    * 3) < _MAX_TIME : HHMMSS.uuuuuu
+	    */
+	   if ( r64 >= _MIN_DTTM ) {
+	      dt = GetAsDate();
+	      tm = GetAsTime();
+	   }
+	   else if ( r64 >= _MIN_DATE ) {
+	      r64 *= f_MIL;
+	      dt   = _GetAsDate( r64 );
+	   }
+	   else if ( r64 <= _MAX_TIME ) {
+	      now = ::rtEdge_TimeSec();
+	      ::localtime_r( &now, &lt );
+	      ymd  = ( lt.tm_year + 1900 ) * 10000;
+	      ymd += ( lt.tm_mon  +    1 ) *   100;
+	      ymd += lt.tm_sec;
+	      r64  = ymd;
+	      r64 *= f_MIL;
+	      dt  = _GetAsDate( r64 );
+	      tm  = GetAsTime();
+	   }
+	   return dtTm;
+	}
+
+	/**
 	 * \brief Returns field value as rtDate
 	 *
 	 * \return Field Value is rtDate
 	 */
 	rtDate GetAsDate()
 	{
-	   rtVALUE &v   = _fld._val;
-	   double   r64 = v._r64;
-	   int      i32;
-	   rtDate   d;
-
-	   // YYYYMMDD * _MIL;
-
-	   r64     /= _MIL;
-	   i32      = (int)r64;
-	   d._year  = i32 / 10000;
-	   d._month = ( i32 / 100 ) % 100;
-	   d._mday  = i32 % 100;
-	   return d;
+	   return _GetAsDate( _fld._val._r64 );
 	}
 
 	/**
@@ -621,18 +659,19 @@ public:
 	 */
 	rtTime GetAsTime()
 	{
-	   rtVALUE &v   = _fld._val;
-	   double   r64 = v._r64;
-	   int      i32 = (int)r64;
-	   rtTime   t;
+	   rtVALUE  &v   = _fld._val;
+	   double    r64 = v._r64;
+	   u_int64_t i64 = (u_int64_t)r64;
+	   int       hmd = (int)::fmod( r64, f_MIL );
+	   rtTime    t;
 
 	   // HHMMSS.uuuuuu
 
-	   t._hour   = i32 / 10000;
-	   t._minute = ( i32 / 100 ) % 100;
-	   t._second = i32 % 100;
-	   r64      -= i32;
-	   t._micros = (int)( _MIL * r64 );
+	   t._hour   = hmd / 10000;
+	   t._minute = ( hmd / 100 ) % 100;
+	   t._second = hmd % 100;
+	   r64      -= i64;
+	   t._micros = (int)( f_MIL * r64 );
 	   t._micros = WithinRange( 0, t._micros, 999999 );
 	   return t;
 	}
@@ -736,56 +775,6 @@ public:
 	   return _dump.data();
 	}
 
-#ifndef DOXYGEN_OMIT
-private:
-	char *_StripTrailing0( char *op )
-	{
-	   int i, sz;
-
-	   sz = strlen( op );
-	   if ( !::memchr( op, '.', sz ) )
-	      return op;
-	   for ( i=sz-1; i>=0; i-- ) {
-	      switch( op[i] ) {
-	         case '.': op[i]   = '\0'; return op;
-	         case '0':                 break;
-	         default:  op[i+1] = '\0'; return op;
-	      }
-	   }
-	   return op;
-	}
-
-	/**
-	 * \brief Dumps field contents as string
-	 *
-	 * \param obuf - User supplied buffer
-	 * \param bFid - Include field ID in header
-	 * \return Length of string
-	 */
-	int Dump( char *buf, bool bFid=false )
-	{
-	   char    *cp;
-	   mddField f;
-
-	   // librtEdge-to-libmddWire compatibliity
-
-	   f._fid  = _fld._fid;
-	   f._val  = _fld._val;
-	   f._name = _fld._name;
-	   f._type = (mddFldType)_fld._type;
-
-	   // OK to dump
-
-	   cp  = buf;
-	   *cp = '\0';
-	   if ( bFid )
-	      cp += sprintf( cp, "   [%04d] %-12s : ", Fid(), Name() );
-	   mddWire_dumpField( f, cp );
-	   _StripTrailing0( cp );
-	   cp += strlen( cp );
-	   return( cp-buf );
-	}
-#endif // DOXYGEN_OMIT
 
 	/**
 	 * \brief Returns true if field available in this Message
@@ -875,10 +864,79 @@ public:
 	}
 
 
+#ifndef DOXYGEN_OMIT
 	////////////////////////
 	// Helpers
 	////////////////////////
 private:
+	char *_StripTrailing0( char *op )
+	{
+	   int i, sz;
+
+	   sz = strlen( op );
+	   if ( !::memchr( op, '.', sz ) )
+	      return op;
+	   for ( i=sz-1; i>=0; i-- ) {
+	      switch( op[i] ) {
+	         case '.': op[i]   = '\0'; return op;
+	         case '0':                 break;
+	         default:  op[i+1] = '\0'; return op;
+	      }
+	   }
+	   return op;
+	}
+
+	/**
+	 * \brief Dumps field contents as string
+	 *
+	 * \param obuf - User supplied buffer
+	 * \param bFid - Include field ID in header
+	 * \return Length of string
+	 */
+	int Dump( char *buf, bool bFid=false )
+	{
+	   char    *cp;
+	   mddField f;
+
+	   // librtEdge-to-libmddWire compatibliity
+
+	   f._fid  = _fld._fid;
+	   f._val  = _fld._val;
+	   f._name = _fld._name;
+	   f._type = (mddFldType)_fld._type;
+
+	   // OK to dump
+
+	   cp  = buf;
+	   *cp = '\0';
+	   if ( bFid )
+	      cp += sprintf( cp, "   [%04d] %-12s : ", Fid(), Name() );
+	   mddWire_dumpField( f, cp );
+	   _StripTrailing0( cp );
+	   cp += strlen( cp );
+	   return( cp-buf );
+	}
+
+	/**
+	 * \brief Returns double as rtDate
+	 *
+	 * \return double as rtDate
+	 */
+	rtDate _GetAsDate( double r64 )
+	{
+	   int    i32;
+	   rtDate d;
+
+	   // YYYYMMDD * f_MIL;
+
+	   r64     /= f_MIL;
+	   i32      = (int)r64;
+	   d._year  = i32 / 10000;
+	   d._month = ( i32 / 100 ) % 100;
+	   d._mday  = i32 % 100;
+	   return d;
+	}
+
 	double _str2dbl( const char *str )
 	{
 	   const char *num, *den;
@@ -914,6 +972,7 @@ private:
 	   buf[sz] = '\0';
 	   return atoi( buf );
 	}
+#endif // DOXYGEN_OMIT
 
 	////////////////////////
 	// private Members

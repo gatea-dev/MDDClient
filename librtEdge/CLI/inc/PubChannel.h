@@ -10,8 +10,9 @@
 *     16 APR 2016 jcs  Build 32: SetUserPubMsgTy(); OnIdle()
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     29 APR 2020 jcs  Build 43: BDS
+*     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -249,6 +250,15 @@ public:
 	void SetBinary( bool bBin );
 
 	/**
+	 * \brief Enables / Disables packing of field lists in Binary
+	 *
+	 * Only valid for binary publication channels
+	 *
+	 * \param bUnPacked - true to publish unpacked; Else packed (default)
+	 */
+	void SetUnPacked( bool bUnPacked );
+
+	/**
 	 * \brief Requests channel be set to supply perms
 	 *
 	 * The channel perms is set once in Start().  Therefore, this
@@ -377,6 +387,15 @@ public:
 	 * \return true if channel is Binary
 	 */
 	bool IsBinary();
+
+	/**
+	 * \brief Return true if field lists published unpacked; false if packed
+	 *
+	 * Only valid for binary publication channels
+	 *
+	 * \return true if field lists published unpacked; false if packed
+	 */
+	bool IsUnPacked();
 
 	/**
 	 * \brief Sets the minimum hop count for the publication channel

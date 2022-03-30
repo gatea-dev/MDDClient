@@ -10,6 +10,7 @@
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: Sleep()
 *      7 MAR 2022 jcs  Build 51: doxygen 
+*     30 MAR 2022 jcs  Build 52: ioctl_unpacked 
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -48,7 +49,7 @@ namespace librtEdge
 ////////////////////////////////////////////////
 public enum class rtEdgeIoctl
 {
-	rtIoctl_parse               = ::ioctl_parse,
+	rtIoctl_unpacked            = ::ioctl_unpacked,
 	rtIoctl_nativeField         = ::ioctl_nativeField,
 	rtIoctl_svcTkrName          = ::ioctl_svcTkrName,
 	rtIoctl_rawData             = ::ioctl_rawData,

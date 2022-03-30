@@ -33,6 +33,8 @@ Build 52 22-03-xx
    - Unpacked libmddWire FieldList
    - mddIoctl_unpacked
 
+3) Field.GetAsDateTime()
+
 
 Build 51 22-03-18
 -----------------
