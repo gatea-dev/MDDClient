@@ -13,7 +13,9 @@
 
 #ifdef WIN32
 #include <windows.h>
+#if !defined(pthread_t)
 #define pthread_t       u_int64_t 
+#endif // !defined(pthread_t)
 #define pthread_cond_t  HANDLE
 #define pthread_mutex_t CRITICAL_SECTION 
 #else

@@ -16,13 +16,11 @@ Features To Add
 1) Query tickers from tape:
    - Just re-use CDB_Query() / CDB_FreeQuery()
 
-2) BDS : Add / Del :
-   - "~~SYM_ADD~~" / "~~SYM_DEL~~"
-   - "~~SYM_LIST~~" for backwards compatibility
-   - OnSymbol( ..., bool bAdd ) 
+2) LVCAdmin.AddBDS():
+   - _dtdBDS  = "ADD-BDS";
 
 
-Build 52 22-03-xx
+Build 52 22-04-xx
 -----------------
 1) C# rtEdgePublisher : 
    - rtEdgePubUpdate::AddFieldAsDateTime guts : DUH!!
@@ -35,8 +33,10 @@ Build 52 22-03-xx
 
 3) Field.GetAsDateTime()
 
-5) CLI : rtEdgePubUpdate.AddFieldAsInt64( int, long long )
+4) CLI : rtEdgePubUpdate.AddFieldAsInt64( int, long long )
 
+5) rtMessage.MsgTime() w/ LVC:
+   - dataLVC() : DUH!!
 
 
 Build 51 22-03-18

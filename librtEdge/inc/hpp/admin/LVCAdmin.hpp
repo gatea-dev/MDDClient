@@ -3,6 +3,8 @@
 *  LVCAdmin.hpp
 *     LVCAdmin Cockpit Channel
 *
+*  TODO : BDS, REFRESH
+*
 *  REVISION HISTORY:
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC

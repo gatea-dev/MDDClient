@@ -12,8 +12,9 @@
 *      3 SEP 2020 jcs  Build 44: IsRecovering(); StreamID()
 *     17 SEP 2020 jcs  Build 45: SetParseOnly
 *      3 DEC 2020 jcs  Build 47: TapePos()
+*      5 APR 2022 jcs  Build 52: core : MsgTime() w/ LVC
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Message_H
 #define __RTEDGE_Message_H
@@ -160,7 +161,16 @@ public:
 	 */
 	double MsgTime()
 	{
-	   return data()._tMsg;
+	   double rc;
+
+	   if ( IsLVC() ) {
+	      rc  = dataLVC()._tUpdUs;
+	      rc *= 0.000001;
+	      rc += dataLVC()._tUpd;
+	   }
+	   else
+	      rc = data()._tMsg;
+	   return rc;
 	}
 
 	/**

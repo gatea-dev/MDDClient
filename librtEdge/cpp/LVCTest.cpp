@@ -157,8 +157,10 @@ int main_CACHE( int argc, char **argv )
       tkr = ::strtok_r( NULL,    ":", &rp );
    }
    printf( "Schema : %d fields\n", sch.Size() );
+/*
    for ( sch.reset(); (sch)(); )
       printf( "[%04d] %s\n", sch.field()->Fid(), sch.field()->Name() );
+ */
    if ( svc && tkr && (msg=lvc.Snap( svc, tkr )) )
       ::fprintf( stdout, msg->Dump() );
    dMs = 1000.0 * all.dSnap();
@@ -189,7 +191,7 @@ int main_ADMIN( int argc, char **argv )
 
    add = !::strcmp( argv[2], "ADD" );
    ty  = add ? "ADD" : "DEL";
-   printf( "Enter <Ticker or File> to %s ...\n" );
+   printf( "Enter <Ticker or File> to %s ...\n", ty );
    while( ::fgets( buf, K, stdin ) ) {
       LVCAdmin    adm( argv[1] );
 
@@ -210,8 +212,8 @@ int main_ADMIN( int argc, char **argv )
 
 int main( int argc, char **argv )
 {
-   return main_ADMIn( argc, argv );
+//   return main_ADMIN( argc, argv );
 //   return main_MEM( argc, argv );
-//   return main_CACHE( argc, argv );
+   return main_CACHE( argc, argv );
 }
 

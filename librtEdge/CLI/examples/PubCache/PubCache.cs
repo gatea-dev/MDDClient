@@ -321,6 +321,7 @@ class PubCache : rtEdgePublisher
        */
       rec.AddFieldAsString( 3, rec.Symbol() );
       rec.AddFieldAsInt32( 6, ++_rtl );
+      rec.AddFieldAsInt32( 7, 314159265359 );
       rec.AddFieldAsDouble( 14263, rtEdge.TimeNs() );
       /*
        * Pubish if watched
