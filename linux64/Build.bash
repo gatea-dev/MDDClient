@@ -34,7 +34,7 @@ do
    make -f Makefile64
    if [ -d ./py/linux64 ]; then
       cd ./py
-      ./linux64/mk.bash
+      ./linux64/Build.bash
       cd ..
       mv py//build/lib.linux-x86_64*/MDDirect27.so ${GHOME}/bin64
    fi
