@@ -11,7 +11,6 @@
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
 *     26 APR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon()
 *
-*
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
@@ -137,17 +136,6 @@ int rtEdge::NumObj()
 void rtEdge::Log( String ^fileName, int debugLevel )
 {
    RTEDGE::rtEdge::Log( _pStr( fileName ), debugLevel );
-}
-
-bool rtEdge::SetMDDirectMon( String ^fileName, 
-                             String ^exeName, 
-                             String ^buildName )
-{
-   const char *pFile = _pStr( fileName );
-   const char *pExe  = _pStr( exeName );
-   const char *pBld  = _pStr( buildName );
-
-   return RTEDGE::rtEdge::SetMDDirectMon( pFile, pExe, pBld );
 }
 
 String ^rtEdge::DateTimeMs( long tm )

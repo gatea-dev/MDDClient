@@ -11,7 +11,7 @@
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     29 APR 2020 jcs  Build 43: BDS
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
-*     26 APR 2022 jcs  Build 53: rtEdgePublisher( string, string, bool )
+*     26 APR 2022 jcs  Build 53: 1 constructor
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -157,67 +157,31 @@ protected:
 	/////////////////////////////////
 public:
 	/**
-	 * \brief Constructor.  Call PubStart() to connect to rtEdgeCache3.
+	 * \brief Constructor.  Calls PubStart() to connect to rtEdgeCache3.
 	 *
 	 * The constructor initializes internal variables.  You call PubStart() 
 	 * to connect to the rtEdgeCache3 server.
 	 *
-	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
-	 * to connect to. 
-	 * \param pubName - Publication service name
-	 */
-	rtEdgePublisher( String ^hosts, String ^pubName );
-
-	/**
-	 * \brief Constructor.  Call PubStart() to connect to rtEdgeCache3.
-	 *
-	 * The constructor initializes internal variables.  You call PubStart() 
-	 * to connect to the rtEdgeCache3 server.
-	 *
-	 * This method is equivalent to the following: 
+	 * The following are equivalent:
+	 * __Constructor-Defined__
 	 * <code>
-	 *    pub = new rtEdgePublisher( hosts, pubName );
-	 *    pub.SetBinary( bbBinary );
+	 *    pub = new rtEdgePublisher( hosts, pubName, true, true );
+	 * </code>
+	 *
+	 * __User-Defined__
+	 * <code>
+	 *    pub = new rtEdgePublisher( hosts, pubName, false, false );
+	 *    pub.SetBinary( true );
+	 *    pub.PubStart();
 	 * </code>
 	 *
 	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
 	 * to connect to. 
 	 * \param pubName - Publication service name
 	 * \param bBinary - true for binary; false for ASCII (MarketFeed) protocol
+	 * \param bStart - true to call PubStart()
 	 */
-	rtEdgePublisher( String ^hosts, String ^pubName, bool bBinary );
-
-	/**
-	 * \brief Constructor.  Call PubStart() to connect to rtEdgeCache3.
-	 *
-	 * The constructor initializes internal variables.  You call PubStart() 
-	 * to connect to the rtEdgeCache3 server.
-	 *
-	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
-	 * to connect to. 
-	 * \param pubName - Publication service name
-	 * \param bInteractive - true for interactive publisher
-	 */
-	rtEdgePublisher( String ^hosts, String ^pubName, bool bInteractive );
-
-	/**
-	 * \brief Constructor - For compatibility with librtEdgeDotNet
-	 *
-	 * This constructor calls PubStart() before returning to stay
-	 * compatible with librtEdgeDotNet. 
-	 *
-	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
-	 * to connect to. 
-	 * \param pubName - Publication service name
-	 * \param bInteractive - true for interactive publisher
-	 * \param bSchema - true to get schema from rtEdgeCache3
-	 * \param bBinary - true for binary protocol
-	 */
-	rtEdgePublisher( String ^hosts,
-	                 String ^pubName,
-	                 bool    bInteractive,
-	                 bool    bSchema,
-	                 bool    bBinary );
+	rtEdgePublisher( String ^hosts, String ^pubName, bool bBinary, bool bStart );
 
 	/**
 	 * \brief Destructor.  Calls Stop() to disconnect; Cleans up internally.
