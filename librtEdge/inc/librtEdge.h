@@ -1266,6 +1266,28 @@ char rtEdge_SetStats( rtEdge_Context cxt, rtEdgeChanStats *st );
  */
 const char *rtEdge_Version( void );
 
+/**
+ * \brief Creates a shared memory file for the run-time statistics for 
+ * your publication and/or subscription channel(s).
+ *
+ * Exposing your stats in shared memory file allows the FeedMon.exe 
+ * agent to monitor your application and optionally stuff stats into DataDog. 
+ *
+ * Usage:
+ * -# Up to one subscriber and one publisher may use same file
+ * -# The 3 string parameters - file, exe, bld - must all be defined
+ *
+ * \param cxt - Context from rtEdge_Initialize() or rtEdge_PubInit()
+ * \param file - Run-time stats filename
+ * \param exe - Application executable name
+ * \param bld - Application build name
+ * \return 1 if successful; 0 otherwise
+ */
+char rtEdge_SetMDDirectMon( rtEdge_Context cxt,
+                            const char    *file, 
+                            const char    *exe, 
+                            const char    *bld );
+
 
 /*******************************
  * Subscription - rtEdgeCache  *
@@ -2012,28 +2034,6 @@ void OS_StopThread( Thread_Context cxt );
  * \param dbgLvl - Debug verbosity level
  */
 void rtEdge_Log( const char *pLog, int dbgLvl );
-
-/**
- * \brief Creates a shared memory file for the run-time statistics for 
- * your application.
- *
- * This function succeeds if all 3 arguments are not NULL and the file can 
- * be created.  This creates a library-wide run-time stats file for all 
- * publication and subscription channels that may be monitored via the 
- * MDDAgent process.
- *
- * The library-wide run-time stats file supports at most 1 publication 
- * and 1 subscription channel per application and may be called either 
- * before or after you create your publication or subscription channel.
- *
- * \param pFile - Run-time stats filename
- * \param pExe - Application executable name
- * \param pBld - Application build name
- * \return 1 if successful; 0 otherwise
- */
-char rtEdge_SetMDDirectMon( const char *pFile, 
-                            const char *pExe, 
-                            const char *pBld );
 
 /**********************
  * Library Utilities  *

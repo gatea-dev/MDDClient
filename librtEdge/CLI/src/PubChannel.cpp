@@ -11,6 +11,7 @@
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     29 APR 2020 jcs  Build 43: BDS
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
+*     26 APR 2022 jcs  Build 53: SetBinary() bug fix
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -157,6 +158,16 @@ rtEdgePublisher::rtEdgePublisher( String ^hosts, String ^pubName ) :
    _chan = _pub;
 }
 
+rtEdgePublisher::rtEdgePublisher( String ^hosts, String ^pubName, bool bBinary ) :
+   _pub( new librtEdgePRIVATE::PubChannel( this, _pStr( pubName ) ) ),
+   _hosts( hosts ),
+   _bInteractive( true ),
+   _bSchema( false ),
+   _bBinary( bBinary )
+{
+   _chan = _pub;
+}
+
 rtEdgePublisher::rtEdgePublisher( String ^hosts,
                                   String ^pubName,
                                   bool    bInteractive ) :
@@ -220,6 +231,7 @@ void rtEdgePublisher::Stop()
 
 void rtEdgePublisher::SetBinary( bool bBin )
 {
+   _bBinary = bBin;
    _pub->SetBinary( bBin );
 }
 

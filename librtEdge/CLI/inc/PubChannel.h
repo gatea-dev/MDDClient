@@ -11,6 +11,7 @@
 *     14 JUL 2017 jcs  Build 34: class Channel
 *     29 APR 2020 jcs  Build 43: BDS
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
+*     26 APR 2022 jcs  Build 53: rtEdgePublisher( string, string, bool )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -166,6 +167,25 @@ public:
 	 * \param pubName - Publication service name
 	 */
 	rtEdgePublisher( String ^hosts, String ^pubName );
+
+	/**
+	 * \brief Constructor.  Call PubStart() to connect to rtEdgeCache3.
+	 *
+	 * The constructor initializes internal variables.  You call PubStart() 
+	 * to connect to the rtEdgeCache3 server.
+	 *
+	 * This method is equivalent to the following: 
+	 * <code>
+	 *    pub = new rtEdgePublisher( hosts, pubName );
+	 *    pub.SetBinary( bbBinary );
+	 * </code>
+	 *
+	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
+	 * to connect to. 
+	 * \param pubName - Publication service name
+	 * \param bBinary - true for binary; false for ASCII (MarketFeed) protocol
+	 */
+	rtEdgePublisher( String ^hosts, String ^pubName, bool bBinary );
 
 	/**
 	 * \brief Constructor.  Call PubStart() to connect to rtEdgeCache3.

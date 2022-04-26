@@ -19,8 +19,9 @@
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *     21 NOV 2020 jcs  Build 46: IsStopping()
 *     23 APR 2021 jcs  Build 48: GetDstConn()
+*     26 APR 2022 jcs  Build 53: Channel.SetMDDirectMon()
 *
-*  (c) 1994-2021 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_rtEdge_H
 #define __RTEDGE_rtEdge_H
@@ -200,26 +201,6 @@ public:
 	static void Log( const char *pLog, int dbgLvl )
 	{
 	   ::rtEdge_Log( pLog, dbgLvl );
-	}
-
-	/** 
-	 * \brief Set MD-Direct monitoring stats to allow the external MDDAgent 
-	 * to monitor the run-time health of your application.
-	 *   
-	 * The library-wide run-time stats file supports at most 1 publication
-	 * and 1 subscription channel per application and may be called either
-	 * before or after you create your publication or subscription channel.
-	 *   
-	 * \param pFile - Name of file containing run-time stats
-	 * \param pExe - Application executable name
-	 * \param pBld - Application build name
-	 * \return true if successful
-	 */  
-	static bool SetMDDirectMon( const char *pFile,
-	                            const char *pExe,
-	                            const char *pBld )
-	{
-	   return ::rtEdge_SetMDDirectMon( pFile, pExe, pBld ) ? 1 : 0;
 	}
 
 	/**
@@ -651,6 +632,33 @@ public:
 	   return pd;
 	}
 
+	/**
+	 * \brief Creates a shared memory file for the run-time statistics for
+	 * your publication and/or subscription channel(s).
+	 *
+	 * Exposing your stats in shared memory file allows the FeedMon.exe
+	 * agent to monitor your application and optionally stuff stats into DataDog.
+	 *
+	 * Usage:
+	 * -# Up to one subscriber and one publisher may use same file 
+	 * -# The 3 string parameters - file, exe, bld - must all be defined  
+	 *
+	 * \param fileName - Run-time stats filename
+	 * \param exeName - Application executable name
+	 * \param buildName - Application build name
+	 * \return true if successful
+	 */
+	bool SetMDDirectMon( const char *fileName,
+	                     const char *exeName,
+	                     const char *buildName )
+	{
+	   char rc;
+
+	   rc = 0;
+	   if ( IsValid() )
+	      rc = ::rtEdge_SetMDDirectMon( _cxt, fileName, exeName, buildName );
+	   return rc ? true : false;
+	}
 
 	/**
 	 * \brief Set channel run-time stats

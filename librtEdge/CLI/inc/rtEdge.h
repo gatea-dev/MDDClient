@@ -11,6 +11,7 @@
 *     10 DEC 2018 jcs  Build 41: Sleep()
 *      7 MAR 2022 jcs  Build 51: doxygen 
 *     30 MAR 2022 jcs  Build 52: ioctl_unpacked 
+*     26 APR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -199,21 +200,6 @@ public:
 	static void Log( String ^fileName, int debugLevel );
 
 	/**
-	 * \brief Set MD-Direct monitoring stats
-	 *
-	 * This allows the external MDDAgent to monitor the run-time stats
-	 * or your application.
-	 *
-	 * \param fileName - Name of file containing run-time stats
-	 * \param exeName - Application executable name
-	 * \param buildName - Application build name
-	 * \return true if successful
-	 */
-	static bool SetMDDirectMon( String ^fileName, 
-	                            String ^exeName, 
-	                            String ^buildName );
-
-	/**
 	 * \brief Return unix time in YYYY-MM-DD HH:MM:SS.mmm
 	 *
 	 * \param tm - Unix Time in seconds since epoch 1970-01-01
@@ -359,12 +345,19 @@ protected:
 	// librtEdge Operations 
 	/////////////////////////////////
 	/**
+	 * \brief Return true if this Channel has been initialized and not Stop()'ed
+	 *
+	 * \return true if this Channel has been initialized and not Stop()'ed
+	 */
+public:
+	bool IsValid();
+
+	/**
 	 * \brief Configure the publication or subscription channel
 	 *
 	 * \param cmd - Command from rtEdgeIoctl
 	 * \param val - Command value
 	 */
-public:
 	void Ioctl( rtEdgeIoctl cmd, IntPtr val );
 
 	/**
@@ -433,6 +426,34 @@ public:
 	 * \return true if channel is MF
 	 */
 	bool IsMF();
+
+	/**
+	 * \brief Return name of destination connection
+	 *
+	 * \return Name of destination connection
+	 */
+	String ^DstConnName();
+
+	/**
+	 * \brief Creates a shared memory file for the run-time statistics for
+	 * your publication and/or subscription channel(s).
+	 *
+	 * Exposing your stats in shared memory file allows the FeedMon.exe
+	 * agent to monitor your application and optionally stuff stats into DataDog.
+	 *
+	 * Usage:
+	 * -# Up to one subscriber and one publisher may use same file 
+	 * -# The 3 string parameters - file, exe, bld - must all be defined  
+	 *
+	 * \param cxt - Context from rtEdge_Initialize() or rtEdge_PubInit()
+	 * \param fileName - Run-time stats filename
+	 * \param exeName - Application executable name
+	 * \param buildName - Application build name
+	 * \return true if successful
+	 */
+	bool SetMDDirectMon( String ^fileName, 
+	                     String ^exeName, 
+	                     String ^buildName );
 
 };  // class Channel
 

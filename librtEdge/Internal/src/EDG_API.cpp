@@ -21,8 +21,9 @@
 *     22 OCT 2020 jcs  Build 46: rtEdge_PumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_PumpFullTape() - Offset only
 *     23 JUL 2021 jcs  Build 49: No mo _MAX_ENG; XxxMap
+*     26 APR 2022 jcs  Build 53: StatMap
 *
-*  (c) 1994-2021, Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 #include <OS_cpu.h>
@@ -34,9 +35,30 @@ static bool  _LVClock       = false;
 using namespace RTEDGE_PRIVATE;
 
 //////////////////////////////
+// MDDirectMon Stats
+//////////////////////////////
+class MDDirectStats : public string
+{
+private:
+   GLmmapView *_mmMon;
+   GLlibStats *_stats;
+
+   // Constructor / Destructor
+public:
+   MDDirectStats( const char *, const char *, const char * );
+   ~MDDirectStats();
+
+   // Access
+public:
+   bool        IsValid() { return( _mmMon != (GLmmapView *)0 ); }
+   GLlibStats *stats()   { return _stats; }
+
+}; // class MDDirectStats
+
+
+//////////////////////////////
 // Internal Helpers
 //////////////////////////////
-
 /*
  * The rtEdge_Context is simply an integer used to find the EdgChannel 
  * object in the collection below.  An integer-based index is safer 
@@ -44,12 +66,13 @@ using namespace RTEDGE_PRIVATE;
  * the user may call an API after calling rtEdge_Destroy() and not crash 
  * the library if we are index-based; If object-based, we crash.
  */
-typedef hash_map<int, EdgChannel *> EdgChanMap;
-typedef hash_map<int, PubChannel *> PubChanMap;
-typedef hash_map<int, LVCDef *>     LVCDefMap;
-typedef hash_map<int, GLchtDb *>    ChartDbMap;
-typedef hash_map<int, Cockpit *>    CockpitMap;
-typedef hash_map<int, Thread *>     ThreadMap;
+typedef hash_map<int, EdgChannel *>       EdgChanMap;
+typedef hash_map<int, PubChannel *>       PubChanMap;
+typedef hash_map<int, LVCDef *>           LVCDefMap;
+typedef hash_map<int, GLchtDb *>          ChartDbMap;
+typedef hash_map<int, Cockpit *>          CockpitMap;
+typedef hash_map<int, Thread *>           ThreadMap;
+typedef hash_map<string, MDDirectStats *> MDDStatMap;
 
 static EdgChanMap     _subs;
 static PubChanMap     _pubs;
@@ -57,6 +80,7 @@ static LVCDefMap      _lvc;
 static ChartDbMap     _cdb;
 static CockpitMap     _cock;
 static ThreadMap      _work;
+static MDDStatMap     _MDDStats;
 static long           _nCxt   = 1;
 static struct timeval _tStart = { 0,0 };
 
@@ -161,8 +185,6 @@ static int _GetPageSize()
 /////////////////////////////////////////////////////////////////////////////
 
 static int _nWinsock = 0;
-static GLmmapView *_mmMon = (GLmmapView *)0;
-static GLlibStats *_stats = (GLlibStats *)0;
 
 static void StartWinsock()
 {
@@ -225,14 +247,6 @@ rtEdge_Context rtEdge_Initialize( rtEdgeAttr attr )
    rtn = ATOMIC_INC( &_nCxt );
    edg = new EdgChannel( attr, rtn );
    _subs[rtn] = edg;
-
-   // 3) Stats / Return
-
-   if ( _stats && !_stats->_nSub ) {
-      _stats->_nSub += 1;
-      edg->SetStats( &_stats->_sub );
-      safe_strcpy( edg->stats()._chanName, "SUBSCRIBE" );
-   }
    return rtn;
 }
 
@@ -272,11 +286,6 @@ void rtEdge_Destroy( rtEdge_Context cxt )
       edg->thr().Stop();
       _subs.erase( it );
       delete edg;
-
-      // Stats
-
-      if ( _stats && ( st == &_stats->_sub ) )
-         _stats->_nSub -= 1;
    }
 
    // 2) Kill winsock; Logging
@@ -651,14 +660,6 @@ rtEdge_Context rtEdge_PubInit( rtEdgePubAttr attr )
    rtn = ATOMIC_INC( &_nCxt );
    pub = new PubChannel( attr, rtn );
    _pubs[rtn] = pub;
-
-   // 3) Stats / Return
-
-   if ( _stats && !_stats->_nPub ) { 
-      _stats->_nPub += 1;
-      pub->SetStats( &_stats->_pub );
-      safe_strcpy( pub->stats()._chanName, "PUBLISH" );
-   }
    return rtn;
 }
 
@@ -710,11 +711,6 @@ void rtEdge_PubDestroy( rtEdge_Context cxt )
       pub->thr().Stop();
       delete pub; 
       _pubs[cxt] = (PubChannel *)0; 
-
-      // Stats
-
-      if ( _stats && ( st == &_stats->_pub ) )
-         _stats->_nPub -= 1; 
    }
 
    // 2) Kill winsock; Loggin
@@ -1253,14 +1249,6 @@ Cockpit_Context Cockpit_Initialize( CockpitAttr attr )
    rtn = ++_nCxt;
    edg = new Cockpit( attr, rtn, lvc );
    _cock[rtn] = edg;
-
-   // 3) Stats / Return
-
-   if ( _stats && !_stats->_nSub ) {
-      _stats->_nSub += 1;
-      edg->SetStats( &_stats->_sub );
-      safe_strcpy( edg->stats()._chanName, "SUBSCRIBE" );
-   }
    return rtn;
 }
 
@@ -1327,74 +1315,57 @@ void rtEdge_Log( const char *pFile, int debugLevel )
    Socket::_log = new Logger( pFile, debugLevel );
 }
  
-char rtEdge_SetMDDirectMon( const char *pFile,
-                            const char *pExe,
-                            const char *pBld )
+char rtEdge_SetMDDirectMon( rtEdge_Context cxt,
+                            const char    *file,
+                            const char    *exe,
+                            const char    *bld )
 {
-   char       *bp;
-   int         fSz;
-   long        i;
-   FPHANDLE    fp;
-   EdgChannel *sub;
-   PubChannel *pub;
+   MDDStatMap          &sdb = _MDDStats;
+   MDDStatMap::iterator it;
+   MDDirectStats       *mdst;
+   GLlibStats          *st;
+   EdgChannel          *sub;
+   PubChannel          *pub;
+   string               s( file );
 
    // Pre-condition(s)
 
-   if ( !pFile || !strlen( pFile ) )
+   if ( !(pub=_GetPub( (int)cxt )) && !(sub=_GetSub( (int)cxt )) )
       return 0;
-   if ( !pExe || !strlen( pExe ) || !pBld || !strlen( pBld ) )
+   if ( !file || !strlen( file ) )
       return 0;
-   if ( _mmMon )
+   if ( !exe || !strlen( exe ) || !bld || !strlen( bld ) )
+      return 0;
+
+   // Find, else create
+
+   if ( (it=sdb.find( s )) == sdb.end() ) {
+      mdst = new MDDirectStats( file, exe, bld );
+      if ( !mdst->IsValid() ) {
+         delete mdst;
+         return 0;
+      }
+      sdb[s] = mdst;
+   }
+   else
+      mdst = (*it).second;
+
+   // OK : Only 1 pub or sub per MDDirectStats
+
+   st = mdst->stats();
+   if ( sub && !st->_nSub ) {
+      st->_nSub += 1;
+      sub->SetStats( &st->_sub );
+      safe_strcpy( sub->stats()._chanName, "SUBSCRIBE" );
       return 1;
-
-   /*
-    * OK to create:
-    *    ASSUMPTION 1: <= 1 Pub / <= 1 Sub
-    *    ASSUMPTION 2: Set 1st Sub / 1st Pub from map, if created
-    */
-   fSz = sizeof( GLlibStats );
-   if ( (fp=GLmmap::Open( pFile, "w+" )) ) {
-      bp = new char[fSz];
-      ::memset( bp, 0, fSz );
-      GLmmap::Grow( bp, fSz, fp );
-      delete[] bp;
-      _mmMon = new GLmmapView( fp, fSz, 0, True );
-      if ( !_mmMon->isValid() ) {
-         delete _mmMon;
-         _mmMon = (GLmmapView *)0;
-      }
    }
-   if ( !_mmMon )
-      return 0;
-
-   // Initialize
-
-   _stats = (GLlibStats *)_mmMon->data();
-   ::memset( _stats, 0, fSz );
-   _stats->_version  = 1;
-   _stats->_fileSiz  = fSz;
-   _stats->_tStart   = _tStart.tv_sec;
-   _stats->_tStartUs = _tStart.tv_usec;
-   _stats->_nSub     = 0;  // ASSUMPTION 1
-   _stats->_nPub     = 0;  // ASSUMPTION 1
-   safe_strcpy( _stats->_exe, pExe );
-   safe_strcpy( _stats->_build, pBld );
-
-   // ASSUMPTION 2
-
-   for ( i=0; i<_nCxt && !_stats->_nSub && !_stats->_nPub; i++ ) {
-      if ( (sub=_GetSub( i )) ) {
-         _stats->_nSub += 1;
-         sub->SetStats( &_stats->_sub );
-         safe_strcpy( pub->stats()._chanName, "SUBSCRIBE" );
-      }
-      else if ( (pub=_GetPub( i )) ) {
-         _stats->_nPub += 1;
-         pub->SetStats( &_stats->_pub );
-         safe_strcpy( pub->stats()._chanName, "PUBLISH" );
-      }
+   else if ( pub && !st->_nPub ) {
+      st->_nPub += 1;
+      pub->SetStats( &st->_pub );
+      safe_strcpy( pub->stats()._chanName, "PUBLISH" );
+      return 1;
    }
-   return 1;
+   return 0;
 }
 
 
@@ -1832,3 +1803,59 @@ void OS_StopThread( Thread_Context cxt )
 }
 
 } // extern "C"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+//                 c l a s s      MDDirectStats
+//
+/////////////////////////////////////////////////////////////////////////////
+
+#define _fSz sizeof( GLlibStats )
+
+////////////////////////////////////////////
+// Constructor / Destructor
+////////////////////////////////////////////
+MDDirectStats::MDDirectStats( const char *file,
+                              const char *exe,
+                              const char *bld ) :
+   string( file ),
+   _mmMon( (GLmmapView *)0 ),
+   _stats( (GLlibStats *)0 )
+{
+   char     bp[_fSz];
+   FPHANDLE fp;
+
+   // One sub and pub per MDDirectStats
+
+   if ( !(fp=GLmmap::Open( file, "w+" )) )
+      return;
+   ::memset( bp, 0, _fSz );
+   GLmmap::Grow( bp, _fSz, fp );
+   _mmMon = new GLmmapView( fp, _fSz, 0, True );
+   if ( !_mmMon->isValid() ) {
+      delete _mmMon;
+      _mmMon = (GLmmapView *)0;
+      return;
+   }
+
+   // Initialize
+
+   _stats = (GLlibStats *)_mmMon->data();
+   ::memset( _stats, 0, _fSz );
+   _stats->_version  = 1;
+   _stats->_fileSiz  = _fSz;
+   _stats->_tStart   = _tStart.tv_sec;
+   _stats->_tStartUs = _tStart.tv_usec;
+   _stats->_nSub     = 0;  // ASSUMPTION 1
+   _stats->_nPub     = 0;  // ASSUMPTION 1
+   safe_strcpy( _stats->_exe, exe );
+   safe_strcpy( _stats->_build, bld );
+}
+
+MDDirectStats::~MDDirectStats()
+{
+   if ( IsValid() )
+      delete _mmMon;
+}
+

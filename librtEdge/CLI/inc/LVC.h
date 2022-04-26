@@ -8,6 +8,7 @@
 *     25 SEP 2017 jcs  Build 35: LVCAdmin.AddTicker()
 *     14 JAN 2018 jcs  Build 39: LVCSnap._nullFld
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
+*     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -263,6 +264,22 @@ public:
 	 * \return Comma-separated list of LVC admin
 	 */
 	String ^Admin();
+
+	/**
+	 * \brief Add new ( svc,bds ) record from LVC
+	 *
+	 * A Broadcast Data Stream (BDS) is an updating stream of tickers from 
+	 * a publisher.  When an LVC is seeded by the BDS, it subscribes to the 
+	 * updating stream of tickers (e.g., List of NYSE exchange tickers), then 
+	 * subscribes to market data from each individual ticker.
+	 * 
+	 * In this manner, the LVC only needs to know a single name - i.e., the 
+	 * name of the BDS - rather than the names of all tickers.
+	 *
+	 * \param svc - Service name
+	 * \param bds - BDS name
+	 */
+	void AddBDS( String ^svc, String ^bds );
 
 	/**
 	 * \brief Add new ( svc,tkr ) record from LVC

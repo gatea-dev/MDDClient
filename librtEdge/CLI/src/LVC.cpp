@@ -7,6 +7,7 @@
 *     25 SEP 2017 jcs  Build 35: LVCAdmin
 *     11 JAN 2018 jcs  Build 39: Leak : FreeAll() in Destroy() 
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
+*     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -227,6 +228,15 @@ void LVCAdmin::Start( String ^admin )
 String ^LVCAdmin::Admin()
 {
    return gcnew String( _lvc->pAdmin() );
+}
+
+void LVCAdmin::AddBDS( String ^svc, String ^bds )
+{
+   const char *pSvc, *pBDS;
+
+   pSvc = (const char *)_pStr( svc );
+   pBDS = (const char *)_pStr( bds );
+   _lvc->AddBDS( pSvc, pBDS );
 }
 
 void LVCAdmin::AddTicker( String ^svc, String ^tkr )

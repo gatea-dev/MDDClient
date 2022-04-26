@@ -16,11 +16,22 @@ Features To Add
 1) Query tickers from tape:
    - Just re-use CDB_Query() / CDB_FreeQuery()
 
-2) LVCAdmin.AddBDS():
-   - _dtdBDS  = "ADD-BDS";
+
+Build 53 22-04-xx
+-----------------
+1) C# : rtEdgePublisher :
+   - rtEdgePublisher.SetBinary() : Set _bBinary : DUH!!
+   - rtEdgePublisher.rtEdgePublisher( string, string, bool bBinary )
+   - rtEdgePublisher.IsValid() / IsConnecting()
+
+2) SetMDDirectMon() : Instance Number
+   - hash_map<int, GLlibStats *>
+
+3) LVCAdmin.AddBDS()
+   - _dtdBDS = "ADD-BDS"
 
 
-Build 52 22-04-xx
+Build 52 22-03-30
 -----------------
 1) C# rtEdgePublisher : 
    - rtEdgePubUpdate::AddFieldAsDateTime guts : DUH!!

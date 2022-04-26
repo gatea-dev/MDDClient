@@ -25,8 +25,9 @@
 *     21 JAN 2018 jcs  Build 39: ATOMIC_CMP_EXCH
 *      6 DEC 2018 jcs  Build 41: 64-bit PTRSZ : size_t
 *     29 APR 2020 jcs  Build 43: hash_set
+*     26 APR 2022 jcs  Build 53: MDDirectStats
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_INTERNAL_H
 #define __EDGLIB_INTERNAL_H
@@ -211,15 +212,16 @@ public:
    char  _build[K];
    int   _nSub;
    int   _nPub;
-};
+
+}; // class GLmdStatsHdr
 
 class GLlibStats : public GLmdStatsHdr
 {
 public:
    rtEdgeChanStats _sub;
    rtEdgeChanStats _pub;
-};
 
+}; // class GLlibStats
 
 /////////////
 // Us

@@ -9,6 +9,8 @@
 *     12 OCT 2017 jcs  Build 36: rtBuf64
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
+*     26 APR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon()
+*
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -32,7 +34,7 @@ char *librtEdgeCLIID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 52 ", GL64 );
+      cp    += sprintf( cp, "@(#)librtEdgeCLI %s Build 53 ", GL64 );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s      = bp;
       sccsid = (char *)s.data();
@@ -308,6 +310,11 @@ Channel::~Channel()
 /////////////////////////////////
 // librtEdge Operations
 /////////////////////////////////
+bool Channel::IsValid()
+{
+   return _chan->IsValid();
+}
+
 void Channel::Ioctl( rtEdgeIoctl cmd, IntPtr val )
 {
    _chan->Ioctl( (::rtEdgeIoctl)cmd, (void *)val );
@@ -356,6 +363,16 @@ bool Channel::IsBinary()
 bool Channel::IsMF()
 {
    return _chan->IsMF();
+}
+
+String ^Channel::DstConnName()
+{
+   return gcnew String( _chan->DstConnName() );
+}
+
+bool Channel::SetMDDirectMon( String ^file, String ^exe, String ^bld )
+{
+   return _chan->SetMDDirectMon( _pStr( file ), _pStr( exe ), _pStr( bld ) );
 }
 
 } // namespace librtEdge

@@ -9,6 +9,7 @@
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC
 *     17 MAR 2022 jcs  Build 51: AddTickers()
+*     26 APR 2022 jcs  Build 54: _dtdBDS
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -18,17 +19,18 @@
 #include <hpp/Cockpit.hpp>
 
 typedef enum {
-	lvcAdm_undefined = 0,
-	lvcAdm_ACK       = 1,
-	lvcAdm_NAK       = 2
+   lvcAdm_undefined = 0,
+   lvcAdm_ACK       = 1,
+   lvcAdm_NAK       = 2
 } LVCAdminMsgType;
 
 // DTD
 
-static const char *_CMD_ADD  = "ADD";
-static const char *_CMD_DEL  = "DEL";
-static const char *_CMD_ACK  = "ACK";
-static const char *_CMD_NAK  = "NAK";
+static const char *_dtdADD  = "ADD";
+static const char *_dtdBDS  = "BDS";
+static const char *_dtdDEL  = "DEL";
+static const char *_dtdACK  = "ACK";
+static const char *_dtdNAK  = "NAK";
 
 namespace RTEDGE
 {
@@ -70,9 +72,9 @@ public:
 	   const char *pn;
 
 	   pn = _msg.Name();
-	   if ( !::strcmp( pn, _CMD_ACK ) )
+	   if ( !::strcmp( pn, _dtdACK ) )
 	      return lvcAdm_ACK;
-	   if ( !::strcmp( pn, _CMD_NAK ) )
+	   if ( !::strcmp( pn, _dtdNAK ) )
 	      return lvcAdm_NAK;
 	   return lvcAdm_undefined;
 	}
@@ -84,7 +86,7 @@ public:
 	 */
 	bool IsAdd()
 	{
-	   return( ::strcmp( _msg.GetAttribute( _mdd_pType ), _CMD_ADD ) == 0 );
+	   return( ::strcmp( _msg.GetAttribute( _mdd_pType ), _dtdADD ) == 0 );
 	}
 
 	/**
@@ -205,6 +207,42 @@ public:
 	}
 
 	/**
+	 * \brief Add new ( svc,bds ) record from LVC
+	 *
+	 * A Broadcast Data Stream (BDS) is an updating stream of tickers from
+	 * a publisher.  When an LVC is seeded by the BDS, it subscribes to the  
+	 * updating stream of tickers (e.g., List of NYSE exchange tickers), then
+	 * subscribes to market data from each individual ticker. 
+	 * 
+	 * In this manner, the LVC only needs to know a single name - i.e., the
+	 * name of the BDS - rather than the names of all tickers. 
+	 *
+	 * \param svc - Service name
+	 * \param bds - BDS name
+	 */
+	void AddBDS( const char *svc, const char *bds )
+	{
+	   char buf[K], *cp;
+
+	   // Pre-condition(s)
+
+	   if ( !svc || !bds )
+	      return;
+	   if ( !strlen( svc ) || !strlen( bds ) )
+	      return;
+
+	   // Safe to add
+
+	   cp  = buf;
+	   cp += sprintf( cp, "<%s ", _dtdBDS );
+	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
+	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, bds );
+	   cp += sprintf( cp, "/>\n" );
+	   Cockpit::Start( pAdmin() );  // TODO : LVC
+	   ::Cockpit_Send( cxt(), buf );
+	}
+
+	/**
 	 * \brief Add ( Service, Ticker ) to LVC
 	 *
 	 * This method automatically calls Start() to connect
@@ -227,7 +265,7 @@ public:
 	   // Safe to add
 
 	   cp  = buf;
-	   cp += sprintf( cp, "<%s ", _CMD_ADD );
+	   cp += sprintf( cp, "<%s ", _dtdADD );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkr );
 	   cp += sprintf( cp, "/>\n" );
@@ -259,7 +297,7 @@ public:
 	      if ( !strlen( tkrs[i] ) )
 	         continue; // for-i
 	      cp  = buf;
-	      cp += sprintf( cp, "<%s ", _CMD_ADD );
+	      cp += sprintf( cp, "<%s ", _dtdADD );
 	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
 	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkrs[i] );
 	      cp += sprintf( cp, "/>\n" );
@@ -283,7 +321,7 @@ public:
 	   char buf[K], *cp;
 
 	   cp  = buf;
-	   cp += sprintf( cp, "<%s ", _CMD_DEL );
+	   cp += sprintf( cp, "<%s ", _dtdDEL );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkr );
 	   cp += sprintf( cp, "/>\n" );
