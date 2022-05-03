@@ -135,14 +135,14 @@ private:
    // Constructor
    ///////////////////
 public:
-   DawgMetric( DawgRecord &rec, XmlElem &xe ) :
+   DawgMetric( DawgRecord &rec, XmlElem &xe, int fid ) :
       _rec( rec ),
-      _fid( xe.getAttrValue( _dtdField, 0 ) ),
+      _fid( fid ),
       _DawgName()
    {
       char dflt[K];
 
-      sprintf( dflt, "%s.%d", tkr(), fid() );
+      sprintf( dflt, "%s.%d", tkr(), _fid );
       _DawgName = xe.getAttrValue( _dtdMetric, dflt );
    }
 
@@ -208,7 +208,7 @@ public:
 
       // Pre-condition
 
-      if ( !(tkr=xe.getAttrValue( _dtdTkr, (const char *)0 )) )
+      if ( !(tkr=xe.getAttrValue( _dtdName, (const char *)0 )) )
          return;
 
       // Allow Field Override; Then Add / Store
@@ -223,7 +223,7 @@ public:
          ndb[k]   = rec;
          rdb[rid] = rec;
       }
-      rec->AddMetric( new DawgMetric( *rec, xe ), fid );
+      rec->AddMetric( new DawgMetric( *rec, xe, fid ), fid );
    }
 
    ///////////////////////////////////
@@ -336,9 +336,9 @@ int main( int argc, char **argv )
 
       if ( ::strcmp( _dtdSvc, edb[i]->name() ) )
          continue; // for-i
-      if ( (svc=edb[i]->getAttrValue( _dtdName, (const char *)0 )) )
+      if ( !(svc=edb[i]->getAttrValue( _dtdName, (const char *)0 )) )
          continue; // for-i
-      if ( (fid=edb[i]->getAttrValue( _dtdField, 0 )) )
+      if ( !(fid=edb[i]->getAttrValue( _dtdField, 0 )) )
          continue; // for-i
       for ( size_t j=0; j<tdb.size(); j++ ) {
          xe = tdb[j];
