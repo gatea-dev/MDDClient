@@ -17,7 +17,7 @@ Features To Add
    - Just re-use CDB_Query() / CDB_FreeQuery()
 
 
-Build 53 22-04-xx
+Build 53 22-05-xx
 -----------------
 1) C# : rtEdgePublisher :
    - rtEdgePublisher.SetBinary() : Set _bBinary : DUH!!
@@ -29,6 +29,12 @@ Build 53 22-04-xx
 
 3) LVCAdmin.AddBDS()
    - _dtdBDS = "ADD-BDS"
+
+4) inc/hpp/DataDog.hpp
+
+5) inc/hpp/XmlParser.hpp
+
+6) cpp/MDD2DataDog.cpp
 
 
 Build 52 22-03-30

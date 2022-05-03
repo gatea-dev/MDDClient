@@ -26,6 +26,7 @@
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *      7 MAR 2022 jcs  Build 51: doxygen
 *     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
+*      3 MAY 2022 jcs  Build 53: DataDog.hpp
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -2179,6 +2180,7 @@ char rtEdge_Is64bit();
 _CPP_END
 #ifdef __cplusplus
 #include <string>
+#include <hpp/DataDog.hpp>
 #include <hpp/OS.hpp>
 #include <hpp/Mutex.hpp>
 #include <hpp/Field.hpp>
@@ -2192,6 +2194,7 @@ _CPP_END
 #include <hpp/SubChannel.hpp>
 #include <hpp/Cockpit.hpp>
 #include <hpp/Update.hpp>
+#include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
 #endif /* __cplusplus */
 

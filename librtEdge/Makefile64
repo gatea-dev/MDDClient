@@ -18,8 +18,9 @@
 #     22 AUG 2017 jcs  Build 35: Cockpit
 #      6 JUN 2018 jcs  Build 35: Bridge
 #     14 MAY 2020 jcs  Build 44: git-ready
+#      3 MAY 2022 jcs  Build 53: MDD2DataDog
 #
-# (c) 1994-2020 Gatea Ltd.
+# (c) 1994-2022, Gatea Ltd.
 #######################################################
 
 ## Warnings
@@ -37,12 +38,12 @@ BIN_DIR   = bin$(BITS)
 CCC       = g++ $(ARCH)
 CC        = gcc $(ARCH)
 
-### libmddData library
+### libmddWire library
 
 MDWLIB    = libmddWire
 MDW_ROOT  = ../$(MDWLIB)
 MDW_LDIR  = $(MDW_ROOT)/lib
-MDW_INC   = -I$(MDW_ROOT)/inc
+MDW_INC   = -I$(MDW_ROOT)/inc -I$(MDW_ROOT)/expat/xmlparse
 MDW_LIBS  = $(MDW_LDIR)/$(MDWLIB)$(BITS).a
 MDW_LIBS += $(MDW_ROOT)/expat/lib/libexpat.a
 
@@ -152,6 +153,11 @@ FileSvr: clear FileSvr.o
 	mv *.o ./obj
 
 LVCTest: clear LVCTest.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+MDD2DataDog: clear MDD2DataDog.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
