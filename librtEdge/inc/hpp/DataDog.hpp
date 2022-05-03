@@ -178,7 +178,18 @@ public:
 	 * \param metric : Metric name
 	 * \param value : String-ified value
 	 */
-	void Gauge( const char *metric, char *value )
+	void Gauge( string &metric, string &value )
+	{
+	   Gauge( metric.data(), value.data() );
+	}
+
+	/**
+	 * \brief Format and send string-ified Gauge metric to datadog-agent
+	 *
+	 * \param metric : Metric name
+	 * \param value : String-ified value
+	 */
+	void Gauge( const char *metric, const char *value )
 	{
 	   _Send( metric, value, 'g' );
 	}
@@ -214,7 +225,7 @@ public:
 	 * \param metric : Metric name
 	 * \param value : String-ified value
 	 */
-	void Set( const char *metric, char *value )
+	void Set( const char *metric, const char *value )
 	{
 	   _Send( metric, value, 's' );
 	}
@@ -250,7 +261,7 @@ public:
 	 * \param metric : Metric name
 	 * \param value : String-ified value
 	 */
-	void Count( const char *metric, char *value )
+	void Count( const char *metric, const char *value )
 	{
 	   _Send( metric, value, 'c' );
 	}
@@ -285,7 +296,7 @@ public:
 	//////////////////////////////
 private:
 #ifndef DOXYGEN_OMIT
-	void _Send( const char *metric, char *value, char type )
+	void _Send( const char *metric, const char *value, char type )
 	{
 	   struct sockaddr *sa;
 	   string           s;

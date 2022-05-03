@@ -18,11 +18,12 @@ static XmlElem _zXml( (XmlElem *)0, "empty" );
 
 // DTD
 
+static const char *_dtdLogUpd = "LogUpds";
 static const char *_dtdUser   = "User";
 static const char *_dtdHost   = "Host";
 static const char *_dtdPort   = "Port";
 static const char *_dtdSvc    = "Service";
-static const char *_dtdTkr    = "Ticker";
+// static const char *_dtdTkr    = "Ticker";
 static const char *_dtdField  = "Field";
 static const char *_dtdName   = "Name";
 static const char *_dtdMetric = "Metric";
@@ -45,6 +46,7 @@ class DawgRecord;
 typedef hash_map<int, DawgMetric *>    MetricsByFID;
 typedef hash_map<int, DawgRecord *>    RecordsByID;
 typedef hash_map<string, DawgRecord *> RecordsByName;
+typedef hash_map<string, string>       StringMap;
 
 /////////////////////////////////////
 // Version
@@ -77,7 +79,6 @@ const char *MDD2DataDogID()
 class DawgRecord
 {
 private:
-   DataDog     &_dawg;
    MetricsByFID _metrics;
    string       _key; // Svc|Tkr
    string       _svc;
@@ -88,8 +89,7 @@ private:
    // Constructor
    ///////////////////////////////////
 public:
-   DawgRecord( DataDog &dawg, const char *svc, const char *tkr, int StreamID ) :
-      _dawg( dawg ),
+   DawgRecord( const char *svc, const char *tkr, int StreamID ) :
       _metrics(),
       _key( svc ),
       _svc( svc ),
@@ -166,17 +166,29 @@ public:
 class MyChannel : public SubChannel
 {
 public:
+   DataDog      &_dawg;
+   double        _dIntvl;
+   time_t        _t0;
+   bool          _bLog;
    RecordsByName _recByName;
    RecordsByID   _recByID;
+   StringMap     _lvc;
 
    ///////////////////////////////////
    // Constructor / Destructor
    ///////////////////////////////////
 public:
-   MyChannel() :
+   MyChannel( DataDog &dawg, double dIntvl, bool bLog ) :
+      _dawg( dawg ),
+      _dIntvl( dIntvl ),
+      _t0( TimeSec() ),
+      _bLog( bLog ),
       _recByName(),
-      _recByID()
-   { ; }
+      _recByID(),
+      _lvc()
+   {
+      SetIdleCallback( true );
+   }
 
    ///////////////////////////////////
    // Operations
@@ -195,7 +207,7 @@ public:
       return ndb.size();
    }
 
-   void AddMetric( DataDog &dawg, const char *svc, int fid, XmlElem &xe )
+   void AddMetric( const char *svc, int fid, XmlElem &xe )
    {
       RecordsByName          &ndb = _recByName;
       RecordsByID            &rdb = _recByID;
@@ -219,7 +231,7 @@ public:
       rec = ( (it=ndb.find( k )) != ndb.end() ) ? (*it).second : (DawgRecord *)0;
       if ( !rec ) {
          rid      = ndb.size() + 1;
-         rec      = new DawgRecord( dawg, svc, tkr, rid );
+         rec      = new DawgRecord( svc, tkr, rid );
          ndb[k]   = rec;
          rdb[rid] = rec;
       }
@@ -255,6 +267,34 @@ public:
       }
    }
 
+   virtual void OnIdle()
+   {
+      StringMap::iterator it;
+      string              k, v, tm;
+      time_t              now, age;
+
+      // Every dIntvl seconds
+
+      now = TimeSec();
+      age = now - _t0;
+      if ( age < _dIntvl )
+         return;
+      _t0 = now;
+
+      // Rock on
+
+      if ( _bLog )
+         printf( "[%s] : %ld metrics\n", pDateTimeMs( tm ), _lvc.size() );
+      for ( it=_lvc.begin(); it!=_lvc.end(); it++ ) {
+         k = (*it).first;
+         v = (*it).second;
+         _dawg.Gauge( k, v );
+         if ( _bLog )
+            printf( "   %-20s = %s\n", k.data(), v.data() );
+      }
+      _flush();
+   }
+
    //////////////////////////
    // Private helpers
    //////////////////////////
@@ -265,11 +305,15 @@ private:
       MetricsByFID::iterator it;
       DawgMetric            *mon;
       Field                 *fld;
+      string                 k, v;
 
       for ( it=mdb.begin(); it!= mdb.end(); it++ ) {
          mon = (*it).second;
-         if ( (fld=msg.GetField( mon->fid() )) )
-            printf( "%s = %s\n", mon->dawg(), fld->GetAsString() );
+         if ( !(fld=msg.GetField( mon->fid() )) )
+            continue; // for-it
+         k       = mon->dawg();
+         v       = fld->GetAsString();
+         _lvc[k] = v;
       }
    }
 
@@ -281,13 +325,11 @@ private:
 }; // class MyChannel
 
 
-
 //////////////////////////
 // main()
 //////////////////////////
 int main( int argc, char **argv )
 {
-   MyChannel   ch;
    XmlParser   x;
    XmlElem    *xe, *xd;
    Strings     sdb;
@@ -300,7 +342,7 @@ int main( int argc, char **argv )
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
       printf( "%s\n", MDD2DataDogID() );
-      printf( "%s\n", ch.Version() );
+      printf( "%s\n", MyChannel::Version() );
       return 0;
    }
    if ( !x.Load( argv[1] ) ) {
@@ -319,6 +361,9 @@ int main( int argc, char **argv )
    DataDog       dawg( xd->getAttrValue( _dtdHost, "localhost" ),
                        xd->getAttrValue( _dtdPort, 8125 ),
                        xd->getAttrValue( _dtdPfx, "" ) );
+   MyChannel     ch( dawg, 
+                     root.getAttrValue( _dtdIntvl, 5.0 ),
+                     root.getAttrValue( _dtdLogUpd, false ) );
 
    kv = ::strtok( (char *)tags.data(), "," );
    for ( ; kv; kv=::strtok( NULL, "," ) )
@@ -342,7 +387,7 @@ int main( int argc, char **argv )
          continue; // for-i
       for ( size_t j=0; j<tdb.size(); j++ ) {
          xe = tdb[j];
-         ch.AddMetric( dawg, svc, fid, *xe );
+         ch.AddMetric( svc, fid, *xe );
       }
    }
    printf( "%ld Tickers Subscribed\n", ch.WoofWoof() );
