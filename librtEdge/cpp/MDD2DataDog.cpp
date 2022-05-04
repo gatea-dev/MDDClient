@@ -354,7 +354,7 @@ int main( int argc, char **argv )
    // Parse Config
 
    xd = (xd=root.find( _dtdDawg )) ? xd : &_zXml;
-   GLvecXmlElem &edb  = root.elements();
+   XmlElemVector &edb  = root.elements();
    const char   *svr  = root.getAttrValue( _dtdHost, "localhost:9998" ); 
    const char   *usr  = root.getAttrValue( _dtdUser, MDD2DataDogID() );
    string        tags( xd->getAttrValue( _dtdTags, "" ) );
@@ -377,7 +377,7 @@ int main( int argc, char **argv )
    pc = ch.Start( svr, usr );
    printf( "%s\n", pc ? pc : "" );
    for ( size_t i=0; i<edb.size(); i++ ) {
-      GLvecXmlElem &tdb = edb[i]->elements();
+      XmlElemVector &tdb = edb[i]->elements();
 
       if ( ::strcmp( _dtdSvc, edb[i]->name() ) )
          continue; // for-i

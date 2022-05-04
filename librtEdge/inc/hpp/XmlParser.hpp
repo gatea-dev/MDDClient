@@ -32,10 +32,10 @@ class KeyValue;
 
 // Templatized vector collections
 
-typedef std::vector<XmlElem *>            GLvecXmlElem;
-typedef std::vector<KeyValue *>           GLvecKeyValue;
-typedef hash_map<std::string, KeyValue *> GLmapKeyValue;
-typedef hash_map<std::string, XmlElem *>  GLmapXmlElem;
+typedef std::vector<XmlElem *>            XmlElemVector;
+typedef std::vector<KeyValue *>           KeyValVector;
+typedef hash_map<std::string, KeyValue *> KeyValMap;
+typedef hash_map<std::string, XmlElem *>  XmlElemMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -153,10 +153,10 @@ class XmlElem : public KeyValue
 {
 private:
 	XmlElem    *_parent;
-	GLvecXmlElem  _elems;
-	GLmapXmlElem  _elemsH;
-	GLvecKeyValue _attrs;
-	GLmapKeyValue _attrsH;
+	XmlElemVector  _elems;
+	XmlElemMap  _elemsH;
+	KeyValVector _attrs;
+	KeyValMap _attrsH;
 
 	/////////////////////////////
 	// Constructor / Destructor
@@ -199,7 +199,7 @@ public:
 	/** \brief Return reference to parent XmlElem */
 	XmlElem    *parent()     { return _parent; }
 	/** \brief Return list (vector) of child elements */
-	GLvecXmlElem &elements() { return _elems; }
+	XmlElemVector &elements() { return _elems; }
 	/** 
 	 * \brief Search for child XML element by name
 	 *
@@ -209,8 +209,8 @@ public:
 	 */
 	XmlElem    *find( const char *lkup, bool bRecurse=true )
 	{
-	   GLmapXmlElem::iterator it;
-	   GLmapXmlElem          &db = _elemsH;
+	   XmlElemMap::iterator it;
+	   XmlElemMap          &db = _elemsH;
 	   XmlElem             *rtn;
 	   XmlElem             *glx;
 	   int                    i, sz;
@@ -239,7 +239,7 @@ public:
 #ifndef DOXYGEN_OMIT
 	const char   *getAttr( const char *lkup )
 	{
-	   GLmapKeyValue::iterator it;
+	   KeyValMap::iterator it;
 	   KeyValue               *kv;
 	   std::string             s( lkup );
 
@@ -252,7 +252,7 @@ public:
 
 	bool hasAttr( const char *lkup )
 	{
-	   GLmapKeyValue::iterator it;
+	   KeyValMap::iterator it;
 	   std::string             s( lkup );
 
 	   return ( (it=_attrsH.find( s )) != _attrsH.end() );
