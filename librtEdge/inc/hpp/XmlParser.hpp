@@ -20,8 +20,6 @@
 typedef unsigned int u_int32_t;
 #endif // WIN32
 
-using namespace std;
-
 typedef void *XML_Parser;
 
 namespace RTEDGE
@@ -34,10 +32,10 @@ class KeyValue;
 
 // Templatized vector collections
 
-typedef vector<XmlElem *>            GLvecXmlElem;
-typedef vector<KeyValue *>           GLvecKeyValue;
-typedef hash_map<string, KeyValue *> GLmapKeyValue;
-typedef hash_map<string, XmlElem *>  GLmapXmlElem;
+typedef std::vector<XmlElem *>            GLvecXmlElem;
+typedef std::vector<KeyValue *>           GLvecKeyValue;
+typedef hash_map<std::string, KeyValue *> GLmapKeyValue;
+typedef hash_map<std::string, XmlElem *>  GLmapXmlElem;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,8 +54,8 @@ typedef hash_map<string, XmlElem *>  GLmapXmlElem;
 class KeyValue
 {
 protected:
-	string _key;
-	string _val;
+	std::string _key;
+	std::string _val;
 
 	/////////////////////////////
 	// Constructor / Destructor
@@ -80,15 +78,15 @@ public:
 	// Access / Mutator
 	/////////////////////////////
 	/** \brief Return reference to key as std::string */
-	string     &stdKey() { return _key; }
+	std::string &stdKey() { return _key; }
 	/** \brief Return reference to value as std::string */
-	string     &stdVal() { return _val; }
+	std::string &stdVal() { return _val; }
 	/** \brief Return key */
-	const char *key()   { return _key.data(); }
+	const char  *key()   { return _key.data(); }
 	/** \brief Return value */
-	const char *value() { return _val.data(); }
+	const char  *value() { return _val.data(); }
 	/** \brief Set value */
-	void        set( char *val )
+	void         set( char *val )
 	{
 	   _val = val;
 	   trim( _val );
@@ -99,35 +97,39 @@ public:
 	/////////////////////////////
 public:
 #ifndef DOXYGEN_OMIT
-	static string &ltrim( string &s )
+	static std::string &ltrim( std::string &s )
 	{
-	   string::iterator beg, end, trim;
+	   std::string::iterator beg, end, trim;
 
 	   // trim from start
 	
 	   beg  = s.begin();
 	   end  = s.end();
-	   trim = find_if( beg, end, not1( ptr_fun<int, int>( isspace ) ) );
+	   trim = std::find_if( beg, 
+	                        end, 
+	                        std::not1( std::ptr_fun<int, int>( isspace ) ) );
 	   s.erase( beg, trim );
 	   return s;
 	}
 
-	static string &rtrim( string &s )
+	static std::string &rtrim( std::string &s )
 	{
-	   string::reverse_iterator rbeg, rend;
-	   string::iterator         end, trim;
+	   std::string::reverse_iterator rbeg, rend;
+	   std::string::iterator         end, trim;
 
 	   // trim from end
 	
 	   rbeg = s.rbegin();
 	   rend = s.rend();
 	   end  = s.end();
-	   trim = find_if( rbeg, rend, not1( ptr_fun<int, int>( isspace ) ) ).base();
+	   trim = std::find_if( rbeg, 
+	                        rend, 
+	                        std::not1( std::ptr_fun<int, int>( isspace ) ) ).base();
 	   s.erase( trim, end );
 	   return s;
 	}
 
-	static string &trim( string &s )
+	static std::string &trim( std::string &s )
 	{
 	   // trim from start and end
 
@@ -239,7 +241,7 @@ public:
 	{
 	   GLmapKeyValue::iterator it;
 	   KeyValue               *kv;
-	   string                  s( lkup );
+	   std::string             s( lkup );
 
 	   if ( (it=_attrsH.find( s )) != _attrsH.end() ) {
 	      kv = (*it).second;
@@ -251,7 +253,7 @@ public:
 	bool hasAttr( const char *lkup )
 	{
 	   GLmapKeyValue::iterator it;
-	   string                  s( lkup );
+	   std::string             s( lkup );
 
 	   return ( (it=_attrsH.find( s )) != _attrsH.end() );
 	}
@@ -288,7 +290,7 @@ public:
 	 * \param dflt - Default return value if not found
 	 * \return Element value as string, returning default if not found
 	 */
-	const char *getElemValue( const char *prop, string &dflt )
+	const char *getElemValue( const char *prop, std::string &dflt )
 	{
 	   return getElemValue( prop, dflt.data() );
 	}
@@ -398,7 +400,7 @@ public:
 	 * \param dflt - Default return value if not found
 	 * \return Attribute value as string, returning default if not found
 	 */
-	const char *getAttrValue( const char *prop, string &dflt )
+	const char *getAttrValue( const char *prop, std::string &dflt )
 	{
 	   return getAttrValue( prop, dflt.data() );
 	}
@@ -493,8 +495,8 @@ public:
 #ifndef DOXYGEN_OMIT
 	XmlElem *addElement( char *pName )
 	{
-	   XmlElem *rtn;
-	   string     key;
+	   XmlElem    *rtn;
+	   std::string key;
 
 	   rtn = new XmlElem( this, pName );
 	   key = rtn->stdKey();
@@ -505,8 +507,8 @@ public:
 
 	KeyValue *addAttr( char *pKey, char *pVal )
 	{
-	   KeyValue *rtn;
-	   string      key;
+	   KeyValue   *rtn;
+	   std::string key;
 
 	   rtn = new KeyValue( pKey, pVal );
 	   key = rtn->stdKey();
@@ -597,7 +599,7 @@ public:
 	 */
 	bool Load( const char *pFile )
 	{
-	   string      s;
+	   std::string s;
 	   const char *xmlData;
 	   int         i, sz, off, nb;
 	
@@ -723,9 +725,9 @@ private:
 	
 	static void xmlData( void *arg, const char *pData, int len )
 	{
-	   string     tmp( pData, len );
-	   XmlParser *glx = (XmlParser *)arg;
-	   string    &rwc = glx->_curElem->stdVal();
+	   std::string  tmp( pData, len );
+	   XmlParser   *glx = (XmlParser *)arg;
+	   std::string &rwc = glx->_curElem->stdVal();
 	
 	   rwc += KeyValue::trim( tmp );
 	}
@@ -813,7 +815,7 @@ private:
 	   return( op-pOut );
 	}
 	
-	static const char *ReadFile( const char *filename, string &s )
+	static const char *ReadFile( const char *filename, std::string &s )
 	{
 	    FILE *fp;
 	    char  buf[K];

@@ -103,6 +103,7 @@
     <ClInclude Include="ByteStream.h" />
     <ClInclude Include="Chain.h" />
     <ClInclude Include="ChartDB.h" />
+    <ClInclude Include="DataDog.h" />
     <ClInclude Include="Field.h" />
     <ClInclude Include="LVC.h" />
     <ClInclude Include="PubChannel.h" />
@@ -120,6 +121,7 @@
     <ClCompile Include="..\src\Chain.cpp" />
     <ClCompile Include="..\src\ChartDB.cpp" />
     <ClCompile Include="..\src\Data.cpp" />
+    <ClCompile Include="..\src\DataDog.cpp" />
     <ClCompile Include="..\src\Field.cpp" />
     <ClCompile Include="..\src\OS.cpp" />
     <ClCompile Include="..\src\PubChannel.cpp" />

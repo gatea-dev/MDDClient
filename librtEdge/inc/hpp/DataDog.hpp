@@ -27,36 +27,18 @@
 #endif // WIN32
 #include <string>
 
-using namespace std;
-
 namespace RTEDGE
 {
 
 #ifndef DOXYGEN_OMIT
-/** \brief Maximum allowable number of Dog Tags to send */
 
 #define _MAX_TAG  1024
 
-////////////////////////////////////////////////
-//
-//        c l a s s   D o g T a g s
-//
-////////////////////////////////////////////////
-/**
- * \class DogTags
- * \brief Structure to hold up to 1024 dog tags
- *
- * You populate this struct if you choose to send optional tags with each metric 
- * to the datadog-agent.
- */
 class DogTags
 {
 public:
-	/** \brief Up to 1024 DogTag keys */
 	const char *_key[_MAX_TAG];
-	/** \brief Up to 1024 DogTag values */
 	const char *_val[_MAX_TAG];
-	/** \brief Number of DogTags */
 	int         _nTag;
 
 }; // class DogTags
@@ -71,34 +53,22 @@ public:
 ////////////////////////////////////////////////
 /**
  * \class DataDog
- * \brief DataDog channel to  channel from data source - rtEdgeCache3 or Tape File
+ * \brief DataDog channel to spit named metrics to the datadog-agent.
  *
- * The 1st argument to Start() defines your data source:
- * 1st Arg | Data Source | Data Type
- * --- | --- | ---
- * host:port | rtEdgeCache3 | Streaming real-time data
- * filename | Tape File (64-bit only) | Recorded market data from tape
+ * 3 DataDog metric types are supported:
+ * -# Gauge
+ * -# Set
+ * -# Count
  *
- * This class ensures that data from both sources - rtEdgeCache3 and Tape
- * File - is streamed into your application in the exact same manner:
- * + Subscribe()
- * + OnData()
- * + OnDead()
- * + Unsubscribe()
- *
- * Lastly, the Tape File data source is specifically driven from this class:
- * API | Action
- * --- | ---
- * StartTape() | Pump data for Subscribe()'ed tkrs until end of file
- * StartTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
- * StopTape() | Stop Tape Pump
+ * Metrics may be tagged via AddTag().  Up to 1024 tags are supported per
+ * DataDog instance
  */
 class DataDog
 {
 private:
-	string             _dogHost;
+	std::string        _dogHost;
 	int                _dogPort;
-	string             _dogPrefix;
+	std::string        _dogPrefix;
 	int                _fd;
 	struct sockaddr_in _dst;
 	DogTags            _dt;
@@ -167,7 +137,6 @@ public:
 	   }
 	}
 
-
 	//////////////////////////////
 	// Operations
 	//////////////////////////////
@@ -178,7 +147,7 @@ public:
 	 * \param metric : Metric name
 	 * \param value : String-ified value
 	 */
-	void Gauge( string &metric, string &value )
+	void Gauge( std::string &metric, std::string &value )
 	{
 	   Gauge( metric.data(), value.data() );
 	}
@@ -299,7 +268,7 @@ private:
 	void _Send( const char *metric, const char *value, char type )
 	{
 	   struct sockaddr *sa;
-	   string           s;
+	   std::string      s;
 	   char             bp[K];
 	   int              i, nt, flags;
 
