@@ -21,7 +21,7 @@
 *     22 OCT 2020 jcs  Build 46: rtEdge_PumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_PumpFullTape() - Offset only
 *     23 JUL 2021 jcs  Build 49: No mo _MAX_ENG; XxxMap
-*     26 APR 2022 jcs  Build 53: StatMap
+*      5 MAY 2022 jcs  Build 53: StatMap; SetMDDirectMon() bug fix
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1330,7 +1330,9 @@ char rtEdge_SetMDDirectMon( rtEdge_Context cxt,
 
    // Pre-condition(s)
 
-   if ( !(pub=_GetPub( (int)cxt )) && !(sub=_GetSub( (int)cxt )) )
+   pub = _GetPub( (int)cxt );
+   sub = _GetSub( (int)cxt );
+   if ( !pub && !sub )
       return 0;
    if ( !file || !strlen( file ) )
       return 0;

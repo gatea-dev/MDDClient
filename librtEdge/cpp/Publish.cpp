@@ -368,6 +368,7 @@ int main( int argc, char **argv )
       pub.SetPerms( true );
       ::fprintf( stdout, "%s\n", pub.Start( pSvr ) );
    }
+   pub.SetMDDirectMon( "./mew.out", "poop", "pee" );
    ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tApp, tSlp );
    ::fflush( stdout );
    for ( i=0,d0=dn=pub.TimeNs(); ( dn-d0 ) < tApp; i++ ) {

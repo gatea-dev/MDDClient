@@ -5,16 +5,11 @@
 *
 *  REVISION HISTORY:
 *     11 MAY 2011 jcs  Created.
-*     29 JUN 2011 jcs  Build  3: rtEdgePublisher
-*     30 JUL 2011 jcs  Build  6: rtEdgePubUpdate
-*     23 SEP 2011 jcs  Build 12: 3rd arg = timer
-*     10 OCT 2012 jcs  Build 13: PubStart()
-*     25 MAY 2013 jcs  Build 17: lock( _wl )
-*     11 JUL 2013 jcs  Build 19: "BID"
-*     23 DEC 2013 jcs  Build 22: tApp
+*     . . .
 *     23 JAN 2015 jcs  Chains
+*      5 MAY 2022 jcs  Build 53: New constructor; SetMDDirectMon()
 *
-*  (c) 1994-2013 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.Collections;
@@ -37,7 +32,7 @@ class PubTest : rtEdgePublisher
    // Constructor
    ////////////////////////////////
    public PubTest( string pSvr, string pPub, int tTmr, string[] chn ) :
-      base( pSvr, pPub /* , true */ )
+      base( pSvr, pPub, true, false )
    {
       // Fields / Watchlist
 
@@ -49,6 +44,7 @@ class PubTest : rtEdgePublisher
 
       _cbk = new TimerCallback( PublishAll );
       _tmr = new Timer( _cbk, this, tTmr, tTmr );
+      SetHeartbeat( 60 );
    }
 
 
@@ -218,8 +214,8 @@ class PubTest : rtEdgePublisher
    {
       try {
          PubTest pub;
-         int      i, tHb, tTmr, argc;
-         string   pSvr, pPub;
+         int      i, tTmr, argc;
+         string   pSvr, pPub, mdd;
          string[] chn;
 
          // Quickie Check
@@ -230,18 +226,18 @@ class PubTest : rtEdgePublisher
             return 0;
          }
          if ( argc > 0 && ( args[0] == "--config" ) ) {
-            pSvr = "<host:port> <Svc> <pubTmr> <ChainFile> <tHbeat>";
+            pSvr = "<host:port> <Svc> <pubTmr> <ChainFile> <MDDirectMon>";
             Console.WriteLine( pSvr );
             return 0;
          }
 
-         // [ <host:port> <Svc> <pubTmr> <ChainFile> <tHbeat> ]
+         // [ <host:port> <Svc> <pubTmr> <ChainFile> <MDDirectMon> ]
 
          pSvr = "localhost:9995";
          pPub = "MySource";
          tTmr = 1000;
          chn  = null;
-         tHb  = 3600;
+         mdd  = "MDDirectMon.stats";
          for ( i=0; i<argc; i++ ) {
             switch( i ) {
                case 0:
@@ -259,15 +255,16 @@ class PubTest : rtEdgePublisher
                      chn = null;
                   break;
                case 4:
-                  tHb = Convert.ToInt32( args[i], 10 );
+                  mdd = args[i];
                   break;
             }
          }
          Console.WriteLine( rtEdge.Version() );
          pub = new PubTest( pSvr, pPub, tTmr, chn );
-         pub.SetHeartbeat( tHb );
          pub.PubStart();
+         pub.SetMDDirectMon( mdd, "PubTest", "PubTest" );
          Console.WriteLine( pub.pConn() );
+         Console.WriteLine( "Stats in " + mdd );
          Console.WriteLine( "Hit <ENTER> to terminate..." );
          Console.ReadLine();
          pub.Stop();

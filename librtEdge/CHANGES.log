@@ -26,6 +26,7 @@ Build 53 22-05-xx
 
 2) SetMDDirectMon() : Instance Number
    - hash_map<int, GLlibStats *>
+   - rtEdgeChanStats._iVal : u_int64_t, not int - DUH!!
 
 3) LVCAdmin.AddBDS()
    - _dtdBDS = "ADD-BDS"

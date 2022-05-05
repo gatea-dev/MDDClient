@@ -163,17 +163,8 @@ public:
 	 * to connect to the rtEdgeCache3 server.
 	 *
 	 * The following are equivalent:
-	 * __Constructor-Defined__
-	 * <code>
-	 *    pub = new rtEdgePublisher( hosts, pubName, true, true );
-	 * </code>
-	 *
-	 * __User-Defined__
-	 * <code>
-	 *    pub = new rtEdgePublisher( hosts, pubName, false, false );
-	 *    pub.SetBinary( true );
-	 *    pub.PubStart();
-	 * </code>
+	 * \include rtEdgePublisher_constructor1.h
+	 * \include rtEdgePublisher_constructor2.h
 	 *
 	 * \param hosts - Comma-separated list of rtEdgeCache3 \<host\>:\<port\> 
 	 * to connect to. 

@@ -358,9 +358,10 @@ int main( int argc, char **argv )
    const char   *svr  = root.getAttrValue( _dtdHost, "localhost:9998" ); 
    const char   *usr  = root.getAttrValue( _dtdUser, MDD2DataDogID() );
    string        tags( xd->getAttrValue( _dtdTags, "" ) );
-   DataDog       dawg( xd->getAttrValue( _dtdHost, "localhost" ),
-                       xd->getAttrValue( _dtdPort, 8125 ),
-                       xd->getAttrValue( _dtdPfx, "" ) );
+   const char   *host = xd->getAttrValue( _dtdHost, "127.0.0.1" );
+   int           port = xd->getAttrValue( _dtdPort, 8125 );
+   const char   *pfx  = xd->getAttrValue( _dtdPfx, "" );
+   DataDog       dawg( host, port, pfx );
    MyChannel     ch( dawg, 
                      root.getAttrValue( _dtdIntvl, 5.0 ),
                      root.getAttrValue( _dtdLogUpd, false ) );
@@ -376,6 +377,7 @@ int main( int argc, char **argv )
    ch.SetBinary( true );
    pc = ch.Start( svr, usr );
    printf( "%s\n", pc ? pc : "" );
+   printf( "Dawg to %s:%d w/ prefix=%s\n", host, port, pfx );
    for ( size_t i=0; i<edb.size(); i++ ) {
       XmlElemVector &tdb = edb[i]->elements();
 
