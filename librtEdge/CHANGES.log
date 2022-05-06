@@ -37,6 +37,11 @@ Build 53 22-05-xx
 
 6) cpp/MDD2DataDog.cpp
 
+/*
+7) CLI : Channel.GetStats()
+ */
+
+
 
 Build 52 22-03-30
 -----------------

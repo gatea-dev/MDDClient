@@ -24,8 +24,9 @@
 *     12 FEB 2020 jcs  Build 42: _tHbeat
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *     29 MAR 2022 jcs  Build 52: mddWire ioctl's here
+*      5 MAY 2022 jcs  Build 53: _bPub
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -172,6 +173,7 @@ Socket::Socket( const char *pHosts, bool bConnectionless ) :
    _bConnectionless( bConnectionless ),
    _mdd( (mddWire_Context)0 ),
    _proto( bConnectionless ? mddProto_Binary : mddProto_XML ),
+   _bPub( false ),
    _mtx(),
    _blkMtx(),
    _nBlk( 0 ),
@@ -604,7 +606,7 @@ void Socket::OnRead()
       nb         = gmax( ::recv( fd(), _in._cp, nL, 0 ), 0 );
       tot        = nb;
       _in._cp   += nb;
-      st._nByte += nb;
+      st._nByte += _bPub ? 0 : nb;
    }
    else {
       for ( tot=0; (nb=READ( fd(), _in._cp, nL )) > 0; ) {
@@ -614,7 +616,7 @@ void Socket::OnRead()
             fflush( stdout );
          }
          nb         = gmax( nb,0 );
-         st._nByte += nb;
+         st._nByte += _bPub ? 0 : nb;
          if ( nb && _log && _log->CanLog( 3 ) ) {
             Locker lck( _log->mtx() );
 

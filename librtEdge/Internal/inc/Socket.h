@@ -18,8 +18,9 @@
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     26 MAY 2017 jcs  Build 34: WireMold64
 *     12 FEB 2020 jcs  Build 42: _tHbeat
+*      5 MAY 2022 jcs  Build 53: _bPub
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_SOCKET_H
 #define __EDGLIB_SOCKET_H
@@ -84,6 +85,7 @@ protected:
 	bool               _bConnectionless;
 	mddWire_Context    _mdd;
 	mddProtocol        _proto;
+	bool               _bPub;
 	Mutex              _mtx;
 	Mutex              _blkMtx;
 	int                _nBlk;

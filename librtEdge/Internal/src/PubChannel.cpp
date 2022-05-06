@@ -26,8 +26,9 @@
 *      1 NOV 2017 jcs  Build 37: _PubPermQryRsp() : mddPub_BuildRawMsg 
 *      6 DEC 2018 jcs  Build 41: VS2017 : size_t not long
 *     12 FEB 2020 jcs  Build 42: Socket._tHbeat
+*      5 MAY 2022 jcs  Build 53: _bPub
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -67,6 +68,7 @@ PubChannel::PubChannel( rtEdgePubAttr  attr,
    _preBuilt( (rtPreBuiltBUF *)0 )
 {
    _mdd  = ::mddPub_Initialize();
+   _bPub = true;
    _attr = attr;
    if ( attr._bConnectionless ) {
       _udpPort = attr._udpPort;

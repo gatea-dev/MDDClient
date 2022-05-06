@@ -667,7 +667,7 @@ typedef struct {
    /** \brief Total number of connections since startup */
    int    _nConn;
    /** \brief Reserved for future use */
-   u_int64_t _iVal[20];
+   long   _iVal[20];
    /** \brief Reserved for future use */
    double _dVal[20];
    /** \brief Channel name - SUBSCRIBE or PUBLISH */
