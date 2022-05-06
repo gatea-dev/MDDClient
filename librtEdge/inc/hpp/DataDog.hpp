@@ -106,7 +106,6 @@ public:
 	   _dst.sin_family      = AF_INET;
 	   _dst.sin_port        = htons( port );
 	   _dst.sin_addr.s_addr = inet_addr( host );
-	   ::memset( &_dt, 0, sizeof( _dt ) );
 	}
 
 	/** \brief Destructor.  Close UDP socket */
