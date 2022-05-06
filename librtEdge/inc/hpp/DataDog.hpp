@@ -90,7 +90,17 @@ public:
 	   _dogPrefix( prefix ),
 	   _fd( ::socket( AF_INET, SOCK_DGRAM, 0 ) )
 	{
-	   // statsd daemon destination address
+	   struct sockaddr_in a;
+
+	   // 1) Us
+
+	   ::memset( &a, 0, sizeof( a ) );
+	   a.sin_family      = AF_INET;
+	   a.sin_port        = 0; // ephemeral
+	   a.sin_addr.s_addr = INADDR_ANY;
+	   ::bind( _fd, (struct sockaddr *)&a, sizeof( a ) );
+
+	   // 2) statsd daemon destination address
 
 	   ::memset( &_dst, 0, sizeof( _dst ) );
 	   _dst.sin_family      = AF_INET;
