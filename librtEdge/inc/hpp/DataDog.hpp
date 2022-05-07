@@ -88,24 +88,18 @@ public:
 	   _dogHost( host ),
 	   _dogPort( port ),
 	   _dogPrefix( prefix ),
-	   _fd( ::socket( AF_INET, SOCK_DGRAM, 0 ) )
+	   _fd( 0 )
 	{
-	   struct sockaddr_in a;
-
-	   // 1) Us
-
-	   ::memset( &a, 0, sizeof( a ) );
-	   a.sin_family      = AF_INET;
-	   a.sin_port        = 0; // ephemeral
-	   a.sin_addr.s_addr = INADDR_ANY;
-	   ::bind( _fd, (struct sockaddr *)&a, sizeof( a ) );
-
-	   // 2) statsd daemon destination address
+	   // 1) statsd daemon destination address
 
 	   ::memset( &_dst, 0, sizeof( _dst ) );
 	   _dst.sin_family      = AF_INET;
 	   _dst.sin_port        = htons( port );
 	   _dst.sin_addr.s_addr = inet_addr( host );
+
+	   // 2) DogTags
+
+	   ::memset( &_dt, 0, sizeof( _dt ) );
 	}
 
 	/** \brief Destructor.  Close UDP socket */
@@ -122,6 +116,31 @@ public:
 	   }
 	}
 
+	//////////////////////////////
+	// Initialize
+	//////////////////////////////
+public:
+	/**
+	 * \brief Create socket / bind
+	 *
+	 * On WIN64, you must call this AFTER a consumer or publisher has 
+	 * been instantiated as this loads the Winsock library
+	 */
+	bool Start()
+	{
+	   struct sockaddr_in a;
+	   int                rc;
+
+	   // create socket / bind
+
+	   _fd = ::socket( AF_INET, SOCK_DGRAM, 0 );
+	   ::memset( &a, 0, sizeof( a ) );
+	   a.sin_family      = AF_INET;
+	   a.sin_port        = 0; // ephemeral
+	   a.sin_addr.s_addr = INADDR_ANY;
+	   rc = ::bind( _fd, (struct sockaddr *)&a, sizeof( a ) );
+	   return( _fd && ( rc == 0 ) );
+	}
 
 	//////////////////////////////
 	// Dog Tags
@@ -147,7 +166,7 @@ public:
 	}
 
 	//////////////////////////////
-	// Operations
+	// DataDog Operations
 	//////////////////////////////
 public:
 	/**

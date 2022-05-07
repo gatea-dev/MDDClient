@@ -376,6 +376,7 @@ int main( int argc, char **argv )
    }
    ch.SetBinary( true );
    pc = ch.Start( svr, usr );
+   dawg.Start();
    printf( "%s\n", pc ? pc : "" );
    printf( "Dawg to %s:%d w/ prefix=%s\n", host, port, pfx );
    for ( size_t i=0; i<edb.size(); i++ ) {
