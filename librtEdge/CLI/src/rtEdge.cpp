@@ -9,7 +9,7 @@
 *     12 OCT 2017 jcs  Build 36: rtBuf64
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
-*     26 APR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon()
+*      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -306,6 +306,11 @@ bool Channel::IsValid()
 void Channel::Ioctl( rtEdgeIoctl cmd, IntPtr val )
 {
    _chan->Ioctl( (::rtEdgeIoctl)cmd, (void *)val );
+}
+
+rtEdgeChanStats ^Channel::GetStats()
+{
+   return gcnew rtEdgeChanStats( _chan->GetStats() );
 }
 
 int Channel::SetRxBufSize( int bufSiz )

@@ -11,7 +11,7 @@
 *     10 DEC 2018 jcs  Build 41: Sleep()
 *      7 MAR 2022 jcs  Build 51: doxygen 
 *     30 MAR 2022 jcs  Build 52: ioctl_unpacked 
-*     26 APR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon()
+*      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -115,6 +115,10 @@ public enum class rtFldType
 	rtFld_bytestream = ::rtFld_bytestream
 };
 
+//////////////////////
+// Forwards
+//////////////////////
+ref class rtEdgeChanStats;
 
 ////////////////////////////////////////////////
 //
@@ -361,6 +365,13 @@ public:
 	void Ioctl( rtEdgeIoctl cmd, IntPtr val );
 
 	/**
+	 * \brief Retrieve channel run-time stats
+	 *
+	 * \return Channel run-time stats
+	 */
+	rtEdgeChanStats ^GetStats();
+
+	/**
 	 * \brief Set SO_RCVBUF for this rtEdgeCache3 channel
 	 *
 	 * \param bufSiz - SO_RCVBUF size
@@ -456,5 +467,158 @@ public:
 	                     String ^buildName );
 
 };  // class Channel
+
+
+////////////////////////////////////////////////
+//
+//   c l a s s   r t E d g e C h a n S t a t s
+//
+////////////////////////////////////////////////
+/**
+ * \struct rtEdgeChanStats
+ * \brief Run-time channel statistics returned from rtEdge_GetStats().
+ *
+ * May be used for either subscription or publication channels
+ */
+public ref class rtEdgeChanStats
+{
+private:
+	::rtEdgeChanStats *_stC;
+	long               _NANO;
+
+	/////////////////////////////////
+	// Constructor
+	/////////////////////////////////
+public:
+	/** 
+	 * \brief Constructor for native rtEdgeChanStats container
+	 *
+	 * \param stC : Pointer to native C/C++ rtEdgeChanStats
+	 */
+	rtEdgeChanStats( ::rtEdgeChanStats *stC ) :
+	   _stC( stC ),
+	   _NANO( 1000000000 )
+	{ ; }
+
+	/////////////////////////////////
+	// Properties
+	/////////////////////////////////
+public:
+	/** \brief Num msgs read (SUBSCRIBE) or written (PUBLISH) */
+	property long long _nMsg
+	{
+	   long long get() { return _stC->_nMsg; }
+	}
+
+	/** \brief Num bytes read (SUBSCRIBE) or written (PUBLISH) */
+	property long long _nByte
+	{
+	   long long get() { return _stC->_nByte; }
+	}
+
+	/** \brief Unix time of last msg read (SUBSCRIBE) or written (PUBLISH) */
+	property DateTime ^_lastMsg
+	{
+	   DateTime ^get() {
+	      long tTickNs;
+
+	      tTickNs  = _stC->_lastMsg; // seconds
+	      tTickNs *= _NANO;          // Nanos
+	      tTickNs += ( _stC->_lastMsgUs * 1000 );
+	      return gcnew DateTime( tTickNs );
+	   }
+	}
+
+	/** \brief Total Num of subscription streams opened since startup  */
+	property int    _nOpen
+	{
+	   int get() { return _stC->_nOpen; }
+	}
+
+	/** \brief Total Num of subscription streams closed since startup  */
+	property int    _nClose
+	{
+	   int get() { return _stC->_nClose; }
+	}
+
+	/** \brief Total Num of Images consumed (SUBSRIBE) or published (PUBLISH) */
+	property int    _nImg
+	{
+	   int get() { return _stC->_nImg; }
+	}
+
+	/** \brief Total Num of Updates consumed (SUBSRIBE) or published (PUBLISH) */
+	property int    _nUpd
+	{
+	   int get() { return _stC->_nUpd; }
+	}
+
+	/** \brief Total Num of DEAD streams */
+	property int    _nDead
+	{
+	   int get() { return _stC->_nDead; }
+	}
+
+	/** \brief Current outbound queue size */
+	property int    _qSiz
+	{
+	   int get() { return _stC->_qSiz; }
+	}
+
+	/** \brief Max outbound queue size */
+	property int    _qSizMax
+	{
+	   int get() { return _stC->_qSizMax; }
+	}
+
+	/** \brief DateTime of last connection */
+	property DateTime ^_lastConn
+	{
+	   DateTime ^get() {
+	      long tTickNs;
+
+	      tTickNs  = _stC->_lastConn; // seconds
+	      tTickNs *= _NANO;  
+	      return gcnew DateTime( tTickNs );
+	   }
+	}
+
+	/** \brief DateTime of last disconnect */
+	property DateTime ^_lastDisco
+	{
+	   DateTime ^get() {
+	      long tTickNs;
+
+	      tTickNs  = _stC->_lastDisco; // seconds
+	      tTickNs *= _NANO;  
+	      return gcnew DateTime( tTickNs );
+	   }
+	}
+
+	/** \brief Total number of connections since startup */
+	property int    _nConn
+	{
+	   int get() { return _stC->_nConn; }
+	}
+
+	/** \brief Channel name - SUBSCRIBE or PUBLISH */
+	property String ^_chanName
+	{
+	   String ^get() { return gcnew String( _stC->_chanName ); }
+	}
+
+	/** \brief Destination connection as \<host\>:\<port\> */
+	property String   ^_dstConn
+	{
+	   String ^get() { return gcnew String( _stC->_dstConn ); }
+	}
+
+	/** \brief 1 if channel is connected; 0 if not */
+	property bool   _bUp
+	{
+	   bool get() { return _stC->_bUp ? true : false; }
+	}
+
+};  // rtEdgeChanStats
 
 } // namespace librtEdge
