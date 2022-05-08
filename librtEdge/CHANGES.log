@@ -39,6 +39,7 @@ Build 53 22-05-07
 
 7) CLI : Channel.GetStats()
 
+8) EdgChannel constructor : Handle empty username
 
 
 Build 52 22-03-30

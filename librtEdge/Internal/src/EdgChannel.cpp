@@ -22,6 +22,7 @@
 *     22 OCT 2020 jcs  Build 46: PumpTape() / StopPumpTape()
 *      3 DEC 2020 jcs  Build 47: StreamDone : both ways
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
+*      7 MAY 2022 jcs  Build 53: Handle empty username
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -70,7 +71,7 @@ EdgChannel::EdgChannel( rtEdgeAttr     attr,
    ps   = (char *)s.data();
    pu   = ::strtok_r( ps, "|", &rp );
    pp   = ::strtok_r( NULL, "|", &rp );
-   _usr = pu;
+   _usr = pu ? pu : "";
    _pwd = pp ? pp : "";
 
    // username|password
