@@ -16,6 +16,7 @@
 *     30 SEP 2020 jcs  Build 45: _rawView / _rawLen
 *      3 DEC 2020 jcs  Build 47: _TapePos
 *      7 MAR 2022 jcs  Build 51: doxygen
+*     17 MAY 2022 jcs  Build 54: LVCData._bActive
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -485,6 +486,12 @@ public:
 	property rtEdgeType _ty
 	{
 	   rtEdgeType get() { return (rtEdgeType)_data->_ty; }
+	}
+
+	/** \brief Returns true if active data stream; false if dead */
+	property bool _bActive
+	{
+	   bool get() { return _data->_bActive ? true : false; }
 	}
 
 	/** \brief Returns create time in LVC (Unix time) */

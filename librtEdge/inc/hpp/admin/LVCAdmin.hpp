@@ -9,7 +9,8 @@
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC
 *     17 MAR 2022 jcs  Build 51: AddTickers()
-*     26 APR 2022 jcs  Build 54: _dtdBDS
+*     26 APR 2022 jcs  Build 53: _dtdBDS
+*     17 MAY 2022 jcs  Build 54: _dtdREFR
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -28,6 +29,7 @@ typedef enum {
 
 static const char *_dtdADD  = "ADD";
 static const char *_dtdBDS  = "BDS";
+static const char *_dtdREFR = "REFRESH";
 static const char *_dtdDEL  = "DEL";
 static const char *_dtdACK  = "ACK";
 static const char *_dtdNAK  = "NAK";
@@ -284,27 +286,7 @@ public:
 	void AddTickers( const char  *svc, 
 	                 const char **tkrs )
 	{
-	   std::string s;
-	   char        buf[K], *cp;
-	   int         i;
-
-	   // Pre-condition(s)
-
-	   if ( !svc || !strlen( svc ) )
-	      return;
-
-	   for ( i=0; tkrs[i]; i++ ) {
-	      if ( !strlen( tkrs[i] ) )
-	         continue; // for-i
-	      cp  = buf;
-	      cp += sprintf( cp, "<%s ", _dtdADD );
-	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
-	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkrs[i] );
-	      cp += sprintf( cp, "/>\n" );
-	      s  += buf;
-	   }
-	   Cockpit::Start( pAdmin() );  // TODO : LVC
-	   ::Cockpit_Send( cxt(), s.data() );
+	   _DoTickers( _dtdADD, svc, tkrs );
 	}
 
 	/**
@@ -328,6 +310,54 @@ public:
 	   Cockpit::Start( pAdmin() );  // TODO : LVC
 	   ::Cockpit_Send( cxt(), buf );
 	}
+
+	/**
+	 * \brief Refresh list of ( Service, Ticker ) to LVC
+	 *
+	 * This method automatically calls Start() to connect
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - NULL-terminated list of tickers
+	 */
+	void RefreshTickers( const char  *svc, 
+	                     const char **tkrs )
+	{
+	   _DoTickers( _dtdREFR, svc, tkrs );
+	}
+
+
+	////////////////////////
+	// Private Helpers
+	////////////////////////
+private:
+#ifndef DOXYGEN_OMIT
+	void _DoTickers( const char  *cmd,
+	                 const char  *svc,
+	                 const char **tkrs )
+	{
+	   std::string s;
+	   char        buf[K], *cp;
+	   int         i;
+
+	   // Pre-condition(s)
+
+	   if ( !svc || !strlen( svc ) )
+	      return;
+
+	   for ( i=0; tkrs[i]; i++ ) {
+	      if ( !strlen( tkrs[i] ) )
+	         continue; // for-i
+	      cp  = buf;
+	      cp += sprintf( cp, "<%s ", cmd );
+	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
+	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkrs[i] );
+	      cp += sprintf( cp, "/>\n" );
+	      s  += buf;
+	   }
+	   Cockpit::Start( pAdmin() );  // TODO : LVC
+	   ::Cockpit_Send( cxt(), s.data() );
+	}
+#endif // DOXYGEN_OMIT
 
 
 	////////////////////////////////////

@@ -8,6 +8,7 @@
 *     11 JAN 2018 jcs  Build 39: Leak : FreeAll() in Destroy() 
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
+*     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -281,6 +282,32 @@ void LVCAdmin::DelTicker( String ^svc, String ^tkr )
    pTkr = (const char *)_pStr( tkr );
    _lvc->DelTicker( pSvc, pTkr );
 }
+
+void LVCAdmin::RefreshTickers( String ^svc, array<String ^> ^tkrs )
+{
+   const char  *pSvc;
+   const char **pTkrs;
+   char        *bp;
+   size_t       sz;
+   int          i, nl;
+
+   // Pre-condition
+
+   if ( !(nl=tkrs->Length) )
+      return;
+
+   // Safe to continue
+
+   pSvc  = (const char *)_pStr( svc );
+   sz    = ( nl+4 ) * sizeof( const char * );
+   bp    = new char[sz];
+   pTkrs = (const char **)bp;
+   for ( i=0; i<nl; pTkrs[i] = (const char *)_pStr( tkrs[i] ), i++ );
+   pTkrs[i] = (const char *)0; 
+   _lvc->RefreshTickers( pSvc, pTkrs );
+   delete[] bp;
+}
+
 
 
 

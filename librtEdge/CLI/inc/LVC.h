@@ -9,6 +9,7 @@
 *     14 JAN 2018 jcs  Build 39: LVCSnap._nullFld
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
+*     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -304,6 +305,14 @@ public:
 	 * \param tkr - Ticker name; Comma-separated for multiple tickers
 	 */
 	void DelTicker( String ^svc, String ^tkr );
+
+	/**
+	 * \brief Refresh list of ( Service, Ticker ) to LVC
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 */
+	void RefreshTickers( String ^svc, array<String ^> ^tkrs );
 
 
 	/////////////////////////////////

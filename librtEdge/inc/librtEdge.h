@@ -27,6 +27,7 @@
 *      7 MAR 2022 jcs  Build 51: doxygen
 *     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
 *      3 MAY 2022 jcs  Build 53: DataDog.hpp
+*     17 MAY 2022 jcs  Build 54: LVCData._bActive
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -776,8 +777,10 @@ typedef struct {
    const char *_pTkr;
    /** \brief Error message */
    const char *_pErr;
-   /** \brief State of DB record - edg_image, edg_stale or edg_dead */
+   /** \brief Last of DB record msg type */
    rtEdgeType  _ty;
+   /** \brief State of DB record - 1 = active; 0 = dead */
+   char        _bActive;
    /** \brief Unix time when DB record was created */
    int         _tCreate;
    /** \brief Unix time of last update */

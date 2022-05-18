@@ -1,4 +1,4 @@
-/******************************************************************************
+/***************************************************************************** 
 *
 *  EDG_GLlvcDb.cpp
 *     LVC shared memory (file) layout and reader
@@ -17,8 +17,9 @@
 *      6 FEB 2016 jcs  Build 32: Linux compatibility in libmddWire; _bBinary
 *     12 SEP 2017 jcs  Build 35: hash_map; No mo XxxTicker()
 *     20 JAN 2018 jcs  Build 39: mtx()
+*     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -229,9 +230,9 @@ LVCData GLlvcDb::GetItem( const char *pSvc,
       d._copy = new char[rec->_siz];
       ::memcpy( d._copy, rp, rec->_siz );
    }
-   d._pTkr    = pTkr;
    d._pSvc    = rec->_svc;
    d._pTkr    = rec->_tkr;
+   d._bActive = rec->_bActive;
    d._tCreate = rec->_tCreate;
    d._tUpd    = rec->_tUpd;
    d._tUpdUs  = rec->_tUpdUs;

@@ -18,8 +18,9 @@
 *      6 FEB 2016 jcs  Build 32: EDG_Internal.h; Binary; GLlvcFldHdr
 *     12 SEP 2017 jcs  Build 35: hash_map; No mo XxxTicker()
 *     20 JAN 2018 jcs  Build 39: mtx()
+*     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_LVC_DB_H
 #define __EDGLIB_LVC_DB_H
@@ -106,7 +107,8 @@ class GLlvcDbItem
 {
 public:
    char    _svc[LVC_SVCLEN];
-   char    _tkr[LVC_ITEMLEN];
+   char    _tkr[LVC_ITEMLEN-1];
+   char    _bActive;
    LVCint  _siz;         // Total size = GLlvcDbItem + _flds + _data
    LVCint  _tCreate;     // Time Created
    LVCint  _tUpd;        // Time Updated
