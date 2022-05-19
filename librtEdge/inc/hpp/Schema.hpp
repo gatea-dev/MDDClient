@@ -9,8 +9,9 @@
 *      8 FEB 2016 jcs  Build 33: mddFieldList *Get()
 *     15 JAN 2018 jcs  Build 39: Leak - 
 *     29 SEP 2018 jcs  Build 41: public field()
+*     19 MAY 2022 jcs  Build 54: rtVALUE._i32 is _maxLen
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Schema_H
 #define __RTEDGE_Schema_H
@@ -66,10 +67,13 @@ protected:
 	   _schema( schema ),
 	   _name( f._name )
 	{
+#ifdef OBSOLETE
 	   rtBUF &b = _mdd._val._buf;
 
 	   _mdd    = f;
 	   b._data = (char *)_name.c_str();
+#endif // OBSOLETE
+	   _mdd    = f;
 	}
 
 	~FieldDef() { ; }
@@ -96,9 +100,12 @@ public:
 	 */
 	const char *pName()
 	{
+#ifdef OBSOLETE
 	   rtBUF &b = _mdd._val._buf;
 
 	   return b._data;
+#endif // OBSOLETE
+	   return _name.data();
 	}
 
 	/**

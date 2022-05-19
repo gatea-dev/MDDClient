@@ -23,6 +23,7 @@
 *      3 DEC 2020 jcs  Build 47: StreamDone : both ways
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
 *      7 MAY 2022 jcs  Build 53: Handle empty username
+*     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -197,7 +198,6 @@ rtEdgeData EdgChannel::GetSchema()
    mddFieldList fl;
    mddField    *mdb, m;
    rtFIELD     *fdb, f;
-   rtBUF       &b = f._val._buf;
    int          i, nf;
 
    // Once
@@ -217,8 +217,7 @@ rtEdgeData EdgChannel::GetSchema()
       m       = mdb[i];
       m._name = m._name ? m._name : _undef;
       f._fid  = m._fid;
-      b._data = (char  *)m._name;
-      b._dLen = strlen( b._data );
+      f._val  = m._val;
       f._name = m._name;
       f._type = (rtFldType)m._type;
       fdb[i]  = f;

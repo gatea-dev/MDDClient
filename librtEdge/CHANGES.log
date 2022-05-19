@@ -23,6 +23,9 @@ Build 54 22-05-xx
 
 2) LVCData._bActive
 
+3) EdgChannel.GetSchema() : 
+   - Do not copy name into rtVALUE, since mddWire puts maxLen there 
+
 
 Build 53 22-05-07
 -----------------
