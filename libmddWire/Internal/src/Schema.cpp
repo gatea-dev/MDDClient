@@ -9,6 +9,7 @@
 *     12 NOV 2014 jcs  Build  8: -Wall
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
+*     19 MAY 2022 jcs  Build 14: mddFldDef._i32 = _maxLen
 *
 *  (c) 1994-2015 Gatea Ltd.
 ******************************************************************************/
@@ -220,9 +221,12 @@ mddFldDef::mddFldDef( const char *pDef ) :
 
    // mddField
 
+   mddValue &v = _mdd._val;
+
    _mdd._fid  = _fid;
    _mdd._name = pName();
    _mdd._type = fType();
+   v._i32     = _maxLen;
 }
 
 mddFldDef::~mddFldDef()

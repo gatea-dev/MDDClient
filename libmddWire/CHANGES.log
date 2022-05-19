@@ -7,9 +7,19 @@ Known Bugs
 
 Features To Add
 ---------------
+1) mddReal into production:
+   - 64-bit mddReal.value
+   - mddWire_realToDouble() / mddWire_double2Real()
+   - ::int64_t mddValue._i64 / u_int64_t mddValue._u64
 
 
-Build 13 22-03-xx
+Build 14 22-05-xx
+-----------------
+1) Schema : mddValue._i32 = _maxLen
+
+
+
+Build 13 22-03-29
 -----------------
 1) Unpacked:
    - Replace mddIoctl_parse w/ mddIoctl_unpacked
