@@ -27,7 +27,7 @@
 *      7 MAR 2022 jcs  Build 51: doxygen
 *     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
 *      3 MAY 2022 jcs  Build 53: DataDog.hpp
-*     17 MAY 2022 jcs  Build 54: LVCData._bActive
+*     17 MAY 2022 jcs  Build 54: LVCData._bActive; rtFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -488,7 +488,9 @@ typedef enum {
    /** \brief Real field; Value in rtVALUE::_real */
    rtFld_real       = mddFld_real,
    /** \brief Bytestream field; Value in rtVALUE::_buf */
-   rtFld_bytestream = mddFld_bytestream
+   rtFld_bytestream = mddFld_bytestream,
+   /** \brief Nanos since Epoch; Value in rtVALUE::_i64 */
+   rtFld_unixTime   = mddFld_unixTime
 } rtFldType;
 
 /**

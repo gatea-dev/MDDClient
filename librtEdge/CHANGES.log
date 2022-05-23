@@ -30,6 +30,9 @@ Build 54 22-05-xx
 
 5) CLI : get/set rtEdgeChanStats._iVal / _dVal
 
+6) mddFld_unixTime
+   - Update.AddFieldAsUnixTime()
+
 
 Build 53 22-05-07
 -----------------

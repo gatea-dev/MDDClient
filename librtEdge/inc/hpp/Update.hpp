@@ -14,6 +14,7 @@
 *      6 MAR 2018 jcs  Build 40: Reset()
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *     29 MAR 2022 jcs  Build 52: pub.IsUnPacked()
+*     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -448,6 +449,55 @@ public:
 	   v._r64 *= _MIL;
 	   v._r64 += hms;
 	   v._r64 += ( 0.000001 * tm._micros );;
+	   _Add( f );
+	}
+
+	/**
+	 * \brief Add rtDateTime field to update as UnixTime
+	 * 
+	 * \param fid - Field ID
+	 * \param dtTm - Field value as rtDateTime
+	 */
+	void AddFieldAsUnixTime( int fid, rtDateTime dtTm )
+	{
+	   rtFIELD   f;
+	   rtVALUE  &v  = f._val;
+	   rtDate   &dt = dtTm._date;
+	   rtTime   &tm = dtTm._time;
+	   struct tm lt;
+	   bool      bDt, bTm;
+
+	   // Support for rtDate-only or rtTime-only
+
+	   bDt = dt._year || dt._month || dt._mday;
+	   bDt = dt._year || dt._month || dt._mday;
+	   bTm = tm._hour || tm._minute || tm._second;
+	   if ( bDt && !bTm ) {
+	      AddField( fid, dt );
+	      return;
+	   }
+	   else if ( !bDt && bTm ) {
+	      AddField( fid, tm );
+	      return;
+	   }
+	   else if ( !bDt && !bTm )
+	      return;
+
+	   // OK - It's a true date / time
+
+	   ::memset( &lt, 0, sizeof( lt ) );
+	   f._type = rtFld_unixTime;
+	   f._fid  = fid;
+	   lt.tm_year = dt._year - 1900;
+	   lt.tm_mon  = dt._month;
+	   lt.tm_mday = dt._mday;
+	   lt.tm_hour = tm._hour;
+	   lt.tm_min  = tm._minute;
+	   lt.tm_sec  = tm._second;
+	   v._i64     = ::mktime( &lt );
+	   v._i64    *= _MIL;
+	   v._i64    += tm._micros;
+	   v._i64    *= 1000; // Nanos since epoch
 	   _Add( f );
 	}
 

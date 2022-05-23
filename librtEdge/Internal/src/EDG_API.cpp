@@ -22,6 +22,7 @@
 *      3 DEC 2020 jcs  Build 47: rtEdge_PumpFullTape() - Offset only
 *     23 JUL 2021 jcs  Build 49: No mo _MAX_ENG; XxxMap
 *      5 MAY 2022 jcs  Build 53: StatMap; SetMDDirectMon() bug fix
+*     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1493,6 +1494,7 @@ double rtEdge_atof( rtFIELD f )
          return v._r32;
       case rtFld_int16:
          return v._i16;
+      case rtFld_unixTime:
       case rtFld_int64:
          return v._i64;
       case rtFld_undef:

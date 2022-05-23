@@ -8,8 +8,9 @@
 *      7 JAN 2015 jcs  Build 29: ByteStream.hpp
 *      5 MAR 2016 jcs  Build 32: edg_permQuery
 *     28 JUL 2020 jcs  Build 44: edg_streamDone
+*     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_ByteStream_H
 #define __RTEDGE_ByteStream_H
@@ -416,6 +417,7 @@ private:
 	         case rtFld_int16:
 	         case rtFld_int64:
 	         case rtFld_real:
+	         case rtFld_unixTime:
 	            break;
 	         case rtFld_bytestream:
 	            fid = fld->Fid();

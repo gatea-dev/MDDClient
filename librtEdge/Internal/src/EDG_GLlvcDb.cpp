@@ -17,7 +17,7 @@
 *      6 FEB 2016 jcs  Build 32: Linux compatibility in libmddWire; _bBinary
 *     12 SEP 2017 jcs  Build 35: hash_map; No mo XxxTicker()
 *     20 JAN 2018 jcs  Build 39: mtx()
-*     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
+*     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive; rtFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -415,6 +415,7 @@ rtFIELD GLlvcDb::GetField( GLlvcFldHdr &h,
             ::memcpy( &v._i16, fp, sizeof( v._i16 ) );
             break;
          case mddFld_int64:
+         case mddFld_unixTime:
             ::memcpy( &v._i64, fp, sizeof( v._i64 ) );
             break;
       }

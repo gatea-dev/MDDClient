@@ -16,6 +16,7 @@
 *     12 AUG 2020 jcs  Build 44: Date/Time : _r64, not GetAsDouble()
 *     27 NOV 2020 jcs  Build 47: GetAsString() : Deep copy string to _s
 *     30 MAR 2022 jcs  Build 52: GetAsDateTime()
+*     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -366,6 +367,7 @@ public:
 	      case rtFld_int64:
 	      case rtFld_real:
 	      case rtFld_bytestream:
+	      case rtFld_unixTime:
 	         break;
 	   }
 	   return rtn;
@@ -412,6 +414,7 @@ public:
 	      case rtFld_int8:   i8 = v._i8;          break; 
 	      case rtFld_int16:  i8 = v._i16;         break; 
 	      case rtFld_int:    i8 = (u_char)v._i32; break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  i8 = (u_char)v._i64; break; 
 	      case rtFld_double: i8 = (u_char)v._r64; break; 
 	      case rtFld_float:  i8 = (u_char)v._r32; break; 
@@ -446,6 +449,7 @@ public:
 	      case rtFld_int8:   i16 = v._i8;           break; 
 	      case rtFld_int16:  i16 = v._i16;          break; 
 	      case rtFld_int:    i16 = (u_short)v._i32; break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  i16 = (u_short)v._i64; break; 
 	      case rtFld_double: i16 = (u_short)v._r64; break; 
 	      case rtFld_float:  i16 = (u_short)v._r32; break; 
@@ -480,6 +484,7 @@ public:
 	      case rtFld_int8:   i32 = v._i8;       break; 
 	      case rtFld_int16:  i32 = v._i16;      break; 
 	      case rtFld_int:    i32 = v._i32;      break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  i32 = (int)v._i64; break; 
 	      case rtFld_double: i32 = (int)v._r64; break; 
 	      case rtFld_float:  i32 = (int)v._r32; break; 
@@ -514,6 +519,7 @@ public:
 	      case rtFld_int8:   i64 = v._i8;             break; 
 	      case rtFld_int16:  i64 = v._i16;            break; 
 	      case rtFld_int:    i64 = v._i32;            break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  i64 = v._i64;            break; 
 	      case rtFld_double: i64 = (u_int64_t)v._r64; break; 
 	      case rtFld_float:  i64 = (u_int64_t)v._r32; break; 
@@ -548,6 +554,7 @@ public:
 	      case rtFld_int8:   r32 = v._i8;         break; 
 	      case rtFld_int16:  r32 = v._i16;        break; 
 	      case rtFld_int:    r32 = v._i32;        break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  r32 = (float)v._i64; break; 
 	      case rtFld_double: r32 = v._r64;        break; 
 	      case rtFld_float:  r32 = v._r32;        break; 
@@ -582,6 +589,7 @@ public:
 	      case rtFld_int8:   r64 = v._i8;          break; 
 	      case rtFld_int16:  r64 = v._i16;         break; 
 	      case rtFld_int:    r64 = v._i32;         break; 
+	      case rtFld_unixTime:
 	      case rtFld_int64:  r64 = (double)v._i64; break; 
 	      case rtFld_double: r64 = v._r64;         break; 
 	      case rtFld_float:  r64 = v._r32;         break; 
@@ -606,6 +614,7 @@ public:
 	 */
 	rtDateTime GetAsDateTime()
 	{
+// TODO : rtFld_unixTime
 	   rtDateTime dtTm;
 	   rtDate    &dt = dtTm._date;
 	   rtTime    &tm = dtTm._time;
@@ -717,6 +726,7 @@ public:
 	      case rtFld_int16:
 	      case rtFld_int64:
 	      case rtFld_real:
+	      case rtFld_unixTime:
 	         ::memcpy( &f, &_fld, sizeof( _fld ) );
 	         mddWire_dumpField( f, buf );
 	         _s  = _StripTrailing0( buf );
@@ -755,6 +765,7 @@ public:
 	      case rtFld_int16:
 	      case rtFld_int64:
 	      case rtFld_real:
+	      case rtFld_unixTime:
 	         break;
 	   }
 	   return _bStr;
@@ -774,7 +785,6 @@ public:
 	   _dump = buf;
 	   return _dump.data();
 	}
-
 
 	/**
 	 * \brief Returns true if field available in this Message

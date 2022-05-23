@@ -113,7 +113,8 @@ public enum class rtFldType
 	rtFld_int16      = ::rtFld_int16,
 	rtFld_int64      = ::rtFld_int64,
 	rtFld_real       = ::rtFld_real,
-	rtFld_bytestream = ::rtFld_bytestream
+	rtFld_bytestream = ::rtFld_bytestream,
+	rtFld_unixTime   = ::rtFld_unixTime
 };
 
 //////////////////////

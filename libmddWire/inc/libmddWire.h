@@ -56,6 +56,8 @@ typedef __int64        u_int64_t;
 #define PACKED_BINARY        0x80
 /** \brief Bitmask for unpacked binary field (Used internally) */
 #define UNPACKED_BINFLD      0x40
+/** \brief Nanosecond */
+#define _NANO                1000000000
 
 /* Data Structures */
 
@@ -974,10 +976,13 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
  */
 #define mddWire_dumpField( f, buf )                                 \
    do {                                                             \
-      mddValue v = f._val;                                          \
-      mddBuf   b = v._buf;                                          \
-      double   r64;                                                 \
-      int      fSz, ymd, hms;                                       \
+      mddValue   v = f._val;                                        \
+      mddBuf     b = v._buf;                                        \
+      double     r64;                                               \
+      int        fSz, ymd, hms;                                     \
+      time_t     tUnx;                                              \
+      u_int64_t  tNano;                                             \
+      struct tm *tm, lt;                                            \
                                                                     \
       switch( f._type ) {                                           \
          case mddFld_undef:                                         \
@@ -1036,7 +1041,17 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
             strcpy( buf, "TBD" );                                   \
             break;                                                  \
          case mddFld_unixTime:                                      \
-            strcpy( buf, "TODO : UnixTime" );                       \
+            tUnx  = v._i64 / _NANO;                                 \
+            tNano = v._i64 % _NANO;                                 \
+            tm    = ::localtime_r( &tUnx, &lt );                    \
+            sprintf( buf, "%04d-%02d-%02d %02d:%02d:%02d.%09d",     \
+                  lt.tm_year + 1900,                                \
+                  lt.tm_mon + 1,                                    \
+                  lt.tm_mday,                                       \
+                  lt.tm_hour,                                       \
+                  lt.tm_min,                                        \
+                  lt.tm_sec,                                        \
+                  (int)tNano );                                     \
             break;                                                  \
       }                                                             \
    } while( 0 )

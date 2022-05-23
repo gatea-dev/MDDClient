@@ -8,6 +8,7 @@
 *      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
 *     29 APR 2020 jcs  Build 43: Moved IrtEdgePubUpdate in here
 *     30 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
+*     23 MAY 2022 jcs  Build 54: AddFieldAsUnixTime()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -60,6 +61,7 @@ public:
 	virtual void AddFieldAsDouble( String ^, double ) abstract;
 	virtual void AddFieldAsByteStream( String ^, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( String ^, DateTime ^ ) abstract;
+	virtual void AddFieldAsUnixTime( String ^, DateTime ^ ) abstract;
 	virtual void AddFieldAsDate( String ^, DateTime ^ ) abstract;
 	virtual void AddFieldAsTime( String ^, DateTime ^ ) abstract;
 
@@ -420,6 +422,14 @@ public:
 	 * \param dt - Field value as DateTime
 	 */
 	virtual void AddFieldAsDateTime( String ^pFld, DateTime ^dt );
+
+	/**
+	 * \brief Add date-time field to update as Unix Time on the wire
+	 *
+	 * \param pFld - Field Name
+	 * \param dt - Field value as DateTim
+	 */
+	virtual void AddFieldAsUnixTime( String ^pFld, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as MDD Date

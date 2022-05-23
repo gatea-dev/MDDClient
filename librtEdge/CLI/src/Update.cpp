@@ -7,6 +7,7 @@
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink()
 *      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
 *     28 MAR 2022 jcs  Build 52: AddFieldAsDateTime() filled in
+*     23 MAY 2022 jcs  Build 55: AddFieldAsUnixTime()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -169,6 +170,9 @@ void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
       case rtFldType::rtFld_bytestream:
          AddFieldAsByteStream( fld->Fid(), fld->GetAsByteStream() );
          break;
+      case rtFldType::rtFld_unixTime:
+         AddFieldAsUnixTime( fld->Fid(), fld->GetAsDateTime() );
+         break;
    }
 }
 
@@ -218,6 +222,11 @@ void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
 void rtEdgePubUpdate::AddFieldAsDateTime( int fid, DateTime ^dt )
 {
    _upd.AddField( fid, _ConvertDateTime( dt ) );
+}
+
+void rtEdgePubUpdate::AddFieldAsUnixTime( int fid, DateTime ^dt )
+{
+   _upd.AddFieldAsUnixTime( fid, _ConvertDateTime( dt ) );
 }
 
 void rtEdgePubUpdate::AddFieldAsDate( int fid, DateTime ^dt )

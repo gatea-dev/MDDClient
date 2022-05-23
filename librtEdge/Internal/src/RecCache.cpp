@@ -9,8 +9,9 @@
 *      6 MAY 2013 jcs  Build 25: rtBUF
 *     12 NOV 2014 jcs  Build 28: Record._fl
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
+*     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -116,6 +117,7 @@ void Field::Cache( rtFIELD f )
       case rtFld_int16:
       case rtFld_int64:
       case rtFld_real:
+      case rtFld_unixTime:
          break;
    }
    _tUpd = &_rec ? _rec._tUpd : 0;
