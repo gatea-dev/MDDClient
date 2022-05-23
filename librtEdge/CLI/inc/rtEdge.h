@@ -624,14 +624,14 @@ public:
 	property int _iVal[int]
 	{
 	   int  get( int idx ) { return _stC->_iVal[idx]; }
-	   void set( int idx, int val ) { _stC->_iVal[idx] = val }
+	   void set( int idx, int val ) { _stC->_iVal[idx] = val; }
 	}
 
 	/** \brief User-defined array of double statistics */
 	property double _dVal[int]
 	{
 	   double get( int idx ) { return _stC->_dVal[idx]; }
-	   void   set( int idx, double val ) { _stC->_dVal[idx] = val }
+	   void   set( int idx, double val ) { _stC->_dVal[idx] = val; }
 	}
 
 
