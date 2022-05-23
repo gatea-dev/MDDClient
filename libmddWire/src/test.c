@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *     18 SEP 2013 jcs  Created (from librtEdge).
 *     12 NOV 2014 jcs  Build  8: -Wall
+*     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *
-*  (c) 1994-2014 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <libmddWire.h>
 #include <string.h>
@@ -92,6 +93,7 @@ void ShowFieldList( mddFieldList d )
          case mddFld_int64:
          case mddFld_real:
          case mddFld_bytestream:
+         case mddFld_unixTime:
             break;
       }
       fprintf( stdout, "\n" );

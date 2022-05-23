@@ -12,6 +12,7 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
+*     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -167,6 +168,7 @@ int Subscribe::_MF_Parse( mddMsgBuf b, mddWireMsg &r )
             case mddFld_int64:
             case mddFld_real:
             case mddFld_bytestream:
+            case mddFld_unixTime:
                break;
          }
       }

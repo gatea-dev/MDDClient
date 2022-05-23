@@ -14,6 +14,7 @@
 *     12 OCT 2015 jcs  Build 10a:_pUser -> _mdd_pUser; mddWire_dumpField
 *     16 APR 2016 jcs  Build 11: _mdd_pAuth, etc.
 *     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
+*     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -144,7 +145,9 @@ typedef enum {
    /** \brief Real field; Value in mddValue::_real */
    mddFld_real,
    /** \brief Bytestream field; Value in mddValue::_buf */
-   mddFld_bytestream
+   mddFld_bytestream,
+   /** \brief Nanos since epoch; Value in mddValue::_i64 */
+   mddFld_unixTime
 } mddFldType;
 
 /**
@@ -1031,6 +1034,9 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
          case mddFld_real:                                          \
          case mddFld_bytestream:                                    \
             strcpy( buf, "TBD" );                                   \
+            break;                                                  \
+         case mddFld_unixTime:                                      \
+            strcpy( buf, "TODO : UnixTime" );                       \
             break;                                                  \
       }                                                             \
    } while( 0 )

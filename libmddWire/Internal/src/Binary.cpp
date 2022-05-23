@@ -15,6 +15,7 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_dNow(); MDW_Internal.h
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
+*     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -253,6 +254,9 @@ int Binary::Get( u_char *bp, mddField &f )
       case mddFld_bytestream:
          cp += Get( cp, v._buf );
          break;
+      case mddFld_unixTime:
+         cp += Get( cp, v._i64, bUnpack );
+         break;
    }
    return( cp-bp );
 }
@@ -470,6 +474,9 @@ int Binary::Set( u_char *bp, mddField f )
       case mddFld_bytestream:
          cp += Set( cp, v._buf );
          break;
+      case mddFld_unixTime:
+         cp  += _u_pack( cp, v._i64, bPack );
+         break;
    }
    return( cp-bp );
 }
@@ -637,6 +644,9 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
       case mddFld_bytestream:
          cp += Get( cp, v._buf );
          break;
+      case mddFld_unixTime:
+         _COPY_GET( v._i64, cp );
+         break;
    }
    return( cp-bp );
 }
@@ -709,6 +719,9 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( r.value, cp );
          *cp++ = r.hint;
          *cp++ = r.isBlank;
+         break;
+      case mddFld_unixTime:
+         _COPY_SET( v._i64, cp );
          break;
    }
    *bp |= bNeg ? _NEG8 : 0;
