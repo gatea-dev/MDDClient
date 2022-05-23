@@ -21,10 +21,14 @@ Build 54 22-05-xx
 -----------------
 1) LVCAdmin.RefreshTickers()
 
-2) LVCData._bActive
+2) LVCAdmin.RefreshAll()
 
-3) EdgChannel.GetSchema() : 
+3) LVCData._bActive
+
+4) EdgChannel.GetSchema() : 
    - Do not copy name into rtVALUE, since mddWire puts maxLen there 
+
+5) CLI : get/set rtEdgeChanStats._iVal / _dVal
 
 
 Build 53 22-05-07

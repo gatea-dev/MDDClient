@@ -10,7 +10,7 @@
 *     21 JAN 2018 jcs  Build 39: LVC
 *     17 MAR 2022 jcs  Build 51: AddTickers()
 *     26 APR 2022 jcs  Build 53: _dtdBDS
-*     17 MAY 2022 jcs  Build 54: _dtdREFR
+*     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -27,12 +27,13 @@ typedef enum {
 
 // DTD
 
-static const char *_dtdADD  = "ADD";
-static const char *_dtdBDS  = "BDS";
-static const char *_dtdREFR = "REFRESH";
-static const char *_dtdDEL  = "DEL";
-static const char *_dtdACK  = "ACK";
-static const char *_dtdNAK  = "NAK";
+static const char *_dtdADD     = "ADD";
+static const char *_dtdBDS     = "BDS";
+static const char *_dtdREFR    = "REFRESH";
+static const char *_dtdREFRALL = "REFRESH-ALL";
+static const char *_dtdDEL     = "DEL";
+static const char *_dtdACK     = "ACK";
+static const char *_dtdNAK     = "NAK";
 
 namespace RTEDGE
 {
@@ -323,6 +324,18 @@ public:
 	                     const char **tkrs )
 	{
 	   _DoTickers( _dtdREFR, svc, tkrs );
+	}
+
+	/**
+	 * \brief Refresh ALL dead tickers in LVC
+	 *
+	 * This method automatically calls Start() to connect
+	 */
+	void RefreshAll()
+	{
+	   const char *tkrs[] = { "*", NULL };
+
+	   _DoTickers( _dtdREFRALL, "*", tkrs );
 	}
 
 

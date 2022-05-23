@@ -12,6 +12,7 @@
 *      7 MAR 2022 jcs  Build 51: doxygen 
 *     30 MAR 2022 jcs  Build 52: ioctl_unpacked 
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
+*     23 MAY 2022 jcs  Build 54: _iVal / _dVal
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -618,6 +619,21 @@ public:
 	{
 	   bool get() { return _stC->_bUp ? true : false; }
 	}
+
+	/** \brief User-defined array of integer statistics */
+	property int _iVal[int]
+	{
+	   int  get( int idx ) { return _stC->_iVal[idx]; }
+	   void set( int idx, int val ) { _stC->_iVal[idx] = val }
+	}
+
+	/** \brief User-defined array of double statistics */
+	property double _dVal[int]
+	{
+	   double get( int idx ) { return _stC->_dVal[idx]; }
+	   void   set( int idx, double val ) { _stC->_dVal[idx] = val }
+	}
+
 
 };  // rtEdgeChanStats
 

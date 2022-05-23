@@ -314,6 +314,16 @@ public:
 	 */
 	void RefreshTickers( String ^svc, array<String ^> ^tkrs );
 
+	/**
+	 * \brief Refresh ALL dead tickers in LVC
+	 *
+	 * This method automatically calls Start() to connect
+	 */
+	void RefreshAll()
+	{
+	   _lvc->RefreshAll();
+	}
+
 
 	/////////////////////////////////
 	// ILVCAdmin interface
