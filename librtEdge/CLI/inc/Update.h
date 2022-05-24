@@ -283,10 +283,18 @@ public:
 	void AddFieldAsDateTime( int fid, DateTime ^dt );
 
 	/**
-	 * \brief Add date-time field to update as Unix Time on the wire
+	 * \brief Add rtDateTime field to update as UnixTime
+	 *
+	 * __Use of the UnixTime data type requires the PubChannel run in unpacked
+	 * mode.__  If running in packed (default), this method will not add the
+	 * field and post an error to PubChannel::OnError().
 	 *
 	 * \param fid - Field ID
-	 * \param dt - Field value as DateTim
+	 * \param dtTm - Field value as DateTime
+	 * 
+	 * \see PubChannel::IsUnPacked()
+	 * \see PubChannel::SetUnPacked()
+	 * \see PubChannel::OnError()
 	 */
 	void AddFieldAsUnixTime( int fid, DateTime ^dt );
 

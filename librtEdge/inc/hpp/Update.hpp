@@ -455,8 +455,16 @@ public:
 	/**
 	 * \brief Add rtDateTime field to update as UnixTime
 	 * 
+	 * __Use of the UnixTime data type requires the PubChannel run in unpacked
+	 * mode.__  If running in packed (default), this method will not add the
+	 * field and post an error to PubChannel::OnError().
+	 * 
 	 * \param fid - Field ID
 	 * \param dtTm - Field value as rtDateTime
+	 *
+	 * \see PubChannel::IsUnPacked()
+	 * \see PubChannel::SetUnPacked()
+	 * \see PubChannel::OnError()
 	 */
 	void AddFieldAsUnixTime( int fid, rtDateTime dtTm )
 	{
