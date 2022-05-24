@@ -12,6 +12,7 @@
 *     29 APR 2020 jcs  Build 43: BDS
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *     26 APR 2022 jcs  Build 53: SetBinary() bug fix; 1 constructor
+*     23 MAY 2022 jcs  Build 54: OnError()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -118,6 +119,12 @@ void PubChannel::OnIdle()
 {
    _cli->OnIdle();
 }
+
+void PubChannel::OnError( const char *err )
+{
+   _cli->OnError( gcnew String( err ) );
+}
+
 
 void PubChannel::OnSymListQuery( int nSym )
 {

@@ -12,6 +12,7 @@
 *     29 APR 2020 jcs  Build 43: BDS
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *     26 APR 2022 jcs  Build 53: 1 constructor
+*     23 MAY 2022 jcs  Build 54: OnError()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -55,6 +56,7 @@ public:
 	virtual void OnSchema( librtEdge::rtEdgeSchema ^ ) abstract;
 	virtual void OnOverflow() abstract;
 	virtual void OnIdle() abstract;
+	virtual void OnError( String ^ ) abstract;
 	virtual void OnSymListQuery( int ) abstract;
 	virtual void OnRefreshImage( String ^, IntPtr ) abstract;
 };
@@ -108,6 +110,7 @@ protected:
 	virtual void OnSchema( RTEDGE::Schema &sch );
 	virtual void OnOverflow();
 	virtual void OnIdle();
+	virtual void OnError( const char *err );
 	virtual void OnSymListQuery( int nSym );
 	virtual void OnRefreshImage( const char *tkr, void *StreamID );
 };
@@ -543,6 +546,14 @@ public:
 	 * in the subscription channel thread.
 	 */
 	virtual void OnIdle()
+	{ ; }
+
+	/**
+	 * \brief Called asynchronously - roughly once per second - when the
+	 *
+	 * \param err - Error Message
+	 */
+	virtual void OnError( String ^err )
 	{ ; }
 
 	/**

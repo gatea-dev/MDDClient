@@ -467,6 +467,13 @@ public:
 	   struct tm lt;
 	   bool      bDt, bTm;
 
+	   // Only in UnPacked Mode : TODO ERROR HANDLER
+
+	   if ( !_pub.IsUnPacked() ) {
+	      _pub.OnError( "PubChannel must be in PACKED mode" );
+	      return;
+	   }
+
 	   // Support for rtDate-only or rtTime-only
 
 	   bDt = dt._year || dt._month || dt._mday;

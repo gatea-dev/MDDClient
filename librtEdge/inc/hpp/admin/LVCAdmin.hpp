@@ -34,6 +34,7 @@ static const char *_dtdREFRALL = "REFRESH-ALL";
 static const char *_dtdDEL     = "DEL";
 static const char *_dtdACK     = "ACK";
 static const char *_dtdNAK     = "NAK";
+static const char *_tkrALL     = "*";
 
 namespace RTEDGE
 {
@@ -333,11 +334,10 @@ public:
 	 */
 	void RefreshAll()
 	{
-	   const char *tkrs[] = { "*", NULL };
+	   const char *tkrs[] = { _tkrALL, NULL };
 
-	   _DoTickers( _dtdREFRALL, "*", tkrs );
+	   _DoTickers( _dtdREFRALL, _tkrALL, tkrs );
 	}
-
 
 	////////////////////////
 	// Private Helpers

@@ -196,6 +196,7 @@ public:
       u.AddField(  fid++, r64 );
       u.AddField(  fid++, i64 );
       u.AddField(  fid++, dtTm );
+      u.AddFieldAsUnixTime(  fid++, dtTm );
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
       u.Publish();

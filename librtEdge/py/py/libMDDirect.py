@@ -13,6 +13,7 @@
 #      3 FEB 2022 jcs  MDDirect.LVCSnap() : Returns tUpd
 #     16 FEB 2022 jcs  Dump( bFldTy=false ); rtEdgeField.TypeName()
 #     16 MAR 2022 jcs  _MDDPY_INT64
+#     24 MAY 2022 jcs  _MDDPY_UNXTM
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -844,6 +845,7 @@ class rtEdgeField:
                           MDDirectEnum._MDDPY_DT    : '(dat) ',
                           MDDirectEnum._MDDPY_TM    : '(tim) ',
                           MDDirectEnum._MDDPY_TMSEC : '(tms) '
+                          MDDirectEnum._MDDPY_UNXTM : '(unx) '
                         }
 
    #################################
@@ -1101,4 +1103,5 @@ class MDDirectEnum:
    _MDDPY_TM    = 5    ## r64 = i32 + mikes
    _MDDPY_TMSEC = 6    ## i32 = ( h * 10000 ) + ( m * 100 ) + s
    _MDDPY_INT64 = 7
+   _MDDPY_UNXTM = 8
 ## \endcond

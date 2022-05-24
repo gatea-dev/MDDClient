@@ -20,6 +20,7 @@
 *     21 NOV 2020 jcs  Build 46: IsStopping()
 *     23 APR 2021 jcs  Build 48: GetDstConn()
 *     26 APR 2022 jcs  Build 53: Channel.SetMDDirectMon()
+*     23 MAY 2022 jcs  Build 54: Channel.OnError()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1018,6 +1019,14 @@ protected:
 	virtual void OnWorkerThread()
 	{ ; }
 
+public:
+	/**
+	 * \brief Called when a General Purpose error occurs on the channel
+	 *
+	 * \param err - Error message
+	 */
+	virtual void OnError( const char *err )
+	{ ; }
 
 
 	////////////////////////////////////

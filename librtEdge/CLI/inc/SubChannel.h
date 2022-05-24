@@ -14,8 +14,9 @@
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
+*     23 MAY 2022 jcs  Build 54: OnError()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -57,6 +58,7 @@ public:
 	virtual void OnSymbol( librtEdge::rtEdgeData ^, String ^ ) abstract;
 	virtual void OnSchema( librtEdge::rtEdgeSchema ^ ) abstract;
 	virtual void OnIdle() abstract;
+	virtual void OnError( String ^ ) abstract;
 };
 
 
@@ -107,6 +109,7 @@ protected:
 	virtual void OnSymbol( RTEDGE::Message &msg, const char *sym );
 	virtual void OnSchema( RTEDGE::Schema &sch );
 	virtual void OnIdle();
+	virtual void OnError( const char *err );
 };
 } // namespace librtEdgePRIVATE
 
@@ -751,7 +754,6 @@ public:
 	virtual void OnStreamDone( rtEdgeData ^msg )
 	{ ; }
 
-
 	/**
 	 * \brief Called asynchronously when Symbol List opened via OpenBDS()
 	 * updates.
@@ -776,7 +778,7 @@ public:
 	{ ; }
 
 	/**
-	 * \brief Called asynchronously - roughly once per second - when the
+	 * \brief Called when a General Purpose error occurs on the channe
 	 * library is idle.
 	 *
 	 * This is only called if you enable via SetIdleCallback()
@@ -786,6 +788,15 @@ public:
 	 */
 	virtual void OnIdle()
 	{ ; }
+
+	/**
+	 * \brief Called asynchronously - roughly once per second - when the
+	 *
+	 * \param err - Error Message
+	 */
+	virtual void OnError( String ^err )
+	{ ; }
+
 
 };  // class rtEdgeSubscriber
 

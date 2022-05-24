@@ -17,7 +17,7 @@ Build 14 22-05-xx
 -----------------
 1) Schema : mddValue._i32 = _maxLen
 
-2) mddFld_unixTime 
+2) mddFld_unixTime : Always unpacked 
 
 
 Build 13 22-03-29

@@ -15,8 +15,9 @@
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
+*     23 MAY 2022 jcs  Build 54: OnError()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <SubChannel.h>
@@ -133,6 +134,11 @@ void SubChannel::OnSchema( RTEDGE::Schema &sch )
 void SubChannel::OnIdle()
 {
    _cli->OnIdle();
+}
+
+void SubChannel::OnError( const char *err )
+{
+   _cli->OnError( gcnew String( err ) );
 }
 
 } // namespace librtEdgePRIVATE
