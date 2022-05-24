@@ -53,6 +53,7 @@ public:
 	virtual void AddFieldAsDouble( int, double ) abstract;
 	virtual void AddFieldAsByteStream( int, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( int, DateTime ^ ) abstract;
+	virtual void AddFieldAsUnixTime( int, DateTime ^ ) abstract;
 	virtual void AddFieldAsDate( int, DateTime ^ ) abstract;
 	virtual void AddFieldAsTime( int, DateTime ^ ) abstract;
 	virtual void AddFieldAsString( String ^, String ^ ) abstract;
@@ -61,7 +62,6 @@ public:
 	virtual void AddFieldAsDouble( String ^, double ) abstract;
 	virtual void AddFieldAsByteStream( String ^, librtEdge::ByteStreamFld ^ ) abstract;
 	virtual void AddFieldAsDateTime( String ^, DateTime ^ ) abstract;
-	virtual void AddFieldAsUnixTime( String ^, DateTime ^ ) abstract;
 	virtual void AddFieldAsDate( String ^, DateTime ^ ) abstract;
 	virtual void AddFieldAsTime( String ^, DateTime ^ ) abstract;
 
@@ -333,6 +333,14 @@ public:
 	virtual void AddFieldAsDateTime( int fid, DateTime ^dt );
 
 	/**
+	 * \brief Add date-time field to update as Unix Time on the wire
+	 *
+	 * \param fid - Field ID
+	 * \param dt - Field value as DateTim
+	 */
+	virtual void AddFieldAsUnixTime( int fid, DateTime ^dt );
+
+	/**
 	 * \brief Add date-time field to update as Date
 	 *
 	 * \param fid - Field ID
@@ -422,14 +430,6 @@ public:
 	 * \param dt - Field value as DateTime
 	 */
 	virtual void AddFieldAsDateTime( String ^pFld, DateTime ^dt );
-
-	/**
-	 * \brief Add date-time field to update as Unix Time on the wire
-	 *
-	 * \param pFld - Field Name
-	 * \param dt - Field value as DateTim
-	 */
-	virtual void AddFieldAsUnixTime( String ^pFld, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as MDD Date
