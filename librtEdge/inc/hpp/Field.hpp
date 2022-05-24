@@ -614,7 +614,6 @@ public:
 	 */
 	rtDateTime GetAsDateTime()
 	{
-// TODO : rtFld_unixTime
 	   rtDateTime dtTm;
 	   rtDate    &dt = dtTm._date;
 	   rtTime    &tm = dtTm._time;
@@ -623,6 +622,11 @@ public:
 	   int        ymd;
 	   time_t     now;
 	   struct tm  lt;
+
+	   // rtFld_unixTime??
+
+	   if ( _IsUnixTime() )
+	      return _GetFromUnixTime( v._i64 );
 
 	   /*
 	    * 1) > _MIN_DTTM : YYYYMMDDHHMMSS.uuuuuu
@@ -658,7 +662,11 @@ public:
 	 */
 	rtDate GetAsDate()
 	{
-	   return _GetAsDate( _fld._val._r64 );
+	   rtVALUE &v = _fld._val;
+
+	   if ( _IsUnixTime() )
+	      return _GetFromUnixTime( v._i64 )._date;
+	   return _GetAsDate( v._r64 );
 	}
 
 	/**
@@ -673,6 +681,9 @@ public:
 	   u_int64_t i64 = (u_int64_t)r64;
 	   int       hmd = (int)::fmod( r64, f_MIL );
 	   rtTime    t;
+
+	   if ( _IsUnixTime() )
+	      return _GetFromUnixTime( v._i64 )._time;
 
 	   // HHMMSS.uuuuuu
 
@@ -879,6 +890,11 @@ public:
 	// Helpers
 	////////////////////////
 private:
+	bool _IsUnixTime()
+	{
+	   return( TypeFromMsg() == rtFld_unixTime );
+	}
+
 	char *_StripTrailing0( char *op )
 	{
 	   int i, sz;
@@ -926,6 +942,29 @@ private:
 	   cp += strlen( cp );
 	   return( cp-buf );
 	}
+
+	rtDateTime _GetFromUnixTime( u_int64_t tUnixNs )
+	{
+	   rtDateTime dtTm;
+	   rtDate    &dt = dtTm._date;
+	   rtTime    &tm = dtTm._time;
+	   time_t     now;
+	   u_int64_t  nano;
+	   struct tm  lt;
+
+	   now  = tUnixNs / _NANO;
+	   nano = tUnixNs % _NANO;
+	   ::localtime_r( &now, &lt );
+	   dt._year   = lt.tm_year + 1900;
+	   dt._month  = lt.tm_mon;
+	   dt._mday   = lt.tm_mday;
+	   tm._hour   = lt.tm_hour;
+	   tm._minute = lt.tm_min;
+	   tm._second = lt.tm_sec;
+	   tm._micros = nano / 1000;
+	   return dtTm;
+	}
+
 
 	/**
 	 * \brief Returns double as rtDate
