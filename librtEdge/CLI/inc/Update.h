@@ -20,59 +20,10 @@
 #include <Data.h>
 #endif // DOXYGEN_OMIT
 
-#ifndef DOXYGEN_OMIT
-
 using namespace librtEdgePRIVATE;
 
 namespace librtEdge
 {
-////////////////////////////////////////////////
-//
-// c l a s s   I r t E d g e P u b U p d a t e
-//
-////////////////////////////////////////////////
-/**
- * \class IrtEdgePubUpdate
- * \brief Abstract class to handle subscriber channel events
- * such as OnConnect() and OnPubOpen().
- */
-public interface class IrtEdgePubUpdate
-{
-	// IrtEdgePublisher Interface - Publish
-public:
-	virtual int Publish() abstract;
-	virtual int Publish( librtEdge::ByteStream ^, int ) abstract;
-	virtual int Publish( librtEdge::ByteStream ^, int, int, int, int ) abstract;
-	virtual int PubError( String ^ ) abstract;
-
-	// IrtEdgePublisher Interface - Field
-public:
-	virtual void AddFieldAsString( int, String ^ ) abstract;
-	virtual void AddFieldAsInt32( int, int ) abstract;
-	virtual void AddFieldAsInt64( int, long long ) abstract;
-	virtual void AddFieldAsDouble( int, double ) abstract;
-	virtual void AddFieldAsByteStream( int, librtEdge::ByteStreamFld ^ ) abstract;
-	virtual void AddFieldAsDateTime( int, DateTime ^ ) abstract;
-	virtual void AddFieldAsUnixTime( int, DateTime ^ ) abstract;
-	virtual void AddFieldAsDate( int, DateTime ^ ) abstract;
-	virtual void AddFieldAsTime( int, DateTime ^ ) abstract;
-	virtual void AddFieldAsString( String ^, String ^ ) abstract;
-	virtual void AddFieldAsInt32( String ^, int ) abstract;
-	virtual void AddFieldAsInt64( String ^, long long ) abstract;
-	virtual void AddFieldAsDouble( String ^, double ) abstract;
-	virtual void AddFieldAsByteStream( String ^, librtEdge::ByteStreamFld ^ ) abstract;
-	virtual void AddFieldAsDateTime( String ^, DateTime ^ ) abstract;
-	virtual void AddFieldAsDate( String ^, DateTime ^ ) abstract;
-	virtual void AddFieldAsTime( String ^, DateTime ^ ) abstract;
-
-	// IrtEdgePublisher Interface - Field
-public:
-	virtual int PubChainLink( String ^, IntPtr, int, bool, array<String ^> ^ ) abstract;
-	virtual int PubChainLink( String ^, IntPtr, int, bool, array<String ^> ^, int ) abstract;
-
-};  // class IrtEdgePubUpdate
-
-#endif // DOXYGEN_OMIT
 
 ////////////////////////////////////////////////
 //
@@ -93,7 +44,7 @@ public:
  * For best performance, it is highly recommended that you reuse this
  * object in your application by calling Init() each update.
  */
-public ref class rtEdgePubUpdate : public IrtEdgePubUpdate
+public ref class rtEdgePubUpdate
 {
 private:
 	IrtEdgePublisher ^_pub;
@@ -172,7 +123,7 @@ public:
 
 
 	/////////////////////////////////
-	// IrtEdgePublisher Interface - Publish
+	// Publish
 	/////////////////////////////////
 public:
 	/**
@@ -181,7 +132,7 @@ public:
 	 *
 	 * \return  Number of bytes published
 	 */
-	virtual int Publish();
+	int Publish();
 
 	/**
 	 * \brief Publish pre-formatted data payload
@@ -190,7 +141,7 @@ public:
 	 * \param bFieldList - true if field list; Else fixed msg
 	 * \return  Number of bytes published
 	 */
-	virtual int Publish( array<Byte> ^buf, bool bFieldList );
+	int Publish( array<Byte> ^buf, bool bFieldList );
 
 	/**
 	 * \brief Publish an error
@@ -198,11 +149,11 @@ public:
 	 * \param err - Error string
 	 * \return  Number of bytes published
 	 */
-	virtual int PubError( String ^err );
+	int PubError( String ^err );
 
 
 	/////////////////////////////////
-	// IrtEdgePublisher Interface - ByteStream
+	// ByteStream
 	/////////////////////////////////
 	/**
 	 * \brief Publish a ByteStream with default size and rate.
@@ -216,8 +167,7 @@ public:
 	 * \param fidData - Field ID where payload data will be put in message.
 	 * \return  Number of bytes published
 	 */
-	virtual int Publish( ByteStream ^bStr, 
-	                     int         fidData );
+	int Publish( ByteStream ^bStr, int fidData );
 
 	/**
 	 * \brief Publish a ByteStream with user-defined size and rate.
@@ -229,11 +179,11 @@ public:
 	 * \param bytesPerSec - Max bytes / sec to publish if multi-message stream
 	 * \return  Number of bytes published
 	 */
-	virtual int Publish( ByteStream ^bStr, 
-	                     int         fidData,
-	                     int         maxFldSiz,
-	                     int         maxFld,
-	                     int         bytesPerSec );
+	int Publish( ByteStream ^bStr, 
+	             int         fidData,
+	             int         maxFldSiz,
+	             int         maxFld,
+	             int         bytesPerSec );
 
 	/**
 	 * \brief Terminate ByteStream Publishing
@@ -248,14 +198,14 @@ public:
 
 
 	/////////////////////////////////
-	// IrtEdgePubUpdate Interface - Fields
+	// Fields
 	/////////////////////////////////
 	/**
 	 * \brief Add rtEdgeField to update
 	 *
 	 * \param fld - rtEdgeField to add
 	 */
-	virtual void AddField( rtEdgeField ^fld );
+	void AddField( rtEdgeField ^fld );
 
 	/**
 	 * \brief Add string field to update
@@ -266,7 +216,7 @@ public:
 	 * \param fid - Field ID
 	 * \param str - Field value as string
 	 */
-	virtual void AddFieldAsString( int fid, String ^str );
+	void AddFieldAsString( int fid, String ^str );
 
 	/**
 	 * \brief Add 8-bit int field to update
@@ -274,7 +224,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i8 - Field value as 8-bit char
 	 */
-	virtual void AddFieldAsInt8( int fid, u_char i8 );
+	void AddFieldAsInt8( int fid, u_char i8 );
 
 	/**
 	 * \brief Add 16-bit int field to update
@@ -282,7 +232,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i16 - Field value as 16-bit short int
 	 */
-	virtual void AddFieldAsInt16( int fid, u_short i16 );
+	void AddFieldAsInt16( int fid, u_short i16 );
 
 	/**
 	 * \brief Add 32-bit int field to update
@@ -290,7 +240,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i32 - Field value as 32-bit int
 	 */
-	virtual void AddFieldAsInt32( int fid, int i32 );
+	void AddFieldAsInt32( int fid, int i32 );
 
 	/**
 	 * \brief Add 64-bit long field to update
@@ -298,7 +248,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i64 - Field value as 64-bit int
 	 */
-	virtual void AddFieldAsInt64( int fid, long long i64 );
+	void AddFieldAsInt64( int fid, long long i64 );
 
 	/**
 	 * \brief Add float field to update
@@ -306,7 +256,7 @@ public:
 	 * \param fid - Field ID
 	 * \param r32 - Field value as double
 	 */
-	virtual void AddFieldAsFloat( int fid, float r32 );
+	void AddFieldAsFloat( int fid, float r32 );
 
 	/**
 	 * \brief Add float field to update
@@ -314,7 +264,7 @@ public:
 	 * \param fid - Field ID
 	 * \param r64 - Field value as double
 	 */
-	virtual void AddFieldAsDouble( int fid, double r64 );
+	void AddFieldAsDouble( int fid, double r64 );
 
 	/**
 	 * \brief Add ByteStreamFld field to update
@@ -322,7 +272,7 @@ public:
 	 * \param fid - Field ID
 	 * \param bStr - Field Value as ByteStreamFld
 	 */
-	virtual void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
+	void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
 
 	/**
 	 * \brief Add date-time field to update as DateTime
@@ -330,7 +280,7 @@ public:
 	 * \param fid - Field ID
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsDateTime( int fid, DateTime ^dt );
+	void AddFieldAsDateTime( int fid, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as Unix Time on the wire
@@ -338,7 +288,7 @@ public:
 	 * \param fid - Field ID
 	 * \param dt - Field value as DateTim
 	 */
-	virtual void AddFieldAsUnixTime( int fid, DateTime ^dt );
+	void AddFieldAsUnixTime( int fid, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as Date
@@ -346,7 +296,7 @@ public:
 	 * \param fid - Field ID
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsDate( int fid, DateTime ^dt );
+	void AddFieldAsDate( int fid, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as Time
@@ -354,7 +304,7 @@ public:
 	 * \param fid - Field ID
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsTime( int fid, DateTime ^dt );
+	void AddFieldAsTime( int fid, DateTime ^dt );
 
 	/**
 	 * \brief Add string field to update
@@ -365,7 +315,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param str - Field value as string
 	 */
-	virtual void AddFieldAsString( String ^pFld, String ^str );
+	void AddFieldAsString( String ^pFld, String ^str );
 
 	/**
 	 * \brief Add 8-bit int field to update
@@ -373,7 +323,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param i8 - Field value as 8-bit char
 	 */
-	virtual void AddFieldAsInt8( String ^pFld, u_char i8 );
+	void AddFieldAsInt8( String ^pFld, u_char i8 );
 
 	/**
 	 * \brief Add 16-bit int field to update
@@ -381,7 +331,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param i16 - Field value as 16-bit short int
 	 */
-	virtual void AddFieldAsInt16( String ^pFld, u_short i16 );
+	void AddFieldAsInt16( String ^pFld, u_short i16 );
 
 	/**
 	 * \brief Add 32-bit int field to update
@@ -389,7 +339,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param i32 - Field value as 32-bit int
 	 */
-	virtual void AddFieldAsInt32( String ^pFld, int i32 );
+	void AddFieldAsInt32( String ^pFld, int i32 );
 
 	/**
 	 * \brief Add 64-bit long field to update
@@ -397,7 +347,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param i64 - Field value as 64-bit int
 	 */
-	virtual void AddFieldAsInt64( String ^pFld, long long i64 );
+	void AddFieldAsInt64( String ^pFld, long long i64 );
 
 	/**
 	 * \brief Add float field to update
@@ -405,7 +355,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param r32 - Field value as double
 	 */
-	virtual void AddFieldAsFloat( String ^pFld, float r32 );
+	void AddFieldAsFloat( String ^pFld, float r32 );
 
 	/**
 	 * \brief Add float field to update
@@ -413,7 +363,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param r64 - Field value as double
 	 */
-	virtual void AddFieldAsDouble( String ^pFld, double r64 );
+	void AddFieldAsDouble( String ^pFld, double r64 );
 
 	/**
 	 * \brief Add ByteStreamFld field to update
@@ -421,7 +371,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param bStr - Field Value as ByteStreamFld
 	 */
-	virtual void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
+	void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
 
 	/**
 	 * \brief Add date-time field to update as MDD DateTime
@@ -429,7 +379,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsDateTime( String ^pFld, DateTime ^dt );
+	void AddFieldAsDateTime( String ^pFld, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as MDD Date
@@ -437,7 +387,7 @@ public:
 	 * \param pFld - Field Name
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsDate( String ^pFld, DateTime ^dt );
+	void AddFieldAsDate( String ^pFld, DateTime ^dt );
 
 	/**
 	 * \brief Add date-time field to update as MDD Time
@@ -445,11 +395,11 @@ public:
 	 * \param pFld - Field Name
 	 * \param dt - Field value as DateTime
 	 */
-	virtual void AddFieldAsTime( String ^pFld, DateTime ^dt );
+	void AddFieldAsTime( String ^pFld, DateTime ^dt );
 
 
 	/////////////////////////////////
-	// IrtEdgePubUpdate Interface - Chain
+	// Chains
 	/////////////////////////////////
 	/**
 	 * \brief Builds and publishes chain link.
@@ -463,12 +413,12 @@ public:
 	 * \param links - Link names
 	 * \param dpyTpl - Display template number
 	 */
-	virtual int PubChainLink( String          ^chainName,
-	                          IntPtr           arg,
-	                          int              linkNum,
-	                          bool             bFinal,
-	                          array<String ^> ^links,
-	                          int              dpyTpl );
+	int PubChainLink( String          ^chainName,
+	                  IntPtr           arg,
+	                  int              linkNum,
+	                  bool             bFinal,
+	                  array<String ^> ^links,
+	                  int              dpyTpl );
 
 	/**
 	 * \brief Builds and publishes chain link.
@@ -481,11 +431,11 @@ public:
 	 * \param bFinal - true if this is final link in chain
 	 * \param links - Link names
 	 */
-	virtual int PubChainLink( String          ^chainName,
-	                          IntPtr           arg,
-	                          int              linkNum,
-	                          bool             bFinal,
-	                          array<String ^> ^links );
+	int PubChainLink( String          ^chainName,
+	                  IntPtr           arg,
+	                  int              linkNum,
+	                  bool             bFinal,
+	                  array<String ^> ^links );
 
 #ifndef DOXYGEN_OMIT
 	/////////////////////////////////

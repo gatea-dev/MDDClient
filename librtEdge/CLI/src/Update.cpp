@@ -77,7 +77,7 @@ void rtEdgePubUpdate::Init( String ^tkr, IntPtr arg, bool bImg )
 
 
 /////////////////////////////////
-// IrtEdgePublisher Interface - Publish
+// Publish
 /////////////////////////////////
 int rtEdgePubUpdate::Publish()
 {
@@ -107,7 +107,7 @@ int rtEdgePubUpdate::PubError( String ^err )
 
 
 /////////////////////////////////
-// IrtEdgePublisher Interface - ByteStream
+// ByteStream
 /////////////////////////////////
 int rtEdgePubUpdate::Publish( ByteStream ^bStr, 
                               int         fidData )
@@ -131,7 +131,7 @@ void rtEdgePubUpdate::Stop( ByteStream ^bStr )
 
 
 /////////////////////////////////
-// IrtEdgePubUpdate Interface
+// Fields
 /////////////////////////////////
 void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
 {
@@ -329,7 +329,7 @@ void rtEdgePubUpdate::AddFieldAsTime( String ^pFld, DateTime ^dt )
 
 
 /////////////////////////////////
-// IrtEdgePubUpdate Interface - Chain
+// Chain
 /////////////////////////////////
 int rtEdgePubUpdate::PubChainLink( String          ^chainName,
                                    IntPtr           arg,
