@@ -486,7 +486,7 @@ public ref class rtEdgeChanStats
 {
 private:
 	::rtEdgeChanStats *_stC;
-	long               _NANO;
+	long               _NANOcli;
 
 	/////////////////////////////////
 	// Constructor
@@ -499,7 +499,7 @@ public:
 	 */
 	rtEdgeChanStats( ::rtEdgeChanStats *stC ) :
 	   _stC( stC ),
-	   _NANO( 1000000000 )
+	   _NANOcli( 1000000000 )
 	{ ; }
 
 	/////////////////////////////////
@@ -525,7 +525,7 @@ public:
 	      long tTickNs;
 
 	      tTickNs  = _stC->_lastMsg; // seconds
-	      tTickNs *= _NANO;          // Nanos
+	      tTickNs *= _NANOcli;          // Nanos
 	      tTickNs += ( _stC->_lastMsgUs * 1000 );
 	      return gcnew DateTime( tTickNs );
 	   }
@@ -580,7 +580,7 @@ public:
 	      long tTickNs;
 
 	      tTickNs  = _stC->_lastConn; // seconds
-	      tTickNs *= _NANO;  
+	      tTickNs *= _NANOcli;  
 	      return gcnew DateTime( tTickNs );
 	   }
 	}
@@ -592,7 +592,7 @@ public:
 	      long tTickNs;
 
 	      tTickNs  = _stC->_lastDisco; // seconds
-	      tTickNs *= _NANO;  
+	      tTickNs *= _NANOcli;  
 	      return gcnew DateTime( tTickNs );
 	   }
 	}
