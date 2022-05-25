@@ -1039,10 +1039,12 @@ void LVC_Destroy( LVC_Context cxt )
 {
    Logger             *lf;
    LVCDefMap::iterator it;
+   LVCDef             *qod;
 
    if ( (it=_lvc.find( cxt )) != _lvc.end() ) {
+      qod = (*it).second;
       _lvc.erase( it );
-      delete (*it).second;
+      delete qod;
    }
 
    // Logging
@@ -1058,7 +1060,7 @@ void LVC_Destroy( LVC_Context cxt )
 CDB_Context CDB_Initialize( const char *pFile, 
                             const char *pAdm )
 {
-   GLchtDb *lvc;
+   GLchtDb *qod;
    Logger  *lf;
    long     rtn;
 
@@ -1071,13 +1073,13 @@ CDB_Context CDB_Initialize( const char *pFile,
    // 1) GLchtDb object
 
    rtn = 0;
-   lvc = new GLchtDb( (char *)pFile, pAdm );
-   if ( 1 || lvc->isValid() ) {
+   qod = new GLchtDb( (char *)pFile, pAdm );
+   if ( 1 || qod->isValid() ) {
       rtn       = ATOMIC_INC( &_nCxt );
-      _cdb[rtn] = lvc;
+      _cdb[rtn] = qod;
    }
    else
-      delete lvc;
+      delete qod;
    return rtn;
 }
 
@@ -1126,7 +1128,7 @@ CDBData CDB_View( CDB_Context cxt,
                   const char *pTkr,
                   int         fid )
 {
-   GLchtDb   *lvc;
+   GLchtDb   *qod;
    Logger    *lf;
    CDBData    rtn;
    double     d0, d1;
@@ -1142,8 +1144,8 @@ CDBData CDB_View( CDB_Context cxt,
    ::memset( &rtn, 0, sizeof( rtn ) );
    rtn._pSvc = pSvc;
    rtn._pTkr = pTkr;
-   if ( (lvc=_GetCDB( (int)cxt )) )
-      rtn = lvc->GetItem( pSvc, pTkr, fid );
+   if ( (qod=_GetCDB( (int)cxt )) )
+      rtn = qod->GetItem( pSvc, pTkr, fid );
    d1         = dNow();
    rtn._dSnap = ( d1-d0 );
    return rtn;
@@ -1165,7 +1167,7 @@ void CDB_AddTicker( CDB_Context cxt,
                     const char *pTkr,
                     int         fid )
 {
-   GLchtDb *lvc;
+   GLchtDb *qod;
    Logger  *lf;
 
    // Logging; Find GLchtDb
@@ -1176,8 +1178,8 @@ void CDB_AddTicker( CDB_Context cxt,
    // Operation : Create, if not found
 
    StartWinsock();
-   if ( (lvc=_GetCDB( (int)cxt )) )
-      lvc->AddTicker( pSvc, pTkr, fid );
+   if ( (qod=_GetCDB( (int)cxt )) )
+      qod->AddTicker( pSvc, pTkr, fid );
    StopWinsock();
 }
 
@@ -1186,7 +1188,7 @@ void CDB_DelTicker( CDB_Context cxt,
                     const char    *pTkr,
                     int            fid )
 {
-   GLchtDb *lvc;
+   GLchtDb *qod;
    Logger  *lf;
 
    // Logging; Find GLchtDb
@@ -1197,21 +1199,23 @@ void CDB_DelTicker( CDB_Context cxt,
    // Operation : Create, if not found
 
    StartWinsock();
-   if ( (lvc=_GetCDB( (int)cxt )) )
-      lvc->DelTicker( pSvc, pTkr, fid );
+   if ( (qod=_GetCDB( (int)cxt )) )
+      qod->DelTicker( pSvc, pTkr, fid );
    StopWinsock();
 }
 
 void CDB_Destroy( CDB_Context cxt )
 {
    ChartDbMap::iterator it;
+   GLchtDb             *qod;
    Logger              *lf;
 
    // GLchtDb object
 
    if ( (it=_cdb.find( cxt )) != _cdb.end() ) {
+      qod = (*it).second;
       _cdb.erase( it );
-      delete (*it).second;
+      delete qod;
    }
 
    // Logging
@@ -1229,7 +1233,7 @@ Cockpit_Context Cockpit_Initialize( CockpitAttr attr )
 {
    Cockpit *edg;
    LVCDef  *ld;
-   GLlvcDb *lvc;
+   GLlvcDb *qod;
    Logger  *lf;
    long     rtn;
 
@@ -1243,12 +1247,12 @@ Cockpit_Context Cockpit_Initialize( CockpitAttr attr )
    // 1) Affiliated LVC?
 
    ld  = _GetLVC( (int)attr._cxtLVC );
-   lvc = ld ? &ld->lvc() : (GLlvcDb *)0;
+   qod = ld ? &ld->lvc() : (GLlvcDb *)0;
 
    // 2) Cockpit object
 
    rtn = ++_nCxt;
-   edg = new Cockpit( attr, rtn, lvc );
+   edg = new Cockpit( attr, rtn, qod );
    _cock[rtn] = edg;
    return rtn;
 }
@@ -1281,13 +1285,15 @@ void Cockpit_Send( Cockpit_Context cxt, const char *msg )
 void Cockpit_Destroy( Cockpit_Context cxt )
 {
    CockpitMap::iterator it;
+   Cockpit             *qod;
    Logger              *lf;
 
    // Cockpit object
 
    if ( (it=_cock.find( cxt )) != _cock.end() ) {
+      qod = (*it).second;
       _cock.erase( it );
-      delete (*it).second;
+      delete qod;
    }
 
    // Logging

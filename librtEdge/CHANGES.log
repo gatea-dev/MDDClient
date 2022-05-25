@@ -33,6 +33,8 @@ Build 54 22-05-xx
 6) mddFld_unixTime
    - Update.AddFieldAsUnixTime()
 
+7) WIN64 core : LVC_Destroy() : lvc = (*it).second; BEFORE erase 
+
 
 Build 53 22-05-07
 -----------------
