@@ -12,8 +12,9 @@
 *     10 FEB 2016 jcs  Build 32: Binary / Performance
 *     12 JAN 2018 jcs  Build 39: main_MEM()
 *     20 NOV 2020 jcs  Build 46: Beefed up : arg switches
+*      2 JUN 2022 jcs  Build 55: Single-field dump
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.Collections.Generic;
@@ -137,7 +138,7 @@ class LVCTest
       /*
        * 1) CSV?  Dump Field Names
        */
-      bAll = ( tkrs != null );
+      bAll = ( tkrs.Length == 1 ) && ( tkrs[0] == "*" );
       bCSV = ( flds != null );
       sch  = lvc.schema();
       fids = null;
@@ -190,8 +191,6 @@ class LVCTest
       LVCDataAll la;
       int        i;
       uint       nt;
-      double     d0, dd;
-      String     pd;
 
       /*
        * Test 1 : 1 LVC(); Multiple ViewAll()'s
@@ -295,11 +294,12 @@ class LVCTest
                 {
                     if (kv.Value.LastUpdated > lastRecord.LastUpdated)
                         nUpdated++;
-
+/*
                     if (kv.Value.Mid == null && lastRecord.Mid != null)
                         nGoneBad++;
                     else if (Math.Abs((kv.Value.Mid ?? 0) - (lastRecord.Mid ?? 0)) > 1e-8)
                         nChangedValue++;
+ */
                 }
             }
             Console.WriteLine($"{nNewTicker} new tickers, {nGoneBad} gone bad, {nUpdated} updated, {nChangedValue} changed value.");
