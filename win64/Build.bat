@@ -57,7 +57,7 @@ goto Done
    del /f /s /q ..Release64
    set MK=%1%
    devenv /build %BLD_TYPE% %MK%64.sln /project %MK%64
-   IF EXIST %MK%MD64.vcxproj (
+   if exist %MK%MD64.vcxproj (
       echo %MK%MD64
       del /f /s /q ..\Release64
       devenv /build %BLD_TYPE% %MK%MD64.sln /project %MK%MD64
@@ -70,8 +70,11 @@ goto Done
    )
    if exist py\%VS% (
       cd py\%VS%
-      devenv /build Release MDDirect.sln /project MDDirect27
-      devenv /build Release MDDirect.sln /project MDDirect39
+      FOR %%Y in (27 39) DO (
+         if exist ..\..\..\..OpenSource\Python%%Y (
+            devenv /build Release MDDirect.sln /project MDDirect%%Y
+         )
+      )
       cd ..\..
    )
    cd ..
