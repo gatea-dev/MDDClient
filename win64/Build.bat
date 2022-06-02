@@ -21,7 +21,7 @@ FOR %%X in (libmddWire librtEdge) DO (
    echo Build %%X
    Call :BuildStuff64 %%X
    FOR %%Y in (Subscribe Publish LVCTest) DO (
-      if exist %%X\cpp\%%Y (
+      if exist %%X\cpp\%%Y.cpp (
          Call :BuildStuff2 %%X %%Y
          cp -v %%X\bin64\%%Y\%%Y.exe .\bin64
       )
