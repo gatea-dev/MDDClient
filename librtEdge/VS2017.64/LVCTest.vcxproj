@@ -66,7 +66,11 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\lib64\librtEdge64.lib;..\..\libmddWire\lib64\libmddWire64.lib;pdh.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>
+         ..\lib64\librtEdge64.lib;
+         ..\..\libmddWire\lib64\libmddWire64.lib;
+         pdh.lib;wsock32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
       <OutputFile>.\..\bin64\LVCTest/LVCTest.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -101,10 +105,14 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>
+         ..\Debug64\librtEdge64.lib;
+         ..\..\libmddWire\Debug64\libmddWire64.lib;
+         pdh.lib;wsock32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
       <OutputFile>.\..\bin64\LVCTest.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\bin64\LVCTest.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
