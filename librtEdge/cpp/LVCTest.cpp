@@ -6,10 +6,10 @@
 *     13 NOV 2014 jcs  Created (from Subscribe.cpp)
 *     25 SEP 2017 jcs  Build 35: LVCAdmin
 *     12 JAN 2018 jcs  Build 39: main_MEM() 
-*     11 FEB 2020 jcs  Build 42: LVC Schema bug
 *     27 JUL 2021 jcs  Build 49: LVC Schema bug
+*      1 JUN 2022 jcs  Build 54: svc:tkr[:fid]
 *
-*  (c) 1994-2021, Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <stdio.h>
@@ -56,6 +56,7 @@ fld = msg.GetField( 32 );
             v._i16 = fld->GetAsInt16();
             break;
          case mddFld_int64:
+         case mddFld_unixTime:
             v._i64 = fld->GetAsInt64();
             break;
       }
@@ -136,7 +137,7 @@ int main_CACHE( int argc, char **argv )
    // cmd-line args
 
    if ( argc < 2 ) {
-      printf( "Usage : %s <LVCfile> [<SVC:TKR>]; Exitting ...\n", argv[0] );
+      printf( "Usage : %s <LVCfile> [<SVC:TKR[:FID]>]; Exitting ...\n", argv[0] );
       return 0;
    }
 
@@ -144,25 +145,33 @@ int main_CACHE( int argc, char **argv )
    LVCAll     &all = lvc.ViewAll();
    Schema     &sch = lvc.GetSchema();
    Message    *msg;
+   Field      *fld;
    const char *ty;
    double      dMs, d0, dd;
-   char       *svc, *tkr, *rp;
+   char       *svc, *tkr, *pFld, *rp;
    bool        bin;
-   int         sz;
+   int         sz, fid;
 
    svc = (char *)0;
    tkr = (char *)0;
+   fid = 0;
    if ( argc > 2 ) {
-      svc = ::strtok_r( argv[2], ":", &rp );
-      tkr = ::strtok_r( NULL,    ":", &rp );
+      svc  = ::strtok_r( argv[2], ":", &rp );
+      tkr  = ::strtok_r( NULL,    ":", &rp );
+      pFld = ::strtok_r( NULL,    ":", &rp );
+      fid  = pFld ? atoi( pFld ) : 0;
    }
    printf( "Schema : %d fields\n", sch.Size() );
 /*
    for ( sch.reset(); (sch)(); )
       printf( "[%04d] %s\n", sch.field()->Fid(), sch.field()->Name() );
  */
-   if ( svc && tkr && (msg=lvc.Snap( svc, tkr )) )
-      ::fprintf( stdout, msg->Dump() );
+   if ( svc && tkr && (msg=lvc.Snap( svc, tkr )) ) {
+      if ( fid && (fld=msg->GetField( fid )) )
+         ::fprintf( stdout, fld->Dump( true ) );
+      else
+         ::fprintf( stdout, msg->Dump() );
+   }
    dMs = 1000.0 * all.dSnap();
    bin = all.IsBinary();
    ty  = bin ? "BIN" : "MF";
