@@ -28,6 +28,7 @@
 *     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
 *      3 MAY 2022 jcs  Build 53: DataDog.hpp
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive; rtFld_unixTime
+*      1 JUN 2022 jcs  Build 55: bld.cpp
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -58,6 +59,7 @@
 
 _CPP_BEGIN
 #include <libmddWire.h>
+#include <bld.cpp>
 _CPP_END
 #include <stdio.h>
 #include <stdlib.h>

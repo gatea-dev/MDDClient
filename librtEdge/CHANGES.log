@@ -13,11 +13,20 @@ Known Bugs
 
 Features To Add
 ---------------
-1) Query tickers from tape:
-   - Just re-use CDB_Query() / CDB_FreeQuery()
 
 
-Build 54 22-05-xx
+Build 55 22-06-xx
+-----------------
+1) inc/bld.cpp
+
+2) RTEDGE.Field.Dump() : string trailing 0 iff binary AND not rtFld_string 
+
+/*
+2) BDS from tape : Any BDS gets EVERYTHING
+ */
+
+
+Build 54 22-05-24
 -----------------
 1) LVCAdmin.RefreshTickers()
 

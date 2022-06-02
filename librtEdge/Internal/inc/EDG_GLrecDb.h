@@ -10,8 +10,9 @@
 *     10 SEP 2016 jcs  Build  4: GLrecTapeHdr._bMDDirect
 *     10 DEC 2017 jcs  Build  7: _USE_UPA; _channelID; SIG_005 : No htonl()
 *     20 FEB 2018 jcs  Build 10: GLrecDailyHdr
+*      2 JUN 2022 jcs  Build 55: No mo _BLD
 *
-*  (c) 1994-2018, Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __REC_DB_H
 #define __REC_DB_H
@@ -37,10 +38,6 @@ typedef enum {
 
 #define _MAX_NAME_LEN  256
 #define _MAX_MSG_LEN   64*K
-
-#ifdef WIN32
-#define _BLD           "11"
-#endif // WIN32
 
 #define REC_SIG_004  "004 gateaRecorder"
 #define REC_SIG_005  "005 gateaRecorder"

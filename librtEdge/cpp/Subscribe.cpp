@@ -69,7 +69,7 @@ const char *SubscribeID()
       char bp[K], *cp;
 
       cp  = bp;
-      cp += sprintf( cp, "@(#)Subscribe Build 47 " );
+      cp += sprintf( cp, "@(#)Subscribe Build %s ", _BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s   = bp;
    }

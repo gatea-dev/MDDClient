@@ -20,6 +20,12 @@ rem ### 2) MDDClient
 FOR %%X in (libmddWire librtEdge) DO (
    echo Build %%X
    Call :BuildStuff64 %%X
+   FOR %%Y in (Subscribe Publish LVCTest) DO (
+      if exist %%X\cpp\%%Y (
+         Call :BuildStuff2 %%X %%Y
+         cp -v %%X\bin64\%%Y\%%Y.exe .\bin64
+      )
+   )
    if exist %%X\CLI\lib64 (
       cp -v %%X\CLI\lib64\*.dll .\bin64
    )
@@ -33,6 +39,19 @@ goto Done
 :: #############################
 :: ## Helper Functions
 :: #############################
+:BuildStuff2
+   cd %1/%VS%
+   set MK=%1%
+   set M2=%2%
+   devenv /build %BLD_TYPE% %MK%.sln /project %M2%
+   cd ..
+   if exist dox\%MK%.dox (
+      %DOXYGEN% dox\%MK%.dox
+      mv doc\* ..\..\doc
+   )
+   cd ..
+   EXIT /B 0
+
 :BuildStuff64
    cd %1\%VS%
    del /f /s /q ..Release64

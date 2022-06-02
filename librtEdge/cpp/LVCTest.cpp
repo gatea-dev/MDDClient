@@ -168,7 +168,7 @@ int main_CACHE( int argc, char **argv )
  */
    if ( svc && tkr && (msg=lvc.Snap( svc, tkr )) ) {
       if ( fid && (fld=msg->GetField( fid )) )
-         ::fprintf( stdout, fld->Dump( true ) );
+         ::fprintf( stdout, "%s\n", fld->Dump( true ) );
       else
          ::fprintf( stdout, msg->Dump() );
    }

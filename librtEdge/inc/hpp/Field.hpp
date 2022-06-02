@@ -17,6 +17,7 @@
 *     27 NOV 2020 jcs  Build 47: GetAsString() : Deep copy string to _s
 *     30 MAR 2022 jcs  Build 52: GetAsDateTime()
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
+*      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -938,7 +939,8 @@ private:
 	   if ( bFid )
 	      cp += sprintf( cp, "   [%04d] %-12s : ", Fid(), Name() );
 	   mddWire_dumpField( f, cp );
-	   _StripTrailing0( cp );
+	   if ( TypeFromMsg() != rtFld_string )
+	      _StripTrailing0( cp );
 	   cp += strlen( cp );
 	   return( cp-buf );
 	}
