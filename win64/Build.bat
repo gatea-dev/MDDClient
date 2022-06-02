@@ -43,7 +43,7 @@ goto Done
    cd %1/%VS%
    set MK=%1%
    set M2=%2%
-   devenv /build %BLD_TYPE% %MK%.sln /project %M2%
+   devenv /build %BLD_TYPE% %MK%64.sln /project %M2%
    cd ..
    if exist dox\%MK%.dox (
       %DOXYGEN% dox\%MK%.dox
