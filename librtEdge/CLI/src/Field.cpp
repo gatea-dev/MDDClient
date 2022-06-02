@@ -10,6 +10,7 @@
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *     30 MAR 2022 jcs  Build 52: long long GetAsInt64(); Native GetAsDateTime()
+*      2 JUN 2022 jcs  Build 55: GetAsString() wraps GetAsString(), not Dump()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -192,7 +193,7 @@ String ^rtEdgeField::GetAsString( bool bShowType )
 
    // OK to continue
 
-   pf = _fld->Dump();
+   pf = _fld->GetAsString();
    ty = _fld->Type();
    if ( bShowType ) {
       switch( ty ) {

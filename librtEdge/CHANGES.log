@@ -19,10 +19,12 @@ Build 55 22-06-xx
 -----------------
 1) inc/bld.cpp
 
-2) RTEDGE.Field.Dump() : string trailing 0 iff binary AND not rtFld_string 
+2) Truncating trailing 0:
+   - RTEDGE.Field.Dump() : _StripTrailing0() iff not rtFld_string 
+   - C# : rtEdgeField.GetAsString() : Wrap GetAsString(), not Dump() - DUH!!
 
 /*
-2) BDS from tape : Any BDS gets EVERYTHING
+3) BDS from tape : Any BDS gets EVERYTHING
  */
 
 
