@@ -18,6 +18,7 @@
 *     12 SEP 2017 jcs  Build 35: hash_map; No mo XxxTicker()
 *     20 JAN 2018 jcs  Build 39: mtx()
 *     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive; rtFld_unixTime
+*      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -230,22 +231,24 @@ LVCData GLlvcDb::GetItem( const char *pSvc,
       d._copy = new char[rec->_siz];
       ::memcpy( d._copy, rp, rec->_siz );
    }
-   d._pSvc    = rec->_svc;
-   d._pTkr    = rec->_tkr;
-   d._bActive = rec->_bActive;
-   d._tCreate = rec->_tCreate;
-   d._tUpd    = rec->_tUpd;
-   d._tUpdUs  = rec->_tUpdUs;
-   tv.tv_sec  = d._tUpd;
-   tv.tv_usec = d._tUpdUs;
-   tNow       = Logger::tvNow();
-   dn         = dNow();
-   dn         = Logger::Time2dbl( tNow );
-   d._dAge    = dn - Logger::Time2dbl( tv );
-   d._tDead   = rec->_tDead;
-   d._nUpd    = rec->_nUpd;
-   bOK        = ( rec->_tDead < rec->_tUpd );
-   d._ty      = bOK ? edg_image : edg_stale;
+   d._pSvc       = rec->_svc;
+   d._pTkr       = rec->_tkr;
+   d._bActive    = rec->_bActive;
+   d._recHdrSiz  = sizeof( GLlvcDbItem );
+   d._recDataSiz = rec->_siz;
+   d._tCreate    = rec->_tCreate;
+   d._tUpd       = rec->_tUpd;
+   d._tUpdUs     = rec->_tUpdUs;
+   tv.tv_sec     = d._tUpd;
+   tv.tv_usec    = d._tUpdUs;
+   tNow          = Logger::tvNow();
+   dn            = dNow();
+   dn            = Logger::Time2dbl( tNow );
+   d._dAge       = dn - Logger::Time2dbl( tv );
+   d._tDead      = rec->_tDead;
+   d._nUpd       = rec->_nUpd;
+   bOK           = ( rec->_tDead < rec->_tUpd );
+   d._ty         = bOK ? edg_image : edg_stale;
    if ( !(nf=rec->_nFld) )
       return d;
    d._flds = new rtFIELD[nf];

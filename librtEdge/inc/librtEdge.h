@@ -28,7 +28,7 @@
 *     29 MAR 2022 jcs  Build 52: mddIoctl_unpacked
 *      3 MAY 2022 jcs  Build 53: DataDog.hpp
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive; rtFld_unixTime
-*      1 JUN 2022 jcs  Build 55: bld.cpp
+*      3 JUN 2022 jcs  Build 55: bld.cpp; LVCData._recXxxSiz
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -785,6 +785,10 @@ typedef struct {
    rtEdgeType  _ty;
    /** \brief State of DB record - 1 = active; 0 = dead */
    char        _bActive;
+   /** \brief Record header size on file in bytes */
+   int         _recHdrSiz;
+   /** \brief Record data size on file in bytes */
+   int         _recDataSiz;
    /** \brief Unix time when DB record was created */
    int         _tCreate;
    /** \brief Unix time of last update */

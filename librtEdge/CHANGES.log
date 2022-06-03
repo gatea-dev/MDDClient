@@ -23,6 +23,7 @@ Build 55 22-06-xx
    - RTEDGE.Field.Dump() : _StripTrailing0() iff not rtFld_string 
    - C# : rtEdgeField.GetAsString() : Wrap GetAsString(), not Dump() - DUH!!
 
+3) LVCData._recXxxSiz
 /*
 3) BDS from tape : Any BDS gets EVERYTHING
  */
