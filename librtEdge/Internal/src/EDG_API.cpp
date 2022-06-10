@@ -23,6 +23,7 @@
 *     23 JUL 2021 jcs  Build 49: No mo _MAX_ENG; XxxMap
 *      5 MAY 2022 jcs  Build 53: StatMap; SetMDDirectMon() bug fix
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
+*     10 JUN 2022 jcs  Build 55: Remap : Same address
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1695,7 +1696,7 @@ rtBuf64 rtEdge_RemapFile( rtBuf64 b )
    if ( (m=(GLmmap *)b._opaque) ) {
       fs = ::OS_GetFileStats( m->filename() );
       if ( m->siz() < fs._Size ) {
-         r._data = m->map( 0, fs._Size );
+         r._data = m->map( 0, fs._Size, b._data );
          r._dLen = m->siz();
       }
    }

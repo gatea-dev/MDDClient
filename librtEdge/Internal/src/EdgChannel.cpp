@@ -24,6 +24,7 @@
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
 *      7 MAY 2022 jcs  Build 53: Handle empty username
 *     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
+*     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1850,6 +1851,13 @@ int TapeChannel::PumpTicker( int ix )
    rec     = _tdb[ix];
    off     = rec->_loc;
    nMsg    = rec->_nMsg;
+   /*
+    * Remap if too big
+    */
+   if ( off > _tape._dLen ) {
+      Unload();
+      Load();
+   }
    _PumpDead();
    for ( i=0,n=0; _bRun && off; i++ ) {
       cp      = bp+off;

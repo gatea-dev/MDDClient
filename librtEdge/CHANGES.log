@@ -24,8 +24,12 @@ Build 55 22-06-xx
    - C# : rtEdgeField.GetAsString() : Wrap GetAsString(), not Dump() - DUH!!
 
 3) LVCData._recXxxSiz
+
+4) Remape Tape as needed:
+   - TapeChannel.PumpTicker() : Unload() / Load() if off > _tape._dLen
+
 /*
-3) BDS from tape : Any BDS gets EVERYTHING
+5) BDS from tape : Any BDS gets EVERYTHING
  */
 
 
