@@ -28,6 +28,7 @@ Build 55 22-06-xx
 4) Remape Tape as needed:
    - TapeChannel.PumpTicker() : Unload() / Load() if off > _tape._dLen
 
+5) LVCTest -> LVCDump.cpp / LVCAdmin.cpp
 /*
 5) BDS from tape : Any BDS gets EVERYTHING
  */

@@ -152,7 +152,12 @@ FileSvr: clear FileSvr.o
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
 
-LVCTest: clear LVCTest.o
+LVCDump: clear LVCDump.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+LVCAdmin: clear LVCAdmin.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj

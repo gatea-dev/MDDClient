@@ -40,7 +40,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\bin64\LVCTest\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\bin64\LVCAdmin\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\Release64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\bin64\</OutDir>
@@ -58,7 +58,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\..\Release64\LVCTest.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\..\Release64\LVCAdmin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Release64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Release64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Release64\</ProgramDataBaseFileName>
@@ -71,14 +71,14 @@
          ..\..\libmddWire\lib64\libmddWire64.lib;
          pdh.lib;wsock32.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
-      <OutputFile>.\..\bin64\LVCTest/LVCTest.exe</OutputFile>
+      <OutputFile>.\..\bin64\LVCAdmin/LVCAdmin.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ProgramDatabaseFile>.\..\bin64\LVCTest/LVCTest.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\..\bin64\LVCAdmin/LVCAdmin.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <TypeLibraryName>.\..\bin64\LVCTest/LVCTest.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\LVCAdmin/LVCAdmin.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -96,7 +96,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\..\Debug64\LVCTest.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\..\Debug64\LVCAdmin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Debug64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Debug64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Debug64\</ProgramDataBaseFileName>
@@ -110,15 +110,15 @@
          ..\..\libmddWire\Debug64\libmddWire64.lib;
          pdh.lib;wsock32.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
-      <OutputFile>.\..\bin64\LVCTest.exe</OutputFile>
+      <OutputFile>.\..\bin64\LVCAdmin.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\..\bin64\LVCTest.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\..\bin64\LVCAdmin.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <TypeLibraryName>.\..\bin64\LVCTest.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\LVCAdmin.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -128,15 +128,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\cpp\LVCTest.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EnableFastChecks</BasicRuntimeChecks>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\cpp\LVCAdmin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
