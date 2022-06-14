@@ -498,13 +498,13 @@ public:
 	/** \brief Record header size on file in bytes */
 	property u_int _recHdrSiz
 	{
-	   u_int get() { return (u_int)_data->_recHdrSiz;
+	   u_int get() { return (u_int)_data->_recHdrSiz; }
 	}
 
 	/** \brief Record data size on file in bytes */
 	property u_int _recDataSiz
 	{
-	   u_int get() { return (u_int)_data->_recDataSiz;
+	   u_int get() { return (u_int)_data->_recDataSiz; }
 	}
 
 	/** \brief Returns create time in LVC (Unix time) */
