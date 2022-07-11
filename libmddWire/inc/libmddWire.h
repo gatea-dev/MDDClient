@@ -1044,6 +1044,8 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
             tUnx  = v._i64 / _NANO;                                 \
             tNano = v._i64 % _NANO;                                 \
             tm    = ::localtime_r( &tUnx, &lt );                    \
+            if ( !tm )                                              \
+               break;                                               \
             sprintf( buf, "%04d-%02d-%02d %02d:%02d:%02d.%09d",     \
                   lt.tm_year + 1900,                                \
                   lt.tm_mon + 1,                                    \

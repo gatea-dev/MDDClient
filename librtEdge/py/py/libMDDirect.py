@@ -14,6 +14,7 @@
 #     16 FEB 2022 jcs  Dump( bFldTy=false ); rtEdgeField.TypeName()
 #     16 MAR 2022 jcs  _MDDPY_INT64
 #     24 MAY 2022 jcs  _MDDPY_UNXTM
+#     11 JUL 2022 jcs  rtEdgeData._tDead; LVC.IsDead()
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -558,17 +559,18 @@ class LVC:
    ########################
    def Snap( self, svc, tkr ):
       #
-      # blob = [ tUpd, Svc, Tkr, fld1, fld2, ... ]
+      # blob = [ tUpd, tDead, Svc, Tkr, fld1, fld2, ... ]
       #          where fldN = [ fidN, valN, tyN ]
       #
       blob = MDDirect.LVCSnap( self._cxt, svc, tkr )
       if not blob:
          return None
-      msg       = rtEdgeData( self._schema )
-      msg._tUpd = blob[0]
-      svc       = blob[1]
-      tkr       = blob[2]
-      flds      = blob[3:]
+      msg        = rtEdgeData( self._schema )
+      msg._tUpd  = blob[0]
+      msg._tDead = blob[1]
+      svc        = blob[2]
+      tkr        = blob[3]
+      flds       = blob[4:]
       return msg._SetData( svc, tkr, flds, True )
 
    ########################
@@ -604,6 +606,7 @@ class rtEdgeData:
    def __init__( self, schema=None ):
       self._schema = schema
       self._tUpd   = 0.0
+      self._tDead  = 0.0
       self._svc    = ''
       self._tkr    = ''
       self._flds   = []
@@ -621,12 +624,44 @@ class rtEdgeData:
       return len(  self._flds )
 
    ########################
+   # Returns True if stream is Active
+   #
+   # @return True if stream is Active
+   ########################
+   def IsActive( self ):
+      return self._tUpd and not self.IsDead()
+
+   ########################
+   # Returns True if stream is DEAD
+   #
+   # @return True if stream is DEAD
+   ########################
+   def IsDead( self ):
+      if self._tDead:
+         return( self._tDead > self._tUpd )
+      return False
+
+   ########################
    # Returns stringified message time
    #
    # @return stringified message time
    ########################
    def MsgTime( self ):
       t   = self._tUpd
+      lt  = time.localtime( t )
+      tMs = int( math.fmod( t * 1000, 1000 ) )
+      rc  = '%04d-%02d-%02d'  % ( lt.tm_year, lt.tm_mon, lt.tm_mday )
+      rc += ' %02d:%02d:%02d' % ( lt.tm_hour, lt.tm_min, lt.tm_sec )
+      rc += '.%03d' % tMs
+      return rc
+
+   ########################
+   # Returns stringified DEAD time
+   #
+   # @return stringified DEAD time
+   ########################
+   def DeadTime( self ):
+      t   = self._tDead
       lt  = time.localtime( t )
       tMs = int( math.fmod( t * 1000, 1000 ) )
       rc  = '%04d-%02d-%02d'  % ( lt.tm_year, lt.tm_mon, lt.tm_mday )

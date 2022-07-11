@@ -8,6 +8,7 @@
 *     19 NOV 2020 jcs  Build  2: PyGetTickers()
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: MDDpyLVC.PySnap() : _tUpd
+*     11 JUL 2022 jcs  Build  7: _tDead
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -89,8 +90,8 @@ PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
    MDDPY::Field     fld;
    mddField        *fdb;
    PyObject        *rtn, *pyF, *pyV, *pyT;
-   double           tm;
-   int              i, nf, ty;
+   double           tu, td;
+   int              i, nf, ty, xt;
 
    // Pre-condition(s)
 
@@ -103,19 +104,22 @@ PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
 
    ::LVCData &ld = msg->dataLVC();
 
-   rtn = ::PyList_New( nf+3 );
+   xt  = 4;
+   rtn = ::PyList_New( nf+xt );
    fdb = (mddField *)msg->Fields();
-   tm  = (double)ld._tUpdUs / 1000000.0;
-   tm += ld._tUpd;
-   ::PyList_SetItem( rtn, 0, PyFloat_FromDouble( tm ) );
-   ::PyList_SetItem( rtn, 1, PyString_FromString( svc ) );
-   ::PyList_SetItem( rtn, 2, PyString_FromString( tkr ) );
+   tu  = (double)ld._tUpdUs / 1000000.0;
+   tu += ld._tUpd;
+   td  = ld._tDead;
+   ::PyList_SetItem( rtn, 0, PyFloat_FromDouble( tu ) );
+   ::PyList_SetItem( rtn, 1, PyFloat_FromDouble( td ) );
+   ::PyList_SetItem( rtn, 2, PyString_FromString( svc ) );
+   ::PyList_SetItem( rtn, 3, PyString_FromString( tkr ) );
    for ( i=0; i<nf; i++ ) {
       fld.Update( fdb[i] );
       pyF = PyInt_FromLong( fld.Fid() );
       pyV = fld.GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      ::PyList_SetItem( rtn, i+3, ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
+      ::PyList_SetItem( rtn, i+xt, ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
    }
    return rtn;
 }

@@ -307,6 +307,10 @@ protected:
 
 int main( int argc, char **argv )
 {
+#ifdef OBSOLETE_STAT_SIZE
+printf( "sizeof( rtEdgeChanStats ) = %ld\n", sizeof( rtEdgeChanStats ) );
+return 0;
+#endif // OBSOLETE_STAT_SIZE
    const char *pSvr, *pPub, *pChn, *pc;
    const char *lnks[_MAX_CHAIN];
    char       *cp;
