@@ -879,7 +879,7 @@ class rtEdgeField:
                           MDDirectEnum._MDDPY_STR   : '(str) ',
                           MDDirectEnum._MDDPY_DT    : '(dat) ',
                           MDDirectEnum._MDDPY_TM    : '(tim) ',
-                          MDDirectEnum._MDDPY_TMSEC : '(tms) '
+                          MDDirectEnum._MDDPY_TMSEC : '(tms) ',
                           MDDirectEnum._MDDPY_UNXTM : '(unx) '
                         }
 
