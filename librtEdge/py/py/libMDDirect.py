@@ -15,6 +15,7 @@
 #     16 MAR 2022 jcs  _MDDPY_INT64
 #     24 MAY 2022 jcs  _MDDPY_UNXTM
 #     11 JUL 2022 jcs  rtEdgeData._tDead; LVC.IsDead()
+#     15 JUL 2022 jcs  LVC.IsDead() if !_tUpd
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -637,7 +638,9 @@ class rtEdgeData:
    # @return True if stream is DEAD
    ########################
    def IsDead( self ):
-      if self._tDead:
+      if not self._tUpd:
+         return True
+      elif self._tDead:
          return( self._tDead > self._tUpd )
       return False
 
