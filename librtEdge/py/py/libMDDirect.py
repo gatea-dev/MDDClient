@@ -16,6 +16,7 @@
 #     24 MAY 2022 jcs  _MDDPY_UNXTM
 #     11 JUL 2022 jcs  rtEdgeData._tDead; LVC.IsDead()
 #     15 JUL 2022 jcs  LVC.IsDead() if !_tUpd
+#     19 JUL 2022 jcs  LVCAdmin
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -50,12 +51,10 @@ except:
 # The library is wrapped as a C extension to Python depending on the 
 # version of Python linked via the following:
 #
-# OS | Python Version | Loadable Module
+# Python Ver | Win64 | Linux64
 # --- | --- | ---
-# Linux64 | 2.7 | MDDirect27.so
-# WIN64 | 3.9 | MDDirect39.pyd
-# Linux64 | 2.7 | MDDirect27.so
-# WIN64 | 3.9 | MDDirect39.pyd
+# 2.7 | MDDirect27.pyd | MDDirect27.so
+# 3.9 | MDDirect39.pyd | MDDirect39.so
 # 
 # You import the module depending on the version of your Python interpreter
 # as follows: 
@@ -83,6 +82,7 @@ except:
 # --- | --- 
 # rtEdgeSubscriber | Subscription channel from rtEdgeCache3 or tape
 # LVC | Snapshot data from Last Value Cache (LVC)
+# LVCAdmin | LVC Admin Channel : Add, Refresh Ticker(s)
 # rtEdgeData | Snapped or streaming data from rtEdgeSubscriber or LVC
 # rtEdgeField | A single field from rtEdgeData
 # 
@@ -543,7 +543,6 @@ class LVC:
    ########################
    # Return list of [ Svc, Tkr ] tuples in the LVC
    #
-   # @param file : LVC filename
    # @return [ [ Svc1, Tkr1 ], [ Svc2, Tkr2 ], ... ]
    ########################
    def GetTickers( self ):
@@ -582,6 +581,93 @@ class LVC:
    def Close( self ):
       if self._cxt:
          MDDirect.LVCClose( self._cxt )
+      self._cxt = None
+
+
+## \cond
+######################################
+#                                    #
+#         L V C A d m i n            #
+#                                    #
+######################################
+## \endcond
+## @class LVCAdmin
+#
+# Control channel to LVC : Add, Refresh Tickers
+#
+# Member | Description
+# --- | ---
+# _cxt    | LVCAdmin Context from MDDirect library
+#
+class LVCAdmin:
+   ########################
+   # Constructor : Create and Connect to LVCAdmin channel
+   #
+   # @param conn : host:port of LVC Admin Channel
+   ########################
+   def __init__( self, conn='localhost:8775' ):
+      self._cxt = MDDirect.LVCAdminOpen( conn )
+
+   ########################
+   # Add Broadcast Data Stream (BDS) to LVC
+   #
+   # A Broadcast Data Stream (BDS) is an updating stream of tickers from
+   # a publisher.  When an LVC is seeded by the BDS, it subscribes to the
+   # updating stream of tickers (e.g., List of NYSE exchange tickers), then
+   # subscribes to market data from each individual ticker.
+   #
+   # In this manner, the LVC only needs to know a single name - i.e., the
+   # name of the BDS - rather than the names of all tickers.
+   #
+   # @param svc : Service Name
+   # @param bds : BDS Name from svc
+   ########################
+   def AddBDS( self, svc, bds ):
+      MDDirect.LVCAdminAddBDS( self._cxt, svc, bds )
+
+   ########################
+   # Add single ticker to LVC
+   #
+   # @param svc : Service Name
+   # @param tkr : Ticker name
+   ########################
+   def AddTicker( self, svc, tkr ):
+      MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr )
+
+   ########################
+   # Add ticker list to LVC for specific service
+   #
+   # @param svc : Service Name
+   # @param tkrs : [ Ticker1, Ticker2, ... ]
+   ########################
+   def AddTickers( self, svc, tkrs ):
+      MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs )
+
+   ########################
+   # Refresh single ticker to LVC
+   #
+   # @param svc : Service Name
+   # @param tkr : Ticker name
+   ########################
+   def RefreshTicker( self, svc, tkr ):
+      MDDirect.LVCRefreshTicker( self._cxt, svc, tkr )
+
+   ########################
+   # Refresh ticker list to LVC for specific service
+   #
+   # @param svc : Service Name
+   # @param tkrs : [ Ticker1, Ticker2, ... ]
+   ########################
+   def RefreshTickers( self, svc, tkrs ):
+      MDDirect.LVCRefreshTickers( self._cxt, svc, tkrs )
+
+   ########################
+   # Close LVCAdmin channel
+   #
+   # @see Open()
+   ########################
+   def Close( self ):
+      MDDirect.LVCAdminClose( self._cxt )
       self._cxt = None
 
 
@@ -745,8 +831,8 @@ class rtEdgeData:
    ########################
    # Return message contents as a string, one field per line
    #
-   # @bHdr : True for DumpHdr(); False for fields only
-   # @bFldTy : True to show field type; False otherwise
+   # @param bHdr : True for DumpHdr(); False for fields only
+   # @param bFldTy : True to show field type; False otherwise
    # @return Message contents as a string, one field per line
    #
    # @see DumpHdr()
@@ -819,7 +905,6 @@ class rtEdgeData:
          self._flds  = flds
       self._byFid = idb
       return self
-## \endcond
 
    #################################
    # Set the message error contents

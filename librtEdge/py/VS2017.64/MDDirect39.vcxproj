@@ -117,6 +117,7 @@
     <ClCompile Include="..\src\Book.cpp" />
     <ClCompile Include="..\src\EventPump.cpp" />
     <ClCompile Include="..\src\LVC.cpp" />
+    <ClCompile Include="..\src\LVCAdmin.cpp" />
     <ClCompile Include="..\src\RecCache.cpp" />
     <ClCompile Include="..\src\SubChannel.cpp" />
     <ClCompile Include="..\src\PyAPI.cpp" />

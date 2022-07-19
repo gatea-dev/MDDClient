@@ -11,6 +11,7 @@
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: PyList_PackX()
 *     16 MAR 2022 jcs  Build  6: error C2760
+*     19 JUL 2022 jcs  Build  8: LVCAdmin
 *     
 *  (c) 1994-2022, Gatea, Ltd.  
 ******************************************************************************/
@@ -160,6 +161,7 @@ typedef LocklessFifo<Update>     UpdateFifo;
 #include <RecCache.h>
 #include <Book.h>
 #include <LVC.h>
+#include <LVCAdmin.h>
 #include <SubChannel.h>
 
 // version.cpp

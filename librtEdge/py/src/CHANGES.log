@@ -5,6 +5,13 @@ Features To Add
 ---------------
 
 
+Build  8  22-07-xx
+------------------
+1) LVCAdmin
+
+2) DDpyLVC::PySnap() : Return None if !ld._tUpd 
+
+
 Build  7  22-07-11
 ------------------
 1) rtEdgeData._tDead

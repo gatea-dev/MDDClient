@@ -11,6 +11,7 @@
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *     25 JAN 2022 jcs  Build  4: MDDirectxy
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
+*     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -33,51 +34,99 @@ static PyObject *_PyReturn( PyObject *obj )
 }
 
 
-
 ////////////////////////////////////////////////////////////
 //
 //       Python 'C' Extension Implementation Methods
 //
 ////////////////////////////////////////////////////////////
 
-static MDDpySubChan *_subs[_MAX_PYCHAN];
-static MDDpyLVC     *_lvcs[_MAX_PYCHAN];
+typedef hash_map<int, MDDpySubChan *>  PySubChanMap;
+typedef hash_map<int, MDDpyLVC *>      PyLVCMap;
+typedef hash_map<int, MDDpyLVCAdmin *> PyLVCAdminMap;
+
+static PySubChanMap  _subMap;
+static PyLVCMap      _lvcMap;
+static PyLVCAdminMap _admMap;
 
 static MDDpySubChan *_GetSub( int cxt )
 {
-   MDDpySubChan *ch;
+   PySubChanMap          &sdb = _subMap;
+   PySubChanMap::iterator it;
+   MDDpySubChan          *ch;
 
-   ch = InRange( 0, cxt, _MAX_PYCHAN-1 ) ? _subs[cxt] : (MDDpySubChan *)0;
+   it = sdb.find( cxt );
+   ch = ( it != sdb.end() ) ? (*it).second : (MDDpySubChan *)0;
    return ch;
 }
 
-static void _DelSub( MDDpySubChan *ch )
+static bool _DelSub( int cxt )
 {
-   int cxt;
+   PySubChanMap          &sdb = _subMap;
+   PySubChanMap::iterator it;
+   MDDpySubChan          *ch;
 
-   cxt = ch->cxt();
-   if ( InRange( 0, cxt, _MAX_PYCHAN-1 ) )
-      _subs[cxt] = (MDDpySubChan *)0;
-   delete ch;
+   if ( (it=sdb.find( cxt )) != sdb.end() ) {
+      ch = (*it).second;
+      sdb.erase( it );
+      ch->Stop();
+      delete ch;
+      return true;
+   }
+   return false;
 }
 
 static MDDpyLVC *_GetLVC( int cxt )
 {
-   MDDpyLVC *ch;
+   PyLVCMap          &ldb = _lvcMap;
+   PyLVCMap::iterator it;
+   MDDpyLVC          *lvc;
 
-   ch = InRange( 0, cxt, _MAX_PYCHAN-1 ) ? _lvcs[cxt] : (MDDpyLVC *)0;
-   return ch;
+   it = ldb.find( cxt );
+   lvc = ( it != ldb.end() ) ? (*it).second : (MDDpyLVC *)0;
+   return lvc;
 }
 
-static void _DelLVC( MDDpyLVC *ch )
+static bool _DelLVC( int cxt )
 {
-   int cxt;
+   PyLVCMap          &ldb = _lvcMap;
+   PyLVCMap::iterator it;
+   MDDpyLVC          *lvc;
 
-   cxt = ch->cxt();
-   if ( InRange( 0, cxt, _MAX_PYCHAN-1 ) )
-      _lvcs[cxt] = (MDDpyLVC *)0;
-   delete ch;
+   if ( (it=ldb.find( cxt )) != ldb.end() ) {
+      lvc = (*it).second;
+      ldb.erase( it );
+      delete lvc;
+      return true;
+   }
+   return false;
 }
+
+static MDDpyLVCAdmin *_GetLVCAdmin( int cxt )
+{
+   PyLVCAdminMap          &ldb = _admMap;
+   PyLVCAdminMap::iterator it;
+   MDDpyLVCAdmin          *adm;
+
+   it = ldb.find( cxt );
+   adm = ( it != ldb.end() ) ? (*it).second : (MDDpyLVCAdmin *)0;
+   return adm; 
+}
+
+static bool _DelLVCAdmin( int cxt )
+{
+   PyLVCAdminMap          &ldb = _admMap;
+   PyLVCAdminMap::iterator it; 
+   MDDpyLVCAdmin          *adm;
+
+   if ( (it=ldb.find( cxt )) != ldb.end() ) { 
+      adm = (*it).second;
+      ldb.erase( it );
+      delete adm;
+      return true;
+   }   
+   return false;
+}
+
 
 //////////////////////
 // External API
@@ -112,10 +161,10 @@ static PyObject *Start( PyObject *self, PyObject *args )
 
    // MD-Direct Subscription Channel
 
-   ch         = new MDDpySubChan( pHost, pUser, bBin );
+   ch           = new MDDpySubChan( pHost, pUser, bBin );
    ch->Start( pHost, pUser );
-   cxt        = ch->cxt();
-   _subs[cxt] = ch;
+   cxt          = ch->cxt();
+   _subMap[cxt] = ch;
    return PyInt_FromLong( cxt );
 }
 
@@ -140,7 +189,7 @@ static PyObject *StartSlice( PyObject *self, PyObject *args )
    ch         = new MDDpySubChan( pHost, pUser, bBin );
    ch->Start( pHost, pUser );
    cxt        = ch->cxt();
-   _subs[cxt] = ch;
+   _subMap[cxt] = ch;
    return PyInt_FromLong( cxt );
 }
 
@@ -322,18 +371,15 @@ static PyObject *Close( PyObject *self, PyObject *args )
 
 static PyObject *Stop( PyObject *self, PyObject *args )
 {
-   MDDpySubChan *ch;
-   int         cxt;
+   int  cxt;
+   bool rc;
 
    // Usage : Stop( cxt )
 
    if ( !PyArg_ParseTuple( args, "i", &cxt ) )
       return _PyReturn( Py_False );
-   if ( (ch=_GetSub( cxt )) ) {
-      ch->Stop();
-      _DelSub( ch );
-   }
-   return _PyReturn( ch ? Py_True : Py_False );
+   rc = _DelSub( cxt );
+   return _PyReturn( rc ? Py_True : Py_False );
 }
 
 static PyObject *Ioctl( PyObject *self, PyObject *args )
@@ -383,9 +429,9 @@ static PyObject *LVCOpen( PyObject *self, PyObject *args )
 
    // MD-Direct Subscription Channel
 
-   lvc        = new MDDpyLVC( file );
-   cxt        = lvc->cxt();
-   _lvcs[cxt] = lvc;
+   lvc          = new MDDpyLVC( file );
+   cxt          = lvc->cxt();
+   _lvcMap[cxt] = lvc;
    return PyInt_FromLong( cxt );
 }
 
@@ -434,16 +480,151 @@ static PyObject *LVCSnap( PyObject *self, PyObject *args )
 
 static PyObject *LVCClose( PyObject *self, PyObject *args )
 {
-   MDDpyLVC *lvc;
-   int       cxt;
+   int  cxt;
+   bool rc;
 
    // Usage : LVCClose( cxt )
 
    if ( !PyArg_ParseTuple( args, "i", &cxt ) )
       return _PyReturn( Py_False );
-   if ( (lvc=_GetLVC( cxt )) )
-      _DelLVC( lvc );
-   return _PyReturn( lvc ? Py_True : Py_False );
+   rc = _DelLVC( cxt );
+   return _PyReturn( rc ? Py_True : Py_False );
+}
+
+
+///////////////////////////
+// LVCAdmin Channel
+////////////////////////////
+static PyObject *LVCAdmOpen( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *file;
+   int            cxt;
+
+   // Usage : LVCAdminOpen( 'localhost:7655' );
+
+   if ( !PyArg_ParseTuple( args, "s", &file ) )
+      return _PyReturn( Py_None );
+
+   // MD-Direct Subscription Channel
+
+   adm          = new MDDpyLVCAdmin( file );
+   cxt          = adm->cxt();
+   _admMap[cxt] = adm;
+   return PyInt_FromLong( cxt );
+}
+
+static PyObject *LVCAdmAddBDS( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc, *bds;
+   int            cxt;
+
+   // Usage : LVCAddBDS( cxt, svc, tkr )
+
+   if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &bds ) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) )
+      adm->PyAddBDS( svc, bds );
+   return Py_None;
+}
+
+static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc, *tkr;
+   int            cxt;
+
+   // Usage : LVCAddTicker( cxt, svc, tkr )
+
+   if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) )
+      adm->PyAddTicker( svc, tkr );
+   return Py_None;
+}
+
+static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc;
+   const char   **tkrs;
+   PyObject      *lst, *pyK;
+   int            cxt, i, nf;
+
+   // Usage : LVCAddTickers( cxt, svc, tkrs )
+
+   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, PyList_Type, &lst ) )
+      return Py_None;
+   if ( !(nf=::PyList_Size( lst )) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) ) {
+      tkrs = new const char *[nf+1];
+      for ( i=0; i<nf; i++ ) {
+         pyK     = PyList_GetItem( lst, i );
+         tkrs[i] = PyString_AsString( pyK );
+      }
+      adm->PyAddTickers( svc, tkrs );
+      delete[] tkrs;
+   }
+   return Py_None;
+}
+
+static PyObject *LVCAdmRfrshTkr( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc, *tkr;
+   const char    *tkrs[K];
+   int            cxt;
+
+   // Usage : LVCRefreshTicker( cxt, svc, tkr )
+
+   if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
+      return Py_None;
+   tkrs[0] = tkr;
+   tkrs[1] = NULL;
+   if ( (adm=_GetLVCAdmin( cxt )) )
+      adm->PyRefreshTickers( svc, tkrs );
+   return Py_None;
+}
+
+static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc;
+   const char   **tkrs;
+   PyObject      *lst, *pyK;
+   int            cxt, i, nf;
+
+   // Usage : LVCRefreshTickers( cxt, svc, tkrs )
+
+   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, PyList_Type, &lst ) )
+      return Py_None;
+   if ( !(nf=::PyList_Size( lst )) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) ) {
+      tkrs = new const char *[nf+1];
+      for ( i=0; i<nf; i++ ) {
+         pyK     = PyList_GetItem( lst, i );
+         tkrs[i] = PyString_AsString( pyK );
+      }
+      adm->PyRefreshTickers( svc, tkrs );
+      delete[] tkrs;
+   }
+   return Py_None;
+}
+
+static PyObject *LVCAdmClose( PyObject *self, PyObject *args )
+{
+   int  cxt;
+   bool rc;
+
+   // Usage : LVCClose( cxt )
+
+   if ( !PyArg_ParseTuple( args, "i", &cxt ) )
+      return _PyReturn( Py_False );
+   rc = _DelLVCAdmin( cxt );
+   return _PyReturn( rc ? Py_True : Py_False );
 }
 
 
@@ -806,6 +987,16 @@ static PyMethodDef EdgeMethods[] =
     { "LVCSnap",       LVCSnap,    _PY_ARGS, "Snap from LVC File" },
     { "LVCClose",      LVCClose,   _PY_ARGS, "Close LVC File" },
     /*
+     * LVC Admin Channel
+     */
+    { "LVCAdminOpen",           LVCAdmOpen,      _PY_ARGS, "Open LVCAdmin Channel" },
+    { "LVCAdminAddBDS",         LVCAdmAddBDS,    _PY_ARGS, "Add BDS to LVC" },
+    { "LVCAdminAddTicker",      LVCAdmAddTkr,    _PY_ARGS, "Add Ticker to LVC" },
+    { "LVCAdminAddTickers",     LVCAdmAddTkrs,   _PY_ARGS, "Add Ticker List to LVC" },
+    { "LVCAdminRefreshTicker",  LVCAdmRfrshTkr,  _PY_ARGS, "Refresh Ticker to LVC" },
+    { "LVCAdminRefreshTickers", LVCAdmRfrshTkrs, _PY_ARGS, "Refresh Ticker List to LVC" },
+    { "LVCAdminClose",          LVCAdmClose,     _PY_ARGS, "Close LVCAdmin Channel" },
+    /*
      * Library Utilities
      */
     { "GetFields",     GetFields, _PY_ARGS, "Get Field List." },
@@ -834,16 +1025,12 @@ static PyModuleDef mddModule = { PyModuleDef_HEAD_INIT,
 PyMODINIT_FUNC PyInit_MDDirect39( void )
 {
    _pMethods = EdgeMethods;
-   ::memset( _subs, 0, sizeof( _subs ) );
-   ::memset( _lvcs, 0, sizeof( _lvcs ) );
    return PyModule_Create( &mddModule );
 } 
 #else
 PyMODINIT_FUNC initMDDirect27( void )
 {
    _pMethods = EdgeMethods;
-   ::memset( _subs, 0, sizeof( _subs ) );
-   ::memset( _lvcs, 0, sizeof( _lvcs ) );
    Py_InitModule( "MDDirect27", EdgeMethods );
 }
 #endif // _MDD_PYTHON3 

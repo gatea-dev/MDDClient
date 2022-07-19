@@ -11,12 +11,13 @@ for pLib in [ 'mddWire', 'rtEdge' ]:
    INC_DIR += [ '%s/lib%s/inc' % ( MDD_ROOT, pLib ) ]
    LIB_DIR += [ '%s/lib%s/lib' % ( MDD_ROOT, pLib ) ]
    LIBS    += [ '%s64' % pLib ]
-SRCS        = [ './src/Book.cpp',
+SRCS        = [ './src/PyAPI.cpp',
+                './src/Book.cpp',
                 './src/EventPump.cpp',
                 './src/LVC.cpp',
+                './src/LVCAdmin.cpp',
                 './src/RecCache.cpp',
                 './src/SubChannel.cpp',
-                './src/PyAPI.cpp',
                 './src/version.cpp' ]
  
 MDDirect = Extension( 'MDDirect27',

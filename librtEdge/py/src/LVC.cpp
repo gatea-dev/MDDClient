@@ -1,7 +1,7 @@
 /******************************************************************************
 *
 *  LVC.cpp
-*     MD-Direct Subscription Channel
+*     MD-Direct LVC Channel
 *
 *  REVISION HISTORY:
 *      3 APR 2019 jcs  Created.
@@ -9,6 +9,7 @@
 *     22 NOV 2020 jcs  Build  3: PyObjects
 *      3 FEB 2022 jcs  Build  5: MDDpyLVC.PySnap() : _tUpd
 *     11 JUL 2022 jcs  Build  7: _tDead
+*     19 JUL 2022 jcs  Build  8: Snap() : None if !_tUpd
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -103,6 +104,13 @@ PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
    // Iterate : [ tUpd, Svc, Tkr, fld1, fld2, ... ]
 
    ::LVCData &ld = msg->dataLVC();
+
+   // None if no updates
+
+   if ( !ld._tUpd )
+      return Py_None;
+
+   // OK to continue
 
    xt  = 4;
    rtn = ::PyList_New( nf+xt );

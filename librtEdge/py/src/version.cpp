@@ -6,6 +6,14 @@
 ******************************************************************************/
 #include <MDDirect.h>
 
+// Build
+
+#if !defined(_BLD)
+#define _BLD "8"
+#endif // !defined(_BLD)
+
+// Platform-specific
+
 #if defined(__LP64__) || defined(_WIN64)
 #define PTRSZ u_long
 #define GL64 "(64-bit)"
@@ -25,7 +33,7 @@ char *MDDirectID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)MDDirect4py Build 7 " );
+      cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s", GL64, _BLD );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       cp    += sprintf( cp, "\n" );
       cp    += sprintf( cp, ::Py_GetVersion() );
