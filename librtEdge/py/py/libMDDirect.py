@@ -650,7 +650,7 @@ class LVCAdmin:
    # @param tkr : Ticker name
    ########################
    def RefreshTicker( self, svc, tkr ):
-      MDDirect.LVCRefreshTicker( self._cxt, svc, tkr )
+      MDDirect.LVCAdminRefreshTicker( self._cxt, svc, tkr )
 
    ########################
    # Refresh ticker list to LVC for specific service
@@ -659,7 +659,7 @@ class LVCAdmin:
    # @param tkrs : [ Ticker1, Ticker2, ... ]
    ########################
    def RefreshTickers( self, svc, tkrs ):
-      MDDirect.LVCRefreshTickers( self._cxt, svc, tkrs )
+      MDDirect.LVCAdminRefreshTickers( self._cxt, svc, tkrs )
 
    ########################
    # Close LVCAdmin channel
