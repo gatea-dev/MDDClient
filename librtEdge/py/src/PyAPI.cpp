@@ -567,11 +567,12 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
    if ( !(nf=::PyList_Size( lst )) )
       return Py_None;
    if ( (adm=_GetLVCAdmin( cxt )) ) {
-      tkrs = new const char *[nf+1];
+      tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
          pyK     = PyList_GetItem( lst, i );
          tkrs[i] = PyString_AsString( pyK );
       }
+      tkrs[i] = NULL;
       adm->PyAddTickers( svc, tkrs );
       delete[] tkrs;
    }
@@ -611,11 +612,12 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
    if ( !(nf=::PyList_Size( lst )) )
       return Py_None;
    if ( (adm=_GetLVCAdmin( cxt )) ) {
-      tkrs = new const char *[nf+1];
+      tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
          pyK     = PyList_GetItem( lst, i );
          tkrs[i] = PyString_AsString( pyK );
       }
+      tkrs[i] = NULL;
       adm->PyRefreshTickers( svc, tkrs );
       delete[] tkrs;
    }
