@@ -17,6 +17,14 @@
 ******************************************************************************/
 #include <MDDirect.h>
 
+#if PY_MAJOR_VERSION >= 3
+#define PyInt_AsLong        PyLong_AsLong
+#define PyInt_Check         PyLong_Check
+#define PyInt_FromLong      PyLong_FromLong
+#define PyString_AsString   PyBytes_AsString
+#define PyString_Check      PyUnicode_Check
+#define PyString_FromString PyUnicode_FromString
+#endif // PY_MAJOR_VERSION >= 3
 
 /////////////////////
 // Forwards
@@ -554,7 +562,7 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 
    // Usage : LVCAddTickers( cxt, svc, tkrs )
 
-   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, PyList_Type, &lst ) )
+   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, &PyList_Type, &lst ) )
       return Py_None;
    if ( !(nf=::PyList_Size( lst )) )
       return Py_None;
@@ -598,7 +606,7 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
 
    // Usage : LVCRefreshTickers( cxt, svc, tkrs )
 
-   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, PyList_Type, &lst ) )
+   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, &PyList_Type, &lst ) )
       return Py_None;
    if ( !(nf=::PyList_Size( lst )) )
       return Py_None;
