@@ -254,6 +254,7 @@ int main( int argc, char **argv )
             ::fprintf( stdout, "(%s,%s) NOT FOUND\n", svc, tkr );
       }
    }
+   ::fprintf( stdout, "Hit  <ENTER> to continue ..." ); getchar();
    ::fprintf( stdout, "Done!!\n " );
    ::fflush( stdout );
    return 1;

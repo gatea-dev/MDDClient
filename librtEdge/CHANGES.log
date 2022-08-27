@@ -1,5 +1,15 @@
-librtEdge Client Library
--------------------------
+/******************************************************************************
+*
+*  CHANGES.log
+*     doxygen-enabled CHANGES.log
+*
+*  REVISION HISTORY:
+*     26 AUG 2022 jcs  Created (from original shit)
+*
+*  (c) 1994-2022, Gatea Ltd.
+******************************************************************************/
+
+/*
 
 Performance
 -----------
@@ -13,118 +23,140 @@ Known Bugs
 
 Features To Add
 ---------------
+1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
 
+2) rtEdgePublisher.pSvrHosts() : Add it in - DUH!!
 
-Build 55 22-06-xx
------------------
-1) inc/bld.cpp
+3) OnConnect( string pConn ) : EBADF + host:port, not just EBADF
 
-2) Truncating trailing 0:
-   - RTEDGE.Field.Dump() : _StripTrailing0() iff not rtFld_string 
-   - C# : rtEdgeField.GetAsString() : Wrap GetAsString(), not Dump() - DUH!!
+*/?
 
-3) LVCData._recXxxSiz
+/**
+ * \mainpage librtEdge API Reference Manual
+ *
+ * librtEdge allows you to consume and publish real-time and historical data
+ * from the MD-Direct platform via C or C++ through the following components:
+ * Function | Component | Description
+ * ---- | --- | ----
+ * Subscribe | rtEdgeCache3 | Consume real-time data
+ * Publish | rtEdgeCache3 | Publish real-time data
+ * Tick-by-Tick | gateaRecorder | Pull out every recorded message for a day
+ * Bulk Snapshot | LVC | Bulk snapshot (5000 tickers in under 1 millisecond)
+ * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
+ *
+ * ## Change Log
+ *
+ * 
+ * ### Build 55 22-06-10
+ * 
+ * -# inc/bld.cpp
+ * 
+ * -# Truncating trailing 0:
+ *    - RTEDGE.Field.Dump() : _StripTrailing0() iff not rtFld_string 
+ *    - C# : rtEdgeField.GetAsString() : Wrap GetAsString(), not Dump() - DUH!!
+ * 
+ * -# LVCData._recXxxSiz
+ * 
+ * -# Remape Tape as needed:
+ *    - TapeChannel.PumpTicker() : Unload() / Load() if off > _tape._dLen
+ * 
+ * -# LVCTest -> LVCDump.cpp / LVCAdmin.cpp
+ * 
+ * 
+ * ### Build 54 22-05-24
+ * 
+ * -# LVCAdmin.RefreshTickers()
+ * 
+ * -# LVCAdmin.RefreshAll()
+ * 
+ * -# LVCData._bActive
+ * 
+ * -# EdgChannel.GetSchema() : 
+ *    - Do not copy name into rtVALUE, since mddWire puts maxLen there 
+ * 
+ * -# CLI : get/set rtEdgeChanStats._iVal / _dVal
+ * 
+ * -# mddFld_unixTime
+ *    - Update.AddFieldAsUnixTime()
+ * 
+ * -# WIN64 core : LVC_Destroy() : lvc = (*it).second; BEFORE erase 
+ * 
+ * 
+ * ### Build 53 22-05-07
+ * 
+ * -# C# : rtEdgePublisher :
+ *    - rtEdgePublisher.SetBinary() : Set _bBinary : DUH!!
+ *    - rtEdgePublisher.rtEdgePublisher( string, string, bool bBinary )
+ *    - rtEdgePublisher.IsValid() / IsConnecting()
+ * 
+ * -# SetMDDirectMon() : Instance Number
+ *    - hash_map<int, GLlibStats *>
+ *    - rtEdgeChanStats._iVal : u_int64_t, not int - DUH!!
+ * 
+ * -# LVCAdmin.AddBDS()
+ *    - _dtdBDS = "ADD-BDS"
+ * 
+ * -# inc/hpp/DataDog.hpp
+ * 
+ * -# inc/hpp/XmlParser.hpp
+ * 
+ * -# cpp/MDD2DataDog.cpp
+ * 
+ * -# CLI : Channel.GetStats()
+ * 
+ * -# EdgChannel constructor : Handle empty username
+ * 
+ * 
+ * ### Build 52 22-03-30
+ * 
+ * -# C# rtEdgePublisher : 
+ *    - rtEdgePubUpdate::AddFieldAsDateTime guts : DUH!!
+ *    - rtEdgePubUpdate::AddFieldAsDate()
+ *    - rtEdgePubUpdate::AddFieldAsTime()
+ * 
+ * -# ------------------ NEW LIBMDDWIRE ------------------
+ *    - Unpacked libmddWire FieldList
+ *    - mddIoctl_unpacked
+ * 
+ * -# Field.GetAsDateTime()
+ * 
+ * -# CLI : rtEdgePubUpdate.AddFieldAsInt64( int, long long )
+ * 
+ * -# rtMessage.MsgTime() w/ LVC:
+ *    - dataLVC() : DUH!!
+ * 
+ * 
+ * ### Build 51 22-03-18
+ * 
+ * -# rtProxy cores : Quick Start / Stop:
+ *    - volatile bool Thread._ready
+ * 
+ * -# LVCAdmin.AddTickers()
+ * 
+ * -# Python : _MDDPY_INT64 / _MDDPY_NONE
+ *    - WIN64 : Handle err C2760 w/ IUnknown typedef
+ *    - PyLong_FromLong() : DUH!!
+ *    - Empty field = None
+ * 
+ * -# LVCAdmin.OnAdminXXX( bool bAdd, ... );
+ *    - Pass OnAdminXXX() into CLI / C#
+ * 
+ * -# 64-bit C#:
+ *    - long long rtEdgeField.GetAsInt64(), not 1 long
+ * 
+ * 
+ * ### Build 50 21-12-14
+ * 
+ * -# CLI rtEdgeField.GetAsDateTime() memory leak
+ *    - rtEdgeField._dt : DUH !!
+ * 
+ * -# Subscribe -table
+ * 
+ * -# WIN64 : pthread_t = u_int64_t
+ * 
+ */ 
 
-4) Remape Tape as needed:
-   - TapeChannel.PumpTicker() : Unload() / Load() if off > _tape._dLen
-
-5) LVCTest -> LVCDump.cpp / LVCAdmin.cpp
-/*
-5) BDS from tape : Any BDS gets EVERYTHING
- */
-
-
-Build 54 22-05-24
------------------
-1) LVCAdmin.RefreshTickers()
-
-2) LVCAdmin.RefreshAll()
-
-3) LVCData._bActive
-
-4) EdgChannel.GetSchema() : 
-   - Do not copy name into rtVALUE, since mddWire puts maxLen there 
-
-5) CLI : get/set rtEdgeChanStats._iVal / _dVal
-
-6) mddFld_unixTime
-   - Update.AddFieldAsUnixTime()
-
-7) WIN64 core : LVC_Destroy() : lvc = (*it).second; BEFORE erase 
-
-
-Build 53 22-05-07
------------------
-1) C# : rtEdgePublisher :
-   - rtEdgePublisher.SetBinary() : Set _bBinary : DUH!!
-   - rtEdgePublisher.rtEdgePublisher( string, string, bool bBinary )
-   - rtEdgePublisher.IsValid() / IsConnecting()
-
-2) SetMDDirectMon() : Instance Number
-   - hash_map<int, GLlibStats *>
-   - rtEdgeChanStats._iVal : u_int64_t, not int - DUH!!
-
-3) LVCAdmin.AddBDS()
-   - _dtdBDS = "ADD-BDS"
-
-4) inc/hpp/DataDog.hpp
-
-5) inc/hpp/XmlParser.hpp
-
-6) cpp/MDD2DataDog.cpp
-
-7) CLI : Channel.GetStats()
-
-8) EdgChannel constructor : Handle empty username
-
-
-Build 52 22-03-30
------------------
-1) C# rtEdgePublisher : 
-   - rtEdgePubUpdate::AddFieldAsDateTime guts : DUH!!
-   - rtEdgePubUpdate::AddFieldAsDate()
-   - rtEdgePubUpdate::AddFieldAsTime()
-
-2) ****************** NEW LIBMDDWIRE ******************
-   - Unpacked libmddWire FieldList
-   - mddIoctl_unpacked
-
-3) Field.GetAsDateTime()
-
-4) CLI : rtEdgePubUpdate.AddFieldAsInt64( int, long long )
-
-5) rtMessage.MsgTime() w/ LVC:
-   - dataLVC() : DUH!!
-
-
-Build 51 22-03-18
------------------
-1) rtProxy cores : Quick Start / Stop:
-   - volatile bool Thread._ready
-
-2) LVCAdmin.AddTickers()
-
-3) Python : _MDDPY_INT64 / _MDDPY_NONE
-   - WIN64 : Handle err C2760 w/ IUnknown typedef
-   - PyLong_FromLong() : DUH!!
-   - Empty field = None
-
-4) LVCAdmin.OnAdminXXX( bool bAdd, ... );
-   - Pass OnAdminXXX() into CLI / C#
-
-5) 64-bit C#:
-   - long long rtEdgeField.GetAsInt64(), not 1 long
-
-
-Build 50 21-12-14
------------------
-1) CLI rtEdgeField.GetAsDateTime() memory leak
-   - rtEdgeField._dt : DUH !!
-
-2) Subscribe -table
-
-3) WIN64 : pthread_t = u_int64_t
-
+#ifndef DOXYGEN_OMIT
 
 Build 49 21-07-29
 -----------------
@@ -134,7 +166,6 @@ Build 49 21-07-29
 
 2) rtEdge_MemSize() : WIN32 Bug Fix
    - Use psapi.dll
-
 
 Build 48 21-04-23
 -----------------
@@ -915,3 +946,5 @@ Build  2 09-08-17
 Build  1 09-08-16
 -----------------
 1) Created.
+
+#endif // DOXYGEN_OMIT

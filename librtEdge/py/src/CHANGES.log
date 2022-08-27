@@ -3,6 +3,8 @@ rtInC Python Plug-in Library
 
 Features To Add
 ---------------
+1) PyList LVCAdmin.XxxTicker(s)( svc, tkr, double dWait=0.0 )
+   - Return list of tickers NOT refreshed / processed
 
 
 Build  8  22-07-xx

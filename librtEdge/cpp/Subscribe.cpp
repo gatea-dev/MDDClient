@@ -14,6 +14,7 @@
 *     10 SEP 2020 jcs  Build 44: -tapeDir -query
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *      6 OCT 2021 jcs  Build 50: -table
+*     16 AUG 2022 jcs  Build 55: stdout formatting buggies
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -363,6 +364,7 @@ public:
       ::fprintf( stdout, "[%s] %s ( %s,%s ) :%s", tm, mt, svc, tkr, err );
       if ( (off=msg.TapePos()) )
          ::fprintf( stdout, "; Pos=%ld", off );
+      ::fprintf( stdout, "\n" );
       _flush();
    }
 
