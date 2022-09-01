@@ -473,6 +473,36 @@ public:
 	      ::rtEdge_ioctl( _cxt, ioctl_tapeDirection, (void *)_bTapeDir );
 	}
 
+	/**
+	 * \brief Return Tape start time in Unix Time; 0 if not tape
+	 *
+	 * \return Tape start time in Unix Time; 0 if not tape
+	 */
+        time_t GetTapeStartTime()
+        {
+	   u_int64_t tm;
+
+           tm = 0;
+	   if ( _cxt && _attr._bTape )
+	      ::rtEdge_ioctl( _cxt, ioctl_tapeStartTime, (void *)&tm );
+           return tm;
+        }
+
+	/**
+	 * \brief Return Tape end (last insert) time in Unix Time; 0 if not tape
+	 *
+	 * \return Tape end (last insert) time in Unix Time; 0 if not tape
+	 */
+        time_t GetTapeEndTime()
+        {
+	   u_int64_t tm;
+
+           tm = 0;
+	   if ( _cxt && _attr._bTape )
+	      ::rtEdge_ioctl( _cxt, ioctl_tapeEndTime, (void *)&tm );
+           return tm;
+        }
+
 
 	////////////////////////////////////
 	// Database Directory Query

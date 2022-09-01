@@ -458,7 +458,19 @@ typedef enum {
     *
     * \param (void *)val - 1 to pump in tape (reverse) order; 0 in chronological; Default is 1
     */
-   ioctl_tapeDirection     = 33
+   ioctl_tapeDirection     = 33,
+   /**
+    * \brief Get Tape start time in Unix Time; 0 if not tape
+    *
+    * \param (void *)val - Pointer to u_int64_t to receive UnixTime
+    */
+   ioctl_tapeStartTime     = 34,
+   /**
+    * \brief Get Tape end (last insert) time in Unix Time; 0 if not tape
+    *
+    * \param (void *)val - Pointer to u_int64_t to receive UnixTime
+    */
+   ioctl_tapeEndTime       = 35
 } rtEdgeIoctl;
 
 /**

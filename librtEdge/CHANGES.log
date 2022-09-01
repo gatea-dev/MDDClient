@@ -23,8 +23,6 @@ Known Bugs
 
 Features To Add
 ---------------
- * -# Tape : *.idx files
-
 1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
 
 */
@@ -58,6 +56,8 @@ Features To Add
  * -# rtEdgeData._RTL
  *
  * -# Socket.OnConnect( "EBADF : host:port" )
+ *
+ * -# SubChannel.GetTapeXccTime() / ioctl_tapeXxxTime
  * 
  * ### Build 55 22-06-10
  * 

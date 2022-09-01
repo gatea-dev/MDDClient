@@ -586,8 +586,9 @@ int EdgChannel::Read( double dWait, rtEdgeRead &rd )
 ////////////////////////////////////////////
 bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
 {
-   bool  bArg, *pbArg;
-   char *pArg;
+   bool       bArg, *pbArg;
+   char      *pArg;
+   u_int64_t *i64;
 
    // 1) Base Socket Class??
 
@@ -599,6 +600,7 @@ bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
    bArg  = ( arg != (void *)0 );
    pbArg = (bool *)arg; 
    pArg  = (char *)arg; 
+   i64   = arg ? (u_int64_t *)arg : (u_int64_t *)0;
    switch( ctl ) {
       case ioctl_rawData:
          _bRawData = bArg;
@@ -618,6 +620,14 @@ bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
       case ioctl_tapeDirection:
          _bTapeDir = bArg;
          return true;
+      case ioctl_tapeStartTime:
+         if ( _tape && i64 )
+            *i64 = _tape->hdr()._tCreate;
+         return( _tape && i64 );
+      case ioctl_tapeEndTime:
+         if ( _tape && i64 )
+            *i64 = _tape->hdr()._curTime.tv_sec;
+         return( _tape && i64 );
       default:
          break;
    }
