@@ -692,12 +692,13 @@ void Socket::OnWrite()
 
 void Socket::OnException()
 {
-   const char *err = "EBADF"; // "OnException()
+   string err( "EBADF : " );
 
-   OnDisconnect( err );
-   Disconnect( err );
+   err += dstConn();
+   OnDisconnect( err.data() );
+   Disconnect( err.data() );
    if ( _log )
-      _log->logT( 2, "Socket::OnRead() : Connection to %s lost\n", dstConn() );
+      _log->logT( 2, "Socket::OnRead() : %s\n", err.data() );
 }
 
 

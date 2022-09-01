@@ -23,13 +23,14 @@ Known Bugs
 
 Features To Add
 ---------------
++ Tape : YYYYMMDD HH:MM:SS pump
++ Tape : *.idx
+
  * -# Tape : *.idx files
 
 1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
 
-3) OnConnect( string pConn ) : EBADF + host:port, not just EBADF
-
-*/?
+*/
 
 /**
  * \mainpage librtEdge API Reference Manual
@@ -57,6 +58,8 @@ Features To Add
  * -# rtEdgePublisher.pSvrHosts() : DUH!!
  * 
  * -# rtEdgeData._RTL
+ *
+ * -# Socket.OnConnect( "EBADF : host:port" )
  * 
  * ### Build 55 22-06-10
  * 
