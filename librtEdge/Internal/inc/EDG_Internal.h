@@ -26,6 +26,7 @@
 *      6 DEC 2018 jcs  Build 41: 64-bit PTRSZ : size_t
 *     29 APR 2020 jcs  Build 43: hash_set
 *     26 APR 2022 jcs  Build 53: MDDirectStats
+*      1 SEP 2022 jcs  Build 56: TapeChannel
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -257,6 +258,7 @@ typedef hash_map<string, int>   RecMap;
 #include <Thread.h>
 #include <RecCache.h>
 #include <EdgChannel.h>
+#include <TapeChannel.h>
 #include <PubChannel.h>
 #include <Cockpit.h>
 

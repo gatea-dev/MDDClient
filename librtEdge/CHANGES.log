@@ -23,9 +23,6 @@ Known Bugs
 
 Features To Add
 ---------------
-+ Tape : YYYYMMDD HH:MM:SS pump
-+ Tape : *.idx
-
  * -# Tape : *.idx files
 
 1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
@@ -50,10 +47,11 @@ Features To Add
  * 
  * ### Build 56 22-09-xx
  * 
- * -# Buffer.Grow() : WithinRange( 0, ... )
+ * -# core : Buffer.Grow() : WithinRange( 0, ... )
  * 
  * -# Tape : *.idx files
- *    - RTEDGE_PRIVATE.GLrpyDailyIdxVw
+ *    - *.idx files : RTEDGE_PRIVATE.GLrpyDailyIdxVw
+ *    - YYYYMMDD HH:MM:SS or HH:MM:SS in TapeSlice._str2tv()
  * 
  * -# rtEdgePublisher.pSvrHosts() : DUH!!
  * 

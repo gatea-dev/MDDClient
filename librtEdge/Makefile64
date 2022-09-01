@@ -19,6 +19,7 @@
 #      6 JUN 2018 jcs  Build 35: Bridge
 #     14 MAY 2020 jcs  Build 44: git-ready
 #      3 MAY 2022 jcs  Build 53: MDD2DataDog
+#      1 SEP 2022 jcs  Build 56: TapeChannel
 #
 # (c) 1994-2022, Gatea Ltd.
 #######################################################
@@ -75,6 +76,7 @@ OBJS = \
 	OS_disk.o \
 	Socket.o \
 	Pump.o \
+	TapeChannel.o \
 	Thread.o \
 	EDG_version.o
 

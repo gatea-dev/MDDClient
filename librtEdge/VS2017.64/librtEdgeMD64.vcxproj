@@ -137,6 +137,7 @@
     <ClCompile Include="..\Internal\src\PubChannel.cpp" />
     <ClCompile Include="..\Internal\src\Pump.cpp" />
     <ClCompile Include="..\Internal\src\Socket.cpp" />
+    <ClCompile Include="..\Internal\src\TapeChannel.cpp" />
     <ClCompile Include="..\Internal\src\Thread.cpp" />
     <ClCompile Include="..\Internal\src\EDG_version.cpp" />
   </ItemGroup>
