@@ -202,6 +202,7 @@ class GLrpyDailyIdxVw : public string
 private:
 	GLrecTapeHdr &_hdr;
 	rtBuf64       _tape;
+	u_int64_t     _off;
 	u_int64_t     _daySz;
 	u_int64_t     _fileSz;
 	Sentinel     *_ss;

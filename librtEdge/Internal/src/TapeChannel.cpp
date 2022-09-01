@@ -1194,6 +1194,7 @@ GLrpyDailyIdxVw::GLrpyDailyIdxVw( GLrecTapeHdr &hdr, char *pf, u_int64_t daySz )
    string( pf ),
    _hdr( hdr ),
    _tape( ::rtEdge_MapFile( pf, _bDeepCopy ) ),
+   _off( 0 ),
    _daySz( daySz ),
    _fileSz( 0 ),
    _ss( (Sentinel *)0 ),
@@ -1225,24 +1226,17 @@ u_int64_t *GLrpyDailyIdxVw::tapeIdxDb()
 
 Bool GLrpyDailyIdxVw::forth()
 {
-#ifdef TODO_FORTH_HOW_TO_DO_IT_WITH_FULLY_MAPPED_FILE
-   u_int64_t off, nL;
-   Bool      bOK;
+   u_int64_t nL;
 
    // Map to next _daySz chunk; Handle End of File
 
-   off = offset() + siz();
-   nL  = _fileSz - off;
-   bOK = ( nL > 0 );
-   if ( bOK ) {
-      map( off, _daySz );
-      bOK = _Set();
+   nL  = _fileSz - ( _off + _daySz );
+   if ( nL >= 0 ) {
+      _off += _daySz;
+      return _Set();
    }
-   return bOK;
-#endif // TODO_FORTH_HOW_TO_DO_IT_WITH_FULLY_MAPPED_FILE
    return False;
 }
-
 
 Bool GLrpyDailyIdxVw::_Set()
 {
@@ -1257,6 +1251,7 @@ Bool GLrpyDailyIdxVw::_Set()
    // Sentinel
 
    cp  = _tape._data;
+   cp += _off;
    _ss = (Sentinel *)cp;
    cp += _sSz;
 
