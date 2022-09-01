@@ -478,7 +478,7 @@ public:
 	// Database Directory Query
 	////////////////////////////////////
 	/**
-	 * \brief Query ChartDB for directory of all tickers
+	 * \brief Query ChartDB or Tape for directory of all tickers
 	 *
 	 * \return ::MDDResult struct with list of all tickers
 	 */

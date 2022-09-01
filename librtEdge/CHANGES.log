@@ -23,9 +23,9 @@ Known Bugs
 
 Features To Add
 ---------------
-1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
+ * -# Tape : *.idx files
 
-2) rtEdgePublisher.pSvrHosts() : Add it in - DUH!!
+1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
 
 3) OnConnect( string pConn ) : EBADF + host:port, not just EBADF
 
@@ -46,6 +46,17 @@ Features To Add
  *
  * ## Change Log
  *
+ * 
+ * ### Build 56 22-09-xx
+ * 
+ * -# Buffer.Grow() : WithinRange( 0, ... )
+ * 
+ * -# Tape : *.idx files
+ *    - RTEDGE_PRIVATE.GLrpyDailyIdxVw
+ * 
+ * -# rtEdgePublisher.pSvrHosts() : DUH!!
+ * 
+ * -# rtEdgeData._RTL
  * 
  * ### Build 55 22-06-10
  * 

@@ -18,6 +18,7 @@
 *      7 MAR 2022 jcs  Build 51: doxygen
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
+*      1 SEP 2022 jcs  Build 56: _RTL
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -205,6 +206,13 @@ public:
 	{
 	   int get() { return _msg->StreamID(); }
 	}
+
+	/** \brief Returns Record Transaction Level */
+	property int _RTL
+	{
+	   int get() { return _msg->RTL(); }
+	}
+
 
 	/** \brief Returns tape position, if pumping from tape */
 	property u_int64_t _TapePos

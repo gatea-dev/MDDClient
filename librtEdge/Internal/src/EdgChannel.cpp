@@ -25,6 +25,7 @@
 *      7 MAY 2022 jcs  Build 53: Handle empty username
 *     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
 *     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
+*      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL; GLrpyDailyIdxVw
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -39,8 +40,7 @@ using namespace RTEDGE_PRIVATE;
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static rtBuf64     _zBuf  = { (char *)0, 0 }; 
-static rtBUF       _zBUF  = { (char *)0, 0 };
+static rtBUF   _zBUF      = { (char *)0, 0 };
 
 ////////////////////////////////////////////
 // Constructor / Destructor
@@ -564,6 +564,7 @@ int EdgChannel::Read( double dWait, rtEdgeRead &rd )
          rd._d._arg      = (VOID_PTR)rec->StreamID();
          rd._d._ty       = ( upd._mt == EVT_IMG ) ? edg_image : edg_update;
          rd._d._StreamID = rec->StreamID();
+         rd._d._RTL      = 0; // _recU->_nUpd
          break;
      case EVT_CONN:
      case EVT_SVC:
@@ -866,6 +867,7 @@ void EdgChannel::OnMF( mddMsgBuf b, const char *ty )
          d._arg      = _recU->_arg;
          d._ty       = bImg ? edg_image : edg_update;
          d._StreamID = _recU->_StreamID;
+         d._RTL      = 0; // _recU->_nUpd
          (*_attr._dataCbk)( _cxt, d );
          if ( IsSnapChan() ) {
             _ClearUpd();
@@ -931,6 +933,7 @@ void EdgChannel::OnMF( mddMsgBuf b, const char *ty )
          d._arg      = _recU->_arg;
          d._ty       = edg_dead;
          d._StreamID = _recU->_StreamID;
+         d._RTL      = 0; // _recU->_nUpd
          (*_attr._dataCbk)( _cxt, d );
          if ( _recU )
             _recU->_bOpn = false;
@@ -1023,6 +1026,7 @@ void EdgChannel::OnXMLData( mddMsgBuf &b, bool bImg )
    d._flds     = (rtFIELD *)_fl._flds;
    d._nFld     = _fl._nFld;
    d._StreamID = _recU->_StreamID;
+   d._RTL      = 0; // _recU->_nUpd
    (*_attr._dataCbk)( _cxt, d );
 }
 
@@ -1322,6 +1326,7 @@ void EdgSvc::OnService( EdgChannel &, bool bUp )
       d._flds     = (rtFIELD *)0;
       d._nFld     = 0;
       d._StreamID = rec->_StreamID;
+      d._RTL      = 0; // rec->_nUpd;
       (*attr._dataCbk)( _ch.cxt(), d );
       if ( bUp && !rec->_bOpn )
          _ch.Open( *rec );
@@ -1476,6 +1481,11 @@ static int _ixSz          = sizeof( u_int64_t );
 static struct timeval _zT = { 0, 0 };
 static struct timeval _eT = { INFINITEs, 0 };
 
+static rtBuf64   _zBuf      = { (char *)0, 0 };
+static char      _bDeepCopy = 0;
+static u_int64_t _sSz       = sizeof( Sentinel );
+static u_int64_t _iSz       = sizeof( u_int64_t );
+
 ////////////////////////////////////////////
 // Constructor / Destructor
 ////////////////////////////////////////////
@@ -1486,6 +1496,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _schemaByName(),
    _tape( _zBuf ),
    _hdr( (GLrecTapeHdr *)0 ),
+   _idx( (GLrpyDailyIdxVw *)0 ),
    _rdb(),
    _tdb(),
    _wl(),
@@ -1515,6 +1526,8 @@ TapeChannel::~TapeChannel()
    Unload();
    ::mddFieldList_Free( _fl );
    ::mddSub_Destroy( _mdd );
+   if ( _idx )
+      delete _idx;
 
    Locker lck( _sliceMtx );
 
@@ -1551,7 +1564,7 @@ const char *TapeChannel::err()
    return _err.length() ? _err.data() : (const char *)0;
 }
 
-u_int64_t *TapeChannel::tapeIdxDb()
+u_int64_t *TapeChannel::tapeIdxDb_OBSOLETE()
 {
    char *cp;
 
@@ -1719,7 +1732,6 @@ bool TapeChannel::Load()
    char         *bp, *cp;
    int           i, nr, rSz;
    bool          bReMap;
-   static char   _bDeepCopy = 0;
 
    // Pre-condition(s)
 
@@ -1778,7 +1790,7 @@ int TapeChannel::Pump()
    mddBuf                  m;
    u_int64_t               off;
    size_t                  nt;
-   int                     n, mSz, idx;
+   int                     n, mSz;
 
    // Pre-condition(s)
 
@@ -1810,8 +1822,11 @@ int TapeChannel::Pump()
    t0  = _slice ? _slice->_t0 : _zT;
    _PumpDead();
    if ( t0.tv_sec ) {
+#ifdef OBSOLETE
       idx = _tapeIdx( t0 );
       off = tapeIdxDb()[idx];
+#endif // OBSOLETE
+      off = _tapeIdx( t0 );
    }
    for ( n=0; !_nSub && _bRun && off<_tape._dLen; ) {
       cp      = bp+off;
@@ -2064,6 +2079,7 @@ int TapeChannel::_PumpDead()
       d._pErr     = "non-existent item";
       d._ty       = edg_dead;
       d._StreamID = (*it).first;
+      d._RTL      = 0;
       if ( _attr._dataCbk )
          (*_attr._dataCbk)( _chan.cxt(), d );
       delete (*it).second;
@@ -2189,6 +2205,7 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
    d._rawLen   = m._dLen;
    d._StreamID = ix;
    d._TapePos  = (char *)&msg - _tape._data;
+   d._RTL      = msg._nUpd;
    if ( _slice ) {
       for ( n=0; _slice->CanPump( n, d ); n++ ) {
          if ( _attr._dataCbk )
@@ -2229,9 +2246,22 @@ u_int64_t TapeChannel::_get64( u_char *bp )
    return *i64;
 }
 
-int TapeChannel::_tapeIdx( struct timeval tv )
+u_int64_t TapeChannel::_tapeIdx( struct timeval tv )
 {
-   return _SecIdx( tv, (GLrecTapeRec *)0 );
+   int        ix;
+   char      *cp;
+   u_int64_t *idb;
+
+   // 1) Current Index
+
+   ix = _SecIdx( tv, (GLrecTapeRec *)0 );
+
+   // 2) tapeIdxDb() : TODO - GLrpyDailyIdxVw
+
+   cp  = _tape._data;
+   cp += _DbHdrSize( _hdr->_numDictEntry, 0, 0 );
+   idb = (u_int64_t *)cp;
+   return idb[ix];
 }
 
 int TapeChannel::_SecIdx( struct timeval now, GLrecTapeRec *rec )
@@ -2520,3 +2550,90 @@ void TapeSlice::_Cache( rtEdgeData &d )
    }
 }
 
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+//            c l a s s       G L r p y D a i l y I d x V w
+//
+/////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Constructor / Destructor
+////////////////////////////////////////////
+GLrpyDailyIdxVw::GLrpyDailyIdxVw( GLrecTapeHdr &hdr, char *pf, u_int64_t daySz ) :
+   string( pf ),
+   _hdr( hdr ),
+   _tape( ::rtEdge_MapFile( pf, _bDeepCopy ) ),
+   _daySz( daySz ),
+   _fileSz( 0 ),
+   _ss( (Sentinel *)0 ),
+   _tapeIdxDb( (u_int64_t *)0 )
+{
+   _fileSz = _tape._dLen;
+   _Set();
+}
+
+GLrpyDailyIdxVw::~GLrpyDailyIdxVw()
+{
+   ::rtEdge_UnmapFile( _tape );
+   _tape = _zBuf;
+}
+
+
+////////////////////////////////////////////
+// Access
+////////////////////////////////////////////
+Sentinel &GLrpyDailyIdxVw::sentinel()
+{
+   return *_ss;
+}
+
+u_int64_t *GLrpyDailyIdxVw::tapeIdxDb()
+{
+   return _tapeIdxDb;
+}
+
+Bool GLrpyDailyIdxVw::forth()
+{
+#ifdef TODO_FORTH_HOW_TO_DO_IT_WITH_FULLY_MAPPED_FILE
+   u_int64_t off, nL;
+   Bool      bOK;
+
+   // Map to next _daySz chunk; Handle End of File
+
+   off = offset() + siz();
+   nL  = _fileSz - off;
+   bOK = ( nL > 0 );
+   if ( bOK ) {
+      map( off, _daySz );
+      bOK = _Set();
+   }
+   return bOK;
+#endif // TODO_FORTH_HOW_TO_DO_IT_WITH_FULLY_MAPPED_FILE
+   return False;
+}
+
+
+Bool GLrpyDailyIdxVw::_Set()
+{
+   GLrecTapeHdr &h = _hdr;
+   char         *cp;
+
+   // Pre-condition
+
+   if ( !isValid() )
+      return false;
+
+   // Sentinel
+
+   cp  = _tape._data;
+   _ss = (Sentinel *)cp;
+   cp += _sSz;
+
+   // Tape Index
+
+   _tapeIdxDb = (u_int64_t *)cp;
+   cp        += ( h._numSecIdxT * _iSz );
+   return isValid();
+}

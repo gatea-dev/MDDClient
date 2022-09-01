@@ -13,6 +13,7 @@
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *     26 APR 2022 jcs  Build 53: SetBinary() bug fix; 1 constructor
 *     23 MAY 2022 jcs  Build 54: OnError()
+*      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -267,6 +268,11 @@ int rtEdgePublisher::GetThreadProcessor()
 long rtEdgePublisher::GetThreadID()
 {
    return _pub->GetThreadID();
+}
+
+String ^rtEdgePublisher::pSvcHosts()
+{
+   return gcnew String( _pub->pSvcHosts() );
 }
 
 String ^rtEdgePublisher::pPubName()

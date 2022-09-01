@@ -21,6 +21,7 @@
 *     22 OCT 2020 jcs  Build 46: XxxPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: TapeSlice
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
+*      1 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -43,6 +44,7 @@ namespace RTEDGE_PRIVATE
 class EdgFldDef;
 class EdgRec;
 class EdgSvc;
+class GLrpyDailyIdxVw;
 class Logger;
 class Schema;
 class Socket;
@@ -273,24 +275,25 @@ class TapeChannel
 {
 friend class TapeRun;
 private:
-	EdgChannel     &_chan;
-	rtEdgeAttr      _attr;
-	FieldMap        _schema;
-	FieldMapByName  _schemaByName;
-	rtBuf64         _tape;
-	GLrecTapeHdr   *_hdr;
-	TapeRecords     _rdb;
-	TapeRecDb       _tdb;
-	TapeWatchList   _wl;
-	DeadTickers     _dead;
-	mddWire_Context _mdd;
-	mddFieldList    _fl;
-	string          _err;
-	int             _nSub;
-	Mutex           _sliceMtx;
-	TapeSlice      *_slice;
-	volatile bool   _bRun;
-	volatile bool   _bInUse;
+	EdgChannel      &_chan;
+	rtEdgeAttr       _attr;
+	FieldMap         _schema;
+	FieldMapByName   _schemaByName;
+	rtBuf64          _tape;
+	GLrecTapeHdr    *_hdr;
+	GLrpyDailyIdxVw *_idx;
+	TapeRecords      _rdb;
+	TapeRecDb        _tdb;
+	TapeWatchList    _wl;
+	DeadTickers      _dead;
+	mddWire_Context  _mdd;
+	mddFieldList     _fl;
+	string           _err;
+	int              _nSub;
+	Mutex            _sliceMtx;
+	TapeSlice       *_slice;
+	volatile bool    _bRun;
+	volatile bool    _bInUse;
 
 	// Constructor / Destructor
 public:
@@ -304,7 +307,7 @@ public:
 	mddWire_Context mdd();
 	const char     *pTape();
 	const char     *err();
-	u_int64_t      *tapeIdxDb();
+	u_int64_t      *tapeIdxDb_OBSOLETE();
 	bool            HasTicker( const char *, const char *, int & );
 	int             GetFieldID( const char * );
 	MDDResult       Query();
@@ -337,7 +340,7 @@ private:
 	string         _Key( const char *, const char * );
 	int            _get32( u_char * );
 	u_int64_t      _get64( u_char * );
-	int            _tapeIdx( struct timeval );
+	u_int64_t      _tapeIdx( struct timeval );
 	int            _SecIdx( struct timeval, GLrecTapeRec * );
 	u_int64_t      _DbHdrSize( int, int, int );
 	int            _RecSiz();
@@ -418,6 +421,35 @@ private:
 	void           _Cache( rtEdgeData & );
 
 };  // class TapeSlice
+
+/////////////////////////////////////////
+// View on Daily Index
+/////////////////////////////////////////
+class GLrpyDailyIdxVw : public string
+{
+private:
+	GLrecTapeHdr &_hdr;
+	rtBuf64       _tape;
+	u_int64_t     _daySz;
+	u_int64_t     _fileSz;
+	Sentinel     *_ss;
+	u_int64_t    *_tapeIdxDb;
+
+	// Constructor
+public:
+	GLrpyDailyIdxVw( GLrecTapeHdr &, char *, u_int64_t );
+	~GLrpyDailyIdxVw();
+
+	// Access / Operations
+public:
+	Sentinel  &sentinel();
+	u_int64_t *tapeIdxDb();
+	Bool       forth();
+	bool       isValid() { return( _tape._data != (char *)0 ); }
+private:
+	Bool       _Set();
+
+}; // class GLrpyDailyIdxVw
 
 } // namespace RTEDGE_PRIVATE
 

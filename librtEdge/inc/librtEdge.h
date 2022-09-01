@@ -29,6 +29,7 @@
 *      3 MAY 2022 jcs  Build 53: DataDog.hpp
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive; rtFld_unixTime
 *      3 JUN 2022 jcs  Build 55: bld.cpp; LVCData._recXxxSiz
+*      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -621,6 +622,8 @@ typedef struct {
    int         _StreamID;
    /** \brief Tape Offset, if from tape */
    u_int64_t   _TapePos;
+   /** \brief Record Transaction Level, if available (e.g., tape) */
+   int         _RTL;
 } rtEdgeData;
 
 /**

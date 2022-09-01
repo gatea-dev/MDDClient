@@ -13,6 +13,7 @@
 *     30 MAR 2022 jcs  Build 52: SetUnPacked()
 *     26 APR 2022 jcs  Build 53: 1 constructor
 *     23 MAY 2022 jcs  Build 54: OnError()
+*      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -351,6 +352,18 @@ public:
 	 * \return Thread ID of the library thread
 	 */
 	long GetThreadID();
+
+	/**
+	 * \brief Returns comma-separated list of rtEdgeCache3 hosts to
+	 * connect this publication channel to.
+	 *
+	 * This list is defined when you call Start() and is specified as
+	 * \<host1\>:\<port1\>,\<host2\>:\<port2\>,...  The library tries to connect
+	 * to \<host1\>; If failure, then \<host2\>, etc.  This
+	 *
+	 * \return Comma-separated list of rtEdgeCache3 hosts.
+	 */
+	String ^pSvrHosts();
 
 	/**
 	 * \brief Returns publication name of this service

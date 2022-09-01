@@ -25,6 +25,7 @@
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *     29 MAR 2022 jcs  Build 52: mddWire ioctl's here
 *      5 MAY 2022 jcs  Build 53: _bPub
+*     31 AUG 2022 jcs  Build 56: Buffer.Grow() bug
 *
 *  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
@@ -99,6 +100,7 @@ bool Buffer::Grow( int nReqGrow )
    // Pre-condition
 
    nGrow = gmin( nReqGrow, ( _maxSiz-_nAlloc ) );
+   nGrow = WithinRange( 0, nGrow, _maxSiz );  // Build 56
    if ( !nGrow )
       return false;
 

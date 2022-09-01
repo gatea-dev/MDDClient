@@ -13,6 +13,7 @@
 *     17 SEP 2020 jcs  Build 45: SetParseOnly
 *      3 DEC 2020 jcs  Build 47: TapePos()
 *      5 APR 2022 jcs  Build 52: core : MsgTime() w/ LVC
+*      1 SEP 2022 jcs  Build 56: RTL()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -181,6 +182,18 @@ public:
 	int StreamID()
 	{
 	   return data()._StreamID;
+	}
+
+	/**
+	 * \brief Returns Record Transaction Level (RTL) if available
+	 *
+	 * This is always non-zero from the tape
+	 *
+	 * \return Record Transaction Level (RTL) if available
+	 */
+	int RTL()
+	{
+	   return data()._RTL;
 	}
 
 	/**
