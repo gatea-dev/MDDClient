@@ -496,7 +496,7 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
    mddProtocol      *pro;
    bool              bArg, *pbArg;
    char             *pArg;
-   int              *p32, i32;
+   int              *p32, i32, cap;
    u_int64_t        *i64;
    rtBUF            *b;
 
@@ -550,7 +550,8 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
          /*
           * Default max is 10MB
           */
-         _out._maxSiz = gmax( _out._maxSiz, *p32 );
+         cap          = _out.bufSz() ? _out._maxSiz : _out._nAlloc;
+         _out._maxSiz = gmax( cap, *p32 );
          return true;
       case ioctl_getTxBufSize:
          *p32 = _out.bufSz();
