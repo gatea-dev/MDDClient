@@ -46,6 +46,8 @@ Features To Add
  * ### Build 56 22-09-xx
  * 
  * -# core : Buffer.Grow() : WithinRange( 0, ... )
+ *    - ioctl_getTxMaxSize
+ *    - RTEDGE.rtEdge.GetTxMaxBufSize()
  * 
  * -# Tape : *.idx files
  *    - *.idx files : RTEDGE_PRIVATE.GLrpyDailyIdxVw
@@ -57,7 +59,7 @@ Features To Add
  *
  * -# Socket.OnConnect( "EBADF : host:port" )
  *
- * -# SubChannel.GetTapeXccTime() / ioctl_tapeXxxTime
+ * -# SubChannel.GetTapeXxxTime() / ioctl_tapeXxxTime
  * 
  * ### Build 55 22-06-10
  * 

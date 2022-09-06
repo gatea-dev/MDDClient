@@ -25,7 +25,7 @@
 *      7 SEP 2020 jcs  Build 44: XxxThreadName()
 *     29 MAR 2022 jcs  Build 52: mddWire ioctl's here
 *      5 MAY 2022 jcs  Build 53: _bPub
-*     31 AUG 2022 jcs  Build 56: Buffer.Grow() bug
+*      6 SEP 2022 jcs  Build 56: Buffer.Grow() bug; ioctl_getTxMaxSize
 *
 *  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
@@ -547,10 +547,16 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
          *p32 = GetRcvBuf();
          return true;
       case ioctl_setTxBufSize:
-         _out._maxSiz = *p32;
+         /*
+          * Default max is 10MB
+          */
+         _out._maxSiz = gmax( _out._maxSiz, *p32 );
          return true;
       case ioctl_getTxBufSize:
          *p32 = _out.bufSz();
+         return true;
+      case ioctl_getTxMaxSize:
+         *p32 = _out._maxSiz;
          return true;
       case ioctl_setThreadProcessor:
          thr().SetThreadProcessor( *p32 );

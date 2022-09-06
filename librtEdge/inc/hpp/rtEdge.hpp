@@ -21,6 +21,7 @@
 *     23 APR 2021 jcs  Build 48: GetDstConn()
 *     26 APR 2022 jcs  Build 53: Channel.SetMDDirectMon()
 *     23 MAY 2022 jcs  Build 54: Channel.OnError()
+*      6 SEP 2022 jcs  Build 56: GetMaxTxBufSize()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -737,6 +738,22 @@ public:
 
 	   bufSiz = 0;
 	   ::rtEdge_ioctl( _cxt, ioctl_getTxBufSize, &bufSiz );
+	   return bufSiz;
+	}
+
+	/**
+	 * \brief Gets MAX outbound channel queue size.  Max queue size
+	 * is set via SetTxBufSize(); Current queue size is GetTxBufSize()
+	 *
+	 * \return Max queue size on outbound channel to Edge3
+	 * \see SetTxBufSize()
+	 */
+	int GetTxMaxBufSize()
+	{
+	   int bufSiz;
+
+	   bufSiz = 0;
+	   ::rtEdge_ioctl( _cxt, ioctl_getTxMaxSize, &bufSiz );
 	   return bufSiz;
 	}
 

@@ -470,7 +470,15 @@ typedef enum {
     *
     * \param (void *)val - Pointer to u_int64_t to receive UnixTime
     */
-   ioctl_tapeEndTime       = 35
+   ioctl_tapeEndTime       = 35,
+   /**
+    * \brief Gets max outbound channel queue size.
+    *
+    * This must be called AFTER you all rtEdge_Init() / rtEdge_PubInit().
+    *
+    * \param (void *)val - Pointer to integer to receive current queue size.
+    */
+   ioctl_getTxMaxSize      = 36
 } rtEdgeIoctl;
 
 /**
