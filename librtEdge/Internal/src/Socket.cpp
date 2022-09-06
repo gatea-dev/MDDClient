@@ -195,6 +195,8 @@ Socket::Socket( const char *pHosts, bool bConnectionless ) :
    _bLatency( false ),
    _bRandomize( false ),
    _bIdleCbk( false ),
+   _ovrFloMtx(),
+   _overflow(),
    _tHbeat( 3600 ),
    _SO_RCVBUF( 0 )
 {
@@ -461,7 +463,7 @@ bool Socket::Write( const char *pData, int dLen )
    Locker           l( _mtx );
    struct sockaddr *sa;
    bool             bOK;
-   char            *pkt;
+   char            *pkt, buf[K];
    int              wSz, pSz;
 
    // Unbuffered if _bConnectionless
@@ -480,6 +482,13 @@ bool Socket::Write( const char *pData, int dLen )
 
    if ( (bOK=_out.Append( (char *)pData, dLen )) )
       OnWrite();
+   else {
+      Locker lck( _ovrFloMtx );
+
+      sprintf( buf, "Overflow : %d bytes; ", _out.bufSz() );
+      _overflow  = buf;
+      _overflow += dstConn();
+   }
    st._qSiz    =  _out.bufSz();
    st._qSizMax = gmax( st._qSiz, st._qSizMax );
    return bOK;
@@ -714,8 +723,20 @@ void Socket::OnException()
 ////////////////////////////////////////////
 void Socket::On1SecTimer()
 {
+   string s;
+
    if ( _bStart && !fd() )
       Connect();
+   {
+      Locker lck( _ovrFloMtx );
+
+      s         = _overflow;
+      _overflow = "";
+   }
+   if ( !s.size() )
+      return;
+   OnDisconnect( s.data() );
+   Disconnect( s.data() );
 }
 
 

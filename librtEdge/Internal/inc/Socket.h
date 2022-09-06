@@ -19,6 +19,7 @@
 *     26 MAY 2017 jcs  Build 34: WireMold64
 *     12 FEB 2020 jcs  Build 42: _tHbeat
 *      5 MAY 2022 jcs  Build 53: _bPub
+*      6 SEP 2022 jcs  Build 56: _bOverflow
 *
 *  (c) 1994-2022 Gatea Ltd.
 ******************************************************************************/
@@ -69,7 +70,8 @@ public:
 	void Reset();
 	void Move( int, int );
 	bool Append( char *, int );
-};
+
+}; // class Buffer
 
 
 /////////////////////////////////////////
@@ -109,6 +111,8 @@ protected:
 	bool               _bLatency;
 	bool               _bRandomize;
 	bool               _bIdleCbk;
+	Mutex              _ovrFloMtx;
+	string             _overflow;
 	int                _tHbeat;
 	int                _SO_RCVBUF;
 	Mold64Pkt          _udp;
@@ -175,7 +179,7 @@ private:
 	int  _GetError();
 	bool NagleOff();
 
-};
+}; // class Socket
 
 } // namespace RTEDGE_PRIVATE
 
