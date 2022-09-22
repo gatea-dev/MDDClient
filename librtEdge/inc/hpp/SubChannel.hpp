@@ -17,8 +17,9 @@
 *     17 SEP 2020 jcs  Build 45: Parse()
 *      3 DEC 2020 jcs  Build 47: StartTapeSliceSample(); PumpFullTape()
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
+*     22 SEP 2022 jcs  Build 56: doxygen Tape Times
 *
-*  (c) 1994-2021, Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_SubChannel_H
 #define __RTEDGE_SubChannel_H
@@ -333,6 +334,8 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 *
+	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
+	 *
 	 * \param tStart - Start time; Default is SOD (Start Of Day)
 	 * \param tEnd - End time; Default is EOD (End Of Day)
 	 */
@@ -358,6 +361,8 @@ public:
 	 * + All messages are delivered in the library thread for this channel
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
+	 *
+	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
 	 *
 	 * \param tStart - Start time
 	 * \param tEnd - End time

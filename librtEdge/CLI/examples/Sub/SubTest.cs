@@ -202,10 +202,10 @@ class SubTest : rtEdgeSubscriber
             s += "       [ -t   <Ticker : CSV or Filename> ] \\ \n";
             s += "       [ -t0  <TapeSliceStartTime> ] \\ \n";
             s += "       [ -t1  <TapeSliceEndTime> ] \\ \n";
-            s += "       [ -ti <TapeSlice Sample Interval> ] \\ \n";
-            s += "       [ -tf <CSV TapeSlice Sample Fields> ] \\ \n";
-            s += "       [ -s0 <TapeSlice Start Offset> ] \\ \n";
-            s += "       [ -sn <TapeSlice NumMsg> ] \\ \n";
+            s += "       [ -ti  <TapeSlice Sample Interval> ] \\ \n";
+            s += "       [ -tf  <CSV TapeSlice Sample Fields> ] \\ \n";
+            s += "       [ -s0  <TapeSlice Start Offset> ] \\ \n";
+            s += "       [ -sn  <TapeSlice NumMsg> ] \\ \n";
             s += "       [ -r   <AppRunTime> ] \\ \n";
             s += "       [ -bds <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";

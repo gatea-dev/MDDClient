@@ -15,6 +15,7 @@
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
+*     22 SEP 2022 jcs  Build 56: doxygen Tape Times
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -247,8 +248,10 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 *
-	 * \param tStart - Start time; Default is SOD (Start Of Day)
-	 * \param tEnd - End time; Default is EOD (End Of Day)
+	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
+	 *
+	 * \param tStart - Start time
+	 * \param tEnd - End time
 	 */
 	void StartTapeSlice( String ^tStart, String ^tEnd );
 
@@ -263,6 +266,8 @@ public:
 	 * + All messages are delivered in the library thread for this channel
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
+	 *
+	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
 	 *
 	 * \param tStart - Start time
 	 * \param tEnd - End time

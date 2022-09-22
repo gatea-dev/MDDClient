@@ -270,9 +270,9 @@ long rtEdgePublisher::GetThreadID()
    return _pub->GetThreadID();
 }
 
-String ^rtEdgePublisher::pSvcHosts()
+String ^rtEdgePublisher::pSvrHosts()
 {
-   return gcnew String( _pub->pSvcHosts() );
+   return gcnew String( _pub->pSvrHosts() );
 }
 
 String ^rtEdgePublisher::pPubName()
