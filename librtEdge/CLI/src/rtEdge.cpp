@@ -289,6 +289,13 @@ String ^rtEdge::TapeTimeString( DateTime ^dtTm )
    return gcnew String( bp );
 }
 
+DateTime ^rtEdge::StringToTapeTime( String ^dtTm )
+{
+   DateTime ^rc = gcnew DateTime;
+
+   rc = DateTime::Parse( dtTm );
+   return rc;
+}
 
 
 ////////////////////////////////////////////////

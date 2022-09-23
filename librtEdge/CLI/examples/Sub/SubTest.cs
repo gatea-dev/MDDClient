@@ -253,7 +253,8 @@ class SubTest : rtEdgeSubscriber
          bool        aOK, bds, bTape, bQry;
          string[]    tkrs;
          MDDRecDef[] dbTkrs;
-         string      s, svr, usr, svc, tkr, t0, t1, csvF;
+         string      s, svr, usr, svc, tkr, csvF;
+         DateTime    t0, t1;
          long        s0;
 
          /////////////////////
@@ -335,9 +336,9 @@ class SubTest : rtEdgeSubscriber
                   tkrs = tkr.Split(',');
             }
             else if ( args[i] == "-t0" )
-               t0  = args[++i];
+               t0  = sub.StringToTapeTime( args[++i] );
             else if ( args[i] == "-t1" )
-               t1  = args[++i];
+               t1  = sub.StringToTapeTime( args[++i] );
             else if ( args[i] == "-csvF" )
                csvF = args[++i];
             else if ( args[i] == "-ti" )

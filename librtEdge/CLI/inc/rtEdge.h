@@ -332,6 +332,14 @@ public:
 	 */
 	static String ^TapeTimeString( DateTime ^dtTm );
 
+	/**
+	 * \brief Convert string-ified Tape Time to DateTime
+	 *
+	 * \param dtTm = string-ified time as YYYYMMDD HH:MM:SS
+	 * \return DateTime
+	 */
+	static DateTime ^StringToTapeTime( String ^dtTm );
+
 };  // class rtEdge
 
 
