@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  * 
- * ### Build 56 22-09-xx
+ * ### Build 56 22-09-23
  * 
  * -# core : Buffer.Grow() : WithinRange( 0, ... )
  *    - ioctl_getTxMaxSize
@@ -60,6 +60,14 @@ Features To Add
  * -# Socket.OnConnect( "EBADF : host:port" )
  *
  * -# SubChannel.GetTapeXxxTime() / ioctl_tapeXxxTime
+ *
+ * -# SubTest.cs : -csvF
+ * 
+ * -# CLI : rtEdge.FromUnixTime()
+ *    - Return reference, not object, else ValueType in code
+ *
+ * -# rtEdge_GetField() working for Tape
+ *    - TapeChannel.GetField()
  * 
  * 
  * ### Build 55 22-06-10

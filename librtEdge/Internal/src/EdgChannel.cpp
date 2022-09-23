@@ -25,7 +25,7 @@
 *      7 MAY 2022 jcs  Build 53: Handle empty username
 *     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
 *     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
-*      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL; GLrpyDailyIdxVw
+*     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -245,12 +245,28 @@ mddField *EdgChannel::GetDef( const char *pFld )
 
 rtFIELD *EdgChannel::GetField( const char *pFld )
 {
-   return _recU ? _recU->GetField( pFld ) : (rtFIELD *)0;
+   mddField *def;
+   int       fid;
+
+   // pFld == fid OR name
+
+   if ( !(fid=atoi( pFld )) ) {
+      if ( (def=GetDef( pFld )) )
+         fid = def->_fid;
+   }
+   return GetField( fid );
 }
 
 rtFIELD *EdgChannel::GetField( int fid )
 {
-   return _recU ? _recU->GetField( fid ) : (rtFIELD *)0;
+   rtFIELD *rc;
+
+   rc = (rtFIELD *)0;
+   if ( _tape )
+      rc = _tape->GetField( fid );
+   else if ( _recU )
+      rc = _recU->GetField( fid );
+   return rc;
 }
 
 bool EdgChannel::HasField( const char *pFld )
@@ -1416,20 +1432,6 @@ Record *EdgRec::cache()
 ////////////////////////////////////////////
 // Update Processing
 ////////////////////////////////////////////
-rtFIELD *EdgRec::GetField( const char *pFld )
-{
-   mddField *def;
-   int       fid;
-
-   // pFld == fid OR name
-
-   if ( !(fid=atoi( pFld )) ) {
-      if ( (def=_svc.ch().GetDef( pFld )) )
-         fid = def->_fid;
-   }
-   return GetField( fid );
-}
-
 rtFIELD *EdgRec::GetField( int fid )
 {
    FieldMap::iterator it;

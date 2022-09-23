@@ -13,6 +13,7 @@
 *     30 MAR 2022 jcs  Build 52: ioctl_unpacked 
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *     23 MAY 2022 jcs  Build 54: _iVal / _dVal
+*     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -321,7 +322,7 @@ public:
 	 * \param tv_usec - Microseconds
 	 * \return DateTime
 	 */
-	static DateTime FromUnixTime( long tv_sec, long tv_usec );
+	static DateTime ^FromUnixTime( long tv_sec, long tv_usec );
 
 };  // class rtEdge
 

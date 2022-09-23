@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *      1 SEP 2022 jcs  Created (from EdgChannel)
+*     23 SEP 2022 jcs  GetField()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -27,12 +28,12 @@ namespace RTEDGE_PRIVATE
 class GLrpyDailyIdxVw;
 class Schema;
 
-typedef hash_map<int, rtFIELD>        FieldMap;
 
 /////////////////////////////////////////
 // Tape Channel
 /////////////////////////////////////////
 
+typedef hash_map<int, rtFIELD>    FieldMap;
 typedef hash_map<string, rtFIELD> FieldMapByName;
 typedef hash_map<string, int>     TapeRecords;
 typedef vector<GLrecTapeRec *>    TapeRecDb;
@@ -58,6 +59,7 @@ private:
 	DeadTickers      _dead;
 	mddWire_Context  _mdd;
 	mddFieldList     _fl;
+	FieldMap         _upds;
 	string           _err;
 	int              _nSub;
 	Mutex            _sliceMtx;
@@ -80,6 +82,7 @@ public:
 	const char     *err();
 	bool            HasTicker( const char *, const char *, int & );
 	int             GetFieldID( const char * );
+	rtFIELD        *GetField( int );
 	MDDResult       Query();
 
 	// PumpTape
@@ -116,6 +119,8 @@ private:
 	u_int64_t      _DbHdrSize( int, int, int );
 	u_int64_t      _DailyIdxSize();
 	int            _RecSiz();
+	void           _BuildFieldMap();
+	void           _ClearFieldMap();
 
 };  // class TapeChannel
 

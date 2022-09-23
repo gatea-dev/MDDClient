@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *      1 SEP 2022 jcs  Created (from EdgChannel)
+*     23 SEP 2022 jcs  GetField()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -57,6 +58,7 @@ TapeChannel::TapeChannel( EdgChannel &chan ) :
    _dead(),
    _mdd( ::mddSub_Initialize() ),
    _fl( ::mddFieldList_Alloc( K ) ),
+   _upds(),
    _err(),
    _nSub( 0 ),
    _sliceMtx(),
@@ -98,6 +100,7 @@ TapeChannel::~TapeChannel()
    for ( i=0; _bInUse; i++ );
    _bRun = false;
    for ( it=_dead.begin(); it!=_dead.end(); delete (*it).second );
+   _ClearFieldMap();
    _wl.clear();
    _dead.clear();
    Unload();
@@ -170,6 +173,21 @@ int TapeChannel::GetFieldID( const char *fldName )
    it  = ndb.find( s );
    fid = ( it != ndb.end() ) ? (*it).second._fid : 0;
    return fid;
+}
+
+rtFIELD *TapeChannel::GetField( int fid )
+{
+   FieldMap          &udb = _upds;
+   FieldMap::iterator it;
+   rtFIELD           *f;
+
+   // Parse (once), then by fid
+
+   if ( !udb.size() )
+      _BuildFieldMap();
+   it = udb.find( fid );
+   f  = ( it != udb.end() ) ? &((*it).second) : (rtFIELD *)0;
+   return f;
 }
 
 MDDResult TapeChannel::Query()
@@ -922,11 +940,37 @@ u_int64_t TapeChannel::_DailyIdxSize()
    return daySz;
 }
 
-
 int TapeChannel::_RecSiz()
 {
    return _rSz + ( _hdr->_numSecIdxR * _ixSz );
 }
+
+void TapeChannel::_BuildFieldMap()
+{
+   FieldMap &udb = _upds;
+   rtFIELD  *fdb = (rtFIELD *)_fl._flds;
+   rtFIELD   f;
+   int       i, fid;
+
+   // Once per update
+
+   if ( udb.size() )
+      return;
+
+   // Go wild
+
+   for ( i=0; i<_fl._nFld; i++ ) {
+      f        = fdb[i];
+      fid      = f._fid;
+      udb[fid] = f;
+   }
+}
+
+void TapeChannel::_ClearFieldMap()
+{
+   _upds.clear();
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////

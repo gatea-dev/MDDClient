@@ -19,10 +19,12 @@
 *     29 APR 2020 jcs  Build 43: bds
 *     11 SEP 2020 jcs  Build 44: -tapeDir; -query
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
+*     23 SEP 2022 jcs  Build 56: -csvF; No mo -tf; Always binary
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using librtEdge;
@@ -30,13 +32,46 @@ using librtEdge;
 class SubTest : rtEdgeSubscriber 
 {
    ////////////////////////////////
+   // Members
+   ////////////////////////////////
+   private int[] _csvFids;
+   
+   ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SubTest( string pSvr, 
-                   string pUsr, 
-                   bool   bBinary ) :
-      base( pSvr, pUsr, bBinary )
+   public SubTest( string pSvr, string pUsr ) :
+      base( pSvr, pUsr, true )
    {
+      _csvFids = null;
+   }
+
+
+   ////////////////////////////////
+   // Mutator
+   ////////////////////////////////
+   public void LoadCSVFids( string csvF )
+   {
+      string[]  fids = csvF.Split(',');
+      List<int> fdb = new List<int>();
+      int       fid, i, n;
+
+      // 1) From CSV, to List<int> ...
+
+      for ( i=n=0; i<fids.Length; i++ ) {
+         try {
+            fid = Convert.ToInt32( fids[i], 10 );
+            fdb.Add( fid );
+         } catch( Exception ) {
+            Console.WriteLine( "Invalid CSV FID " + fids[i] );
+         }
+      }
+
+      // 2) ... to int[] array
+
+      if ( (n=fdb.Count) > 0 ) {
+         _csvFids = new int[n];
+         for ( i=0; i<n; _csvFids[i]=fdb[i], i++ );
+      }
    }
 
 
@@ -62,7 +97,10 @@ class SubTest : rtEdgeSubscriber
 
    public override void OnData( rtEdgeData d )
    {
-      OnData_DUMP( d );
+      if ( _csvFids != null )
+         OnData_CSV( d );
+      else
+         OnData_DUMP( d );
    }
 
    public override void OnRecovering( rtEdgeData d )
@@ -87,6 +125,29 @@ class SubTest : rtEdgeSubscriber
    public override void OnSymbol( rtEdgeData d, string sym )
    {
       Console.WriteLine( pNow() + " SYM-ADD : " + sym );
+   }
+
+
+   public override void OnSchema( rtEdgeSchema db )
+   {
+      string      rc;
+      int         i, fid;
+      rtEdgeField def;
+
+      // CSV Only
+
+      if ( _csvFids == null )
+         return;
+      rc = "Date,Type,Service,Ticker,";
+      for ( i=0; i<_csvFids.Length; i++ ) {
+         fid = _csvFids[i];
+         if ( (def=db.GetDef( fid )) != null )
+            rc += def.Name();
+         else
+            rc += fid.ToString();
+         rc += ",";
+      }
+      Console.WriteLine( rc );
    }
 
 
@@ -124,6 +185,28 @@ class SubTest : rtEdgeSubscriber
          Console.WriteLine( "" );
    }
 
+   private void OnData_CSV( rtEdgeData d )
+   {
+      string      sig;
+      int         fid;
+      rtEdgeField fld;
+
+      sig  = pTime( (DateTime)d._MsgTime ) + ",";
+      sig += d.MsgType() + ",";
+      sig += d._pSvc + ",";
+      sig += d._pTkr + ",";
+      sig += d._nFld.ToString() + ",";
+      for ( uint i=0; i<_csvFids.Length; i++ ) {
+         fid = _csvFids[i];
+         if ( (fld=d.GetField( fid )) != null )
+            sig += fld.GetAsString( false );
+         else
+            sig += "-";
+         sig += ",";
+      }
+      Console.WriteLine( sig );
+   }
+
    private void OnData_DUMP( rtEdgeData d )
    {
        Console.WriteLine( d.Dump() );
@@ -131,26 +214,29 @@ class SubTest : rtEdgeSubscriber
 
    private string pNow()
    {
-      DateTime now;
+      return pTime( DateTime.Now );
+   }
+
+   private string pTime( DateTime dtTm )
+   {
       string   rtn;
 
       // YYYY-MM-DD HH:MM:SS.mmm
 
-      now  = DateTime.Now;
       rtn  = "[";
-      rtn += now.Year.ToString("D4");
+      rtn += dtTm.Year.ToString("D4");
       rtn += "-";
-      rtn += now.Month.ToString("D2");
+      rtn += dtTm.Month.ToString("D2");
       rtn += "-";
-      rtn += now.Day.ToString("D2");
+      rtn += dtTm.Day.ToString("D2");
       rtn += "] ";
-      rtn += now.Hour.ToString("D2");
+      rtn += dtTm.Hour.ToString("D2");
       rtn += ":";
-      rtn += now.Minute.ToString("D2");
+      rtn += dtTm.Minute.ToString("D2");
       rtn += ":";
-      rtn += now.Second.ToString("D2");
+      rtn += dtTm.Second.ToString("D2");
       rtn += ".";
-      rtn += now.Millisecond.ToString("D3");
+      rtn += dtTm.Millisecond.ToString("D3");
       rtn += " ";
       return rtn;
    }
@@ -164,10 +250,10 @@ class SubTest : rtEdgeSubscriber
       try {
          SubTest     sub;
          int         i, nt, argc, tRun, ti, sn;
-         bool        bMF, aOK, bds, bTape, bQry;
+         bool        aOK, bds, bTape, bQry;
          string[]    tkrs;
          MDDRecDef[] dbTkrs;
-         string      s, svr, usr, svc, tkr, t0, t1, tf;
+         string      s, svr, usr, svc, tkr, t0, t1, csvF;
          long        s0;
 
          /////////////////////
@@ -185,29 +271,28 @@ class SubTest : rtEdgeSubscriber
          tkrs  = null;
          t0    = null;
          t1    = null;
+         csvF  = null;
          ti    = 0;
-         tf    = null;
          s0    = 0;
          sn    = 0;
          tRun  = 0;
-         bMF   = false;
          bds   = false;
          bTape = true;
          bQry  = false;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
-            s += "       [ -h   <Source : host:port or TapeFile> ] \\ \n";
-            s += "       [ -u   <Username> ] \\ \n";
-            s += "       [ -s   <Service> ] \\ \n";
-            s += "       [ -t   <Ticker : CSV or Filename> ] \\ \n";
-            s += "       [ -t0  <TapeSliceStartTime> ] \\ \n";
-            s += "       [ -t1  <TapeSliceEndTime> ] \\ \n";
-            s += "       [ -ti  <TapeSlice Sample Interval> ] \\ \n";
-            s += "       [ -tf  <CSV TapeSlice Sample Fields> ] \\ \n";
-            s += "       [ -s0  <TapeSlice Start Offset> ] \\ \n";
-            s += "       [ -sn  <TapeSlice NumMsg> ] \\ \n";
-            s += "       [ -r   <AppRunTime> ] \\ \n";
-            s += "       [ -bds <true> ] \\ \n";
+            s += "       [ -h    <Source : host:port or TapeFile> ] \\ \n";
+            s += "       [ -u    <Username> ] \\ \n";
+            s += "       [ -s    <Service> ] \\ \n";
+            s += "       [ -t    <Ticker : CSV or Filename> ] \\ \n";
+            s += "       [ -csvF <fid1,fid2,...> \\ \n";
+            s += "       [ -t0   <TapeSliceStartTime> ] \\ \n";
+            s += "       [ -t1   <TapeSliceEndTime> ] \\ \n";
+            s += "       [ -ti   <TapeSlice Sample Interval> ] \\ \n";
+            s += "       [ -s0   <TapeSlice Start Offset> ] \\ \n";
+            s += "       [ -sn   <TapeSlice NumMsg> ] \\ \n";
+            s += "       [ -r    <AppRunTime> ] \\ \n";
+            s += "       [ -bds  <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
             s += "       [ -query <true to dump d/b directory> ]  \\ \n";
             Console.WriteLine( s );
@@ -218,8 +303,8 @@ class SubTest : rtEdgeSubscriber
             Console.Write( "      -t       : <empty>\n" );
             Console.Write( "      -t0      : <empty>\n" );
             Console.Write( "      -t1      : <empty>\n" );
+            Console.Write( "      -csvF    : <empty>\n" );
             Console.Write( "      -ti      : ${0}\n", ti );
-            Console.Write( "      -tf      : <empty>\n" );
             Console.Write( "      -s0      : ${0}\n", s0 );
             Console.Write( "      -sn      : ${0}\n", sn );
             Console.Write( "      -r       : {0}\n", tRun );
@@ -253,10 +338,10 @@ class SubTest : rtEdgeSubscriber
                t0  = args[++i];
             else if ( args[i] == "-t1" )
                t1  = args[++i];
+            else if ( args[i] == "-csvF" )
+               csvF = args[++i];
             else if ( args[i] == "-ti" )
                ti = Convert.ToInt32( args[++i], 10 );
-            else if ( args[i] == "-tf" )
-               tf  = args[++i];
             else if ( args[i] == "-s0" )
                s0 = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-sn" )
@@ -271,10 +356,11 @@ class SubTest : rtEdgeSubscriber
                bQry = ( args[++i] == "true" );
          }
          Console.WriteLine( rtEdge.Version() );
-         sub = new SubTest( svr, usr, !bMF );
+         sub = new SubTest( svr, usr );
+         if ( csvF != null )
+            sub.LoadCSVFids( csvF );
          sub.SetTapeDirection( bTape );
-         if ( !bMF )
-            Console.WriteLine( "BINARY" );
+         Console.WriteLine( "BINARY" );
          Console.WriteLine( sub.Start() );
          /*
           * Tape Query??
@@ -299,12 +385,8 @@ class SubTest : rtEdgeSubscriber
             for ( i=0; i<nt; sub.Subscribe( svc, tkrs[i++], 0 ) );
          if ( sub.IsTape() ) {
             Console.WriteLine( "Pumping tape ..." );
-            if ( ( t0 != null ) && ( t1 != null ) ) {
-               if ( ( ti != 0 ) && ( tf != null ) )
-                  sub.StartTapeSliceSample( t0, t1, ti, tf );
-               else
-                  sub.StartTapeSlice( t0, t1 );
-            }
+            if ( ( t0 != null ) && ( t1 != null ) )
+               sub.StartTapeSlice( t0, t1 );
             else if ( ( sn != 0 ) )
                sub.StartPumpFullTape( s0, sn );
             else

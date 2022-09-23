@@ -10,6 +10,7 @@
 *     14 JAN 2018 jcs  Build 39: _nObjCLI
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
+*     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -263,7 +264,7 @@ array<Byte> ^rtEdge::_memcpy( ::rtBuf64 b )
    return rtn;
 }
 
-DateTime rtEdge::FromUnixTime( long tv_sec, long tv_usec )
+DateTime ^rtEdge::FromUnixTime( long tv_sec, long tv_usec )
 {
    DateTime ^epoch, ^rtn;
    Double    dSec;

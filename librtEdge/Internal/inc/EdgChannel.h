@@ -21,7 +21,7 @@
 *     22 OCT 2020 jcs  Build 46: XxxPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: TapeSlice
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
-*      1 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw
+*     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -248,7 +248,6 @@ public:
 
 	// Update Processing
 
-	rtFIELD *GetField( const char * );
 	rtFIELD *GetField( int );
 	void     ClearUpd();
 
