@@ -270,8 +270,8 @@ class SubTest : rtEdgeSubscriber
          svc   = "bloomberg";
          tkr   = null;
          tkrs  = null;
-         t0    = null;
-         t1    = null;
+         t0    = DateTime.MinValue;
+         t1    = DateTime.MinValue;
          csvF  = null;
          ti    = 0;
          s0    = 0;
@@ -336,9 +336,9 @@ class SubTest : rtEdgeSubscriber
                   tkrs = tkr.Split(',');
             }
             else if ( args[i] == "-t0" )
-               t0  = sub.StringToTapeTime( args[++i] );
+               t0  = rtEdge.StringToTapeTime( args[++i] );
             else if ( args[i] == "-t1" )
-               t1  = sub.StringToTapeTime( args[++i] );
+               t1  = rtEdge.StringToTapeTime( args[++i] );
             else if ( args[i] == "-csvF" )
                csvF = args[++i];
             else if ( args[i] == "-ti" )
@@ -386,7 +386,7 @@ class SubTest : rtEdgeSubscriber
             for ( i=0; i<nt; sub.Subscribe( svc, tkrs[i++], 0 ) );
          if ( sub.IsTape() ) {
             Console.WriteLine( "Pumping tape ..." );
-            if ( ( t0 != null ) && ( t1 != null ) )
+            if ( ( t0 != DateTime.MinValue ) && ( t1 != DateTime.MinValue ) )
                sub.PumpTapeSlice( t0, t1 );
             else if ( ( sn != 0 ) )
                sub.StartPumpFullTape( s0, sn );
