@@ -16,6 +16,7 @@
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
+*     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -219,25 +220,28 @@ bool rtEdgeSubscriber::IsTape()
    return _sub->IsTape();
 }
 
-void rtEdgeSubscriber::StartTape()
+void rtEdgeSubscriber::PumpTape()
 {
-   _sub->StartTape();
+   _sub->PumpTape();
 }
 
-void rtEdgeSubscriber::StartTapeSlice( String ^tStart, String ^tEnd )
+void rtEdgeSubscriber::PumpTapeSlice( DateTime ^tStart, DateTime ^tEnd )
 {
-   _sub->StartTapeSlice( _pStr( tStart ), _pStr( tEnd ) );
+   const char *t0 = _pStr( TapeTimeString( tStart ) );
+   const char *t1 = _pStr( TapeTimeString( tEnd ) );
+
+   _sub->PumpTapeSlice( t0, t1 );
 }
 
-void rtEdgeSubscriber::StartTapeSliceSample( String ^tStart, 
-                                             String ^tEnd, 
-                                             int     tInt, 
-                                             String ^pFlds )
+void rtEdgeSubscriber::PumpTapeSliceSample( DateTime ^tStart, 
+                                             DateTime ^tEnd, 
+                                             int       tInt, 
+                                             String   ^pFlds )
 {
-   const char *t0 = _pStr( tStart );
-   const char *t1 = _pStr( tEnd );
+   const char *t0 = _pStr( TapeTimeString( tStart ) );
+   const char *t1 = _pStr( TapeTimeString( tEnd ) );
 
-   _sub->StartTapeSliceSample( t0, t1, tInt, _pStr( pFlds ) );
+   _sub->PumpTapeSliceSample( t0, t1, tInt, _pStr( pFlds ) );
 }
 
 void rtEdgeSubscriber::StopTape()
@@ -507,9 +511,9 @@ rtEdgeData ^rtEdgeSubscriber::ParseView( IntPtr vw, int dLen )
 ////////////////////////////////////
 // Tape Only
 ////////////////////////////////////
-int rtEdgeSubscriber::StartPumpFullTape( u_int64_t off0, int nMsg )
+int rtEdgeSubscriber::PumpFullTape( u_int64_t off0, int nMsg )
 {
-   return _sub->StartPumpFullTape( off0, nMsg );
+   return _sub->PumpFullTape( off0, nMsg );
 }
 
 int rtEdgeSubscriber::StopPumpFullTape( int pumpID )

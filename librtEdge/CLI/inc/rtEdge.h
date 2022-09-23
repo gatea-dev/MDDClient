@@ -324,6 +324,14 @@ public:
 	 */
 	static DateTime ^FromUnixTime( long tv_sec, long tv_usec );
 
+	/**
+	 * \brief Convert DateTime to string-ified Tape Time
+	 *
+	 * \param dtTm - DateTime
+	 * \return YYYYMMDD HH:MM:SS
+	 */
+	static String ^TapeTimeString( DateTime ^dtTm );
+
 };  // class rtEdge
 
 

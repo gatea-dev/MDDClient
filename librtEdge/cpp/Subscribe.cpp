@@ -795,14 +795,14 @@ int main( int argc, char **argv )
    if ( ch.IsTape() ) {
       if ( t0 && t1 ) {
          if ( ti && tf )
-            ch.StartTapeSliceSample( t0, t1, ti, tf );
+            ch.PumpTapeSliceSample( t0, t1, ti, tf );
          else 
-            ch.StartTapeSlice( t0, t1 );
+            ch.PumpTapeSlice( t0, t1 );
       }
       else if ( sn )
-         ch.StartPumpFullTape( s0, sn );
+         ch.PumpFullTape( s0, sn );
       else
-         ch.StartTape();
+         ch.PumpTape();
    }
    if ( tRun )
       ch.Sleep( tRun );

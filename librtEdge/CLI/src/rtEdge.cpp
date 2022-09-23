@@ -275,6 +275,20 @@ DateTime ^rtEdge::FromUnixTime( long tv_sec, long tv_usec )
    return epoch->AddSeconds( dSec ).ToLocalTime();
 }
 
+String ^rtEdge::TapeTimeString( DateTime ^dtTm )
+{
+   char *cp, bp[K];
+
+   // YYYYMMDD HH:MM:SS.mmm
+
+   cp  = bp;
+   cp += sprintf( cp, "%04d%02d%02d", dtTm->Year, dtTm->Month, dtTm->Day );
+   cp += sprintf( cp, " " );
+   cp += sprintf( cp, "%02d:%02d:%02d", dtTm->Hour, dtTm->Minute, dtTm->Second );
+   cp += sprintf( cp, ".%03d", dtTm->Millisecond );
+   return gcnew String( bp );
+}
+
 
 
 ////////////////////////////////////////////////

@@ -15,9 +15,9 @@
 *     12 FEB 2020 jcs  Build 42: Channel.SetHeartbeat()
 *     10 SEP 2020 jcs  Build 44: SetTapeDirection(); Query()
 *     17 SEP 2020 jcs  Build 45: Parse()
-*      3 DEC 2020 jcs  Build 47: StartTapeSliceSample(); PumpFullTape()
+*      3 DEC 2020 jcs  Build 47: PumpTapeSliceSlice(); PumpFullTape()
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
-*     22 SEP 2022 jcs  Build 56: doxygen Tape Times
+*     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -72,8 +72,8 @@ typedef hash_set<int>               SymLists;
  * Lastly, the Tape File data source is specifically driven from this class:
  * API | Action
  * --- | ---
- * StartTape() | Pump data for Subscribe()'ed tkrs until end of file
- * StartTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
+ * PumpTape() | Pump data for Subscribe()'ed tkrs until end of file
+ * PumpTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
  * StopTape() | Stop Tape Pump 
  */
 class SubChannel : public Channel
@@ -319,7 +319,7 @@ private:
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 */
 public:
-	void StartTape()
+	void PumpTape()
 	{
 	   if ( _attr._bTape )
 	      Subscribe( pSvrHosts(), _tape_all, (void *)0 );
@@ -339,7 +339,7 @@ public:
 	 * \param tStart - Start time; Default is SOD (Start Of Day)
 	 * \param tEnd - End time; Default is EOD (End Of Day)
 	 */
-	void StartTapeSlice( const char *tStart = "00:00:00",
+	void PumpTapeSlice( const char *tStart = "00:00:00",
 	                     const char *tEnd   = "23:59:59" )
 	{
 	   std::string tkr( tStart );
@@ -369,10 +369,10 @@ public:
 	 * \param tInterval - Interval in seconds
 	 * \param pFlds - CSV list of Field IDs or Names of interest
 	 */
-	void StartTapeSliceSample( const char *tStart,
-	                           const char *tEnd,
-	                           int         tInterval,
-	                           const char *pFlds )
+	void PumpTapeSliceSample( const char *tStart,
+	                          const char *tEnd,
+	                          int         tInterval,
+	                          const char *pFlds )
 	{
 	   std::string tkr;
 	   char        buf[K];
@@ -380,7 +380,7 @@ public:
 	   // Pre-condition
 
 	   if ( !tInterval || !pFlds )
-	      return StartTapeSlice( tStart, tEnd );
+	      return PumpTapeSlice( tStart, tEnd );
 
 	   // OK : Tape Slice Sample
 
@@ -905,7 +905,7 @@ public:
 	 * \return Unique Tape Pumping ID; Kill pump via StopPumpFullTape()
 	 * \see StopPumpFullTape()
 	 */
-	int StartPumpFullTape( u_int64_t off0, int nMsg )
+	int PumpFullTape( u_int64_t off0, int nMsg )
 	{
 	   if ( IsValid() )
 	      return ::rtEdge_StartPumpFullTape( _cxt, off0, nMsg );
@@ -915,7 +915,7 @@ public:
 	/**
 	 * \brief Stop pumping from tape
 	 *
-	 * \param pumpID - Pump ID returned from StartPumpFullTape()
+	 * \param pumpID - Pump ID returned from PumpFullTape()
 	 * \return 1 if stopped; 0 if invalid Pump ID
 	 * \see PumpFullTape()
 	 */

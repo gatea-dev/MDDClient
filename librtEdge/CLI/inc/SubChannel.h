@@ -15,7 +15,7 @@
 *     30 SEP 2020 jcs  Build 45: Parse() / ParseView()
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
-*     22 SEP 2022 jcs  Build 56: doxygen Tape Times
+*     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -146,8 +146,8 @@ namespace librtEdge
  * Lastly, the Tape File data source is specifically driven from this class:
  * API | Action
  * --- | ---
- * StartTape() | Pump data for Subscribe()'ed tkrs until end of file
- * StartTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
+ * PumpTape() | Pump data for Subscribe()'ed tkrs until end of file
+ * PumpTapeSlice() | Pump data for Subscribe()'ed tkrs in a time interval
  * StopTape() | Stop Tape Pump
  *
  * \include rtEdgeSubscriber_override.h
@@ -237,7 +237,7 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 */
-	void StartTape();
+	void PumpTape();
 
 	/**
 	 * \brief Pump data from the tape between the given start and end times.
@@ -248,12 +248,10 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 *
-	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
-	 *
 	 * \param tStart - Start time
 	 * \param tEnd - End time
 	 */
-	void StartTapeSlice( String ^tStart, String ^tEnd );
+	void PumpTapeSlice( DateTime ^tStart, DateTime ^tEnd );
 
 	/**
 	 * \brief Pump data from the tape between the given start and end times
@@ -267,17 +265,15 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 *
-	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
-	 *
 	 * \param tStart - Start time
 	 * \param tEnd - End time
 	 * \param tInterval - Interval in seconds
 	 * \param pFlds - CSV list of Field IDs or Names of interest
 	 */
-	void StartTapeSliceSample( String ^tStart,
-	                           String ^tEnd,
-	                           int     tInterval,
-	                           String ^pFlds );
+	void PumpTapeSliceSample( DateTime ^tStart, 
+	                          DateTime ^tEnd,
+	                          int       tInterval,
+	                          String   ^pFlds );
 
 	/** \brief Stop pumping data from tape */
 	void StopTape();
@@ -623,22 +619,22 @@ public:
 	 * notified of completion in OnStreamDone().
 	 *
 	 * To pump a 'slice', you will need to store the rtEdgeData.TapePos() from
-	 * the last message received in previous call to StartPumpFullTape(), 
-	 * then use this as the off0 in next call to StartPumpFullTape().
+	 * the last message received in previous call to PumpFullTape(), 
+	 * then use this as the off0 in next call to PumpFullTape().
 	 *
 	 * \param off0 - Beginning offset, or 0 for beginning of tape
 	 * \param nMsg - Number of msgs to pump; 0 for all
 	 * \return Unique Tape Pumping ID; Kill pump via StopPumpFullTape()
 	 * \see StopPumpFullTape()
 	 */
-	int StartPumpFullTape( u_int64_t off0, int nMsg );
+	int PumpFullTape( u_int64_t off0, int nMsg );
 
 	/**
 	 * \brief Stop pumping from tape
 	 *
 	 * \param pumpID - Pump ID returned from rtEdge_PumpFullTape()
 	 * \return 1 if stopped; 0 if invalid Pump ID
-	 * \see StartPumpFullTape()
+	 * \see PumpFullTape()
 	 */
 	int StopPumpFullTape( int pumpID );
 

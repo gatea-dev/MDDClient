@@ -386,11 +386,11 @@ class SubTest : rtEdgeSubscriber
          if ( sub.IsTape() ) {
             Console.WriteLine( "Pumping tape ..." );
             if ( ( t0 != null ) && ( t1 != null ) )
-               sub.StartTapeSlice( t0, t1 );
+               sub.PumpTapeSlice( t0, t1 );
             else if ( ( sn != 0 ) )
                sub.StartPumpFullTape( s0, sn );
             else
-               sub.StartTape();
+               sub.PumpTape();
          }
          if ( tRun > 0 ) {
             Console.WriteLine( "Running for {0} millisecond ...", tRun );
