@@ -17,7 +17,7 @@ char *librtEdgeID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)librtEdge %s Build %s ", GL64, _BLD );
+      cp    += sprintf( cp, "@(#)librtEdge %s Build %s ", GL64, _MDD_LIB_BLD );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       s      = bp;
       sccsid = (char *)s.data();

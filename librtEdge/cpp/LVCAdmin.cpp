@@ -27,7 +27,7 @@ const char *LVCAdminID()
       char bp[K], *cp;
 
       cp  = bp;
-      cp += sprintf( cp, "@(#)LVCAdmin Build %s ", _BLD );
+      cp += sprintf( cp, "@(#)LVCAdmin Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
       cp += sprintf( cp, rtEdge::Version() );
       s   = bp;

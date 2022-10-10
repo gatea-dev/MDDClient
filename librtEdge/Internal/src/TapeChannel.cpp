@@ -6,6 +6,7 @@
 *  REVISION HISTORY:
 *      1 SEP 2022 jcs  Created (from EdgChannel)
 *     23 SEP 2022 jcs  GetField()
+*     10 OCT 2022 jcs  Multiple tickers
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -390,20 +391,21 @@ int TapeChannel::Pump()
    mddBuf                  m;
    u_int64_t               off;
    size_t                  nt;
-   int                     n, mSz;
+   int                     n, mSz, rc;
 
    // Pre-condition(s)
 
    if ( !_hdr || !_bRun )
       return 0;
 
-   // One ticker??
+   // Specific ticker(s)??
 
    TapeRun run( *this );
 
-   if ( (nt=_wl.size()) == 1 ) {
+   if ( (nt=_wl.size()) ) {
       it = _wl.begin();
-      return PumpTicker( (*it).first );
+      for ( rc=0; it!=_wl.end(); rc += PumpTicker( (*it).first ), it++ );
+      return rc;
    }
    /*
     * PumpTpe( off, nMsg )??
@@ -420,6 +422,7 @@ int TapeChannel::Pump()
    bp  = _tape._data;
    off = _hdr->_hdrSiz;
    t0  = _slice ? _slice->_t0 : _zT;
+   msg = (GLrecTapeMsg *)0;
    _PumpDead();
    if ( t0.tv_sec )
       off = _tapeOffset( t0 );
@@ -1154,6 +1157,8 @@ struct timeval TapeSlice::_str2tv( char *hmsU )
    struct timeval tv;
    time_t         t;
    char          *ps, *ymd, *hms, *h, *m, *s, *u, *z, *r1, *r2;
+   char           sH[8], sM[8], sS[8];
+   bool           b8, b6;
    size_t         sz, mul;
    rtFIELD        f;
    rtBUF         &b = f._val._buf;
@@ -1173,22 +1178,34 @@ struct timeval TapeSlice::_str2tv( char *hmsU )
    hms = ::strtok_r( NULL, _SEP1, &r1 );
    hh  = hms ? hms : hmsU;
    if ( hms ) {
+      b8         = ( (sz=strlen( ymd )) == 8 );
       f._type    = rtFld_string;
       b._data    = ymd;
       b._dLen    = 4;
       lt.tm_year = ::rtEdge_atoi( f ) - 1900; 
+      b._dLen   += b8 ? 0 : 1; // '-'
       b._data   += b._dLen;
       b._dLen    = 2;
       lt.tm_mon  = ::rtEdge_atoi( f ) - 1;
+      b._dLen   += b8 ? 0 : 1; // '-'
       b._data   += b._dLen;
       lt.tm_mday = ::rtEdge_atoi( f );
    }
    ps  = (char *)hh.data();
    hms = ::strtok_r( ps,   _SEP2, &r2 );
    u   = ::strtok_r( NULL, _SEP2, &r2 );
-   h   = ::strtok_r( hms,  _SEP3, &r2 );
-   m   = h ? ::strtok_r( NULL, _SEP3, &r2 ) : z;
-   s   = m ? ::strtok_r( NULL, _SEP3, &r2 ) : z;
+   b6  = ( (sz=strlen( hms )) == 6 );
+   if ( b6 ) {
+      sH[2] = sM[2] = sS[2] = '\0';
+      ::memcpy( (h=sH), hms+0, 2 );
+      ::memcpy( (m=sM), hms+2, 2 );
+      ::memcpy( (s=sS), hms+4, 2 );
+   }
+   else {
+      h = ::strtok_r( hms,  _SEP3, &r2 );
+      m = h ? ::strtok_r( NULL, _SEP3, &r2 ) : z;
+      s = m ? ::strtok_r( NULL, _SEP3, &r2 ) : z;
+   }
    sz  = u ? strlen( u ) : 0;
    mul = 1;
    switch( sz ) {

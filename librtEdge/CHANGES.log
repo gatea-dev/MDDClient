@@ -42,6 +42,14 @@ Features To Add
  *
  * ## Change Log
  *
+ *
+ * ### Build 57 22-10-xx
+ *
+ * -# Tape 
+ *    - TapeChannel.Pump() : Subscribe to multiple tickers 
+ *    - TapeSlice._str2tv() : Tape Slice as YYYYMMDD or YYYY-MM-DD
+ *    - TapeSlice._str2tv() : Tape Slice as HH:MM:SS or HHMMSS
+ *
  * 
  * ### Build 56 22-09-23
  * 
