@@ -322,7 +322,7 @@ public:
 	 * \param tv_usec - Microseconds
 	 * \return DateTime
 	 */
-	static DateTime ^FromUnixTime( long tv_sec, long tv_usec );
+	static DateTime FromUnixTime( long tv_sec, long tv_usec );
 
 	/**
 	 * \brief Convert DateTime to string-ified Tape Time
@@ -338,7 +338,7 @@ public:
 	 * \param dtTm = string-ified time as YYYYMMDD HH:MM:SS
 	 * \return DateTime
 	 */
-	static DateTime ^StringToTapeTime( String ^dtTm );
+	static DateTime StringToTapeTime( String ^dtTm );
 
 };  // class rtEdge
 

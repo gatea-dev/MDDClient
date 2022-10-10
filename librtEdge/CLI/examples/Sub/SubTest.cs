@@ -389,7 +389,7 @@ class SubTest : rtEdgeSubscriber
             if ( ( t0 != DateTime.MinValue ) && ( t1 != DateTime.MinValue ) )
                sub.PumpTapeSlice( t0, t1 );
             else if ( ( sn != 0 ) )
-               sub.StartPumpFullTape( s0, sn );
+               sub.PumpFullTape( s0, sn );
             else
                sub.PumpTape();
          }

@@ -264,9 +264,9 @@ array<Byte> ^rtEdge::_memcpy( ::rtBuf64 b )
    return rtn;
 }
 
-DateTime ^rtEdge::FromUnixTime( long tv_sec, long tv_usec )
+DateTime rtEdge::FromUnixTime( long tv_sec, long tv_usec )
 {
-   DateTime ^epoch, ^rtn;
+   DateTime ^epoch;
    Double    dSec;
 
    epoch = gcnew DateTime( 1970,1,1,0,0,0,0, DateTimeKind::Utc );
@@ -289,12 +289,9 @@ String ^rtEdge::TapeTimeString( DateTime ^dtTm )
    return gcnew String( bp );
 }
 
-DateTime ^rtEdge::StringToTapeTime( String ^dtTm )
+DateTime rtEdge::StringToTapeTime( String ^dtTm )
 {
-   DateTime ^rc = gcnew DateTime;
-
-   rc = DateTime::Parse( dtTm );
-   return rc;
+   return DateTime::Parse( dtTm );
 }
 
 
