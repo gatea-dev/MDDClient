@@ -7,6 +7,7 @@
 *      1 SEP 2022 jcs  Created (from EdgChannel)
 *     23 SEP 2022 jcs  GetField()
 *     10 OCT 2022 jcs  Multiple tickers
+*     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -391,6 +392,7 @@ int TapeChannel::Pump()
    mddBuf                  m;
    u_int64_t               off;
    size_t                  nt;
+   bool                    bPmp;
    int                     n, mSz, rc;
 
    // Pre-condition(s)
@@ -419,20 +421,21 @@ int TapeChannel::Pump()
    /*
     * All Tickers??
     */
-   bp  = _tape._data;
-   off = _hdr->_hdrSiz;
-   t0  = _slice ? _slice->_t0 : _zT;
-   msg = (GLrecTapeMsg *)0;
+   bp   = _tape._data;
+   off  = _hdr->_hdrSiz;
+   t0   = _slice ? _slice->_t0 : _zT;
+   msg  = (GLrecTapeMsg *)0;
+   bPmp = true;
    _PumpDead();
    if ( t0.tv_sec )
       off = _tapeOffset( t0 );
-   for ( n=0; !_nSub && _bRun && off<_tape._dLen; ) {
+   for ( n=0; !_nSub && bPmp && _bRun && off<_tape._dLen; ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
       m._dLen = msg->_msgLen - mSz;
-      n      += _PumpOneMsg( *msg, m, false );
+      n      += _PumpOneMsg( *msg, m, false, bPmp );
       off    += msg->_msgLen;
    }
    _PumpComplete( msg, off );  
@@ -451,6 +454,7 @@ int TapeChannel::PumpTicker( int ix )
    Offsets       odb;
    u_int64_t     off, diff, nMsg;
    size_t        i, j, nr;
+   bool          bPmp, notUsed;
    int           n, mSz, pct;
    static int    _pct[] = { 10, 25, 50, 75 };
 
@@ -474,7 +478,8 @@ int TapeChannel::PumpTicker( int ix )
       Load();
    }
    _PumpDead();
-   for ( i=0,n=0; _bRun && off; i++ ) {
+   bPmp = true;
+   for ( i=0,n=0; bPmp && _bRun && off; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
@@ -502,7 +507,7 @@ int TapeChannel::PumpTicker( int ix )
             odb.push_back( off );
       }
       else
-         n   += _PumpOneMsg( *msg, m, true );
+         n   += _PumpOneMsg( *msg, m, true, bPmp );
       if ( msg->_bLast4 )
          diff = (u_int64_t)_get32( msg->_last );
       else
@@ -520,7 +525,7 @@ int TapeChannel::PumpTicker( int ix )
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
       m._dLen = msg->_msgLen - mSz;
-      n      += _PumpOneMsg( *msg, m, true );
+      n      += _PumpOneMsg( *msg, m, true, notUsed );
    }
    _PumpStatus( msg, "Stream Complete", edg_streamDone );
 
@@ -719,6 +724,7 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
    Sentinel      &ss = h._sentinel;
    GLrecTapeMsg  *msg;
    char          *bp, *cp;
+   bool           bPmp;
    mddBuf         m;
    u_int64_t      off;
    int            i, n, mSz;
@@ -744,13 +750,15 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
 
    // Pump up to nMsg ...
 
-   for ( i=0,n=0,off=off0; _bRun && off<_tape._dLen && i<nMsg; i++ ) {
+   off  = off0;
+   bPmp = true;
+   for ( i=0,n=0; bPmp && _bRun && off<_tape._dLen && i<nMsg; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
       mSz     = msg->_bLast4 ? _mSz4 : _mSz8;
       m._data = cp + mSz;
       m._dLen = msg->_msgLen - mSz;
-      n      += _PumpOneMsg( *msg, m, false );
+      n      += _PumpOneMsg( *msg, m, false, bPmp );
       off    += msg->_msgLen;
    }
    /*
@@ -766,7 +774,7 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
    return n;
 }
 
-int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
+int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev, bool &bPmp )
 {
    rtEdgeData     d;
    struct timeval tv;
@@ -776,9 +784,9 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev )
 
    if ( !_InTimeRange( msg ) ) {
       if ( bRev )
-         _bRun &= ( msg._tv_sec >= _slice->_t0.tv_sec );
+         bPmp &= ( msg._tv_sec >= _slice->_t0.tv_sec );
       else
-         _bRun &= ( msg._tv_sec <= _slice->_t1.tv_sec );
+         bPmp &= ( msg._tv_sec <= _slice->_t1.tv_sec );
       return 0;
    }
    if ( !_IsWatched( msg ) )

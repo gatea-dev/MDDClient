@@ -6,6 +6,7 @@
 *  REVISION HISTORY:
 *      1 SEP 2022 jcs  Created (from EdgChannel)
 *     23 SEP 2022 jcs  GetField()
+*     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -109,7 +110,7 @@ private:
 	int            _PumpDead();
 	void           _PumpStatus( GLrecTapeMsg *, const char *, rtEdgeType ty=edg_recovering, u_int64_t off=0 );
 	int            _PumpSlice( u_int64_t, int );
-	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool );
+	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool, bool & );
 	void           _PumpComplete( GLrecTapeMsg *, u_int64_t );
 	string         _Key( const char *, const char * );
 	int            _get32( u_char * );
