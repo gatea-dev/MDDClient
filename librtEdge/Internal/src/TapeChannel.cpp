@@ -461,10 +461,11 @@ int TapeChannel::PumpTicker( int ix )
 
    // One Ticker
 
-   bp      = _tape._data;
-   rec     = _tdb[ix];
-   off     = rec->_loc;
-   nMsg    = rec->_nMsg;
+   bp   = _tape._data;
+   rec  = _tdb[ix];
+   off  = rec->_loc;
+   nMsg = rec->_nMsg;
+   msg  = (GLrecTapeMsg *)0;
    /*
     * Remap if too big
     */
@@ -512,7 +513,7 @@ int TapeChannel::PumpTicker( int ix )
     * Reverse??
     */
    nr = odb.size();
-   for ( i=0; i<nr; i++ ) {
+   for ( i=0; _bRun && i<nr; i++ ) {
       off     = odb[nr-1-i];
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;

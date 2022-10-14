@@ -334,13 +334,17 @@ public:
 	 * + If you Subscribe()'ed to any tickers, only those are pumped
 	 * + If you did not Subscribe(), then ALL tickers are pumped
 	 *
-	 * String-ified time format is either "YYYYMMDD HH:MM:SS" or "HH:MM:SS"
+	 * tStart and tEnd strings are parsed as follows:
+	 * + __DateTime__ or __Time__ are supported
+	 * + __DateTime__ = Space separated __Date__ __Time__
+	 * + __Date__ = YYYYMMDD or YYYY-MM-DD
+	 * + __Time__ =  HH:MM:SS, HH:MM or HHMMSS
 	 *
 	 * \param tStart - Start time; Default is SOD (Start Of Day)
 	 * \param tEnd - End time; Default is EOD (End Of Day)
 	 */
 	void PumpTapeSlice( const char *tStart = "00:00:00",
-	                     const char *tEnd   = "23:59:59" )
+	                    const char *tEnd   = "23:59:59" )
 	{
 	   std::string tkr( tStart );
 
@@ -483,30 +487,30 @@ public:
 	 *
 	 * \return Tape start time in Unix Time; 0 if not tape
 	 */
-        time_t GetTapeStartTime()
-        {
+	time_t GetTapeStartTime()
+	{
 	   u_int64_t tm;
 
-           tm = 0;
+	   tm = 0;
 	   if ( _cxt && _attr._bTape )
 	      ::rtEdge_ioctl( _cxt, ioctl_tapeStartTime, (void *)&tm );
-           return tm;
-        }
+	      return tm;
+	   }
 
 	/**
 	 * \brief Return Tape end (last insert) time in Unix Time; 0 if not tape
 	 *
 	 * \return Tape end (last insert) time in Unix Time; 0 if not tape
 	 */
-        time_t GetTapeEndTime()
-        {
+	time_t GetTapeEndTime()
+	{
 	   u_int64_t tm;
 
-           tm = 0;
+	   tm = 0;
 	   if ( _cxt && _attr._bTape )
 	      ::rtEdge_ioctl( _cxt, ioctl_tapeEndTime, (void *)&tm );
-           return tm;
-        }
+	   return tm;
+	}
 
 
 	////////////////////////////////////
