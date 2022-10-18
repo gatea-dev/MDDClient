@@ -33,7 +33,7 @@ Features To Add
  * 
  * ### Build 14 22-05-23
  * 
- * -#) Schema : mddValue._i32 = _maxLen
+ * -# Schema : mddValue._i32 = _maxLen
  * 
  * -# mddFld_unixTime : Always unpacked 
  * 
