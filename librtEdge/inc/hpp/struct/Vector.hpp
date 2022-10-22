@@ -123,12 +123,12 @@ public:
 
 /**
  * \class Vector
- * \brief This class encapsulates a one-dimensional Vector : Pub or Sub
+ * \brief A one-dimensional Vector of doubles : Pub or Sub
  *
  * When consuming you receive asynchronous notifications as follows:
- * + OnData() - When a "chunk" of the stream is received (i.e. 1 message)
- * + OnError() - Stream error
- * + OnSubscribeComplete() - Stream completely consumed
+ * + OnData( VectorImage & ) - Complete Vector Update
+ * + OnData( VectorUpdate & ) - Partiel Vector Update
+ * + OnError() - Error
  *
  * When publishing you receive asynchronous notifications as follows:
  * + OnPublishData() - When a "chunk" of the stream has been published
@@ -284,6 +284,19 @@ public:
 	////////////////////////////////////
 public:
 	/**
+	 * \brief Return Vector Values
+	 *
+	 * \param img - Resultant Vector to populate
+	 * \return VectorImage of all values
+	 */
+	VectorImage Get( VectorImage &img )
+	{
+	   img.clear();
+	   for ( int i=0; i<_size; img.push_back( _vals[i++] ) );
+	   return img;
+	}
+
+	/**
 	 * \brief Publish Image or Update
 	 *
 	 * For best performance, we keep track internally of whether the entire vector 
@@ -299,9 +312,10 @@ public:
 	 *
 	 * \param u - Update publishing object
 	 * \param StreamID - Unique MDDirect Stream ID
+	 * \param bImg - true to force Image
 	 * \return Number of data points published
 	 */
-	size_t Publish( RTEDGE::Update &u, int StreamID )
+	size_t Publish( RTEDGE::Update &u, int StreamID, bool bImg=false )
 	{
 	   VecWireHdr    *h;
 	   u_int64_t     *img;
@@ -314,13 +328,14 @@ public:
 
 	   // Pre-condition
 
-	   if ( _bImg && !_upds.size() )
+	   bImg |= _bImg;
+	   if ( bImg && !_upds.size() )
 	      return 0;
 	   /*
 	    * 1) Allocate Buffer
 	    */
-	   n   = _bImg ? _size : gmin( (size_t)_size, _upds.size() );
-	   sz  = _bImg ? sizeof( u_int64_t ) : sizeof( VecWireUpdVal ); 
+	   n   = bImg ? _size : gmin( (size_t)_size, _upds.size() );
+	   sz  = bImg ? sizeof( u_int64_t ) : sizeof( VecWireUpdVal ); 
 	   sz *= n;
 	   sz += sizeof( VecWireHdr );
 	   bp  = new char[sz+10];
@@ -331,7 +346,7 @@ public:
 	    */
 	   h->_MsgSz     = sz;
 	   h->_Precision = _precision;
-	   h->_bImg      = _bImg;
+	   h->_bImg      = bImg;
 	   h->_nVal      = (int)n;
 	   cp           += sizeof( *h );
 	   img           = (u_int64_t *)cp;
@@ -344,10 +359,10 @@ public:
 	      _precIn  = 1.0 / _precOut;
 	   }
 	   for ( int i=0; i<(int)n; i++ ) {
-	      ix   = _bImg ? i        : _upds[i]._Index;
-	      r64  = _bImg ? _vals[i] : _upds[i]._Value;
+	      ix   = bImg ? i        : _upds[i]._Index;
+	      r64  = bImg ? _vals[i] : _upds[i]._Value;
 	      r64 *= _precOut; 
-	      if ( _bImg ) {
+	      if ( bImg ) {
 	         img[i] = (u_int64_t)r64;
 	      }
 	      else {
