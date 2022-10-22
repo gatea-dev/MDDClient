@@ -15,6 +15,7 @@
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *      6 OCT 2021 jcs  Build 50: -table
 *     16 AUG 2022 jcs  Build 55: stdout formatting buggies
+*     22 OCT 2022 jcs  Build 58: MyVector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -77,6 +78,52 @@ const char *SubscribeID()
    sccsid = s.data();
    return sccsid+4;
 }
+
+
+/////////////////////////////////////
+//
+//   c l a s s   M y V e c t o r
+//
+/////////////////////////////////////
+class MyVector : public Vector
+{
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+public:
+   MyVector( const char *svc, const char *tkr ) :
+      Vector( svc, tkr )
+   { ; }
+
+   ////////////////////////////////
+   // Asynchronous Callbacks
+   ////////////////////////////////
+public:
+   virtual void OnData( VectorImage &img )
+   {
+      string s = Dump();
+
+      ::fprintf( stdout, "IMG (%s,%s) ", Service(), Ticker() );
+      ::fwrite( s.data(), 1, s.length(), stdout );
+      ::fflush( stdout );
+   }
+
+   virtual void OnData( VectorUpdate &upd )
+   {
+      string s = Dump( upd );
+
+      ::fprintf( stdout, "UPD (%s,%s) ", Service(), Ticker() );
+      ::fwrite( s.data(), 1, s.length(), stdout );
+      ::fflush( stdout );
+   }
+
+   virtual void OnError( const char *err )
+   {
+      ::fprintf( stdout, "Vector.OnError() : %s\n", err );
+      ::fflush( stdout );
+   }
+
+}; // class MyVector
 
 
 /////////////////////////////////////
@@ -574,6 +621,11 @@ private:
 //////////////////////////
 // main()
 //////////////////////////
+static bool _IsTrue( const char *p )
+{
+   return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
+}
+
 int main( int argc, char **argv )
 {
    MyChannel   ch;
@@ -581,8 +633,8 @@ int main( int argc, char **argv )
    const char *pc;
    FILE       *fp;
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
-   char       *pa, *cp, *rp, sTkr[K];
-   bool        bCfg, aOK, bBin, bStr, bTape, bQry;
+   char       *cp, *rp, sTkr[K];
+   bool        bCfg, aOK, bBin, bStr, bVec, bTape, bQry;
    void       *arg;
    string      s;
    u_int64_t   s0;
@@ -612,6 +664,7 @@ int main( int argc, char **argv )
    bBin  = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    bStr  = false;
+   bVec  = false;
    bTape = true;
    bQry  = false;
    if ( bCfg ) {
@@ -629,6 +682,7 @@ int main( int argc, char **argv )
       s += "       [ -r  <AppRunTime> ] \\ \n";
       s += "       [ -p  <Protocol MF|BIN> ] \\ \n";
       s += "       [ -bstr <If included, bytestream> ] \\ \n";
+      s += "       [ -vector <If included, bytestream> ] \\ \n";
       s += "       [ -csv true ] \\ \n";
       s += "       [ -csvF <csv list of FIDs> \\ \n";
       s += "       [ -renko <FID,BoxSize[,Mult]>\n";
@@ -651,6 +705,7 @@ int main( int argc, char **argv )
       printf( "      -r       : %d\n", tRun );
       printf( "      -p       : %s\n", bBin ? "BIN" : "MF" );
       printf( "      -bstr    : %s\n", bStr ? "YES" : "NO" );
+      printf( "      -vector  : %s\n", bVec ? "YES" : "NO" );
       printf( "      -csv     : %s\n", ch._bCSV ? "YES" : "NO" );
       printf( "      -csvF    : <empty>\n" );
       printf( "      -renko   : <empty>\n" );
@@ -692,16 +747,14 @@ int main( int argc, char **argv )
          tRun = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-p" ) )
          bBin = ::strcmp( argv[++i], "MF" );
-      else if ( !::strcmp( argv[i], "-csv" ) ) {
-         pa        = argv[++i];
-         ch._bCSV |= !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
-      }
+      else if ( !::strcmp( argv[i], "-csv" ) )
+         ch._bCSV = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-csvF" ) )
          ch.LoadCSVFids( argv[++i] );
-      else if ( !::strcmp( argv[i], "-bstr" ) ) {
-         pa    = argv[++i];
-         bStr |= !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
-      }
+      else if ( !::strcmp( argv[i], "-bstr" ) )
+         bStr = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-vector" ) )
+         bVec = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-renko" ) ) {
          string sr( argv[++i] );
 
@@ -716,18 +769,12 @@ int main( int argc, char **argv )
                r = _zRenko;
          }
       }
-      else if ( !::strcmp( argv[i], "-bds" ) ) {
-         pa       = argv[++i];
-         ch._bds |= !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
-      }
-      else if ( !::strcmp( argv[i], "-tapeDir" ) ) {
-         pa    = argv[++i];
-         bTape = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
-      }
-      else if ( !::strcmp( argv[i], "-query" ) ) {
-         pa   = argv[++i];
-         bQry = !::strcmp( pa, "YES" ) || !::strcmp( pa, "true" );
-      }
+      else if ( !::strcmp( argv[i], "-bds" ) )
+         ch._bds = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-tapeDir" ) )
+         bTape = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-query" ) )
+         bQry = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-table" ) )
          ch.LoadTable( argv[++i] );
    }
@@ -755,6 +802,7 @@ int main( int argc, char **argv )
 
    vector<string *> tkrs;
    MyStream        *str;
+   MyVector        *vec;
 
    if ( tkr && (fp=::fopen( tkr, "r" )) ) {
       while( ::fgets( (cp=sTkr), K, fp ) ) {
@@ -770,7 +818,7 @@ int main( int argc, char **argv )
          }
          cp[1] = '\0';
          if ( strlen( sTkr ) )
-            tkrs.push_back( new std::string( sTkr ) );
+            tkrs.push_back( new string( sTkr ) );
       }
       ::fclose( fp );
    }
@@ -782,7 +830,15 @@ int main( int argc, char **argv )
       for ( i=0; i<nt; i++ ) {
          str = new MyStream( svc, tkrs[i]->data() );
          ch.Subscribe( *str );
-         printf( "ByteStream.Subscribe( %s,%s )\n", str->svc(), str->tkr() );
+         printf( "ByteStream.Subscribe( %s,%s )\n", svc, str->Ticker() );
+      }
+   }
+   else if ( bVec ) {
+      ch.Sleep( 1.0 ); // Wait for protocol negotiation to finish
+      for ( i=0; i<nt; i++ ) {
+         vec = new MyVector( svc, tkrs[i]->data() );
+         vec->Subscribe( ch );
+         printf( "Vector.Subscribe( %s,%s )\n", svc, vec->Ticker() );
       }
    }
    else if ( ch._bds )

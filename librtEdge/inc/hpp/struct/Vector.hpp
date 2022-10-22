@@ -255,14 +255,12 @@ public:
 	 *
 	 * \param svc - Service supplying this ByteStream if Subscribe()
 	 * \param tkr - Published name of this ByteStream
-	 * \param size - Vector Size
 	 * \param precision - Sig Fig; 0 to 'learn' from Subscription Stream
 	 */
-	Vector( const char *svc, const char *tkr, int size, int precision=0.0 ) :
+	Vector( const char *svc, const char *tkr, int precision=0.0 ) :
 	   _str( *this, svc, tkr ),
 	   _upds(),
-	   _vals( new double[size] ),
-	   _size( size ),
+	   _vals(),
 	   _precision( precision ),
 	   _precIn( 0.0 ),
 	   _precOut( 0.0 ),
@@ -276,13 +274,33 @@ public:
 
 	virtual ~Vector()
 	{
-	   delete[] _vals;
+	   _vals.clear();
 	}
 
 	////////////////////////////////////
-	// Operations
+	// Access
 	////////////////////////////////////
 public:
+	/**
+	 * \brief Returns Service Name of this Vector
+	 *
+	 * \return Service Name of this Vector
+	 */
+	const char *Service()
+	{
+	   return _str.Service();
+	}
+
+	/**
+	 * \brief Returns Ticker Name of this Vector
+	 *
+	 * \return Ticker Name of this Vector
+	 */
+	const char *Ticker()
+	{
+	   return _str.Ticker();
+	}
+
 	/**
 	 * \brief Return Vector Values
 	 *
@@ -292,16 +310,40 @@ public:
 	VectorImage Get( VectorImage &img )
 	{
 	   img.clear();
-	   for ( int i=0; i<_size; img.push_back( _vals[i++] ) );
+	   img = _vals;
 	   return img;
+	}
+
+	////////////////////////////////////
+	// Operations
+	////////////////////////////////////
+	/**
+	 * \brief Subscribe to published Vector
+	 *
+	 * \param sub - SubChannel to subscribe to
+	 * \return Unique Subscription ID
+	 */
+	int Subscribe( SubChannel &sub )
+	{
+	   return sub.Subscribe( _str );
+	}
+
+	/**
+	 * \brief Unsubscribe to published Vector
+	 *
+	 * \param sub - SubChannel to subscribe to
+	 */
+	void Unsubscribe( SubChannel &sub )
+	{
+	   sub.Unsubscribe( _str );
 	}
 
 	/**
 	 * \brief Publish Image or Update
 	 *
-	 * For best performance, we keep track internally of whether the entire vector 
-	 * has been published or not.  Based on this, your consumer Vector will see the
-	 * following:
+	 * For best performance, we keep track internally of whether the entire 
+	 * vector has been published or not.  Based on this, your consumer 
+	 * Vector will see the following:
 	 *
 	 * Vector State | Publish | Consumer Callback
 	 * --- | --- | ---
@@ -334,7 +376,7 @@ public:
 	   /*
 	    * 1) Allocate Buffer
 	    */
-	   n   = bImg ? _size : gmin( (size_t)_size, _upds.size() );
+	   n   = bImg ? _vals.size() : _upds.size();
 	   sz  = bImg ? sizeof( u_int64_t ) : sizeof( VecWireUpdVal ); 
 	   sz *= n;
 	   sz += sizeof( VecWireHdr );
@@ -376,7 +418,7 @@ public:
 	   pb._data = bp;
 	   pb._dLen = (int)sz;
 	   _str.SetPublishData( pb );
-	   u.Init( _str.tkr(), StreamID, true );
+	   u.Init( _str.Ticker(), StreamID, true );
 	   u.Publish( _str, _fidPayload );
 
 	   // Clean up
@@ -397,10 +439,11 @@ public:
 	{
 	   size_t i, n;
 
-	   n = gmin( (size_t)_size, img.size() );
-	   for ( i=0; i<n; _vals[i]=img[i], i++ );
-	   _bImg = true;
+	   _vals.clear();
 	   _upds.clear();
+	   n = img.size();
+	   for ( i=0; i<n; _vals.push_back( img[i++] ) );
+	   _bImg = true;
 	   return n;
 	}
 
@@ -415,16 +458,76 @@ public:
 	{
 	   VectorValue u = { idx, val };
 
-	   // Pre-condition
+	   // Grow as necessary
 
-	   if ( !InRange( 0, idx, _size-1 ) )
-	      return 0;
+	   for ( ; idx<(int)_vals.size(); _vals.push_back( 0.0 ) );
 
 	   // Safe to set
 
 	   _vals[idx] = val;
 	   _upds.push_back( u );
 	   return 1;
+	}
+
+
+	////////////////////////////////////
+	// Debugging
+	////////////////////////////////////
+	/**
+	 * \brief Dump Vector contents in formatted string
+	 *
+	 * \param bPage : true for < 80 char per row; false for 1 row
+	 * \return Vector contents as formatted string
+	 */
+	std::string Dump( bool bPage=true )
+	{
+	   char       *cp, bp[K], fmt[K];
+	   size_t      i, n;
+	   std::string s;
+
+	   sprintf( fmt, "%%.%df,", _precision );
+	   n   = _vals.size();
+	   cp  = bp;
+	   cp += sprintf( cp, "[%04ld values] ", n );
+	   for ( i=0; i<n; i++ ) {
+	      cp += sprintf( cp, fmt, _vals[i] );
+	      if ( cp-bp >= 76 ) {
+	         cp += sprintf( cp, "\n" );
+	         s  += bp;
+	         cp  = bp;
+	      }
+	   }
+	   s += bp;
+	   return std::string( s );
+	}
+
+	/**
+	 * \brief Dump Vector Update contents in formatted string
+	 *
+	 * \param bPage : true for < 80 char per row; false for 1 row
+	 * \return Vector Update contents as formatted string
+	 */
+	std::string Dump( VectorUpdate &upd, bool bPage=true )
+	{
+	   char       *cp, bp[K], fmt[K];
+	   size_t      i, n;
+	   std::string s;
+
+	   sprintf( fmt, "%%.%df,", _precision );
+	   n   = upd.size();
+	   cp  = bp;
+	   cp += sprintf( cp, "[%04ld values] ", n );
+	   for ( i=0; i<n; i++ ) {
+	      cp += sprintf( cp, "%d=", upd[i]._Index );
+	      cp += sprintf( cp, fmt, upd[i]._Value );
+	      if ( cp-bp >= 76 ) {
+	         cp += sprintf( cp, "\n" );
+	         s  += bp;
+	         cp  = bp;
+	      }
+	   }
+	   s += bp;
+	   return std::string( s );
 	}
 
 	////////////////////////////////////
@@ -523,7 +626,6 @@ private:
 	   h   = (VecWireHdr *)cp;
 	   nv  = h->_nVal;
 assert( h->_MsgSz == sz );
-assert( nv <= _size ); 
 	   cp += sizeof( VecWireHdr );
 
 	   // Once, if not defined by user
@@ -534,12 +636,13 @@ assert( nv <= _size );
 	      _precIn    = 1.0 / _precOut;
 	   }
 
-	   // Pull 'em out
+	   // Pull 'em out : Grow as necessary
 
 	   vdb = (u_int64_t *)cp;
 	   udb = (VecWireUpdVal *)cp;
 	   for ( i=0; i<nv; i++ ) {
 	      ix = i;
+	      for ( int j=0; j<ix; _vals.push_back( 0.0 ), j++ );
 	      if ( h->_bImg ) {
 	         _vals[ix] = _precIn * vdb[i];
 	         cp       += sizeof( u_int64_t );
@@ -548,7 +651,6 @@ assert( nv <= _size );
 	      else {
 	         ix        = udb[i]._Index;
 	         _vals[ix] = _precIn * udb[i]._Value;
-assert( ix < _size );
 	         cp       += sizeof( VecWireUpdVal );
 	         v._Index  = ix;
 	         v._Value  = _vals[ix];
@@ -584,8 +686,7 @@ assert( ix < _size );
 private:
 	VectorStream _str;
 	VectorUpdate _upds;
-	double      *_vals;
-	int          _size;
+	VectorImage  _vals;
 	int          _precision;
 	double       _precIn;
 	double       _precOut;

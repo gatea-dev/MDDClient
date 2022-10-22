@@ -15,6 +15,7 @@
 *      6 DEC 2018 jcs  Build 41: VOID_PTR
 *     29 MAR 2022 jcs  Build 52: pub.IsUnPacked()
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
+*     22 OCT 2022 jcs  Build 58: ByteStream.Ticker()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -716,7 +717,7 @@ public:
 	   len          = pBuf._dLen;
 	   _bPubByteStr = true;
 	   for ( i=0,off=0; off<len && _bPubByteStr; i++ ) {
-	      Init( bStr.tkr(), arg, true );
+	      Init( bStr.Ticker(), arg, true );
 	      AddField( bStr.fidOff(), off );
 	      AddField( bStr.fidLen(), len );
 	      AddField( bStr.fidPayload(), fidData );

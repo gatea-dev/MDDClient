@@ -18,6 +18,7 @@
 *      3 DEC 2020 jcs  Build 47: PumpTapeSliceSlice(); PumpFullTape()
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
+*     22 OCT 2022 jcs  Build 58: ByteStream.Service()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -629,7 +630,7 @@ public:
 	      return 0;
 	   }
 
-	   idx      = Subscribe( bStr.svc(), bStr.tkr(), (void *)0 );
+	   idx      = Subscribe( bStr.Service(), bStr.Ticker(), (void *)0 );
 	   bdb[idx] = &bStr;
 	   bStr.SetStreamID( idx );
 	   return idx;
@@ -647,7 +648,7 @@ public:
 	   ByteStreams::iterator it;
 	   int                   sid, rtn;
 
-	   rtn = Unsubscribe( bStr.svc(), bStr.tkr() );
+	   rtn = Unsubscribe( bStr.Service(), bStr.Ticker() );
 	   sid = bStr.StreamID();
 	   if ( (it=_bStrDb.find( sid )) != _bStrDb.end() )
 	      _bStrDb.erase( it );

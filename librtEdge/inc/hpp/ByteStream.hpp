@@ -9,6 +9,7 @@
 *      5 MAR 2016 jcs  Build 32: edg_permQuery
 *     28 JUL 2020 jcs  Build 44: edg_streamDone
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
+*     22 OCT 2022 jcs  Build 58: Service() / Ticker(), not svc() / tkr()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -130,9 +131,9 @@ public:
 	 *
 	 * \return Service Name of this Byte Stream
 	 */
-	const char *svc()
+	const char *Service()
 	{
-	   return _svc.c_str();
+	   return _svc.data();
 	}
 
 	/**
@@ -140,9 +141,9 @@ public:
 	 *
 	 * \return Ticker Name of this Byte Stream
 	 */
-	const char *tkr()
+	const char *Ticker()
 	{
-	   return _tkr.c_str();
+	   return _tkr.data();
 	}
 
 	/**
