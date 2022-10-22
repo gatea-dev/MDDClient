@@ -14,6 +14,11 @@
 #include <hpp/ByteStream.hpp>
 
 #ifndef DOXYGEN_OMIT
+/**
+ * \brief Put ByteStream payload into  this field
+ */
+static int _fidPayload = 10001;
+
 /** 
  * \brief Minimum alloc size 
  */
@@ -86,10 +91,10 @@ namespace RTEDGE
 class VectorValue
 {
 public:
-   /** \brief Location in Vector */
-   int    _Index;
-   /** \brief Value */
-   double _Value;
+	/** \brief Location in Vector */
+	int    _Index;
+	/** \brief Value */
+	double _Value;
 
 }; // class VectorValue
 
@@ -255,11 +260,13 @@ public:
 	 */
 	Vector( const char *svc, const char *tkr, int size, int precision=0.0 ) :
 	   _str( *this, svc, tkr ),
+	   _upds(),
 	   _vals( new double[size] ),
 	   _size( size ),
 	   _precision( precision ),
 	   _precIn( 0.0 ),
-	   _precOut( 0.0 )
+	   _precOut( 0.0 ),
+	   _bImg( true )
 	{
 	   if ( _precision ) {
 	      _precOut = ::pow10( _precision );
@@ -270,6 +277,139 @@ public:
 	virtual ~Vector()
 	{
 	   delete[] _vals;
+	}
+
+	////////////////////////////////////
+	// Operations
+	////////////////////////////////////
+public:
+	/**
+	 * \brief Publish Image or Update
+	 *
+	 * For best performance, we keep track internally of whether the entire vector 
+	 * has been published or not.  Based on this, your consumer Vector will see the
+	 * following:
+	 *
+	 * Vector State | Publish | Consumer Callback
+	 * --- | --- | ---
+	 * Unpublished | VectorImage | OnData( VectorImage & )
+	 * Published | VectorUpdate | OnData( VectorUpdate & )
+	 * Comletely Updated | VectorImage | OnData( VectorImage & )
+	 * Not Updated | None | None
+	 *
+	 * \param u - Update publishing object
+	 * \param StreamID - Unique MDDirect Stream ID
+	 * \return Number of data points published
+	 */
+	size_t Publish( RTEDGE::Update &u, int StreamID )
+	{
+	   VecWireHdr    *h;
+	   u_int64_t     *img;
+	   VecWireUpdVal *upd;
+	   double         r64;
+	   char          *bp, *cp;
+	   size_t         sz, n;
+	   rtBUF          pb;
+	   int            ix;
+
+	   // Pre-condition
+
+	   if ( _bImg && !_upds.size() )
+	      return 0;
+	   /*
+	    * 1) Allocate Buffer
+	    */
+	   n   = _bImg ? _size : gmin( (size_t)_size, _upds.size() );
+	   sz  = _bImg ? sizeof( u_int64_t ) : sizeof( VecWireUpdVal ); 
+	   sz *= n;
+	   sz += sizeof( VecWireHdr );
+	   bp  = new char[sz+10];
+	   cp  = bp;
+	   h   = (VecWireHdr *)cp;
+	   /*
+	    * 2) Fill in header
+	    */
+	   h->_MsgSz     = sz;
+	   h->_Precision = _precision;
+	   h->_bImg      = _bImg;
+	   h->_nVal      = (int)n;
+	   cp           += sizeof( *h );
+	   img           = (u_int64_t *)cp;
+	   upd           = (VecWireUpdVal *)cp;
+	   /*
+	    * 3) Build payload
+	    */
+	   if ( !_precOut ) {
+	      _precOut = ::pow10( _precision );
+	      _precIn  = 1.0 / _precOut;
+	   }
+	   for ( int i=0; i<(int)n; i++ ) {
+	      ix   = _bImg ? i        : _upds[i]._Index;
+	      r64  = _bImg ? _vals[i] : _upds[i]._Value;
+	      r64 *= _precOut; 
+	      if ( _bImg ) {
+	         img[i] = (u_int64_t)r64;
+	      }
+	      else {
+	         upd[i]._Index = ix;
+	         upd[i]._Value = (u_int64_t)r64;
+	      }
+	   }
+	   /*
+	    * 4) Publish
+	    */
+	   pb._data = bp;
+	   pb._dLen = (int)sz;
+	   _str.SetPublishData( pb );
+	   u.Init( _str.tkr(), StreamID, true );
+	   u.Publish( _str, _fidPayload );
+
+	   // Clean up
+
+	   delete[] bp;
+	   _bImg = false;
+	   _upds.clear();
+	   return n;
+	}
+
+	/**
+	 * \brief Set Entire Vector of Values
+	 *
+	 * \param img - vector of values to load
+	 * \return Number loaded
+	 */
+	size_t Update( VectorImage &img )
+	{
+	   size_t i, n;
+
+	   n = gmin( (size_t)_size, img.size() );
+	   for ( i=0; i<n; _vals[i]=img[i], i++ );
+	   _bImg = true;
+	   _upds.clear();
+	   return n;
+	}
+
+	/**
+	 * \brief Set Single Value
+	 *
+	 * \param idx - Value Index
+	 * \param val - Value
+	 * \return 1 if set; 0 if outside boundary
+	 */
+	int Update( int idx, double val )
+	{
+	   VectorValue u = { idx, val };
+
+	   // Pre-condition
+
+	   if ( !InRange( 0, idx, _size-1 ) )
+	      return 0;
+
+	   // Safe to set
+
+	   _vals[idx] = val;
+	   _upds.push_back( u );
+	   return 1;
 	}
 
 	////////////////////////////////////
@@ -428,11 +568,13 @@ assert( ix < _size );
 	////////////////////////
 private:
 	VectorStream _str;
+	VectorUpdate _upds;
 	double      *_vals;
 	int          _size;
 	int          _precision;
 	double       _precIn;
 	double       _precOut;
+	bool         _bImg;
 
 }; // class Vector
 
