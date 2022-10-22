@@ -30,6 +30,7 @@
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive; rtFld_unixTime
 *      3 JUN 2022 jcs  Build 55: bld.cpp; LVCData._recXxxSiz
 *      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL
+*     22 OCT 2022 jcs  Build 58: hpp/struct/Vector.hpp
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -2230,6 +2231,7 @@ _CPP_END
 #include <hpp/Update.hpp>
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
+#include <hpp/struct/Vector.hpp>
 #endif /* __cplusplus */
 
 #endif // __LIB_RTEDGE_H

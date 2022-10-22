@@ -23,7 +23,9 @@ Known Bugs
 
 Features To Add
 ---------------
-1) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
+1) Vector atop ByteStream
+
+2) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
 
 */
 
@@ -43,7 +45,12 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 57 22-10-xx
+ * ### Build 58 22-10-xx
+ *
+ * -# Vector.hpp
+ *
+ * 
+ * ### Build 57 22-10-14
  *
  * -# Tape 
  *    - TapeChannel.Pump() : Subscribe to multiple tickers 

@@ -185,20 +185,29 @@ public:
       double         r64;
       struct timeval tv;
 
-      fid        = 6;
       bImg       = ( w._rtl == 1 );
+      u.Init( w.tkr(), w._arg, bImg );
+      fid        = 6;
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
       dtTm       = unix2rtDateTime( tv );
-      i64        = 7723845300000; 
-      r64        = 123456789.123456;
-      u.Init( w.tkr(), w._arg, bImg );
+      i64        = 7723845300000;
+      i64        = 4503595332403200;
+      r64        = 123456789.987654321 /* + w._rtl */;
+      u.AddField(  fid++, r64 );
+      r64        = 6120.987654321 + w._rtl;
+      u.AddField(  fid++, r64 );
+      r64        = 3.14159265358979323846;
       u.AddField(  fid++, r64 );
       u.AddField(  fid++, i64 );
       u.AddField(  fid++, dtTm );
       u.AddFieldAsUnixTime(  fid++, dtTm );
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
+      u.AddField(  2147483647, "2147483647" );
+      u.AddField( -2147483647, "-2147483647" );
+      u.AddField( 16260000, "16260000" );
+      u.AddField( 536870911, "536870911" );
       u.Publish();
       w._rtl += 1;
    }
@@ -359,6 +368,7 @@ return 0;
    pub.SetUnPacked( ::getenv( "__JD_UNPACKED" ) != (char *)0 );
    pub.SetChain( lnks, nl );
    ::fprintf( stdout, "%s\n", pub.Version() );
+   ::fprintf( stdout, "%sPACKED\n", pub.IsUnPacked() ? "UN" : "" );
    if ( bUDP ) {
       ::fprintf( stdout, "%s\n", pub.StartConnectionless( pSvr, _LCL_PORT ) );
       StreamID = 1;
