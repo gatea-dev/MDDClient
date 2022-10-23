@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <hpp/ByteStream.hpp>
 
+using namespace std;
+
 #ifndef DOXYGEN_OMIT
 /**
  * \brief Put ByteStream payload into  this field
@@ -98,8 +100,8 @@ public:
 
 }; // class VectorValue
 
-typedef std::vector<double>      VectorImage;
-typedef std::vector<VectorValue> VectorUpdate;
+typedef vector<double>      VectorImage;
+typedef vector<VectorValue> VectorUpdate;
 
 #ifndef DOXYGEN_OMIT
 class IVector
@@ -158,7 +160,11 @@ public:
 	      ByteStream( svc, tkr ),
 	      _vec( vec ),
 	      _buf( _zBuf64 )
-	   { ; }
+	   {
+	      // We are updating stream
+
+	      SetSnapshot( false );
+	   }
 
 	   ~VectorStream()
 	   {
@@ -193,6 +199,7 @@ public:
 	   virtual void OnSubscribeComplete()
 	   {
 	      _vec.IOnSubscribeComplete( _buf );
+	      _buf._dLen = 0;
 	   }
 
 	   virtual void OnPublishData( int nByte, int totByte )
@@ -219,10 +226,11 @@ public:
 
 	      off = rc._dLen;
 	      sz  = bs._dLen;
-	      if ( (off+sz) >= rc._nAlloc ) {
-	         aSz      = rc._nAlloc ? _MIN_VECTOR : ( rc._nAlloc >> 1 );
-	         cp       = rc._data;
-	         rc._data = new char[aSz];
+	      while ( (off+sz) >= rc._nAlloc ) {
+	         aSz        = !rc._nAlloc ? _MIN_VECTOR : ( rc._nAlloc >> 1 );
+	         cp         = rc._data;
+	         rc._data   = new char[aSz];
+	         rc._nAlloc = aSz;
 	         if ( cp ) {
 	            ::memcpy( rc._data, cp, off );
 	            delete[] cp;
@@ -257,17 +265,17 @@ public:
 	 * \param tkr - Published name of this ByteStream
 	 * \param precision - Sig Fig; 0 to 'learn' from Subscription Stream
 	 */
-	Vector( const char *svc, const char *tkr, int precision=0.0 ) :
+	Vector( const char *svc, const char *tkr, int precision=0 ) :
 	   _str( *this, svc, tkr ),
 	   _upds(),
 	   _vals(),
-	   _precision( precision ),
+	   _precision( 0 ),
 	   _precIn( 0.0 ),
 	   _precOut( 0.0 ),
 	   _bImg( true )
 	{
-	   if ( _precision )
-	      SetPrecision( _precision );
+	   if ( precision )
+	      SetPrecision( precision );
 	}
 
 	virtual ~Vector()
@@ -341,13 +349,15 @@ public:
 	 * \param val - Value
 	 * \return 1 if set; 0 if outside boundary
 	 */
-	int UpdateAt( int idx, double val )
+	int UpdateAt( size_t idx, double val )
 	{
-	   VectorValue u = { idx, val };
+	   VectorValue u = { (int)idx, val };
+	   size_t      nAdd;
 
 	   // Grow as necessary
 
-	   for ( ; idx<(int)_vals.size(); _vals.push_back( 0.0 ) );
+	   nAdd = (idx+1) - _vals.size();
+	   for ( size_t i=0; i<nAdd; _vals.push_back( 0.0 ), i++ );
 
 	   // Safe to set
 
@@ -402,7 +412,7 @@ public:
 	   num = gmin( _vals.size(), num );
 	   for ( i=0; i<num; i++ ) {
 	      tmp.push_back( _vals.back() );
-	      _vals.erase( _vals.end() );
+	      _vals.pop_back();
 	   }
 	   n = tmp.size();
 	   for ( i=0; i<n; i++ ) {
@@ -469,7 +479,7 @@ public:
 	   // Pre-condition
 
 	   bImg |= _bImg;
-	   if ( bImg && !_upds.size() )
+	   if (! bImg && !_upds.size() )
 	      return 0;
 	   /*
 	    * 1) Allocate Buffer
@@ -534,11 +544,11 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector contents as formatted string
 	 */
-	std::string Dump( bool bPage=true )
+	string Dump( bool bPage=true )
 	{
-	   char       *cp, bp[K], fmt[K];
-	   size_t      i, n;
-	   std::string s;
+	   char  *cp, bp[K], fmt[K];
+	   size_t i, n;
+	   string s;
 
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = _vals.size();
@@ -550,10 +560,14 @@ public:
 	         cp += sprintf( cp, "\n" );
 	         s  += bp;
 	         cp  = bp;
+	         *cp = '\0';
 	      }
 	   }
-	   s += bp;
-	   return std::string( s );
+	   if ( cp-bp ) {
+	      cp += sprintf( cp, "\n" );
+	      s  += bp;
+	   }
+	   return string( s );
 	}
 
 	/**
@@ -562,11 +576,11 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector Update contents as formatted string
 	 */
-	std::string Dump( VectorUpdate &upd, bool bPage=true )
+	string Dump( VectorUpdate &upd, bool bPage=true )
 	{
-	   char       *cp, bp[K], fmt[K];
-	   size_t      i, n;
-	   std::string s;
+	   char  *cp, bp[K], fmt[K];
+	   size_t i, n;
+	   string s;
 
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = upd.size();
@@ -575,14 +589,18 @@ public:
 	   for ( i=0; i<n; i++ ) {
 	      cp += sprintf( cp, "%d=", upd[i]._Index );
 	      cp += sprintf( cp, fmt, upd[i]._Value );
-	      if ( cp-bp >= 76 ) {
+	      if ( ( cp-bp ) >= 76 ) {
 	         cp += sprintf( cp, "\n" );
 	         s  += bp;
 	         cp  = bp;
+	         *cp = '\0';
 	      }
 	   }
-	   s += bp;
-	   return std::string( s );
+	   if ( cp-bp ) {
+	      cp += sprintf( cp, "\n" );
+	      s  += bp;
+	   }
+	   return string( s );
 	}
 
 	////////////////////////////////////
@@ -671,6 +689,7 @@ private:
 	   VectorUpdate   upd;
 	   VectorValue    v;
 	   u_int64_t      sz, *vdb;
+	   double         dv;
 	   int            i, ix, nv;
 
 	   // Header
@@ -688,20 +707,24 @@ assert( h->_MsgSz == sz );
 
 	   vdb = (u_int64_t *)cp;
 	   udb = (VecWireUpdVal *)cp;
+	   _vals.clear();
+	   _vals.resize( nv );
+	   img.resize( nv );
 	   for ( i=0; i<nv; i++ ) {
 	      ix = i;
-	      for ( int j=0; j<ix; _vals.push_back( 0.0 ), j++ );
 	      if ( h->_bImg ) {
-	         _vals[ix] = _precIn * vdb[i];
+	         dv        = _precIn * vdb[i];
+	         _vals[ix] = dv;
 	         cp       += sizeof( u_int64_t );
-	         img.push_back( _vals[ix] );
+	         img[ix]   = dv;
 	      } 
 	      else {
 	         ix        = udb[i]._Index;
-	         _vals[ix] = _precIn * udb[i]._Value;
+	         dv        = _precIn * udb[i]._Value;
+	         _vals[ix] = dv;
 	         cp       += sizeof( VecWireUpdVal );
 	         v._Index  = ix;
-	         v._Value  = _vals[ix];
+	         v._Value  = dv;
 	         upd.push_back( v );
 	      } 
 	   }

@@ -9,7 +9,7 @@
 *      5 MAR 2016 jcs  Build 32: edg_permQuery
 *     28 JUL 2020 jcs  Build 44: edg_streamDone
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
-*     22 OCT 2022 jcs  Build 58: Service() / Ticker(), not svc() / tkr()
+*     22 OCT 2022 jcs  Build 58: IsSnapshot()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -110,7 +110,8 @@ public:
 	   _fidLen( fidLen ),
 	   _fidNumFld( fidNumFld ),
 	   _fidPayload( fidPayload ),
-	   _StreamID( 0 )
+	   _StreamID( 0 ),
+	   _bSnapshot( true )
 	{
 	   ::memset( &_pubBuf, 0, sizeof( _pubBuf ) );
 	   ::memset( &_subBuf, 0, sizeof( _subBuf ) );
@@ -126,6 +127,16 @@ public:
 	// Access
 	////////////////////////////////////
 public:
+	/**
+	 * \brief Return true if Snapshot ByteStream
+	 *
+	 * \return true if Snapshot ByteStream
+	 */
+	bool IsSnapshot()
+	{
+	   return _bSnapshot;
+	}
+
 	/**
 	 * \brief Returns Service Name of this Byte Stream
 	 *
@@ -241,6 +252,16 @@ public:
 	// Operations
 	////////////////////////////////////
 public:
+	/**
+	 * \brief Sets ByteStream in Snapshot (true) or Update (false) mode
+	 *
+	 * \param bSnapshot - true for snapshot; false for update
+	 */
+	void SetSnapshot( bool bSnapshot )
+	{
+	   _bSnapshot = bSnapshot;
+	}
+
 	/**
 	 * \brief Sets the Stream ID for this subscription ByteStream
 	 *
@@ -470,6 +491,7 @@ private:
 	int         _fidNumFld;
 	int         _fidPayload;
 	int         _StreamID;
+	bool        _bSnapshot;
 	rtBUF       _pubBuf;
 	mddBldBuf   _subBuf;
 

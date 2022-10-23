@@ -638,6 +638,7 @@ int main( int argc, char **argv )
    void       *arg;
    string      s;
    u_int64_t   s0;
+   double      slp;
    int         i, nt, tRun, ti, sn;
    ::MDDResult res; 
    ::MDDRecDef rd;
@@ -779,7 +780,7 @@ int main( int argc, char **argv )
          ch.LoadTable( argv[++i] );
    }
    printf( "%s\n", ch.Version() );
-   ch.SetBinary( bStr || bBin );
+   ch.SetBinary( bStr || bBin || bVec );
    ch.SetTapeDirection( bTape );
    pc = ch.Start( svr, usr );
    printf( "%s\n", pc ? pc : "" );
@@ -824,9 +825,10 @@ int main( int argc, char **argv )
    }
    else if ( tkr )
       tkrs.push_back( new string ( tkr ) );
-   nt = (int)tkrs.size();
+   nt  = (int)tkrs.size();
+   slp = (r2=::getenv( "__JD_SLEEP" )) ? atof( r2 ) : 2.5; 
    if ( bStr ) {
-      ch.Sleep( 1.0 ); // Wait for protocol negotiation to finish
+      ch.Sleep( slp); // Wait for protocol negotiation to finish
       for ( i=0; i<nt; i++ ) {
          str = new MyStream( svc, tkrs[i]->data() );
          ch.Subscribe( *str );
@@ -834,7 +836,7 @@ int main( int argc, char **argv )
       }
    }
    else if ( bVec ) {
-      ch.Sleep( 1.0 ); // Wait for protocol negotiation to finish
+      ch.Sleep( slp ); // Wait for protocol negotiation to finish
       for ( i=0; i<nt; i++ ) {
          vec = new MyVector( svc, tkrs[i]->data() );
          vec->Subscribe( ch );

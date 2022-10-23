@@ -1089,8 +1089,10 @@ private:
 	      bBDS = ( st != sdb.end() );
 	   }
 	   if ( bStr ) {
-	      if ( bStr->_OnData( *this, _msg->Set( &d, &fl ) ) )
-	         Unsubscribe( *bStr );
+	      if ( bStr->_OnData( *this, _msg->Set( &d, &fl ) ) ) {
+	         if ( bStr->IsSnapshot() )
+	            Unsubscribe( *bStr );
+	      }
 	   }
 	   else if ( chn ) {
 	      if ( chn->_OnData( *this, _msg->Set( &d, &fl ) ) )

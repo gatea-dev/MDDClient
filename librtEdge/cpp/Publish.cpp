@@ -131,7 +131,7 @@ public:
       Vector( svc, tkr, precision ),
       _StreamID( (int)(size_t)arg )
    {
-      for ( int i=0; i<vecSz; UpdateAt( i, i ), i++ );
+      for ( int i=0; i<vecSz; UpdateAt( i, M_PI * i ), i++ );
    }
 
 
@@ -141,8 +141,8 @@ public:
 public:
    void PubVector( RTEDGE::Update &u )
    {
+      Publish( u, _StreamID, true );
       ShiftRight( 1 );
-      Publish( u, _StreamID );
    }
 
 }; // class MyVector

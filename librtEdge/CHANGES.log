@@ -48,6 +48,7 @@ Features To Add
  * ### Build 58 22-10-xx
  *
  * -# Vector.hpp
+ *    - ByteStream.SetSnapshot()
  *
  * 
  * ### Build 57 22-10-14
