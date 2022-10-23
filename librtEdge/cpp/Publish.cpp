@@ -117,7 +117,9 @@ public:
 class MyVector : public Vector
 {
 private:
-   int _StreamID;
+   int    _Size;
+   int    _StreamID;
+   size_t _RTL;
 
    ///////////////////
    // Constructor
@@ -129,7 +131,9 @@ public:
              int         precision,
              void       *arg ) :
       Vector( svc, tkr, precision ),
-      _StreamID( (int)(size_t)arg )
+      _Size( vecSz ),
+      _StreamID( (int)(size_t)arg ),
+      _RTL( 1 )
    {
       for ( int i=0; i<vecSz; UpdateAt( i, M_PI * i ), i++ );
    }
@@ -141,8 +145,16 @@ public:
 public:
    void PubVector( RTEDGE::Update &u )
    {
-      Publish( u, _StreamID, true );
-      ShiftRight( 1 );
+      size_t ix = ( _RTL % _Size );
+ 
+      // Every 5th time
+
+      _RTL += 1;
+      Publish( u, _StreamID );
+      if ( ( _RTL % 5 ) == 0 )
+         UpdateAt( ix, M_E );
+      else
+         ShiftRight( 1 );
    }
 
 }; // class MyVector

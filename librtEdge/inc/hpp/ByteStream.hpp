@@ -466,7 +466,12 @@ private:
 	   b._data += off0;
 	   b._dLen  = ( off-off0 );
 	   OnData( b );
+/*
+ * 22-10-23 jcs  FUCKED
+ *
 	   bDone = ( _subBuf._dLen >= _subBuf._nAlloc );
+ */
+	   bDone = ( (int)_subBuf._dLen >= len );
 	   if ( bDone )
 	      OnSubscribeComplete();
 	   return bDone;

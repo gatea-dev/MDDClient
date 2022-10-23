@@ -352,12 +352,12 @@ public:
 	int UpdateAt( size_t idx, double val )
 	{
 	   VectorValue u = { (int)idx, val };
-	   size_t      nAdd;
+	   int         nAdd;
 
 	   // Grow as necessary
 
-	   nAdd = (idx+1) - _vals.size();
-	   for ( size_t i=0; i<nAdd; _vals.push_back( 0.0 ), i++ );
+	   nAdd = (int)(idx+1) - (int)_vals.size();
+	   for ( int i=0; i<nAdd; _vals.push_back( 0.0 ), i++ );
 
 	   // Safe to set
 
@@ -391,6 +391,7 @@ public:
 	      dz = bRollToEnd ? tmp[i] : 0.0;
 	      _vals.push_back( dz );
 	   }
+	   _bImg = true;
 	   return num;
 	}
 
@@ -419,6 +420,7 @@ public:
 	      dz = bRollToFront ? tmp[(n-1)-i] : 0.0;
 	      _vals.insert( _vals.begin(), dz );
 	   }
+	   _bImg = true;
 	   return num;
 	}
 
