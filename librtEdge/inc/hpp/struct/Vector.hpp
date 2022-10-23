@@ -266,10 +266,8 @@ public:
 	   _precOut( 0.0 ),
 	   _bImg( true )
 	{
-	   if ( _precision ) {
-	      _precOut = ::pow10( _precision );
-	      _precIn  = 1.0 / _precOut;
-	   }
+	   if ( _precision )
+	      SetPrecision( _precision );
 	}
 
 	virtual ~Vector()
@@ -312,6 +310,106 @@ public:
 	   img.clear();
 	   img = _vals;
 	   return img;
+	}
+
+
+	////////////////////////////////////
+	// Mutator
+	////////////////////////////////////
+	/**
+	 * \brief Set Entire Vector of Values
+	 *
+	 * \param img - vector of values to load
+	 * \return Number loaded
+	 */
+	size_t Update( VectorImage &img )
+	{
+	   size_t i, n;
+
+	   _vals.clear();
+	   _upds.clear();
+	   n = img.size();
+	   for ( i=0; i<n; _vals.push_back( img[i++] ) );
+	   _bImg = true;
+	   return n;
+	}
+
+	/**
+	 * \brief Set Single Value
+	 *
+	 * \param idx - Value Index
+	 * \param val - Value
+	 * \return 1 if set; 0 if outside boundary
+	 */
+	int UpdateAt( int idx, double val )
+	{
+	   VectorValue u = { idx, val };
+
+	   // Grow as necessary
+
+	   for ( ; idx<(int)_vals.size(); _vals.push_back( 0.0 ) );
+
+	   // Safe to set
+
+	   _vals[idx] = val;
+	   _upds.push_back( u );
+	   return 1;
+	}
+
+	/**
+	 * \brief Shift values left (down), optionally rolling to end
+	 *
+	 * \param num - Number to shift
+	 * \param bRollToEnd - true to roll values to end; false for 0.0 
+	 * \return Number shifted
+	 */
+	size_t ShiftLeft( size_t num, bool bRollToEnd=true )
+	{
+	   VectorImage tmp;
+	   size_t      i, n;
+	   double      dz;
+
+	   // Up to _vals.size()
+
+	   num = gmin( _vals.size(), num );
+	   for ( i=0; i<num; i++ ) {
+	      tmp.push_back( _vals.front() );
+	      _vals.erase( _vals.begin() );
+	   }
+	   n = tmp.size();
+	   for ( i=0; i<n; i++ ) {
+	      dz = bRollToEnd ? tmp[i] : 0.0;
+	      _vals.push_back( dz );
+	   }
+	   return num;
+	}
+
+	/**
+	 * \brief Shift values right (up), optionally rolling to beginning
+	 *
+	 * \param num - Number to shift
+	 * \param bRollToFront - true to roll values to front; false for 0.0 
+	 * \return Number shifted
+	 */
+	size_t ShiftRight( size_t num, bool bRollToFront=true )
+	{
+	   VectorImage tmp;
+	   size_t      i, n;
+	   double      dz;
+
+	   // Up to _vals.size()
+
+	   num = gmin( _vals.size(), num );
+	   for ( i=0; i<num; i++ ) {
+	      tmp.push_back( _vals.back() );
+	      _vals.erase( _vals.end() );
+	   }
+	   n = tmp.size();
+	   for ( i=0; i<n; i++ ) {
+	      dz = bRollToFront ? tmp[(n-1)-i] : 0.0;
+	      _vals.insert( _vals.begin(), dz );
+	   }
+	   return num;
 	}
 
 	////////////////////////////////////
@@ -396,10 +494,7 @@ public:
 	   /*
 	    * 3) Build payload
 	    */
-	   if ( !_precOut ) {
-	      _precOut = ::pow10( _precision );
-	      _precIn  = 1.0 / _precOut;
-	   }
+	   SetPrecision( _precision );
 	   for ( int i=0; i<(int)n; i++ ) {
 	      ix   = bImg ? i        : _upds[i]._Index;
 	      r64  = bImg ? _vals[i] : _upds[i]._Value;
@@ -427,46 +522,6 @@ public:
 	   _bImg = false;
 	   _upds.clear();
 	   return n;
-	}
-
-	/**
-	 * \brief Set Entire Vector of Values
-	 *
-	 * \param img - vector of values to load
-	 * \return Number loaded
-	 */
-	size_t Update( VectorImage &img )
-	{
-	   size_t i, n;
-
-	   _vals.clear();
-	   _upds.clear();
-	   n = img.size();
-	   for ( i=0; i<n; _vals.push_back( img[i++] ) );
-	   _bImg = true;
-	   return n;
-	}
-
-	/**
-	 * \brief Set Single Value
-	 *
-	 * \param idx - Value Index
-	 * \param val - Value
-	 * \return 1 if set; 0 if outside boundary
-	 */
-	int Update( int idx, double val )
-	{
-	   VectorValue u = { idx, val };
-
-	   // Grow as necessary
-
-	   for ( ; idx<(int)_vals.size(); _vals.push_back( 0.0 ) );
-
-	   // Safe to set
-
-	   _vals[idx] = val;
-	   _upds.push_back( u );
-	   return 1;
 	}
 
 
@@ -627,14 +682,7 @@ private:
 	   nv  = h->_nVal;
 assert( h->_MsgSz == sz );
 	   cp += sizeof( VecWireHdr );
-
-	   // Once, if not defined by user
-
-	   if ( !_precision && !_precOut ) {
-	      _precision = h->_Precision;
-	      _precOut   = ::pow10( _precision );
-	      _precIn    = 1.0 / _precOut;
-	   }
+	   SetPrecision( h->_Precision );
 
 	   // Pull 'em out : Grow as necessary
 
@@ -678,6 +726,20 @@ assert( h->_MsgSz == sz );
 	   OnPublishComplete( nByte );
 	}
 
+	////////////////////////////////////
+	// Helpers Interface
+	////////////////////////////////////
+private:
+	void SetPrecision( int prec )
+	{
+	   // Once, if not defined by user
+
+	   if ( !_precision && !_precOut ) {
+	      _precision = prec;
+	      _precOut   = ::pow10( _precision );
+	      _precIn    = 1.0 / _precOut;
+	   }
+	}
 #endif // DOXYGEN_OMIT
 
 	////////////////////////

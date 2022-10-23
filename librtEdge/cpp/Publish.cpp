@@ -5,11 +5,12 @@
 *  REVISION HISTORY:
 *     20 JAN 2015 jcs  Created.
 *     28 FEB 2015 jcs  Build 30: SetHeartbeat()
-*      4 MAY 2015 jcs  Build 31: Fully-qualified std:: (compiler)
+*      4 MAY 2015 jcs  Build 31: Fully-qualified  (compiler)
 *     17 FEB 2016 jcs  Build 32: SetUserPubMsgTy(); Watch._upd
 *     26 MAY 2017 jcs  Build 34: StartUDP()
 *     16 MAR 2022 jcs  Build 51: De-lint
 *     29 MAR 2022 jcs  Build 52: ::getenv( "__JD_UNPACKED" )
+*     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -19,6 +20,29 @@
 #define _LCL_PORT  4321
 
 using namespace RTEDGE;
+using namespace std;
+
+/////////////////////////////////////
+// Version
+/////////////////////////////////////
+const char *PublishID()
+{
+   static string s;
+   const char   *sccsid;
+
+   // Once
+
+   if ( !s.length() ) {
+      char bp[K], *cp;
+
+      cp  = bp;
+      cp += sprintf( cp, "@(#)Publish Build %s ", _MDD_LIB_BLD );
+      cp += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
+      s   = bp;
+   }
+   sccsid = s.data();
+   return sccsid+4;
+}
 
 ////////////////////
 //
@@ -28,11 +52,11 @@ using namespace RTEDGE;
 class Watch
 {
 private:
-   std::string _tkr;
-   rtBUF       _upd;
+   string _tkr;
+   rtBUF  _upd;
 public:
-   void       *_arg;
-   int         _rtl;
+   void  *_arg;
+   int    _rtl;
 
    ///////////////////
    // Constructor
@@ -81,7 +105,47 @@ public:
          ::memcpy( _upd._data, lwc._data, sz );
       }
    }
-};
+
+}; // class Watch
+
+
+////////////////////
+//
+//  M y V e c t o r
+//
+////////////////////
+class MyVector : public Vector
+{
+private:
+   int _StreamID;
+
+   ///////////////////
+   // Constructor
+   ///////////////////
+public:
+   MyVector( const char *svc, 
+             const char *tkr, 
+             int         vecSz,
+             int         precision,
+             void       *arg ) :
+      Vector( svc, tkr, precision ),
+      _StreamID( (int)(size_t)arg )
+   {
+      for ( int i=0; i<vecSz; UpdateAt( i, i ), i++ );
+   }
+
+
+   ///////////////////
+   // Operations
+   ///////////////////
+public:
+   void PubVector( RTEDGE::Update &u )
+   {
+      ShiftRight( 1 );
+      Publish( u, _StreamID );
+   }
+
+}; // class MyVector
 
 
 ////////////////////////
@@ -90,7 +154,8 @@ public:
 //
 ////////////////////////
 
-typedef std::map<std::string, Watch *> WatchList;
+typedef map<string, Watch *>    WatchList;
+typedef map<string, MyVector *> WatchListV;
 
 class MyChannel : public PubChannel
 {
@@ -98,7 +163,10 @@ class MyChannel : public PubChannel
    // Members
    ////////////////////////////////
 private:
+   int          _vecSz;
+   int          _vecPrec;
    WatchList    _wl;
+   WatchListV   _wlV;
    Mutex        _mtx;
    const char **_chn;
    int          _nLnk;
@@ -107,9 +175,12 @@ private:
    // Constructor
    ////////////////////////////////
 public:
-   MyChannel( const char *pPub ) :
-      PubChannel( pPub ),
+   MyChannel( const char *svc, int vecSz, int vecPrec ) :
+      PubChannel( svc ),
+      _vecSz( vecSz ),
+      _vecPrec( vecPrec ),
       _wl(),
+      _wlV(),
       _mtx(),
       _chn( (const char **)0 ),
       _nLnk( 0 )
@@ -126,12 +197,24 @@ public:
    {
       Locker              lck( _mtx );
       WatchList::iterator it;
-      std::string         s( tkr );
+      string         s( tkr );
 
       if ( (it=_wl.find( s )) == _wl.end() )
          _wl[s] = new Watch( tkr, arg );
       it = _wl.find( s );
       return (*it).second;
+   }
+
+   MyVector *AddVector( const char *tkr, void *arg )
+   {
+      Locker               lck( _mtx );
+      WatchListV::iterator vt;
+      string               s( tkr );
+
+      if ( (vt=_wlV.find( s )) == _wlV.end() )
+         _wlV[s] = new MyVector( pPubName(), tkr, _vecSz, _vecPrec, arg );
+      vt = _wlV.find( s );
+      return (*vt).second;
    }
 
    void SetChain( const char **chn, int nLnk )
@@ -140,11 +223,13 @@ public:
       _nLnk = nLnk;
    }
 
-   int PublishAll()
+   size_t PublishAll()
    {
-      Locker              lck( _mtx );
-      WatchList::iterator it;
-      Watch              *w;
+      Locker               lck( _mtx );
+      WatchList::iterator  it;
+      WatchListV::iterator vt;
+      Watch               *w;
+      MyVector            *v;
 
       // Not synchronized; Quick Hack
 
@@ -152,7 +237,11 @@ public:
          w = (*it).second;
          PubTkr( *w );
       }
-      return _wl.size();
+      for ( vt=_wlV.begin(); vt!=_wlV.end(); vt++ ) {
+         v = (*vt).second;
+         v->PubVector( upd() );
+      }
+      return( _wl.size() + _wlV.size() );
    }
 
    void PubTkr_THIN( Watch &w )
@@ -250,11 +339,12 @@ public:
 
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
-      Locker      lck( _mtx );
-      Watch      *w;
-      std::string tmp( tkr );
-      char       *pfx, *ric;
-      bool        bChn;
+      Locker    lck( _mtx );
+      string    tmp( tkr );
+      Watch    *w;
+      MyVector *v;
+      char     *pfx, *ric;
+      bool      bChn;
 
       pfx  = ::strtok( (char *)tmp.data(), "#" );
       ric  = ::strtok( NULL, "#" );
@@ -262,6 +352,10 @@ public:
       ::fprintf( stdout, "OPEN %s\n", tkr ); ::fflush( stdout );
       if ( bChn )
          PubChainLink( atoi( pfx ), ric, arg );
+      else if ( _vecSz ) {
+         v = AddVector( tkr, arg );
+         v->PubVector( upd() );
+      }
       else {
          w = AddWatch( tkr, arg );
          PubTkr( *w );
@@ -270,15 +364,20 @@ public:
 
    virtual void OnPubClose( const char *tkr )
    {
-      Locker              lck( _mtx );
-      WatchList::iterator it;
-      std::string         s( tkr );
+      Locker               lck( _mtx );
+      WatchList::iterator  it;
+      WatchListV::iterator vt;
+      string               s( tkr );
 
       ::fprintf( stdout, "CLOSE %s\n", tkr );
       ::fflush( stdout );
       if ( (it=_wl.find( s )) != _wl.end() ) {
          _wl.erase( it );
          delete (*it).second;
+      }
+      if ( (vt=_wlV.find( s )) != _wlV.end() ) {
+         _wlV.erase( vt );
+         delete (*vt).second;
       }
    }
 
@@ -293,7 +392,7 @@ public:
       Locker              lck( _mtx );
       WatchList::iterator it;
       Watch              *w;
-      std::string         s( tkr );
+      string         s( tkr );
 
       ::fprintf( stdout, "OnRefreshImage( %s )\n", tkr );
       ::fflush( stdout );
@@ -312,52 +411,101 @@ protected:
    {
       return new Update( *this );
    }
-};
+
+}; // class MyChannel
+
+
+//////////////////////////
+// main()
+//////////////////////////
+static bool _IsTrue( const char *p )
+{
+   return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
+}
 
 int main( int argc, char **argv )
 {
-#ifdef OBSOLETE_STAT_SIZE
-printf( "sizeof( rtEdgeChanStats ) = %ld\n", sizeof( rtEdgeChanStats ) );
-return 0;
-#endif // OBSOLETE_STAT_SIZE
-   const char *pSvr, *pPub, *pChn, *pc;
+   const char *svr, *svc, *pChn;
    const char *lnks[_MAX_CHAIN];
    char       *cp;
-   double      tSlp, tApp, d0, dn;
-   int         i, nl, nt, StreamID;
-   bool        bUDP;
+   double      tPub, tRun, d0, dn;
+   int         i, nl, nt, hBeat, vecSz, vPrec;
+   bool        bCfg, bPack, aOK;
+   string      s;
    rtBuf64     chn;
 
-   // Quickie check
-
+   /////////////////////////////
+   // Quickie checks
+   /////////////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
+      printf( "%s\n", PublishID() );
       printf( "%s\n", rtEdge::Version() );
       return 0;
    }
-
-   // cmd-line args
-
-   if ( argc < 5 ) {
-      pc = "Usage: %s <hosts> <Svc> <pubTmr> <tAppMs> <ChainFile>";
-      printf( pc, argv[0] );
-      printf( "; Exitting ...\n" );
+   svr   = "localhost:9995";
+   svc   = "my_publisher";
+   pChn  = NULL;
+   hBeat = 15;
+   tRun  = 60.0;
+   tPub  = 1.0;
+   vecSz = 0;
+   vPrec = 2;
+   bPack = true;
+   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   if ( bCfg ) {
+      s  = "Usage: %s \\ \n";
+      s += "       [ -h       <Source : host:port> ] \\ \n";
+      s += "       [ -s       <Service> ] \\ \n";
+      s += "       [ -pub     <Publication Interval> ] \\ \n";
+      s += "       [ -run     <App Run Time> ] \\ \n";
+      s += "       [ -vector  <Non-zero for vector; 0 for Field List> ] \\ \n";
+      s += "       [ -vecPrec <Vector Precision> ] \\ \n";
+      s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
+      s += "       [ -hbeat   <Heartbeat> ] \\ \n";
+      printf( s.data(), argv[0] );
+      printf( "   Defaults:\n" );
+      printf( "      -h       : %s\n", svr );
+      printf( "      -s       : %s\n", svc );
+      printf( "      -pub     : %.1f\n", tPub );
+      printf( "      -run     : %.1f\n", tRun );
+      printf( "      -vector  : %d\n", vecSz );
+      printf( "      -vecPrec : %d\n", vPrec );
+      printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
+      printf( "      -hbeat   : %d\n", hBeat );
       return 0;
    }
-   pPub = argv[2];
-   tSlp = atof( argv[3] );
-   tApp = atof( argv[4] );
-   pChn = argv[5];
 
-   MyChannel   pub( pPub );
-   std::string s, ss( argv[1] );
+   /////////////////////
+   // cmd-line args
+   /////////////////////
+   for ( i=1; i<argc; i++ ) {
+      aOK = ( i+1 < argc );
+      if ( !aOK )
+         break; // for-i
+      if ( !::strcmp( argv[i], "-h" ) )
+         svr = argv[++i];
+      else if ( !::strcmp( argv[i], "-s" ) )
+         svc = argv[++i];
+      else if ( !::strcmp( argv[i], "-pub" ) )
+         tPub = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-run" ) )
+         tRun = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-vector" ) )
+         vecSz = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-packed" ) )
+         bPack = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-packed" ) )
+         hBeat = _IsTrue( argv[++i] );
+   }
 
-   pSvr = ::strtok( (char *)ss.data(), ":" );
-   bUDP = !::strcmp( pSvr, "udp" );
-   pSvr = bUDP ? ::strtok( NULL, "\n" ) : argv[1];
-   if ( (chn=pub.MapFile( pChn ))._dLen ) {
-      std::string tmp( chn._data, chn._dLen );
+   MyChannel pub( svc, vecSz, vPrec );
+
+   s = "";
+   if ( pChn && (chn=pub.MapFile( pChn ))._dLen ) {
+      string tmp( chn._data, chn._dLen );
 
       s = tmp;
+      pub.UnmapFile( chn );
    }
    cp = ::strtok( (char *)s.data(), "\n" );
    for ( nl=0; nl<_MAX_CHAIN-1 && cp; nl++ ) {
@@ -365,29 +513,19 @@ return 0;
       cp       = ::strtok( NULL, "\n" );
    }
    lnks[nl] = NULL;
-   pub.SetUnPacked( ::getenv( "__JD_UNPACKED" ) != (char *)0 );
+   pub.SetUnPacked( !bPack );
    pub.SetChain( lnks, nl );
    ::fprintf( stdout, "%s\n", pub.Version() );
    ::fprintf( stdout, "%sPACKED\n", pub.IsUnPacked() ? "UN" : "" );
-   if ( bUDP ) {
-      ::fprintf( stdout, "%s\n", pub.StartConnectionless( pSvr, _LCL_PORT ) );
-      StreamID = 1;
-      pub.AddWatch( "ticker1", (VOID_PTR)StreamID++ );
-      pub.AddWatch( "ticker2", (VOID_PTR)StreamID++ );
-      pub.AddWatch( "ticker3", (VOID_PTR)StreamID++ );
-   }
-   else {
-      pub.SetBinary( true );
-      pub.SetHeartbeat( 60 );
-      pub.SetHeartbeat( 15 );
-      pub.SetPerms( true );
-      ::fprintf( stdout, "%s\n", pub.Start( pSvr ) );
-   }
+   pub.SetBinary( true );
+   pub.SetHeartbeat( hBeat );
+   pub.SetPerms( true );
+   ::fprintf( stdout, "%s\n", pub.Start( svr ) );
    pub.SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
-   ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tApp, tSlp );
+   ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
    ::fflush( stdout );
-   for ( i=0,d0=dn=pub.TimeNs(); ( dn-d0 ) < tApp; i++ ) {
-      pub.Sleep( tSlp );
+   for ( i=0,d0=dn=pub.TimeNs(); ( dn-d0 ) < tRun; i++ ) {
+      pub.Sleep( tPub );
       nt = pub.PublishAll();
       dn = pub.TimeNs();
       if ( nt )
@@ -399,7 +537,6 @@ return 0;
 
    ::fprintf( stdout, "Cleaning up ...\n" ); ::fflush( stdout );
    pub.Stop();
-   pub.UnmapFile( chn );
    printf( "Done!!\n " );
    return 1;
 }

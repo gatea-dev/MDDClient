@@ -719,7 +719,7 @@ int main( int argc, char **argv )
    /////////////////////
    // cmd-line args
    /////////////////////
-  for ( i=1; i<argc; i++ ) {
+   for ( i=1; i<argc; i++ ) {
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
