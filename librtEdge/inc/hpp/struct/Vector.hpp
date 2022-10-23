@@ -575,6 +575,7 @@ public:
 	/**
 	 * \brief Dump Vector Update contents in formatted string
 	 *
+	 * \param upd : Collection to dump  
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector Update contents as formatted string
 	 */
