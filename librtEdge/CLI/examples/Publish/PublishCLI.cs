@@ -72,12 +72,12 @@ class PublishCLI : rtEdgePublisher
       MyVector vec;
 
       lock( _wl ) {
-         foreach ( DictionaryEntry kv in _wl ) {
+         foreach ( var kv in _wl ) {
             PubTkr( (string)kv.Key, (IntPtr)kv.Value, false );
          }
       }
       lock( _wlV ) {
-         foreach ( DictionaryEntry kv in _wlV ) {
+         foreach ( var kv in _wlV ) {
             vec = (MyVector)kv.Value;
             vec.PubVector();
          }
@@ -103,19 +103,19 @@ class PublishCLI : rtEdgePublisher
       u.AddFieldAsDouble( fid++, rtEdge.TimeNs() );
       u.AddFieldAsDateTime( fid++, DateTime.Now );
       i64        = 7723845300000;
-      u.AddField(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, i64 );
       i64        = 4503595332403200;
-      u.AddField(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, i64 );
       r64        = 123456789.987654321 /* + w._rtl */;
-      u.AddField(  fid++, r64 );
-      r64        = 6120.987654321 + w._rtl;
-      u.AddField(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, r64 );
+      r64        = 6120.987654321;
+      u.AddFieldAsDouble(  fid++, r64 );
       r64        = 3.14159265358979323846;
-      u.AddField(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, r64 );
       u.AddFieldAsUnixTime(  fid++, DateTime.Now );
-      u.AddField(  2147483647, "2147483647" );
-      u.AddField( -2147483647, "-2147483647" );
-      u.AddField( 16260000, "16260000" );
+      u.AddFieldAsString(  2147483647, "2147483647" );
+      u.AddFieldAsString( -2147483647, "-2147483647" );
+      u.AddFieldAsString( 16260000, "16260000" );
       u.Publish();
       _rtl += 1;
    }
@@ -168,7 +168,7 @@ class PublishCLI : rtEdgePublisher
             Console.WriteLine( "Exception: " + e.Message );
          }
       }
-      if ( _vecSz ) {
+      if ( _vecSz > 0 ) {
          lock( _wlV ) {
             if ( !_wlV.TryGetValue( tkr, out vec ) ) {
                vec = new MyVector( this, tkr, _vecSz, _vPrec, arg );
@@ -183,7 +183,7 @@ class PublishCLI : rtEdgePublisher
                PubChainLink( lnk, kv[1], arg );
             else {
                PubTkr( tkr, arg, true );
-               if ( !_wl.TryGetValue( tkr, out w ) ) {
+               if ( !_wl.TryGetValue( tkr, out w ) )
                   _wl.Add( tkr, arg );
             }
          }
@@ -223,7 +223,7 @@ class PublishCLI : rtEdgePublisher
       return rtn;
    }
 
-   public bool _IsTrue( string p )
+   static bool _IsTrue( string p )
    {
       return( ( p == "YES" ) || ( p == "true" ) );
    }
@@ -236,10 +236,10 @@ class PublishCLI : rtEdgePublisher
    {
       try {
          PublishCLI pub;
-         string     svc, svc;
-         int        hbeat, vecSz, vPrec;
-         double     tRun, tPub;
-         bool       aOK;
+         string     s, svr, svc;
+         int        i, argc,  tPub, hbeat, vecSz, vPrec;
+         double     tRun;
+         bool       aOK, bPack;
 
          /////////////////////
          // Quickie checks
@@ -251,9 +251,9 @@ class PublishCLI : rtEdgePublisher
          }
          svr   = "localhost:9995";
          svc   = "my_publisher";
-         hBeat = 15;
+         hbeat = 15;
          tRun  = 60.0;
-         tPub  = 1.0;
+         tPub  = 1;
          vecSz = 0;
          vPrec = 2;
          bPack = true;
@@ -291,31 +291,31 @@ class PublishCLI : rtEdgePublisher
                svr = args[++i];
             else if ( args[i] == "-s" )
                svc = args[++i];
-            else if ( args[i] == "-pub" ) {
-               tPub = Convert.ToDouble( args[++i] );
-            else if ( args[i] == "-run" ) {
+            else if ( args[i] == "-pub" )
+               tPub = Convert.ToInt32( args[++i] );
+            else if ( args[i] == "-run" )
                tRun = Convert.ToDouble( args[++i] );
-            else if ( args[i] == "-vector" ) {
+            else if ( args[i] == "-vector" )
                vecSz = Convert.ToInt32( args[++i], 10 );
-            else if ( args[i] == "-vecPrec" ) {
-               vPrec = Convert.ToDouble( args[++i], 10 );
-            else if ( args[i] == "-packed" ) {
+            else if ( args[i] == "-vecPrec" )
+               vPrec = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-packed" )
                bPack = _IsTrue( args[++i] );
-            else if ( args[i] == "-hbeat" ) {
+            else if ( args[i] == "-hbeat" )
                hbeat = Convert.ToInt32( args[++i], 10 );
          }
 
          // Rock on
 
          Console.WriteLine( rtEdge.Version() );
-         pub = new PublishCLI( svr, svc, tTmr, vecSz, vPrec );
+         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec );
          pub.PubStart();
-         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
+//         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
          pub.SetUnPacked( !bPack );
-         pub.SetHeartBeat( hbeat );
+         pub.SetHeartbeat( hbeat );
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
-         Console.WriteLine( "Stats in " + mdd );
+//         Console.WriteLine( "Stats in " + mdd );
          Console.WriteLine( "Hit <ENTER> to terminate..." );
          Console.ReadLine();
          pub.Stop();
@@ -335,7 +335,7 @@ class PublishCLI : rtEdgePublisher
 //  M y V e c t o r
 //
 ////////////////////
-class MyVector : public Vector
+class MyVector : Vector
 {
    ////////////////////////////////
    // Members
@@ -351,7 +351,7 @@ class MyVector : public Vector
    public MyVector( rtEdgePublisher pub,
                     string          tkr, 
                     int             vecSz, 
-                    int             vPrec, 
+                    int             vecPrec, 
                     IntPtr          StreamID ) :
       base( pub.pPubName(), tkr, vecPrec )
    {
@@ -373,11 +373,11 @@ class MyVector : public Vector
       // Every 5th time
 
       _RTL += 1;
-      Publish( _pub, _StreamID, true );
+      Publish( _pub, (int)_StreamID, true );
       if ( ( _RTL % 5 ) == 0 )
          UpdateAt( ix, Math.E );
       else
-         ShiftRight( 1 );
+         ShiftRight( 1, true );
    }
 
 }; // class MyVector
