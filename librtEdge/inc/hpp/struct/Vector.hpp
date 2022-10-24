@@ -555,7 +555,7 @@ public:
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = _vals.size();
 	   cp  = bp;
-	   cp += sprintf( cp, "[%04ld values] ", n );
+	   cp += sprintf( cp, "[%04d values] ", (int)n );
 	   for ( i=0; i<n; i++ ) {
 	      cp += sprintf( cp, fmt, _vals[i] );
 	      if ( cp-bp >= 76 ) {
@@ -588,7 +588,7 @@ public:
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = upd.size();
 	   cp  = bp;
-	   cp += sprintf( cp, "[%04ld values] ", n );
+	   cp += sprintf( cp, "[%04d values] ", (int)n );
 	   for ( i=0; i<n; i++ ) {
 	      cp += sprintf( cp, "%d=", upd[i]._position );
 	      cp += sprintf( cp, fmt, upd[i]._value );
@@ -762,7 +762,7 @@ private:
 
 	   if ( !_precision && !_precOut ) {
 	      _precision = prec;
-	      _precOut   = ::pow10( _precision );
+	      _precOut   = ::pow( 10.0, _precision );
 	      _precIn    = 1.0 / _precOut;
 	   }
 	}
