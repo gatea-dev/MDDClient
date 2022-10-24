@@ -11,6 +11,7 @@
 
 #ifndef DOXYGEN_OMIT
 #include <rtEdge.h>
+#include <PubChannel.h>
 #include <SubChannel.h>
 #endif // DOXYGEN_OMIT
 
@@ -110,11 +111,11 @@ public:
 class VectorC : public RTEDGE::Vector
 {
 private:
-	gcroot < IVector^ > _cli;
+	gcroot < librtEdgePRIVATE::IVector^ > _cli;
 
 	// Constructor
 public:
-	VectorC( IVector ^cli, const char *svc, const char *tkr );
+	VectorC( librtEdgePRIVATE::IVector ^cli, const char *svc, const char *tkr, int );
 
 	// Asynchronous Callbacks
 protected:
@@ -151,7 +152,7 @@ namespace librtEdge
  * + OnPublishComplete() - Stream completely published
  */
 public ref class Vector : public librtEdge::rtEdge,
-                          public librtEdgePRIVATE::IVector,
+                          public librtEdgePRIVATE::IVector
 {
 private: 
 	librtEdgePRIVATE::VectorC *_vec;
@@ -247,14 +248,14 @@ public:
 	 * \param sub - librtEdge::rtEdgeSubscriber feeding us
 	 * \return Unique Subscription ID
 	 */
-	int Subscribe( librtEdge::rtEdgeSubscriber ^sub )
+	int Subscribe( librtEdge::rtEdgeSubscriber ^sub );
 
 	/**
 	 * \brief Unsubscribe to published Vector
 	 *
 	 * \param sub - librtEdge::rtEdgeSubscriber feeding us
 	 */
-	void Unsubscribe( librtEdge::rtEdgeSubscriber ^sub )
+	void Unsubscribe( librtEdge::rtEdgeSubscriber ^sub );
 
 	/**
 	 * \brief Publish Image or Update
@@ -304,12 +305,12 @@ public:
 	/** \brief Returns name of service supplying this update */
 	property double _value[int]
 	{
-	   void   set( int idx, double val ) { _stC->UpdateAt( idx, val ); }
+	   void   set( int idx, double val ) { _vec->UpdateAt( idx, val ); }
 	   double get( int idx ) {
 	      RTEDGE::VectorImage img;
 	      size_t              sz;
 
-	      sz = _stC->Get( img ).size();
+	      sz = _vec->Get( img ).size();
 	      if ( InRange( 0, idx, sz-1 ) )
 	         return img[idx];
 	      return 0.0;
@@ -317,7 +318,7 @@ public:
 	}
 	 
 	/////////////////////////////////
-	// IVector interface
+	// librtEdgePRIVATE::IVector interface
 	/////////////////////////////////
 public:
 	/**  
@@ -328,7 +329,7 @@ public:
 	 *    
 	 * \param img - Initial Image
 	 */   
-	virtual void OnData( VectorImage &img )
+	virtual void OnData( cli::array<double> &img )
 	{ ; }
 
 	/**  
@@ -354,7 +355,7 @@ public:
 	 *    
 	 * \param err - Textual description of error
 	 */   
-	virtual void OnError( const char *err )
+	virtual void OnError( String ^err )
 	{ ; }
 
 	/**

@@ -23,18 +23,13 @@ namespace librtEdgePRIVATE
 //////////////////////////
 // Constructor
 //////////////////////////
-VectorC::VectorC( IVector    ^cli,
-                  const char *svc,
-                  const char *tkr ) :
-   _cli( cli ),
-   RTEDGE::Vector( svc, tkr )
-{
-   ::memset( &_pubDataC, 0, sizeof( _pubDataC ) );
-}
-
-VectorC::~VectorC()
-{
-}
+VectorC::VectorC( librtEdgePRIVATE::IVector ^cli,
+                  const char                *svc,
+                  const char                *tkr,
+                  int                        precision ) :
+   RTEDGE::Vector( svc, tkr, precision ),
+   _cli( cli )
+{ ; }
 
 
 //////////////////////////
@@ -43,21 +38,21 @@ VectorC::~VectorC()
 void VectorC::OnData( RTEDGE::VectorImage &img )
 {
    cli::array<double> ^ddb;
-   size_t         sz = img.size();
+   size_t              sz = img.size();
 
-   idb = gcnew cli::array<double>( sz );
+   ddb = gcnew cli::array<double>( sz );
    for ( size_t i=0; i<sz; ddb[i]=img[i], i++ );
    _cli->OnData( ddb );
 }
 
 void VectorC::OnData( RTEDGE::VectorUpdate &upd )
 {
-   cli::array<VectorValue ^> ^udb; 
-   size_t              sz = upd.size();
+   cli::array<librtEdge::VectorValue ^> ^udb; 
+   size_t                                sz = upd.size();
 
-   udb = gcnew cli::array<VectorValue ^>( sz );
+   udb = gcnew cli::array<librtEdge::VectorValue ^>( sz );
    for ( size_t i=0; i<sz; i++ )
-      udb[i] = gcnew VectorValue( upd[i]._position, upd[i]._value );
+      udb[i] = gcnew librtEdge::VectorValue( upd[i]._position, upd[i]._value );
    _cli->OnData( udb );
 }
 
@@ -86,8 +81,11 @@ namespace librtEdge
 /////////////////////////////////
 // Constructor / Destructor
 /////////////////////////////////
-Vector::Vector( String ^svc, String ^tkr ) :
-   _vec( new librtEdgePRIVATE::VectorC( this, _pStr( svc ), _pStr( tkr ) ) )
+Vector::Vector( String ^svc, String ^tkr, int precision ) :
+   _vec( new librtEdgePRIVATE::VectorC( this, 
+                                        rtEdge::_pStr( svc ), 
+                                        rtEdge::_pStr( tkr ),
+                                        precision ) )
 { ; }
 
 Vector::~Vector()
@@ -100,25 +98,25 @@ Vector::~Vector()
 /////////////////////////////////
 // Access
 /////////////////////////////////
-String ^Vector::svc()
+String ^Vector::Service()
 {
-   return gcnew String( _vec->svc() );
+   return gcnew String( _vec->Service() );
 }
 
-String ^Vector::tkr()
+String ^Vector::Ticker()
 {
-   return gcnew String( _vec->tkr() );
+   return gcnew String( _vec->Ticker() );
 }
 
 cli::array<double> ^Vector::Get()
 {
-   VectorImage    img;
+   RTEDGE::VectorImage img;
    cli::array<double> ^ddb;
-   size_t         sz = _vec->Get( img ).size();
+   size_t              sz = _vec->Get( img ).size();
 
    ddb = gcnew cli::array<double>( sz );
    for ( size_t i=0; i<sz; ddb[i]=img[i], i++ );
-   return img;
+   return ddb;
 }
 
 
@@ -179,14 +177,14 @@ String ^Vector::Dump( bool bPage )
    return gcnew String( s.data() );
 }
 
-String ^Dump( cli::array<VectorValue ^> ^upd, bool bPage )
+String ^Vector::Dump( cli::array<VectorValue ^> ^upd, bool bPage )
 {
    RTEDGE::VectorUpdate udb;
    RTEDGE::VectorValue  v;
    string               s;
    int                  i;
 
-   for ( i=0; i<upd.Length; i++ ) {
+   for ( i=0; i<upd->Length; i++ ) {
       v._position = upd[i]._position;
       v._value    = upd[i]._value;
       udb.push_back( v );
