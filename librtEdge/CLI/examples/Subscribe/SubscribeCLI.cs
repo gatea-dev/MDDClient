@@ -395,6 +395,7 @@ class SubscribeCLI : rtEdgeSubscriber
          if ( bds )
             for ( i=0; i<nt; sub.OpenBDS( svc, tkrs[i++], 0 ) );
          else if ( bVec ) {
+            rtEdge.Sleep( 2.5 ); // 2.5 seconds to ensure BINARY
             vdb = new MyVector[nt];
             for ( i=0; i<nt; vdb[i] = new MyVector( svc, tkrs[i] ), i++ );
             for ( i=0; i<nt; vdb[i].Subscribe( sub ), i++ );
