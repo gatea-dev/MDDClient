@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  PubTest.cs
+*  PublishCLI.cs
 *     librtEdge .NET interface test - Publication
 *
 *  REVISION HISTORY:
@@ -8,6 +8,7 @@
 *     . . .
 *     23 JAN 2015 jcs  Chains
 *      5 MAY 2022 jcs  Build 53: New constructor; SetMDDirectMon()
+*     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -17,7 +18,7 @@ using System.IO;
 using System.Threading;
 using librtEdge;
 
-class PubTest : rtEdgePublisher
+class PublishCLI : rtEdgePublisher
 {
    ////////////////////////////////
    // Members
@@ -31,7 +32,7 @@ class PubTest : rtEdgePublisher
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public PubTest( string pSvr, string pPub, int tTmr, string[] chn ) :
+   public PublishCLI( string pSvr, string pPub, int tTmr, string[] chn ) :
       base( pSvr, pPub, true, false )
    {
       // Fields / Watchlist
@@ -213,7 +214,7 @@ class PubTest : rtEdgePublisher
    public static int Main(String[] args)
    {
       try {
-         PubTest pub;
+         PublishCLI pub;
          int      i, tTmr, argc;
          string   pSvr, pPub, mdd;
          string[] chn;
@@ -260,9 +261,9 @@ class PubTest : rtEdgePublisher
             }
          }
          Console.WriteLine( rtEdge.Version() );
-         pub = new PubTest( pSvr, pPub, tTmr, chn );
+         pub = new PublishCLI( pSvr, pPub, tTmr, chn );
          pub.PubStart();
-         pub.SetMDDirectMon( mdd, "PubTest", "PubTest" );
+         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( "Stats in " + mdd );
          Console.WriteLine( "Hit <ENTER> to terminate..." );
