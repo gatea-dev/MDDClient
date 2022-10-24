@@ -14,7 +14,7 @@
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *     23 MAY 2022 jcs  Build 54: _iVal / _dVal
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
-*     24 OCT 2022 jcs  Build 58: doxygen de-lint
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -277,7 +277,7 @@ public:
 	 * \param pFile - Name of file to map
 	 * \return File contents
 	 */
-	static array<Byte> ^ReadFile( String ^pFile );
+	static cli::array<Byte> ^ReadFile( String ^pFile );
 
 
 	/////////////////////////////////
@@ -296,25 +296,25 @@ public:
 	 * \brief Marshall a C rtBUF into a C# byte[] array
 	 *
 	 * \param buf - Memory buffer from unmanaged-land
-	 * \return Allocated array<Byte> in managed-land
+	 * \return Allocated cli::array<Byte> in managed-land
 	 */
-	static array<Byte> ^_memcpy( ::rtBUF buf );
+	static cli::array<Byte> ^_memcpy( ::rtBUF buf );
 
 	/**
 	 * \brief Marshall a C rtBuf64 into a C# byte[] array
 	 *
 	 * \param buf - Memory buffer from unmanaged-land
-	 * \return Allocated array<Byte> in managed-land
+	 * \return Allocated cli::array<Byte> in managed-land
 	 */
-	static array<Byte> ^_memcpy( ::rtBuf64 buf );
+	static cli::array<Byte> ^_memcpy( ::rtBuf64 buf );
 
 	/**
 	 * \brief Marshall a C# byte[] array into a C rtBUF
 	 *
-	 * \param buf - Allocated array<Byte> in managed-land
+	 * \param buf - Allocated cli::array<Byte> in managed-land
 	 * \return Memory buffer for unmanaged-land
 	 */
-	static ::rtBUF _memcpy( array<Byte> ^buf );
+	static ::rtBUF _memcpy( cli::array<Byte> ^buf );
 
 	/**
 	 * \brief Convert from Unix Time to .NET DateTime

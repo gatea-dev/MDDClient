@@ -14,8 +14,9 @@
 *     26 APR 2022 jcs  Build 53: SetBinary() bug fix; 1 constructor
 *     23 MAY 2022 jcs  Build 54: OnError()
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <PubChannel.h>
@@ -300,7 +301,7 @@ int rtEdgePublisher::PubGetHopCount()
    return _pub->PubGetHopCount();
 }
 
-array<Byte> ^rtEdgePublisher::PubGetData()
+cli::array<Byte> ^rtEdgePublisher::PubGetData()
 {
    return rtEdge::_memcpy( _pub->PubGetData() );
 }
@@ -318,9 +319,9 @@ int rtEdgePublisher::GetFid( String ^fldName )
 /////////////////////////////////
 // BDS Publication
 /////////////////////////////////
-int rtEdgePublisher::PublishBDS( String          ^bds, 
-                                 int              StreamID, 
-                                 array<String ^> ^symbols )
+int rtEdgePublisher::PublishBDS( String               ^bds, 
+                                 int                   StreamID, 
+                                 cli::array<String ^> ^symbols )
 {
    char *syms[K];
    int   i, n, nb;

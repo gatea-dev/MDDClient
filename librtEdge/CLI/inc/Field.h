@@ -10,7 +10,7 @@
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
-*     24 OCT 2022 jcs  Build 58: Opaque cpp()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -37,7 +37,7 @@ public ref class ByteStreamFld
 {
 private: 
 	RTEDGE::ByteStreamFld *_bStr;
-	array<Byte>           ^_bRaw;
+	cli::array<Byte>      ^_bRaw;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -85,9 +85,9 @@ public:
 	 *
 	 * \return ByteStreamFld data contents
 	 */
-	property array<Byte> ^_data
+	property cli::array<Byte> ^_data
 	{
-	   array<Byte> ^get() {
+	   cli::array<Byte> ^get() {
 	      if ( _bRaw == nullptr )
 	         _bRaw = rtEdge::_memcpy( _bStr->buf() );
 	      return _bRaw;

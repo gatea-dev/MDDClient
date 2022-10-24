@@ -17,8 +17,9 @@
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <SubChannel.h>
@@ -482,7 +483,7 @@ void rtEdgeSubscriber::FreeResult()
 ////////////////////////////////////
 // Parse Only
 ////////////////////////////////////
-rtEdgeData ^rtEdgeSubscriber::Parse( array<byte> ^data )
+rtEdgeData ^rtEdgeSubscriber::Parse( cli::array<byte> ^data )
 {
    RTEDGE::Message *msg;
    ::rtBUF          b;

@@ -53,6 +53,9 @@ Features To Add
  * -# Rename CLI examples:
  *    - SubTest -> SubscribeCLI
  *    - PubTest -> PublishCLI
+ *
+ * -# CLI : cli::array<> so we can use namespace std in C/C++
+ * 
  * 
  * ### Build 57 22-10-14
  *

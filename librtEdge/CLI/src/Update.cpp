@@ -5,7 +5,7 @@
 *  REVISION HISTORY:
 *     13 NOV 2014 jcs  Created.
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink()
-*      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
+*      7 JUL 2015 jcs  Build 31: Publish( cli::array<Byte> ^ )
 *     28 MAR 2022 jcs  Build 52: AddFieldAsDateTime() filled in
 *     23 MAY 2022 jcs  Build 55: AddFieldAsUnixTime()
 *
@@ -86,7 +86,7 @@ int rtEdgePubUpdate::Publish()
    return _upd.Publish();
 }
 
-int rtEdgePubUpdate::Publish( array<Byte> ^buf, bool bFieldList )
+int rtEdgePubUpdate::Publish( cli::array<Byte> ^buf, bool bFieldList )
 {
    ::rtBUF       r;
    ::mddDataType dt;
@@ -331,12 +331,12 @@ void rtEdgePubUpdate::AddFieldAsTime( String ^pFld, DateTime ^dt )
 /////////////////////////////////
 // Chain
 /////////////////////////////////
-int rtEdgePubUpdate::PubChainLink( String          ^chainName,
-                                   IntPtr           arg,
-                                   int              linkNum,
-                                   bool             bFinal,
-                                   array<String ^> ^links,
-                                   int              dpyTpl )
+int rtEdgePubUpdate::PubChainLink( String               ^chainName,
+                                   IntPtr                arg,
+                                   int                   linkNum,
+                                   bool                  bFinal,
+                                   cli::array<String ^> ^links,
+                                   int                   dpyTpl )
 {
    const char *ldb[K], *pChn;
    void       *vArg;
@@ -349,11 +349,11 @@ int rtEdgePubUpdate::PubChainLink( String          ^chainName,
    return _upd.PubChainLink( pChn, vArg, linkNum, bFinal, ldb, nl, dpyTpl );
 }
 
-int rtEdgePubUpdate::PubChainLink( String          ^chainName,
-                                   IntPtr           arg,
-                                   int              linkNum,
-                                   bool             bFinal,
-                                   array<String ^> ^links ) 
+int rtEdgePubUpdate::PubChainLink( String               ^chainName,
+                                   IntPtr                arg,
+                                   int                   linkNum,
+                                   bool                  bFinal,
+                                   cli::array<String ^> ^links ) 
 {
    return PubChainLink( chainName, arg, linkNum, bFinal, links, 999 );
 }

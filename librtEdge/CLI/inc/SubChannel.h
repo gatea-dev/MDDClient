@@ -16,7 +16,7 @@
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
-*     24 OCT 2022 jcs  Build 58: Opaque cpp()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -658,7 +658,7 @@ public:
 	 * \param data - Raw data to parse
 	 * \return rtEdgeData containing parsed results
 	 */
-	rtEdgeData ^Parse( array<byte> ^data );
+	rtEdgeData ^Parse( cli::array<byte> ^data );
 
 	/**
 	 * \brief Parse a "view" of the raw message

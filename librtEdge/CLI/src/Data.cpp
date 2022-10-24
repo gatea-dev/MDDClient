@@ -7,8 +7,9 @@
 *      5 FEB 2016 jcs  Build 32: _InitHeap()
 *     11 JAN 2018 jcs  Build 39: Leak : _FreeHeap()
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Data.h>
@@ -44,7 +45,7 @@ rtEdgeData::rtEdgeData() :
    // Pre-allocate a 'heap' of 1024 reusable rtEdgeFields
 
    nh    = 1024;
-   _heap = gcnew array<rtEdgeField ^>( nh );
+   _heap = gcnew cli::array<rtEdgeField ^>( nh );
    for ( i=0; i<nh; _heap[i++] = gcnew rtEdgeField() );
    rtEdge::_IncObj();
 }
@@ -64,7 +65,7 @@ rtEdgeData::rtEdgeData( rtEdgeData ^src ) :
    _cachedFields( nullptr )
 {
    String               ^deepCopy;
-   array<rtEdgeField ^> ^sdb;
+   cli::array<rtEdgeField ^> ^sdb;
    rtEdgeField          ^fld;
    Hashtable            ^cdb;
    int                   i, fid, nf;
@@ -81,7 +82,7 @@ rtEdgeData::rtEdgeData( rtEdgeData ^src ) :
     */
    sdb  = src->_flds;
    nf   = (int)_NumFld;
-   _fdb = gcnew array<rtEdgeField ^>( nf );
+   _fdb = gcnew cli::array<rtEdgeField ^>( nf );
    for ( i=0; i<nf; i++ ) {
       fld     = sdb[i];
       _fdb[i] = gcnew rtEdgeField( fld );
@@ -315,7 +316,7 @@ void LVCData::_InitHeap( int nf )
    // Once
 
    if ( _heap == nullptr ) {
-      _heap = gcnew array<rtEdgeField ^>( nf );
+      _heap = gcnew cli::array<rtEdgeField ^>( nf );
       for ( i=0; i<nf; _heap[i++] = gcnew rtEdgeField() );
    }
 }
@@ -416,11 +417,11 @@ LVCData ^LVCDataAll::data()
 ////////////////////////////////////
 // Access - Column-centric
 ////////////////////////////////////
-array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
+cli::array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
 {
    RTEDGE::Messages &mdb = _all->msgs();
    RTEDGE::Field    *fld;
-   array<String ^>  ^col;
+   cli::array<String ^>  ^col;
    LVCData           f;
    const char       *val;
    u_int             i, nt;
@@ -432,7 +433,7 @@ array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
 
    // Rock on ...
 
-   col = gcnew array<String ^>( nt );
+   col = gcnew cli::array<String ^>( nt );
    for ( i=0; i<nt; i++ ) {
       fld    = mdb[i]->GetField( fid );
       val    = fld ? fld->GetAsString() : "";
@@ -441,11 +442,11 @@ array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
    return col;
 }
 
-array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
+cli::array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
 {
    RTEDGE::Messages &mdb = _all->msgs();
    RTEDGE::Field    *fld;
-   array<int>       ^col;
+   cli::array<int>       ^col;
    LVCData           f;
    u_int             i, nt;
 
@@ -456,7 +457,7 @@ array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
 
    // Rock on ...
 
-   col = gcnew array<int>( nt );
+   col = gcnew cli::array<int>( nt );
    for ( i=0; i<nt; i++ ) {
       fld    = mdb[i]->GetField( fid );
       col[i] = fld ? fld->GetAsInt32() : 0;
@@ -464,11 +465,11 @@ array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
    return col;
 }
 
-array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
+cli::array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
 {
    RTEDGE::Messages &mdb = _all->msgs();
    RTEDGE::Field    *fld;
-   array<double>    ^col;
+   cli::array<double>    ^col;
    LVCData           f;
    u_int             i, nt;
 
@@ -479,7 +480,7 @@ array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
 
    // Rock on ...
 
-   col = gcnew array<double>( nt );
+   col = gcnew cli::array<double>( nt );
    for ( i=0; i<nt; i++ ) {
       fld    = mdb[i]->GetField( fid );
       col[i] = fld ? fld->GetAsDouble() : 0.0;
@@ -515,7 +516,7 @@ void LVCDataAll::_InitHeap( int nh )
    // Once
 
    if ( _heap == nullptr ) {
-      _heap = gcnew array<LVCData ^>( nh );
+      _heap = gcnew cli::array<LVCData ^>( nh );
       for ( i=0; i<nh; _heap[i++] = gcnew LVCData() );
    }
 }

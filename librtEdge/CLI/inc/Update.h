@@ -5,11 +5,11 @@
 *  REVISION HISTORY:
 *     13 NOV 2014 jcs  Created.
 *     23 JAN 2015 jcs  Build 29: ByteStreamFld; PubChainLink() 
-*      7 JUL 2015 jcs  Build 31: Publish( array<Byte> ^ )
+*      7 JUL 2015 jcs  Build 31: Publish( cli::array<Byte> ^ )
 *     29 APR 2020 jcs  Build 43: Moved IrtEdgePubUpdate in here
 *     30 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
 *     23 MAY 2022 jcs  Build 54: AddFieldAsUnixTime()
-*     23 OCT 2022 jcs  Build 58: Opaque cpp()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -151,7 +151,7 @@ public:
 	 * \param bFieldList - true if field list; Else fixed msg
 	 * \return  Number of bytes published
 	 */
-	int Publish( array<Byte> ^buf, bool bFieldList );
+	int Publish( cli::array<Byte> ^buf, bool bFieldList );
 
 	/**
 	 * \brief Publish an error
@@ -435,7 +435,7 @@ public:
 	                  IntPtr           arg,
 	                  int              linkNum,
 	                  bool             bFinal,
-	                  array<String ^> ^links,
+	                  cli::array<String ^> ^links,
 	                  int              dpyTpl );
 
 	/**
@@ -453,7 +453,7 @@ public:
 	                  IntPtr           arg,
 	                  int              linkNum,
 	                  bool             bFinal,
-	                  array<String ^> ^links );
+	                  cli::array<String ^> ^links );
 
 #ifndef DOXYGEN_OMIT
 	/////////////////////////////////

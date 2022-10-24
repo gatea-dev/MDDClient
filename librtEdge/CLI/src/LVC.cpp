@@ -9,8 +9,9 @@
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
@@ -249,7 +250,7 @@ void LVCAdmin::AddTicker( String ^svc, String ^tkr )
    _lvc->AddTicker( pSvc, pTkr );
 }
 
-void LVCAdmin::AddTickers( String ^svc, array<String ^> ^tkrs )
+void LVCAdmin::AddTickers( String ^svc, cli::array<String ^> ^tkrs )
 {
    const char  *pSvc;
    const char **pTkrs;
@@ -283,7 +284,7 @@ void LVCAdmin::DelTicker( String ^svc, String ^tkr )
    _lvc->DelTicker( pSvc, pTkr );
 }
 
-void LVCAdmin::RefreshTickers( String ^svc, array<String ^> ^tkrs )
+void LVCAdmin::RefreshTickers( String ^svc, cli::array<String ^> ^tkrs )
 {
    const char  *pSvc;
    const char **pTkrs;

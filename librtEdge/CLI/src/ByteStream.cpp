@@ -4,8 +4,9 @@
 *
 *  REVISION HISTORY:
 *     13 DEC 2014 jcs  Created.
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2014 Gatea, Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <ByteStream.h>
@@ -187,7 +188,7 @@ int ByteStream::StreamID()
    return bStr().StreamID();
 }
 
-array<Byte> ^ByteStream::subBuf()
+cli::array<Byte> ^ByteStream::subBuf()
 {
    return rtEdge::_memcpy( bStr().subBuf() );
 }
@@ -197,7 +198,7 @@ int ByteStream::subBufLen()
    return bStr().subBufLen();
 }
 
-array<Byte> ^ByteStream::pubBuf()
+cli::array<Byte> ^ByteStream::pubBuf()
 {
    return rtEdge::_memcpy( bStr().pubBuf() );
 }
@@ -206,7 +207,7 @@ array<Byte> ^ByteStream::pubBuf()
 /////////////////////////////////
 // Mutator
 /////////////////////////////////
-void ByteStream::SetPublishData( array<Byte> ^buf )
+void ByteStream::SetPublishData( cli::array<Byte> ^buf )
 {
    pin_ptr<Byte> p   = &buf[0];
    char         *data = (char *)p;

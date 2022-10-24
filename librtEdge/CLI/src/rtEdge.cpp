@@ -11,6 +11,7 @@
 *     10 DEC 2018 jcs  Build 41: VS2017; Sleep()
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -198,10 +199,10 @@ void rtEdge::Sleep( double dSlp )
    RTEDGE::rtEdge::Sleep( dSlp );
 }
 
-array<Byte> ^rtEdge::ReadFile( String ^pFile )
+cli::array<Byte> ^rtEdge::ReadFile( String ^pFile )
 {
    ::rtBuf64    vw;
-   array<Byte> ^rtn;
+   cli::array<Byte> ^rtn;
 
    vw  = RTEDGE::rtEdge::MapFile( _pStr( pFile ) );
    rtn = _memcpy( vw );
@@ -221,9 +222,9 @@ const char *rtEdge::_pStr( String ^str )
    return (const char *)ptr.ToPointer();
 }
 
-array<Byte> ^rtEdge::_memcpy( ::rtBUF b )
+cli::array<Byte> ^rtEdge::_memcpy( ::rtBUF b )
 {
-   array<Byte> ^rtn;
+   cli::array<Byte> ^rtn;
    IntPtr       ptr;
    u_int        dSz;
 
@@ -231,15 +232,15 @@ array<Byte> ^rtEdge::_memcpy( ::rtBUF b )
    ptr = IntPtr( (void *)b._data );
    dSz = b._dLen;
    if ( dSz ) {
-      rtn = gcnew array<Byte>( dSz );
+      rtn = gcnew cli::array<Byte>( dSz );
       Marshal::Copy( ptr, rtn, 0, dSz );
    }
    return rtn;
 }
 
-array<Byte> ^rtEdge::_memcpy( ::rtBuf64 b )
+cli::array<Byte> ^rtEdge::_memcpy( ::rtBuf64 b )
 {
-   array<Byte> ^rtn;
+   cli::array<Byte> ^rtn;
    IntPtr       ptr;
    long         dSz;
 
@@ -247,13 +248,13 @@ array<Byte> ^rtEdge::_memcpy( ::rtBuf64 b )
    ptr = IntPtr( (void *)b._data );
    dSz = b._dLen;
    if ( dSz ) {
-      rtn = gcnew array<Byte>( dSz );
+      rtn = gcnew cli::array<Byte>( dSz );
       Marshal::Copy( ptr, rtn, 0, dSz );
    }
    return rtn;
 }
 
-::rtBUF rtEdge::_memcpy( array<Byte> ^b )
+::rtBUF rtEdge::_memcpy( cli::array<Byte> ^b )
 {
    ::rtBUF       rtn;
    pin_ptr<Byte> p  = &b[0];

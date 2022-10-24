@@ -6,7 +6,7 @@
 *     13 NOV 2014 jcs  Created.
 *     13 OCT 2015 jcs  Build 32: CDBTable / ViewTable()
 *     10 SEP 2020 jcs  Build 44: MDDResult
-*     23 OCT 2022 jcs  Build 58: Formatting.
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -45,7 +45,7 @@ private:
 	String          ^_svc;
 	String          ^_tkr;
 	String          ^_err;
-	array<float>    ^_fdb;
+	cli::array<float>    ^_fdb;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -216,16 +216,16 @@ public:
 	}
 
 	/** \brief Returns Field List from this update */
-	property array<float> ^_flds
+	property cli::array<float> ^_flds
 	{
-	   array<float> ^get() {
+	   cli::array<float> ^get() {
 	      u_int i, nf;
 
 	      // Create once per query
 
 	      nf = _curTick;
 	      if ( _fdb == nullptr ) {
-	         _fdb = gcnew array<float>( nf );
+	         _fdb = gcnew cli::array<float>( nf );
 	         for ( i=0; i<nf; _fdb[i]=_data->flds()[i], i++ );
 	      } 
 	      return _fdb;
@@ -256,7 +256,7 @@ private:
 	RTEDGE::CDBTable *_tbl;
 	String           ^_svc;
 	String           ^_err;
-	array<float>     ^_fdb;
+	cli::array<float>     ^_fdb;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -391,9 +391,9 @@ public:
 	}
 
 	/** \brief Returns Field List from this update */
-	property array<float> ^_flds
+	property cli::array<float> ^_flds
 	{
-	   array<float> ^get() {
+	   cli::array<float> ^get() {
 	      u_int  i, nf;
 	      float *fp;
 
@@ -402,7 +402,7 @@ public:
 	      nf = _size;
 	      fp = _tbl->flds();
 	      if ( _fdb == nullptr ) {
-	         _fdb = gcnew array<float>( nf );
+	         _fdb = gcnew cli::array<float>( nf );
 	         for ( i=0; i<nf; _fdb[i]=fp[i], i++ );
 	      } 
 	      return _fdb;
@@ -483,7 +483,7 @@ public ref class MDDResult
 {
 private: 
 	::MDDResult         &_qry;
-	array<MDDRecDef ^> ^_rdb;
+	cli::array<MDDRecDef ^> ^_rdb;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -500,16 +500,16 @@ public:
 	/////////////////////////////////
 public:
 	/** \brief Returns Field List from this update */
-	property array<MDDRecDef ^> ^_recs
+	property cli::array<MDDRecDef ^> ^_recs
 	{
-	   array<MDDRecDef ^> ^get() {
+	   cli::array<MDDRecDef ^> ^get() {
 	      u_int i, nf;
 
 	      // Create once per query
 
 	      nf = _nRec;
 	      if ( _rdb == nullptr ) {
-	         _rdb = gcnew array<MDDRecDef ^>( nf );
+	         _rdb = gcnew cli::array<MDDRecDef ^>( nf );
 	         for ( i=0; i<nf; i++ )
 	            _rdb[i] = gcnew MDDRecDef( _qry._recs[i] );
 	      } 
@@ -594,7 +594,7 @@ public:
 	 * \param fid - Field ID
 	 * \return CDBTable class with time-series values
 	 */  
-	CDBTable ^ViewTable( String ^svc, array<String ^> ^tkrs, int fid );
+	CDBTable ^ViewTable( String ^svc, cli::array<String ^> ^tkrs, int fid );
 
 	/**
 	 * \brief Release resources associated with last call to View().

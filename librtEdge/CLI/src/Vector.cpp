@@ -42,20 +42,20 @@ VectorC::~VectorC()
 //////////////////////////
 void VectorC::OnData( RTEDGE::VectorImage &img )
 {
-   array<double> ^ddb;
+   cli::array<double> ^ddb;
    size_t         sz = img.size();
 
-   idb = gcnew array<double>( sz );
+   idb = gcnew cli::array<double>( sz );
    for ( size_t i=0; i<sz; ddb[i]=img[i], i++ );
    _cli->OnData( ddb );
 }
 
 void VectorC::OnData( RTEDGE::VectorUpdate &upd )
 {
-   array<VectorValue> ^udb; 
+   cli::array<VectorValue> ^udb; 
    size_t              sz = upd.size();
 
-   udb = gcnew array<VectorValue>( sz );
+   udb = gcnew cli::array<VectorValue>( sz );
    for ( size_t i=0; i<sz; i++ )
       udb[i] = gcnew VectorValue( upd[i]._position, upd[i]._value );
    _cli->OnData( udb );
@@ -110,13 +110,13 @@ String ^Vector::tkr()
    return gcnew String( _vec->tkr() );
 }
 
-array<double> ^Vector::Get()
+cli::array<double> ^Vector::Get()
 {
    VectorImage    img;
-   array<double> ^ddb;
+   cli::array<double> ^ddb;
    size_t         sz = _vec->Get( img ).size();
 
-   ddb = gcnew array<double>( sz );
+   ddb = gcnew cli::array<double>( sz );
    for ( size_t i=0; i<sz; ddb[i]=img[i], i++ );
    return img;
 }
@@ -125,7 +125,7 @@ array<double> ^Vector::Get()
 /////////////////////////////////
 // Mutator
 /////////////////////////////////
-int Vector::Update( array<double> ^ddb )
+int Vector::Update( cli::array<double> ^ddb )
 {
    RTEDGE::VectorImage img;
 
@@ -179,7 +179,7 @@ String ^Vector::Dump( bool bPage )
    return gcnew String( s.data() );
 }
 
-String ^Dump( array<VectorValue> ^upd, bool bPage )
+String ^Dump( cli::array<VectorValue> ^upd, bool bPage )
 {
    RTEDGE::VectorUpdate udb;
    RTEDGE::VectorValue  v;

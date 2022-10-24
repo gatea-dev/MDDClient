@@ -14,7 +14,7 @@
 *     26 APR 2022 jcs  Build 53: 1 constructor
 *     23 MAY 2022 jcs  Build 54: OnError()
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
-*     24 OCT 2022 jcs  Build 58: Opaque cpp()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -419,7 +419,7 @@ public:
 	 *
 	 * \return rtBUF pointing to last published message.
 	 */
-	array<Byte> ^PubGetData();
+	cli::array<Byte> ^PubGetData();
 
 
 	/////////////////////////////////
@@ -452,7 +452,7 @@ public:
 	 * \param symbols - Array of symbols to publish
 	 * \return  Number of bytes published; 0 if overflow
 	 */
-	int PublishBDS( String ^bds, int StreamID, array<String ^> ^symbols );
+	int PublishBDS( String ^bds, int StreamID, cli::array<String ^> ^symbols );
 
 
 	/////////////////////////////////

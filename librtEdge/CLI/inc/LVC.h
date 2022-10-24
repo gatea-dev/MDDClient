@@ -10,7 +10,7 @@
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
-*     23 OCT 2022 jcs  Build 58: Opaque cpp()
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -301,7 +301,7 @@ public:
 	 * \param svc - Service Name
 	 * \param tkrs - Array of tickers to add
 	 */
-	void AddTickers( String ^svc, array<String ^> ^tkrs );
+	void AddTickers( String ^svc, cli::array<String ^> ^tkrs );
 
 	/**
 	 * \brief Delete existing ( svc,tkr ) record from LVC
@@ -317,7 +317,7 @@ public:
 	 * \param svc - Service Name
 	 * \param tkrs - Array of tickers to add
 	 */
-	void RefreshTickers( String ^svc, array<String ^> ^tkrs );
+	void RefreshTickers( String ^svc, cli::array<String ^> ^tkrs );
 
 	/**
 	 * \brief Refresh ALL dead tickers in LVC

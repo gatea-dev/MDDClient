@@ -6,8 +6,9 @@
 *     13 NOV 2014 jcs  Created.
 *      2 OCT 2015 jcs  Build 32: CDBTable / ViewTable()
 *     10 SEP 2020 jcs  Build 44: MDDResult
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <ChartDB.h>
@@ -234,7 +235,7 @@ CDBData ^ChartDB::View( String ^svc, String ^tkr, int fid )
    return _qry;
 }
 
-CDBTable ^ChartDB::ViewTable( String ^svc, array<String ^> ^tkrs, int fid )
+CDBTable ^ChartDB::ViewTable( String ^svc, cli::array<String ^> ^tkrs, int fid )
 {
    const char  *pSvc, *pTkr;
    const char **tdb;

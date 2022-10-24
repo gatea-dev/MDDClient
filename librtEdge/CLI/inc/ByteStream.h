@@ -4,7 +4,7 @@
 *
 *  REVISION HISTORY:
 *     13 DEC 2014 jcs  Created.
-*     23 OCT 2022 jcs  Build 58: Formatting.
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -32,7 +32,7 @@ public interface class IByteStream
 {
 	// IByteStream Interface
 public:
-	virtual void OnData( array<Byte> ^ ) abstract;
+	virtual void OnData( cli::array<Byte> ^ ) abstract;
 	virtual void OnError( String ^ ) abstract;
 	virtual void OnSubscribeComplete() abstract;
 	virtual void OnPublishComplete( int ) abstract;
@@ -250,7 +250,7 @@ public:
 	 *
 	 * \return Buffer containing the raw data that has been received so far.
 	 */
-	array<Byte> ^subBuf();
+	cli::array<Byte> ^subBuf();
 
 	/**
 	 * \brief Returns total expected length of ByteStream being consumed.
@@ -266,7 +266,7 @@ public:
 	 *
 	 * \return byte[] array containing the raw data to publish
 	 */
-	array<Byte> ^pubBuf();
+	cli::array<Byte> ^pubBuf();
 
 
 	/////////////////////////////////
@@ -278,7 +278,7 @@ public:
 	 *
 	 * \param buf - Raw buffer of data to publish
 	 */
-	void SetPublishData( array<Byte> ^buf );
+	void SetPublishData( cli::array<Byte> ^buf );
 
 
 	/////////////////////////////////
@@ -297,7 +297,7 @@ public:
 	 *
 	 * \param buf - Buffer pointing to new chunk
 	 */
-	virtual void OnData( array<Byte> ^buf )
+	virtual void OnData( cli::array<Byte> ^buf )
 	{ ; }
 
 	/**

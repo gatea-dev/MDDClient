@@ -31,8 +31,8 @@ public interface class IVector
 {
 	// IVector Interface
 public:
-	virtual void OnData( array<double> ^ ) abstract;
-	virtual void OnData( array<librtEdge::VectorValue> ^ ) abstract;
+	virtual void OnData( cli::array<double> ^ ) abstract;
+	virtual void OnData( cli::array<librtEdge::VectorValue> ^ ) abstract;
 	virtual void OnError( String ^ ) abstract;
 	virtual void OnPublishComplete( int ) abstract;
 
@@ -137,8 +137,8 @@ public:
  * \brief A one-dimensional Vector of doubles : Pub or Sub
  *
  * When consuming you receive asynchronous notifications as follows:
- * + OnData( array<double> ^ ) - Complete Vector Update
- * + OnData( array<VectorValue> ^ ) - Partial Vector Update
+ * + OnData( cli::array<double> ^ ) - Complete Vector Update
+ * + OnData( cli::array<VectorValue> ^ ) - Partial Vector Update
  * + OnError() - Error
  *
  * When publishing you receive asynchronous notifications as follows:
@@ -190,7 +190,7 @@ public:
 	 *
 	 * \return array of all values
 	 */
-	array<double> ^Get();
+	cli::array<double> ^Get();
 
 
 	/////////////////////////////////
@@ -203,7 +203,7 @@ public:
 	 * \param img - vector of values to load
 	 * \return Number loaded
 	 */
-	int Update( array<double> ^img );
+	int Update( cli::array<double> ^img );
 
 	/**
 	 * \brief Set Single Value
@@ -259,9 +259,9 @@ public:
 	 *
 	 * Vector State | Publish | Consumer Callback
 	 * --- | --- | ---
-	 * Unpublished | array<double> | OnData( array<double> ^ )
-	 * Published | array<VectorValue> | OnData( array<VectorValue> ^ )
-	 * Comletely Updated | array<double> | OnData( array<double> & )
+	 * Unpublished | cli::array<double> | OnData( cli::array<double> ^ )
+	 * Published | cli::array<VectorValue> | OnData( cli::array<VectorValue> ^ )
+	 * Comletely Updated | cli::array<double> | OnData( cli::array<double> & )
 	 * Not Updated | None | None
 	 *
 	 * \param pub - Publisher channel
@@ -289,7 +289,7 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector Update contents as formatted string
 	 */
-	String ^Dump( array<VectorValue> ^upd, bool bPage );
+	String ^Dump( cli::array<VectorValue> ^upd, bool bPage );
 
 	/////////////////////////////////
 	// Properties
@@ -333,7 +333,7 @@ public:
 	 *    
 	 * \param upd - Values that have updated
 	 */   
-	virtual void OnData( array<VectorValue> ^upd )
+	virtual void OnData( cli::array<VectorValue> ^upd )
 	{ ; }
 
 	/**  

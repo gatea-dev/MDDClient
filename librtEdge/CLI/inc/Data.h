@@ -5,7 +5,7 @@
 *  REVISION HISTORY:
 *     17 SEP 2014 jcs  Created.
 *      8 JAN 2015 jcs  Build 29: mt() / MsgType().
-*     23 FEB 2015 jcs  Build 30: array<Byte> _raw, not String
+*     23 FEB 2015 jcs  Build 30: cli::array<Byte> _raw, not String
 *      6 JUL 2015 jcs  Build 31: rtBuF
 *     11 FEB 2016 jcs  Build 32: LVCDataAll.IsBinary; _InitHeap()
 *     15 OCT 2017 jcs  Build 36: Dump()
@@ -19,6 +19,7 @@
 *     17 MAY 2022 jcs  Build 54: LVCData._bActive
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
 *      1 SEP 2022 jcs  Build 56: _RTL
+*     23 OCT 2022 jcs  Build 58: cli::array<>
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -50,18 +51,18 @@ namespace librtEdge
 public ref class rtEdgeData
 {
 private: 
-	RTEDGE::Message      *_msg;
-	rtEdgeType            _mt;
-	u_int                 _NumFld;
-	::rtEdgeData         *_data;
-	String               ^_svc;
-	String               ^_tkr;
-	String               ^_err;
-	array<Byte>          ^_raw;
-	array<rtEdgeField ^> ^_fdb;
-	rtEdgeField          ^_fld;
-	array<rtEdgeField ^> ^_heap;
-	Hashtable            ^_cachedFields;
+	RTEDGE::Message           *_msg;
+	rtEdgeType                 _mt;
+	u_int                      _NumFld;
+	::rtEdgeData              *_data;
+	String                    ^_svc;
+	String                    ^_tkr;
+	String                    ^_err;
+	cli::array<Byte>          ^_raw;
+	cli::array<rtEdgeField ^> ^_fdb;
+	rtEdgeField               ^_fld;
+	cli::array<rtEdgeField ^> ^_heap;
+	Hashtable                 ^_cachedFields;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -263,9 +264,9 @@ public:
 	}
 
 	/** \brief Returns Field List from this update */
-	property array<rtEdgeField ^> ^_flds
+	property cli::array<rtEdgeField ^> ^_flds
 	{
-	   array<rtEdgeField ^> ^get() {
+	   cli::array<rtEdgeField ^> ^get() {
 	      rtEdgeField f;
 	      u_int       i, nf;
 
@@ -274,7 +275,7 @@ public:
 	      nf = _nFld;
 	      if ( _fdb == nullptr ) {
 	         _CheckHeap( nf );
-	         _fdb = gcnew array<rtEdgeField ^>( nf );
+	         _fdb = gcnew cli::array<rtEdgeField ^>( nf );
 	         _msg->reset();
 	         for ( i=0; i<nf && forth(); i++ ) {
 	            _heap[i]->Copy( _msg->field() );
@@ -292,9 +293,9 @@ public:
 	}
 
 	/** \brief Returns raw message */
-	property array<byte> ^_rawData
+	property cli::array<byte> ^_rawData
 	{
-	   array<byte> ^get() {
+	   cli::array<byte> ^get() {
 	      if ( _raw == nullptr ) {
 	         ::rtBUF       b;
 	          ::rtEdgeData &d = _msg->data();
@@ -359,9 +360,9 @@ private:
 	String               ^_svc;
 	String               ^_tkr;
 	String               ^_err;
-	array<rtEdgeField ^> ^_fdb;
+	cli::array<rtEdgeField ^> ^_fdb;
 	rtEdgeField          ^_fld;
-	array<rtEdgeField ^> ^_heap;
+	cli::array<rtEdgeField ^> ^_heap;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -558,9 +559,9 @@ public:
 	}
 
 	/** \brief Returns Field List from this update */
-	property array<rtEdgeField ^> ^_flds
+	property cli::array<rtEdgeField ^> ^_flds
 	{
-	   array<rtEdgeField ^> ^get() {
+	   cli::array<rtEdgeField ^> ^get() {
 	      rtEdgeField f;
 	      u_int       i, nf;
 
@@ -569,7 +570,7 @@ public:
 	      nf = _nFld;
 	      if ( _fdb == nullptr ) {
 	         _CheckHeap( nf );
-	         _fdb = gcnew array<rtEdgeField ^>( nf );
+	         _fdb = gcnew cli::array<rtEdgeField ^>( nf );
 	         _msg->reset();
 	         for ( i=0; i<nf && forth(); i++ ) {
 	            _heap[i]->Copy( _msg->field() );
@@ -616,8 +617,8 @@ private:
 	RTEDGE::LVCAll   *_all; 
 	LVCData          ^_data;
 	int               _itr;
-	array<LVCData ^> ^_fdb;
-	array<LVCData ^> ^_heap;
+	cli::array<LVCData ^> ^_fdb;
+	cli::array<LVCData ^> ^_heap;
 
 	/////////////////////////////////
 	// Constructor / Destructor
@@ -699,7 +700,7 @@ public:
 	 * \param fid Field ID to query
 	 * \return Column of field values as string array
 	 */
-	array<String ^> ^GetColumnAsString( int fid );
+	cli::array<String ^> ^GetColumnAsString( int fid );
 
 	/**
 	 * \brief Query all rows for field, returning values as int
@@ -707,7 +708,7 @@ public:
 	 * \param fid Field ID to query
 	 * \return Column of field values as int array
 	 */
-	array<int> ^GetColumnAsInt32( int fid );
+	cli::array<int> ^GetColumnAsInt32( int fid );
 
 	/**
 	 * \brief Query all rows for field, returning values as double
@@ -715,7 +716,7 @@ public:
 	 * \param fid Field ID to query
 	 * \return Column of field values as double array
 	 */
-	array<double> ^GetColumnAsDouble( int fid );
+	cli::array<double> ^GetColumnAsDouble( int fid );
 
 
 	/////////////////////////////////
@@ -748,9 +749,9 @@ public:
 	}
 
 	/** \brief Returns LVCData List from this update */
-	property array<LVCData ^> ^_tkrs
+	property cli::array<LVCData ^> ^_tkrs
 	{
-	   array<LVCData ^> ^get() {
+	   cli::array<LVCData ^> ^get() {
 	      RTEDGE::Messages &mdb = _all->msgs();
 	      LVCData           f;
 	      u_int             i, nf;
@@ -760,7 +761,7 @@ public:
 	      nf = mdb.size();
 	      if ( _fdb == nullptr ) {
 	         _CheckHeap( nf );
-	         _fdb = gcnew array<LVCData ^>( nf );
+	         _fdb = gcnew cli::array<LVCData ^>( nf );
 	         _data->Clear();
 	         for ( i=0; i<nf; i++ ) {
 	            _heap[i]->Set( *mdb[i] );
