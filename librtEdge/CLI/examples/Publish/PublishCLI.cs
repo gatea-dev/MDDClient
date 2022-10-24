@@ -43,11 +43,13 @@ class PublishCLI : rtEdgePublisher
    ////////////////////////////////
    public PublishCLI( string svr, 
                       string svc, 
-                      int    tTmr, 
+                      double tTmr, 
                       int    vecSz,
                       int    vPrec ) :
       base( svr, svc, true, false ) // binary, bStart 
    {
+      int tMs;
+
       // Fields / Watchlist
 
       _vecSz = vecSz;
@@ -59,8 +61,9 @@ class PublishCLI : rtEdgePublisher
 
       // Timer Callback
 
+      tMs  = (int)( 1000.0 * tTmr );
       _cbk = new TimerCallback( PublishAll );
-      _tmr = new Timer( _cbk, this, tTmr, tTmr );
+      _tmr = new Timer( _cbk, this, tMs, tMs );
    }
 
 
@@ -237,8 +240,8 @@ class PublishCLI : rtEdgePublisher
       try {
          PublishCLI pub;
          string     s, svr, svc;
-         int        i, argc,  tPub, hbeat, vecSz, vPrec;
-         double     tRun;
+         int        i, argc,  hbeat, vecSz, vPrec;
+         double     tRun, tPub;
          bool       aOK, bPack;
 
          /////////////////////
@@ -253,7 +256,7 @@ class PublishCLI : rtEdgePublisher
          svc   = "my_publisher";
          hbeat = 15;
          tRun  = 60.0;
-         tPub  = 1;
+         tPub  = 1.0;
          vecSz = 0;
          vPrec = 2;
          bPack = true;
@@ -292,7 +295,7 @@ class PublishCLI : rtEdgePublisher
             else if ( args[i] == "-s" )
                svc = args[++i];
             else if ( args[i] == "-pub" )
-               tPub = Convert.ToInt32( args[++i] );
+               tPub = Convert.ToDouble( args[++i] );
             else if ( args[i] == "-run" )
                tRun = Convert.ToDouble( args[++i] );
             else if ( args[i] == "-vector" )
@@ -311,7 +314,8 @@ class PublishCLI : rtEdgePublisher
          pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec );
          pub.PubStart();
 //         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
-         pub.SetUnPacked( !bPack );
+         if ( vecSz == 0 )
+            pub.SetUnPacked( !bPack );
          pub.SetHeartbeat( hbeat );
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
