@@ -14,6 +14,63 @@
 #include <SubChannel.h>
 #endif // DOXYGEN_OMIT
 
+namespace librtEdge
+{
+
+////////////////////////////////////////////////
+//
+//       c l a s s   V e c t o r V a l u e
+//
+////////////////////////////////////////////////
+
+/**
+ * \class VectorValue
+ * \brief Single Vector Value including index
+ */
+public ref class VectorValue
+{
+private:
+	int    _pos;
+	double _val;
+
+	/////////////////////////////////
+	// Constructor / Destructor
+	/////////////////////////////////
+	/**  
+	 * \brief Constructor
+	 *    
+	 * \param pos : Position in Vector
+	 * \param value : Value
+	 */   
+public:
+	VectorValue( int pos, double value ) :
+	   _pos( pos ),
+	   _val( value )
+	{ ; }
+
+	~VectorValue() { ; }
+
+	/////////////////////////////////
+	// Properties
+	/////////////////////////////////
+public:
+	/** \brief Returns the position */
+	property int _position
+	{
+	   int get() { return _pos; }
+	}
+
+	/** \brief Returns the value */
+	property double _value
+	{
+	   double get() { return _val; }
+	}
+
+}; // class VectorValue
+
+} // namespace librtEdge
+
+
 #ifndef DOXYGEN_OMIT
 
 namespace librtEdgePRIVATE
@@ -32,7 +89,7 @@ public interface class IVector
 	// IVector Interface
 public:
 	virtual void OnData( cli::array<double> ^ ) abstract;
-	virtual void OnData( cli::array<librtEdge::VectorValue> ^ ) abstract;
+	virtual void OnData( cli::array<librtEdge::VectorValue ^> ^ ) abstract;
 	virtual void OnError( String ^ ) abstract;
 	virtual void OnPublishComplete( int ) abstract;
 
@@ -78,58 +135,6 @@ namespace librtEdge
 
 ////////////////////////////////////////////////
 //
-//       c l a s s   V e c t o r V a l u e
-//
-////////////////////////////////////////////////
-
-/**
- * \class VectorValue
- * \brief Single Vector Value including index
- */
-public ref class VectorValue
-{
-private:
-	int    _pos;
-	double _val;
-
-	/////////////////////////////////
-	// Constructor / Destructor
-	/////////////////////////////////
-	/**  
-	 * \brief Constructor
-	 *    
-	 * \param pos : Position in Vector
-	 * \param value : Value
-	 */   
-public:
-	VectorValue( int pos, double value ) :
-	   _pos( pos ),
-	   _val( value )
-	{ ; }
-
-	~VectorValue() { ; }
-
-	/////////////////////////////////
-	// Properties
-	/////////////////////////////////
-public:
-	/** \brief Returns the position */
-	property int _position { 
-	{
-	   int get() { return _pos; }
-	}
-
-	/** \brief Returns the value */
-	property double _value
-	{
-	   double get() { return _val; }
-	}
-
-}; // VectorValue
-
-
-////////////////////////////////////////////////
-//
 //        c l a s s    V e c t o r
 //
 ////////////////////////////////////////////////
@@ -139,14 +144,14 @@ public:
  *
  * When consuming you receive asynchronous notifications as follows:
  * + OnData( cli::array<double> ^ ) - Complete Vector Update
- * + OnData( cli::array<VectorValue> ^ ) - Partial Vector Update
+ * + OnData( cli::array<VectorValue ^> ^ ) - Partial Vector Update
  * + OnError() - Error
  *
  * When publishing you receive asynchronous notifications as follows:
  * + OnPublishComplete() - Stream completely published
  */
 public ref class Vector : public librtEdge::rtEdge,
-	                       public librtEdgePRIVATE::IVector,
+                          public librtEdgePRIVATE::IVector,
 {
 private: 
 	librtEdgePRIVATE::VectorC *_vec;
@@ -261,8 +266,8 @@ public:
 	 * Vector State | Publish | Consumer Callback
 	 * --- | --- | ---
 	 * Unpublished | cli::array<double> | OnData( cli::array<double> ^ )
-	 * Published | cli::array<VectorValue> | OnData( cli::array<VectorValue> ^ )
-	 * Comletely Updated | cli::array<double> | OnData( cli::array<double> & )
+	 * Published | cli::array<VectorValue ^> | OnData( cli::array<VectorValue ^> ^ )
+	 * Completely Updated | cli::array<double> | OnData( cli::array<double> & )
 	 * Not Updated | None | None
 	 *
 	 * \param pub - Publisher channel
@@ -290,7 +295,7 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector Update contents as formatted string
 	 */
-	String ^Dump( cli::array<VectorValue> ^upd, bool bPage );
+	String ^Dump( cli::array<VectorValue ^> ^upd, bool bPage );
 
 	/////////////////////////////////
 	// Properties
@@ -334,7 +339,7 @@ public:
 	 *    
 	 * \param upd - Values that have updated
 	 */   
-	virtual void OnData( cli::array<VectorValue> ^upd )
+	virtual void OnData( cli::array<VectorValue ^> ^upd )
 	{ ; }
 
 	/**  

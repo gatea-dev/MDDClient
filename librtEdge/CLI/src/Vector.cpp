@@ -52,10 +52,10 @@ void VectorC::OnData( RTEDGE::VectorImage &img )
 
 void VectorC::OnData( RTEDGE::VectorUpdate &upd )
 {
-   cli::array<VectorValue> ^udb; 
+   cli::array<VectorValue ^> ^udb; 
    size_t              sz = upd.size();
 
-   udb = gcnew cli::array<VectorValue>( sz );
+   udb = gcnew cli::array<VectorValue ^>( sz );
    for ( size_t i=0; i<sz; i++ )
       udb[i] = gcnew VectorValue( upd[i]._position, upd[i]._value );
    _cli->OnData( udb );
@@ -179,7 +179,7 @@ String ^Vector::Dump( bool bPage )
    return gcnew String( s.data() );
 }
 
-String ^Dump( cli::array<VectorValue> ^upd, bool bPage )
+String ^Dump( cli::array<VectorValue ^> ^upd, bool bPage )
 {
    RTEDGE::VectorUpdate udb;
    RTEDGE::VectorValue  v;
