@@ -131,7 +131,7 @@ public:
 	////////////////////////////////////
 public:
 #ifndef DOXYGEN_OMIT
-	RTEDGE::LVC &cpp(); { return *_lvc; }
+	RTEDGE::LVC &cpp() { return *_lvc; }
 #endif // DOXYGEN_OMIT
 
 	/** 

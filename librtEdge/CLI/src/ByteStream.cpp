@@ -153,14 +153,14 @@ RTEDGE::ByteStream &ByteStream::bStr()
    return *_bStr;
 }
 
-String ^ByteStream::svc()
+String ^ByteStream::Service()
 {
-   return gcnew String( bStr().svc() );
+   return gcnew String( bStr().Service() );
 }
 
-String ^ByteStream::tkr()
+String ^ByteStream::Ticker()
 {
-   return gcnew String( bStr().tkr() );
+   return gcnew String( bStr().Ticker() );
 }
 
 int ByteStream::fidOff()

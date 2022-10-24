@@ -128,7 +128,7 @@ public:
 	/////////////////////////////////
 public:
 #ifndef DOXYGEN_OMIT
-	RTEDGE::Update &cpp(); { return _upd; }
+	RTEDGE::Update &cpp() { return _upd; }
 #endif // DOXYGEN_OMIT
 
 

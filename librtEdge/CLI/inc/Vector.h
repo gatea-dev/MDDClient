@@ -65,7 +65,8 @@ protected:
 	virtual void OnData( RTEDGE::VectorUpdate & );
 	virtual void OnError( const char * );
 	virtual void OnPublishComplete( int );
-};
+
+}; // class VectorC
 
 } // namespace librtEdgePRIVATE
 

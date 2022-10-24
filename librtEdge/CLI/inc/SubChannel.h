@@ -361,7 +361,6 @@ public:
 	RTEDGE::SubChannel &cpp() { return *_sub; }
 #endif // DOXYGEN_OMIT
 
-	librtEdgePRIVATE::SubChannel *_sub;
 	/**
 	 * \brief Return socket file descriptor for this Channel
 	 *

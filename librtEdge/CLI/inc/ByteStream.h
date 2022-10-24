@@ -197,14 +197,14 @@ public:
 	 *
 	 * \return Service Name of this Byte Stream
 	 */
-	String ^svc();
+	String ^Service();
 
 	/**
 	 * \brief Returns Ticker Name of this Byte Stream
 	 *
 	 * \return Ticker Name of this Byte Stream
 	 */
-	String ^tkr();
+	String ^Ticker();
 
 	/**
 	 * \brief Returns field ID containing ByteStream offset
