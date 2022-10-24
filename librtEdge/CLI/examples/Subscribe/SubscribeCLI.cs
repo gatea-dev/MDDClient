@@ -20,6 +20,7 @@
 *     11 SEP 2020 jcs  Build 44: -tapeDir; -query
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *     23 SEP 2022 jcs  Build 56: -csvF; No mo -tf; Always binary
+*     22 OCT 2022 jcs  Build 58: MyVector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -29,6 +30,11 @@ using System.IO;
 using System.Threading;
 using librtEdge;
 
+/////////////////////////////////////
+//
+//   c l a s s   S u b s c r i b e C L I
+//
+/////////////////////////////////////
 class SubscribeCLI : rtEdgeSubscriber 
 {
    ////////////////////////////////
@@ -248,14 +254,15 @@ class SubscribeCLI : rtEdgeSubscriber
    public static int Main(String[] args) 
    {
       try {
-         SubscribeCLI     sub;
-         int         i, nt, argc, tRun, ti, sn;
-         bool        aOK, bds, bTape, bQry;
-         string[]    tkrs;
-         MDDRecDef[] dbTkrs;
-         string      s, svr, usr, svc, tkr, csvF;
-         DateTime    t0, t1;
-         long        s0;
+         SubscribeCLI sub;
+         int          i, nt, argc, tRun, ti, sn;
+         bool         aOK, bds, bVec, bTape, bQry;
+         string[]     tkrs;
+         MDDRecDef[]  dbTkrs;
+         MyVector[]   vdb;
+         string       s, svr, usr, svc, tkr, csvF;
+         DateTime     t0, t1;
+         long         s0;
 
          /////////////////////
          // Quickie checks
@@ -278,6 +285,7 @@ class SubscribeCLI : rtEdgeSubscriber
          sn    = 0;
          tRun  = 0;
          bds   = false;
+         bVec  = false;
          bTape = true;
          bQry  = false;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
@@ -293,6 +301,7 @@ class SubscribeCLI : rtEdgeSubscriber
             s += "       [ -s0   <TapeSlice Start Offset> ] \\ \n";
             s += "       [ -sn   <TapeSlice NumMsg> ] \\ \n";
             s += "       [ -r    <AppRunTime> ] \\ \n";
+            s += "       [ -vector <If included, bytestream> ] \\ \n";
             s += "       [ -bds  <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
             s += "       [ -query <true to dump d/b directory> ]  \\ \n";
@@ -309,6 +318,7 @@ class SubscribeCLI : rtEdgeSubscriber
             Console.Write( "      -s0      : ${0}\n", s0 );
             Console.Write( "      -sn      : ${0}\n", sn );
             Console.Write( "      -r       : {0}\n", tRun );
+            Console.Write( "      -vector  : {0}\n", bVec );
             Console.Write( "      -bds     : {0}\n", bds );
             Console.Write( "      -tapeDir : {0}\n", bTape );
             Console.Write( "      -query   : {0}\n", bQry );
@@ -349,12 +359,14 @@ class SubscribeCLI : rtEdgeSubscriber
                sn = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-r" )
                tRun = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-vector" )
+               bVec = _IsTrue( args[++i] );
             else if ( args[i] == "-bds" )
-               bds = ( args[++i] == "true" );
+               bds = _IsTrue( args[++i] );
             else if ( args[i] == "-tapeDir" )
-               bTape = ( args[++i] == "true" );
+               bTape = _IsTrue( args[++i] );
             else if ( args[i] == "-query" )
-               bQry = ( args[++i] == "true" );
+               bQry = _IsTrue( args[++i] );
          }
          Console.WriteLine( rtEdge.Version() );
          sub = new SubscribeCLI( svr, usr );
@@ -382,6 +394,11 @@ class SubscribeCLI : rtEdgeSubscriber
          nt = ( tkrs != null ) ? tkrs.Length : 0;
          if ( bds )
             for ( i=0; i<nt; sub.OpenBDS( svc, tkrs[i++], 0 ) );
+         else if ( bVec ) {
+            vdb = new MyVector[nt];
+            for ( i=0; i<nt; vdb[i] = new MyVector( svc, tkrs[i] ), i++ );
+            for ( i=0; i<nt; vdb[i].Subscribe( sub ), i++ );
+         }
          else
             for ( i=0; i<nt; sub.Subscribe( svc, tkrs[i++], 0 ) );
          if ( sub.IsTape() ) {
@@ -434,4 +451,46 @@ class SubscribeCLI : rtEdgeSubscriber
       rtn = ss.Split('\n');
       return rtn;
    }
-}
+
+   static bool _IsTrue( string p )
+   {
+      return( ( p == "YES" ) || ( p == "true" ) );
+   }
+
+} // class SubscribeCLI
+
+
+/////////////////////////////////////
+//
+//   c l a s s   M y V e c t o r
+//
+/////////////////////////////////////
+class MyVector : Vector
+{
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+   public MyVector( string svc, string tkr ) :
+      base( svc, tkr, 0 )
+   { ; }
+
+   ////////////////////////////////
+   // Asynchronous Callbacks
+   ////////////////////////////////
+   public override void OnData( double[] img )
+   {
+      Console.WriteLine( Dump( true ) );
+   }
+
+   public override void OnData( VectorValue[] upd )
+   {
+      Console.WriteLine( Dump( upd, true ) );
+   }
+
+   public override void OnError( string err )
+   {
+      Console.WriteLine( "ERR ({0},{1}) : {2}", Service(), Ticker(), err );
+   }
+
+}; // class MyVector
+

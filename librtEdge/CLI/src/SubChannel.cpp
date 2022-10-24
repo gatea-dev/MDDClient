@@ -158,12 +158,11 @@ namespace librtEdge
 /////////////////////////////////
 // Constructor / Destructor
 /////////////////////////////////
-rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
-                                    String ^user ) :
+rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts, String ^user ) :
    _sub( new librtEdgePRIVATE::SubChannel( this ) ),
    _hosts( hosts ),
    _user( user ),
-   _bBinary( false ),
+   _bBinary( true ),
    _qry( gcnew rtEdgeData() ),
    _fldGet( gcnew rtEdgeField() ),
    _qryAll( new ::MDDResult() ),
@@ -172,9 +171,7 @@ rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
   _chan = _sub;
 }
 
-rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts,
-                                    String ^user,
-                                    bool    bBinary ) :
+rtEdgeSubscriber::rtEdgeSubscriber( String ^hosts, String ^user, bool bBinary ) :
    _sub( new librtEdgePRIVATE::SubChannel( this ) ),
    _hosts( hosts ),
    _user( user ),

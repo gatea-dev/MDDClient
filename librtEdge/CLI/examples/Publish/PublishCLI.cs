@@ -14,38 +14,53 @@
 ******************************************************************************/
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using librtEdge;
 
+///////////////////////////
+//
+//  P u b l i s h C L I
+//
+///////////////////////////
 class PublishCLI : rtEdgePublisher
 {
    ////////////////////////////////
    // Members
    ////////////////////////////////
-   private Hashtable     _wl;
-   private Timer         _tmr;
-   private TimerCallback _cbk;
-   private int           _rtl;
-   private string[]      _chn;
+   private int                          _vecSz;
+   private int                          _vPrec;
+   private Dictionary<string, IntPtr>   _wl;
+   private Dictionary<string, MyVector> _wlV;
+   private Timer                        _tmr;
+   private TimerCallback                _cbk;
+   private int                          _rtl;
+   private string[]                     _chn;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public PublishCLI( string pSvr, string pPub, int tTmr, string[] chn ) :
-      base( pSvr, pPub, true, false )
+   public PublishCLI( string svr, 
+                      string svc, 
+                      int    tTmr, 
+                      int    vecSz,
+                      int    vPrec ) :
+      base( svr, svc, true, false ) // binary, bStart 
    {
       // Fields / Watchlist
 
-      _wl  = new Hashtable();
-      _rtl = 0;
-      _chn = chn;
+      _vecSz = vecSz;
+      _vPrec = vPrec;
+      _wl    = new Dictionary<string, IntPtr>();
+      _wlV   = new Dictionary<string, MyVector>();
+      _rtl   = 0;
+      _chn   = null;
 
       // Timer Callback
 
       _cbk = new TimerCallback( PublishAll );
       _tmr = new Timer( _cbk, this, tTmr, tTmr );
-      SetHeartbeat( 60 );
    }
 
 
@@ -54,9 +69,17 @@ class PublishCLI : rtEdgePublisher
    ////////////////////////////////
    public void PublishAll( object data )
    {
+      MyVector vec;
+
       lock( _wl ) {
-         foreach ( DictionaryEntry  kv in _wl ) {
+         foreach ( DictionaryEntry kv in _wl ) {
             PubTkr( (string)kv.Key, (IntPtr)kv.Value, false );
+         }
+      }
+      lock( _wlV ) {
+         foreach ( DictionaryEntry kv in _wlV ) {
+            vec = (MyVector)kv.Value;
+            vec.PubVector();
          }
       }
    }
@@ -67,6 +90,8 @@ class PublishCLI : rtEdgePublisher
    public void PubTkr( string tkr, IntPtr arg, bool bImg )
    {
       rtEdgePubUpdate u;
+      double          r64;
+      long            i64;
       int             fid;
 
       // RTL; Time (int); Time (double); DateTime, String
@@ -77,45 +102,20 @@ class PublishCLI : rtEdgePublisher
       u.AddFieldAsInt32( fid++, (int)rtEdge.TimeSec() );
       u.AddFieldAsDouble( fid++, rtEdge.TimeNs() );
       u.AddFieldAsDateTime( fid++, DateTime.Now );
-      u.AddFieldAsString( 70, "+10 43/64" );
-      u.AddFieldAsString( 9151, "3001.95000019077" );
-      u.AddFieldAsString( 9152, "0.0237629979273164" );
-      u.AddFieldAsString( 9153, "0.0301808869670407" );
-      u.AddFieldAsString( 9154, "-0.999999986920079" );
-      u.AddFieldAsString( 9155, "0.0504438875743321" );
-      u.AddFieldAsString( 9156, "0.642828433854239" );
-      u.AddFieldAsString( 9157, "-0.0769193799974062" );
-      u.AddFieldAsString( 9158, "0.154162692851771" );
-      u.AddFieldAsString( 9159, "0" );
-      u.AddFieldAsString( 9160, "0.145033631216388" );
-      u.AddFieldAsString( 9161, "9.48514228079972E-10" );
-      u.AddFieldAsString( 9140, "0.000895748729725115" );
-      u.AddFieldAsString( 9141, "0.000282777396460158" );
-      u.AddFieldAsString( 9142, "0.000131151388637757" );
-      u.AddFieldAsString( 9143, "0.999951726026228" );
-      u.AddFieldAsString( 9144, "0.999945779518907" );
-      u.AddFieldAsString( 9145, "0" );
-      u.AddFieldAsString( 9146, "0" );
-      u.AddFieldAsString( 9147, "14" );
-      u.AddFieldAsString( 9148, "2400" );
-      u.AddFieldAsString( 9149, "4000" );
-      u.AddFieldAsString( 9009, "0" );
-      u.AddFieldAsString( 9532, "0" );
-      u.AddFieldAsString( 9034, "20171215" );
-      u.AddFieldAsString( 9501, "15 DEC 2017 00:00:00.000" );
-      u.AddFieldAsString( 9502, "2.4027397260274" );
-      u.AddFieldAsString( 9500, "3238.26" );
-      u.AddFieldAsString( 9503, "3001.95000019077" );
-      u.AddFieldAsString( 9504, "0.211533009563856" );
-      u.AddFieldAsString( 9531, "0" );
-      u.AddFieldAsString( 9528, "0.999999902167299" );
-      u.AddFieldAsString( 9534, "0" );
-      u.AddFieldAsString( 9533, "0" );
-      u.AddFieldAsString( 9553, "0" );
-      u.AddFieldAsString( 9529, "BLOOMBERG|VGH5 INDEX|LAST_PRICE" );
-      u.AddFieldAsString( 9530, "3236" );
-      u.AddFieldAsString( 9505, "NULL" );
-      u.AddFieldAsString( 9506, "0" );
+      i64        = 7723845300000;
+      u.AddField(  fid++, i64 );
+      i64        = 4503595332403200;
+      u.AddField(  fid++, i64 );
+      r64        = 123456789.987654321 /* + w._rtl */;
+      u.AddField(  fid++, r64 );
+      r64        = 6120.987654321 + w._rtl;
+      u.AddField(  fid++, r64 );
+      r64        = 3.14159265358979323846;
+      u.AddField(  fid++, r64 );
+      u.AddFieldAsUnixTime(  fid++, DateTime.Now );
+      u.AddField(  2147483647, "2147483647" );
+      u.AddField( -2147483647, "-2147483647" );
+      u.AddField( 16260000, "16260000" );
       u.Publish();
       _rtl += 1;
    }
@@ -152,6 +152,8 @@ class PublishCLI : rtEdgePublisher
    {
       string[] kv = tkr.Split('#');
       bool     bChn;
+      IntPtr   w;
+      MyVector vec;
       int      lnk;
 
       Console.WriteLine( "[{0}] OPEN {1}", DateTimeMs(), tkr );
@@ -166,13 +168,24 @@ class PublishCLI : rtEdgePublisher
             Console.WriteLine( "Exception: " + e.Message );
          }
       }
-      lock( _wl ) {
-         if ( bChn )
-            PubChainLink( lnk, kv[1], arg );
-         else {
-            PubTkr( tkr, arg, true );
-            if ( !_wl.ContainsKey( tkr ) )
-               _wl.Add( tkr, arg );
+      if ( _vecSz ) {
+         lock( _wlV ) {
+            if ( !_wlV.TryGetValue( tkr, out vec ) ) {
+               vec = new MyVector( this, tkr, _vecSz, _vPrec, arg );
+               _wlV.Add( tkr, vec );
+            }
+            vec.PubVector();
+         }
+      }
+      else {
+         lock( _wl ) {
+            if ( bChn )
+               PubChainLink( lnk, kv[1], arg );
+            else {
+               PubTkr( tkr, arg, true );
+               if ( !_wl.TryGetValue( tkr, out w ) ) {
+                  _wl.Add( tkr, arg );
+            }
          }
       }
    }
@@ -182,6 +195,9 @@ class PublishCLI : rtEdgePublisher
       Console.WriteLine( "[{0}] CLOSE {1}", DateTimeMs(), tkr );
       lock( _wl ) {
          _wl.Remove( tkr );
+      }
+      lock( _wlV ) {
+         _wlV.Remove( tkr );
       }
    }
 
@@ -207,64 +223,98 @@ class PublishCLI : rtEdgePublisher
       return rtn;
    }
 
+   public bool _IsTrue( string p )
+   {
+      return( ( p == "YES" ) || ( p == "true" ) );
+   }
+
 
    ////////////////////////////////
    // main()
    ////////////////////////////////
-   public static int Main(String[] args)
+   public static int Main( String[] args )
    {
       try {
          PublishCLI pub;
-         int      i, tTmr, argc;
-         string   pSvr, pPub, mdd;
-         string[] chn;
+         string     svc, svc;
+         int        hbeat, vecSz, vPrec;
+         double     tRun, tPub;
+         bool       aOK;
 
-         // Quickie Check
-
+         /////////////////////
+         // Quickie checks
+         /////////////////////
          argc = args.Length;
          if ( argc > 0 && ( args[0] == "--version" ) ) {
             Console.WriteLine( rtEdge.Version() );
             return 0;
          }
-         if ( argc > 0 && ( args[0] == "--config" ) ) {
-            pSvr = "<host:port> <Svc> <pubTmr> <ChainFile> <MDDirectMon>";
-            Console.WriteLine( pSvr );
+         svr   = "localhost:9995";
+         svc   = "my_publisher";
+         hBeat = 15;
+         tRun  = 60.0;
+         tPub  = 1.0;
+         vecSz = 0;
+         vPrec = 2;
+         bPack = true;
+         if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
+            s  = "Usage: %s \\ \n";
+            s += "       [ -h       <Source : host:port> ] \\ \n";
+            s += "       [ -s       <Service> ] \\ \n";
+            s += "       [ -pub     <Publication Interval> ] \\ \n";
+            s += "       [ -run     <App Run Time> ] \\ \n";
+            s += "       [ -vector  <Non-zero for vector; 0 for Field List> ] \\ \n";
+            s += "       [ -vecPrec <Vector Precision> ] \\ \n";
+            s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
+            s += "       [ -hbeat   <Heartbeat> ] \\ \n";
+            Console.WriteLine( s );
+            Console.Write( "   Defaults:\n" );
+            Console.Write( "      -h       : {0}\n", svr );
+            Console.Write( "      -s       : {0}\n", svc );
+            Console.Write( "      -pub     : {0}\n", tPub );
+            Console.Write( "      -run     : {0}\n", tRun );
+            Console.Write( "      -vector  : {0}\n", vecSz );
+            Console.Write( "      -vecPrec : {0}\n", vPrec );
+            Console.Write( "      -packed  : {0}\n", bPack );
+            Console.Write( "      -hbeat   : {0}\n", hbeat );
             return 0;
          }
 
-         // [ <host:port> <Svc> <pubTmr> <ChainFile> <MDDirectMon> ]
-
-         pSvr = "localhost:9995";
-         pPub = "MySource";
-         tTmr = 1000;
-         chn  = null;
-         mdd  = "MDDirectMon.stats";
+         /////////////////////
+         // cmd-line args
+         /////////////////////
          for ( i=0; i<argc; i++ ) {
-            switch( i ) {
-               case 0:
-                  pSvr = args[i];
-                  break;
-               case 1:
-                  pPub = args[i];
-                  break;
-               case 2:
-                  tTmr = Convert.ToInt32( args[i], 10 );
-                  break;
-               case 3:
-                  chn = File.ReadAllLines( args[i] );
-                  if ( chn.Length == 0 )
-                     chn = null;
-                  break;
-               case 4:
-                  mdd = args[i];
-                  break;
-            }
+            aOK = ( i+1 < argc );
+            if ( !aOK )
+               break; // for-i
+            if ( args[i] == "-h" )
+               svr = args[++i];
+            else if ( args[i] == "-s" )
+               svc = args[++i];
+            else if ( args[i] == "-pub" ) {
+               tPub = Convert.ToDouble( args[++i] );
+            else if ( args[i] == "-run" ) {
+               tRun = Convert.ToDouble( args[++i] );
+            else if ( args[i] == "-vector" ) {
+               vecSz = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-vecPrec" ) {
+               vPrec = Convert.ToDouble( args[++i], 10 );
+            else if ( args[i] == "-packed" ) {
+               bPack = _IsTrue( args[++i] );
+            else if ( args[i] == "-hbeat" ) {
+               hbeat = Convert.ToInt32( args[++i], 10 );
          }
+
+         // Rock on
+
          Console.WriteLine( rtEdge.Version() );
-         pub = new PublishCLI( pSvr, pPub, tTmr, chn );
+         pub = new PublishCLI( svr, svc, tTmr, vecSz, vPrec );
          pub.PubStart();
          pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
+         pub.SetUnPacked( !bPack );
+         pub.SetHeartBeat( hbeat );
          Console.WriteLine( pub.pConn() );
+         Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
          Console.WriteLine( "Stats in " + mdd );
          Console.WriteLine( "Hit <ENTER> to terminate..." );
          Console.ReadLine();
@@ -274,6 +324,61 @@ class PublishCLI : rtEdgePublisher
          Console.WriteLine( "Exception: " + e.Message );
       }
       return 0;
+
+   } // Main()
+
+}  // class PublishCLI
+
+
+////////////////////
+//
+//  M y V e c t o r
+//
+////////////////////
+class MyVector : public Vector
+{
+   ////////////////////////////////
+   // Members
+   ////////////////////////////////
+   private rtEdgePublisher _pub;
+   private int             _Size;
+   private IntPtr          _StreamID;
+   private int             _RTL;
+
+   ///////////////////
+   // Constructor
+   ///////////////////
+   public MyVector( rtEdgePublisher pub,
+                    string          tkr, 
+                    int             vecSz, 
+                    int             vPrec, 
+                    IntPtr          StreamID ) :
+      base( pub.pPubName(), tkr, vecPrec )
+   {
+      _pub      = pub;
+      _Size     = vecSz;
+      _StreamID = StreamID;
+      _RTL      = 1;
+      for ( int i=0; i<vecSz; UpdateAt( i, Math.PI * i ), i++ );
    }
-}
+
+
+   ///////////////////
+   // Operations
+   ///////////////////
+   public void PubVector()
+   {
+      int ix = ( _RTL % _Size );
+
+      // Every 5th time
+
+      _RTL += 1;
+      Publish( _pub, _StreamID, true );
+      if ( ( _RTL % 5 ) == 0 )
+         UpdateAt( ix, Math.E );
+      else
+         ShiftRight( 1 );
+   }
+
+}; // class MyVector
 

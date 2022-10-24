@@ -285,7 +285,7 @@ public:
 	 * The channel protocol is set once in Start().  Therefore, this
 	 * must be called BEFORE calling Start().
 	 *
-	 * \param bBin - true to set to binary; Else ASCII (default)
+	 * \param bBin - true to set to binary (default); Else ASCII
 	 */
 	void SetBinary( bool bBin );
 

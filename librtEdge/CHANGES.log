@@ -55,6 +55,8 @@ Features To Add
  *    - PubTest -> PublishCLI
  *
  * -# CLI : cli::array<> so we can use namespace std in C/C++
+ *
+ * -# CLI : rtEdgeSubscriber default IsBinary()
  * 
  * 
  * ### Build 57 22-10-14
