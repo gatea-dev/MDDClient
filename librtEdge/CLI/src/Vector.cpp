@@ -152,17 +152,17 @@ int Vector::ShiftRight( int num, bool bRollToFront )
 ////////////////////////////////////
 int Vector::Subscribe( librtEdge::rtEdgeSubscriber ^sub )
 {
-   return _vec->Subscribe( sub.cpp() );
+   return _vec->Subscribe( sub->cpp() );
 }
 
 void Vector::Unsubscribe( librtEdge::rtEdgeSubscriber ^sub )
 {
-   return _vec->Unsubscribe( sub.cpp() );
+   return _vec->Unsubscribe( sub->cpp() );
 }
 
 int Vector::Publish( librtEdge::rtEdgePublisher ^pub, int StreamID, bool bImg )
 {
-   return _vec->Publish( pub.cpp(), StreamID, bImg );
+   return _vec->Publish( pub->upd(), StreamID, bImg );
 }
 
 
@@ -185,8 +185,8 @@ String ^Vector::Dump( cli::array<VectorValue ^> ^upd, bool bPage )
    int                  i;
 
    for ( i=0; i<upd->Length; i++ ) {
-      v._position = upd[i]._position;
-      v._value    = upd[i]._value;
+      v._position = upd[i]->_position;
+      v._value    = upd[i]->_value;
       udb.push_back( v );
    }
    s = _vec->Dump( udb, bPage );

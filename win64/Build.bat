@@ -23,14 +23,14 @@ FOR %%X in (libmddWire librtEdge) DO (
    FOR %%Y in (Subscribe Publish LVCTest) DO (
       if exist %%X\cpp\%%Y.cpp (
          Call :BuildStuff2 %%X %%Y
-         cp -v %%X\bin64\%%Y\%%Y.exe .\bin64
+         copy %%X\bin64\%%Y\%%Y.exe .\bin64
       )
    )
    if exist %%X\CLI\lib64 (
-      cp -v %%X\CLI\lib64\*.dll .\bin64
+      copy %%X\CLI\lib64\*.dll .\bin64
    )
    if exist %%X\py\bin64 (
-      cp -v %%X\py\bin64\*.pyd ..\bin64
+      copy %%X\py\bin64\*.pyd ..\bin64
    )
 )
 goto Done
@@ -47,7 +47,7 @@ goto Done
    cd ..
    if exist dox\%MK%.dox (
       %DOXYGEN% dox\%MK%.dox
-      mv doc\* ..\..\doc
+      move doc\* ..\..\doc
    )
    cd ..
    EXIT /B 0

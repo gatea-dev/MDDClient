@@ -329,7 +329,7 @@ public:
 	 *    
 	 * \param img - Initial Image
 	 */   
-	virtual void OnData( cli::array<double> &img )
+	virtual void OnData( cli::array<double> ^img )
 	{ ; }
 
 	/**  
