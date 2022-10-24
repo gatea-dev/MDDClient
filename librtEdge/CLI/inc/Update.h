@@ -9,6 +9,7 @@
 *     29 APR 2020 jcs  Build 43: Moved IrtEdgePubUpdate in here
 *     30 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
 *     23 MAY 2022 jcs  Build 54: AddFieldAsUnixTime()
+*     23 OCT 2022 jcs  Build 58: Opaque cpp()
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -120,6 +121,15 @@ public:
 	 * \param bImg - true if initial image; false if update
 	 */
 	void Init( String ^tkr, IntPtr arg, bool bImg );
+
+
+	/////////////////////////////////
+	// Access
+	/////////////////////////////////
+public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::Update &cpp(); { return _upd; }
+#endif // DOXYGEN_OMIT
 
 
 	/////////////////////////////////
@@ -296,7 +306,7 @@ public:
 	 * \see PubChannel::SetUnPacked()
 	 * \see PubChannel::OnError()
 	 */
-	void AddFieldAsUnixTime( int fid, DateTime ^dt );
+	void AddFieldAsUnixTime( int fid, DateTime ^dtTm );
 
 	/**
 	 * \brief Add date-time field to update as Date

@@ -11,6 +11,7 @@
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *     30 MAR 2022 jcs  Build 52: long long GetAsInt64(); Native GetAsDateTime()
 *      2 JUN 2022 jcs  Build 55: GetAsString() wraps GetAsString(), not Dump()
+*     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -128,11 +129,6 @@ rtEdgeField::~rtEdgeField()
 /////////////////////////////////
 // Access
 /////////////////////////////////
-RTEDGE::Field *rtEdgeField::cpp()
-{   
-   return _fld;
-}   
-
 int rtEdgeField::Fid()
 {
    return _fld->Fid();

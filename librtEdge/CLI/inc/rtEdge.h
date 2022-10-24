@@ -14,6 +14,7 @@
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *     23 MAY 2022 jcs  Build 54: _iVal / _dVal
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
+*     24 OCT 2022 jcs  Build 58: doxygen de-lint
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -475,7 +476,6 @@ public:
 	 * -# Up to one subscriber and one publisher may use same file 
 	 * -# The 3 string parameters - file, exe, bld - must all be defined  
 	 *
-	 * \param cxt - Context from rtEdge_Initialize() or rtEdge_PubInit()
 	 * \param fileName - Run-time stats filename
 	 * \param exeName - Application executable name
 	 * \param buildName - Application build name

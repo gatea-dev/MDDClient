@@ -16,6 +16,7 @@
 *      3 DEC 2020 jcs  Build 47: XxxxPumpFullTape()
 *     23 MAY 2022 jcs  Build 54: OnError()
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
+*     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -153,7 +154,7 @@ namespace librtEdge
  * \include rtEdgeSubscriber_override.h
  */
 public ref class rtEdgeSubscriber : public librtEdge::Channel,
-	                                 public librtEdgePRIVATE::IrtEdgeSubscriber 
+                                    public librtEdgePRIVATE::IrtEdgeSubscriber 
 {
 private: 
 	librtEdgePRIVATE::SubChannel *_sub;
@@ -356,6 +357,11 @@ public:
 	// Access
 	/////////////////////////////////
 public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::SubChannel &cpp() { return *_sub; }
+#endif // DOXYGEN_OMIT
+
+	librtEdgePRIVATE::SubChannel *_sub;
 	/**
 	 * \brief Return socket file descriptor for this Channel
 	 *

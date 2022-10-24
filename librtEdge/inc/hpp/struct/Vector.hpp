@@ -47,9 +47,9 @@ static VecBuf64 _zBuf64 = { (char *)0, 0, 0 };
  */
 typedef struct {
    /** \brief Location in Vector */
-   int       _Index; 
+   int       _position; 
    /** \brief Value : 10 sig-fig */
-   u_int64_t _Value;
+   u_int64_t _value;
 } VecWireUpdVal;
 
 /**
@@ -93,10 +93,10 @@ namespace RTEDGE
 class VectorValue
 {
 public:
-	/** \brief Location in Vector */
-	int    _Index;
+	/** \brief Position in Vector */
+	int    _position;
 	/** \brief Value */
-	double _Value;
+	double _value;
 
 }; // class VectorValue
 
@@ -129,7 +129,7 @@ public:
  *
  * When consuming you receive asynchronous notifications as follows:
  * + OnData( VectorImage & ) - Complete Vector Update
- * + OnData( VectorUpdate & ) - Partiel Vector Update
+ * + OnData( VectorUpdate & ) - Partial Vector Update
  * + OnError() - Error
  *
  * When publishing you receive asynchronous notifications as follows:
@@ -261,8 +261,8 @@ public:
 	/**
 	 * \brief Constructor for both Publish() and Subscribe()
 	 *
-	 * \param svc - Service supplying this ByteStream if Subscribe()
-	 * \param tkr - Published name of this ByteStream
+	 * \param svc - Service supplying this Vector if Subscribe()
+	 * \param tkr - Published name of this Vector
 	 * \param precision - Sig Fig; 0 to 'learn' from Subscription Stream
 	 */
 	Vector( const char *svc, const char *tkr, int precision=0 ) :
@@ -313,7 +313,7 @@ public:
 	 * \param img - Resultant Vector to populate
 	 * \return VectorImage of all values
 	 */
-	VectorImage Get( VectorImage &img )
+	VectorImage &Get( VectorImage &img )
 	{
 	   img.clear();
 	   img = _vals;
@@ -430,7 +430,7 @@ public:
 	/**
 	 * \brief Subscribe to published Vector
 	 *
-	 * \param sub - SubChannel to subscribe to
+	 * \param sub - SubChannel feeding us
 	 * \return Unique Subscription ID
 	 */
 	int Subscribe( SubChannel &sub )
@@ -441,7 +441,7 @@ public:
 	/**
 	 * \brief Unsubscribe to published Vector
 	 *
-	 * \param sub - SubChannel to subscribe to
+	 * \param sub - SubChannel feeding us
 	 */
 	void Unsubscribe( SubChannel &sub )
 	{
@@ -508,15 +508,15 @@ public:
 	    */
 	   SetPrecision( _precision );
 	   for ( int i=0; i<(int)n; i++ ) {
-	      ix   = bImg ? i        : _upds[i]._Index;
-	      r64  = bImg ? _vals[i] : _upds[i]._Value;
+	      ix   = bImg ? i        : _upds[i]._position;
+	      r64  = bImg ? _vals[i] : _upds[i]._value;
 	      r64 *= _precOut; 
 	      if ( bImg ) {
 	         img[i] = (u_int64_t)r64;
 	      }
 	      else {
-	         upd[i]._Index = ix;
-	         upd[i]._Value = (u_int64_t)r64;
+	         upd[i]._position = ix;
+	         upd[i]._value    = (u_int64_t)r64;
 	      }
 	   }
 	   /*
@@ -590,8 +590,8 @@ public:
 	   cp  = bp;
 	   cp += sprintf( cp, "[%04ld values] ", n );
 	   for ( i=0; i<n; i++ ) {
-	      cp += sprintf( cp, "%d=", upd[i]._Index );
-	      cp += sprintf( cp, fmt, upd[i]._Value );
+	      cp += sprintf( cp, "%d=", upd[i]._position );
+	      cp += sprintf( cp, fmt, upd[i]._value );
 	      if ( ( cp-bp ) >= 76 ) {
 	         cp += sprintf( cp, "\n" );
 	         s  += bp;
@@ -636,7 +636,7 @@ public:
 	 * \brief Called asynchronously if there is an error in consuming
 	 * the single- or multi-message Byte Stream.
 	 *
-	 * This will be the last message you receive on this ByteStream.
+	 * This will be the last message you receive on this Vector.
 	 *
 	 * Override this method in your application to take action when
 	 * Byte Stream arrives in error.  If needed, the current data is
@@ -661,7 +661,7 @@ public:
 	{ ; }
 
 	/**
-	 * \brief Called asynchronously once the complete ByteStream has been
+	 * \brief Called asynchronously once the complete Vector has been
 	 * published.
 	 *
 	 * Override this method in your application to take action when
@@ -722,12 +722,12 @@ assert( h->_MsgSz == sz );
 	         img[ix]   = dv;
 	      } 
 	      else {
-	         ix        = udb[i]._Index;
-	         dv        = _precIn * udb[i]._Value;
-	         _vals[ix] = dv;
-	         cp       += sizeof( VecWireUpdVal );
-	         v._Index  = ix;
-	         v._Value  = dv;
+	         ix          = udb[i]._position;
+	         dv          = _precIn * udb[i]._value;
+	         _vals[ix]   = dv;
+	         cp         += sizeof( VecWireUpdVal );
+	         v._position = ix;
+	         v._value    = dv;
 	         upd.push_back( v );
 	      } 
 	   }

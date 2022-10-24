@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  SubTest.cs
+*  SubscribeCLI.cs
 *     librtEdge .NET interface test - Subscription
 *
 *  REVISION HISTORY:
@@ -29,7 +29,7 @@ using System.IO;
 using System.Threading;
 using librtEdge;
 
-class SubTest : rtEdgeSubscriber 
+class SubscribeCLI : rtEdgeSubscriber 
 {
    ////////////////////////////////
    // Members
@@ -39,7 +39,7 @@ class SubTest : rtEdgeSubscriber
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SubTest( string pSvr, string pUsr ) :
+   public SubscribeCLI( string pSvr, string pUsr ) :
       base( pSvr, pUsr, true )
    {
       _csvFids = null;
@@ -248,7 +248,7 @@ class SubTest : rtEdgeSubscriber
    public static int Main(String[] args) 
    {
       try {
-         SubTest     sub;
+         SubscribeCLI     sub;
          int         i, nt, argc, tRun, ti, sn;
          bool        aOK, bds, bTape, bQry;
          string[]    tkrs;
@@ -266,7 +266,7 @@ class SubTest : rtEdgeSubscriber
             return 0;
          }
          svr   = "localhost:9998";
-         usr   = "SubTest";
+         usr   = "SubscribeCLI";
          svc   = "bloomberg";
          tkr   = null;
          tkrs  = null;
@@ -357,7 +357,7 @@ class SubTest : rtEdgeSubscriber
                bQry = ( args[++i] == "true" );
          }
          Console.WriteLine( rtEdge.Version() );
-         sub = new SubTest( svr, usr );
+         sub = new SubscribeCLI( svr, usr );
          if ( csvF != null )
             sub.LoadCSVFids( csvF );
          sub.SetTapeDirection( bTape );

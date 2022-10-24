@@ -14,6 +14,7 @@
 *     26 APR 2022 jcs  Build 53: 1 constructor
 *     23 MAY 2022 jcs  Build 54: OnError()
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
+*     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -309,6 +310,10 @@ public:
 	// Access
 	/////////////////////////////////
 public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::PubChannel &cpp() { return *_pub; }
+#endif // DOXYGEN_OMIT
+
 	/**
 	 * \brief Return socket file descriptor for this Channel
 	 *

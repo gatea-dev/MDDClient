@@ -50,6 +50,9 @@ Features To Add
  * -# Vector.hpp
  *    - ByteStream.SetSnapshot()
  *
+ * -# Rename CLI examples:
+ *    - SubTest -> SubscribeCLI
+ *    - PubTest -> PublishCLI
  * 
  * ### Build 57 22-10-14
  *

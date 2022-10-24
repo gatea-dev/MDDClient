@@ -10,6 +10,7 @@
 *      9 MAR 2020 jcs  Build 42: Copy constructor; _bStrCpy
 *     11 AUG 2020 jcs  Build 44: GetAsDateTime() filled in
 *     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
+*     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -159,12 +160,10 @@ public:
 	/////////////////////////////////
 	// Access
 	/////////////////////////////////
-	/** 
-	 * \brief Returns unmanaged Field
-	 *   
-	 * \return Unmanaged Field
-	 */  
-	RTEDGE::Field *cpp();
+public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::Field *cpp() { return _fld; }
+#endif // DOXYGEN_OMIT
 
 	/** 
 	 * \brief Returns field ID

@@ -10,8 +10,9 @@
 *     16 MAR 2022 jcs  Build 51: LVCAdmin.AddTickers(); OnAcminXX()
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
+*     23 OCT 2022 jcs  Build 58: Opaque cpp()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -129,6 +130,10 @@ public:
 	// Access
 	////////////////////////////////////
 public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::LVC &cpp(); { return *_lvc; }
+#endif // DOXYGEN_OMIT
+
 	/** 
 	 * \brief Return rtEdgeSchema for this LVC
 	 *   
@@ -359,7 +364,7 @@ public:
 	 * \see AddTickers()
 	 * \see DelTicker()
 	 */
-	virtual void OnAdminNAK( bool, String ^, String ^ ) { ; }
+	virtual void OnAdminNAK( bool bAdd, String ^svc, String ^tkr ) { ; }
 
 };  // class LVCAdmin
 
