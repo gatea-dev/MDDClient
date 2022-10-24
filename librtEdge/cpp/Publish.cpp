@@ -16,6 +16,11 @@
 ******************************************************************************/
 #include <librtEdge.h>
 
+#if !defined(M_PI)
+#define M_E            2.7182818284590452354   /* e */
+#define M_PI           3.14159265358979323846  /* pi */
+#endif // !defined(M_PI)
+
 #define _MAX_CHAIN (16*K)
 #define _LCL_PORT  4321
 
