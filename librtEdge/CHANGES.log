@@ -47,6 +47,8 @@ Features To Add
  *
  * ### Build 58 22-10-xx
  *
+ * -# Surface.hpp
+ *
  * -# Vector.hpp
  *    - ByteStream.SetSnapshot()
  *
