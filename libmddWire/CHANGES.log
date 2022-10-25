@@ -31,6 +31,13 @@ Features To Add
  * ## Change Log
  * 
  * 
+ * ### Build 15 22-10-24
+ * 
+ * -# inc/bld.hpp
+ *
+ * -# Unpacked mddFld_bytestream bug fix
+ * 
+ * 
  * ### Build 14 22-05-23
  * 
  * -# Schema : mddValue._i32 = _maxLen

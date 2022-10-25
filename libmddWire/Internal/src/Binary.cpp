@@ -3,10 +3,6 @@
 *  Binary.cpp
 *     MD-Direct binary data 
 *
-*  TODO : 
-*      - Orc packing sucks for large value i32's : 5 bytes;
-*      - ILX packing?  0x80 = 16-bit; 0xc0 = 32-bit; 0xe0 : 64-bit
-*
 *  REVISION HISTORY:
 *     18 SEP 2013 jcs  Created
 *      5 DEC 2013 jcs  Build  4: UNPACKED_BINFLD
@@ -16,6 +12,7 @@
 *     12 OCT 2015 jcs  Build 10a:MDW_dNow(); MDW_Internal.h
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
+*     24 OCT 2022 jcs  Build 15: Unpacked mddFld_bytestream 
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -713,12 +710,12 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( i64, cp );
          break;
       case mddFld_real:
-         cp += Set( cp, v._real );
-         break;
-      case mddFld_bytestream:
          _COPY_SET( r.value, cp );
          *cp++ = r.hint;
          *cp++ = r.isBlank;
+         break;
+      case mddFld_bytestream:
+         cp += Set( cp, v._buf );
          break;
       case mddFld_unixTime:
          _COPY_SET( v._i64, cp );

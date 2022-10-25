@@ -15,6 +15,7 @@
 *     16 APR 2016 jcs  Build 11: _mdd_pAuth, etc.
 *     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
+*     24 OCT 2022 jcs  Build 15: bld.hpp
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -29,6 +30,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/types.h>
+#include <bld.hpp>
 
 /* Platform dependent */
 
