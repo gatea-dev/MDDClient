@@ -480,12 +480,12 @@ class MyVector : Vector
    ////////////////////////////////
    public override void OnData( double[] img )
    {
-      Console.WriteLine( Dump( true ) );
+      Console.Write( Dump( true ) );
    }
 
    public override void OnData( VectorValue[] upd )
    {
-      Console.WriteLine( Dump( upd, true ) );
+      Console.Write( Dump( upd, true ) );
    }
 
    public override void OnError( string err )
