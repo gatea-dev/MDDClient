@@ -19,6 +19,3 @@ librtEdge | Provides Access to all the MD-Direct Features
 - Available on WIN64 in C, C++, .NET
 - Available on Linux64 in C, C++
 
-### Client pub/sub API:
-- C, C++, .NET
-- Win64 / Linux64
