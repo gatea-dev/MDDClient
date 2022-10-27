@@ -18,7 +18,7 @@
 *      3 DEC 2020 jcs  Build 47: PumpTapeSliceSlice(); PumpFullTape()
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
-*     22 OCT 2022 jcs  Build 58: ByteStream.Service()
+*     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -27,8 +27,6 @@
 #include <hpp/rtEdge.hpp>
 #include <map>
 
-#define _MAX_CHAN 100 // Max 100 connections per instance
-
 namespace RTEDGE
 {
 
@@ -36,16 +34,19 @@ namespace RTEDGE
 
 class Message;
 class Schema;
-class SubChannel;  // Forward declaration for bSubInit_ / schans_
+class SubChannel;
+
+#ifndef DOXYGEN_OMIT
+static CxtMap<SubChannel *> _subChans;
 
 static const char *_tape_all = "*";
 static const char *_dflt_fld = "6";
-static bool        bSubInit_ = false;
-static SubChannel *schans_[_MAX_CHAN];
 
 typedef hash_map<int, ByteStream *> ByteStreams;
 typedef hash_map<int, Chain *>      Chains;
 typedef hash_set<int>               SymLists;
+
+#endif // DOXYGEN_OMIT
 
 ////////////////////////////////////////////////
 //
@@ -109,15 +110,6 @@ public:
 	   _chainDb(),
 	   _symListDb()
 	{
-	   int i;
-
-	   // Initialize channel lookup (ONCE)
-
-	   for ( i=0; !bSubInit_ && i<_MAX_CHAN; schans_[i++]=(SubChannel *)0 );
-	   bSubInit_ = true;
-
-	   // Initialize us
-
 	   SetCache( false );
 	   ::memset( &_attr, 0, sizeof( _attr ) );
 	   ::memset( &_qryAll, 0, sizeof( _qryAll ) );
@@ -241,8 +233,8 @@ public:
 	   _attr._dataCbk   = _dataCbk;
 	   _attr._schemaCbk = _schemaCbk;
 	   _cxt             = ::rtEdge_Initialize( _attr );
-	   schans_[_cxt]    = this;
 	   _msg             = new Message( _cxt );
+	   _subChans.Add( _cxt, this );
 	   if ( IsCache() ) {
 	      ::rtEdge_ioctl( _cxt, ioctl_enableCache, (void *)_bCache );
 	      _msgQ = new Message( _cxt );
@@ -302,8 +294,8 @@ private:
 	   _attr._dataCbk   = _dataCbk;
 	   _attr._schemaCbk = _schemaCbk;
 	   _cxt             = ::rtEdge_Initialize( _attr );
-	   schans_[_cxt]    = this;
 	   _msg             = new Message( _cxt );
+	   _subChans.Add( _cxt, this );
 	   SetIdleCallback( _bIdleCbk );
 	   SetTapeDirection( _bTapeDir );
 	   return ::rtEdge_Start( _cxt );
@@ -552,8 +544,7 @@ public:
 	   StopTape();
 	   _bStrDb.clear();
 	   _chainDb.clear();
-	   if ( _cxt )
-	      schans_[_cxt] = (SubChannel *)0;
+	   _subChans.Remove( _cxt );
 	   Channel::Stop();
 	   if ( _msg )
 	      delete _msg;
@@ -1171,7 +1162,7 @@ private:
 	{
 	   SubChannel *us;
 
-	   if ( (us=schans_[cxt]) )
+	   if ( (us=_subChans.Get( cxt )) )
 	      us->OnConnect( msg, ( state == edg_up ) );
 	}
 
@@ -1181,7 +1172,7 @@ private:
 	{
 	   SubChannel *us;
 
-	   if ( (us=schans_[cxt]) )
+	   if ( (us=_subChans.Get( cxt )) )
 	      us->OnService( pSvc, ( state == edg_up ) );
 	} 
 
@@ -1192,7 +1183,7 @@ private:
 
 	   // ( rtEdgeData._ty ==0 ) implies OnIdle()
 
-	   if ( (us=schans_[cxt]) ) {
+	   if ( (us=_subChans.Get( cxt )) ) {
 	      ty = (int)d._ty;
 	      if ( !ty )
 	         us->OnIdle();
@@ -1205,7 +1196,7 @@ private:
 	{
 	   SubChannel *us;
 
-	   if ( (us=schans_[cxt]) )
+	   if ( (us=_subChans.Get( cxt )) )
 	      us->_OnSchema( d );
 	}
 

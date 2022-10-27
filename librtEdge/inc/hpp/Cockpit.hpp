@@ -6,24 +6,24 @@
 *  REVISION HISTORY:
 *     24 AUG 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: protected, not private
+*     26 OCT 2022 jcs  Build 58: CxtMap
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Cockpit_H
 #define __RTEDGE_Cockpit_H
 #include <hpp/rtEdge.hpp>
-
-#define _MAX_CHAN 100 // Max 100 connections per instance
 
 namespace RTEDGE
 {
 
 // Forward declarations
 
-class Cockpit;  // Forward declaration for bPitInit_ / cchans_
+class Cockpit;
 
-static bool     bPitInit_ = false;
-static Cockpit *cchans_[_MAX_CHAN];
+#ifndef DOXYGEN_OMIT
+static CxtMap<Cockpit *> _cockpits;
+#endif // DOXYGEN_OMIT
 
 
 ////////////////////////////////////////////////
@@ -284,11 +284,6 @@ public:
 	   _cxt( (Cockpit_Context)0 ),
 	   _bIdleCbk( false )
 	{
-	   // Initialize channel lookup (ONCE)
-
-	   for ( int i=0; !bPitInit_ && i<_MAX_CHAN; cchans_[i++]=(Cockpit *)0 );
-	   bPitInit_ = true;
-
 	   // Initialize us
 
 	   ::memset( &_attr, 0, sizeof( _attr ) );
@@ -388,8 +383,8 @@ public:
 	   _attr._connCbk   = _connCbk;
 	   _attr._dataCbk   = _dataCbk;
 	   _cxt             = ::Cockpit_Initialize( _attr );
-	   cchans_[_cxt]    = this;
 //	   _msg             = new Message( _cxt );
+	   _cockpits.Add( _cxt, this );
 	   SetIdleCallback( _bIdleCbk );
 	   return ::Cockpit_Start( _cxt );
 	}
@@ -403,7 +398,7 @@ public:
 	{
 	   if ( _cxt )
 	      ::Cockpit_Destroy( _cxt );
-	   cchans_[_cxt] = (Cockpit *)0;
+	   _cockpits.Remove( _cxt );
 	   _cxt = (Cockpit_Context)0;
 	}
 
@@ -488,7 +483,7 @@ protected:
 	{
 	   Cockpit *us;
 
-	   if ( (us=cchans_[cxt]) )
+	   if ( (us=_cockpits.Get( cxt )) )
 	      us->OnConnect( msg, ( state == edg_up ) );
 	}
 
@@ -499,7 +494,7 @@ protected:
 
 	   // ( CockpitData._value._name  == 0 ) implies OnIdle()
 
-	   if ( (us=cchans_[cxt]) ) {
+	   if ( (us=_cockpits.Get( cxt )) ) {
 	      if ( !d._value._name )
 	         us->OnIdle();
 	      else if ( !us->_OnData( msg ) )

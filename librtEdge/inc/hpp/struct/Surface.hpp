@@ -111,7 +111,10 @@ public:
 	      _iSurf( iSurf ),
 	      _Width( Width ),
 	      _surface()
-	   { ; }
+	   {
+	      if ( Width )
+	         SetNumCol( Width );
+	   }
 
 	   ////////////////////////////////////
 	   // Access
@@ -138,6 +141,7 @@ public:
 
 	      // Chop up img into _Width rows
 
+	      _Width = GetNumCol();
 	      sdb.clear();
 	      for ( size_t i=0; i<img.size(); i++ ) {
 	         if ( i && !(i%_Width) ) {
@@ -199,13 +203,13 @@ public:
 	 *
 	 * \param svc - Service supplying this Surface if Subscribe()
 	 * \param tkr - Published name of this Surface
-	 * \param Width - Surface Width (columns)
+	 * \param Width - Surface Width (cols); 0 to 'learn' from Subscription Stream
 	 * \param precision - Sig Fig; 0 to 'learn' from Subscription Stream
 	 */
 	Surface( const char *svc, 
 	         const char *tkr, 
-	         int         Width,
-	         int         precision=0 ) :
+	         int         Width     = 0,
+	         int         precision = 0 ) :
 	   _vec( *this, svc, tkr, Width, precision ),
 	   _bImg( true )
 	{ ; }
@@ -356,15 +360,47 @@ public:
 	// Debugging
 	////////////////////////////////////
 	/**
-	 * \brief Dump Surface contents in formatted string
+	 * \brief Dump Surface contents in formatted string, one row a a time
 	 *
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Surface contents as formatted string
 	 */
 	string Dump( bool bPage=true )
-	{
-	   return _vec.Dump( bPage );
-	}
+	{    
+	   SurfaceRows &sdb = _vec.surface();
+	   char        *cp, bp[K], fmt[K];
+	   size_t       np, nr, nc;
+	   string       s;
+
+	   sprintf( fmt, "%%.%df,", _vec.Precision() );
+	   nr = sdb.size();
+	   np = 0;
+	   for ( size_t r=0; r<nr; np+=sdb[r++].size() );
+	   cp  = bp;
+	   cp += sprintf( cp, "[%04d vals; %02d rows]\n", (int)np, (int)nr );
+	   for ( size_t r=0; r<nr; r++ ) {
+	      SurfaceRow &row = sdb[r];
+
+	      nc  = row.size();
+	      cp += sprintf( cp, "[%d] ", (int)r );
+	      for ( size_t c=0; c<nc; c++ ) {
+	         cp += sprintf( cp, fmt, row[c] );
+	         if ( cp-bp >= 76 ) {
+	            cp += sprintf( cp, "\n" );
+	            s  += bp;
+	            cp  = bp;
+	            *cp = '\0';
+	         }
+	      }    
+	      cp += sprintf( cp, "\n" );
+	      s  += bp;
+	      cp  = bp;
+	      *cp = '\0';
+	   }    
+	   if ( cp-bp )
+	      s  += bp;
+	   return string( s ); 
+	}    
 
 	/**
 	 * \brief Dump Surface Update contents in formatted string
@@ -377,15 +413,30 @@ public:
 	{
 	   VectorUpdate vdb;
 	   SurfaceValue vs;
-	   VectorValue  vv;
+	   char        *cp, bp[K], fmt[K];
+	   size_t       i, n;
+	   string       s;
 
-	   for ( size_t i=0; i<upd.size(); i++ ) {
-	      vs           = upd[i];
-	      vv._position = ( vs._row * _vec.Width() ) + vs._col; 
-	      vv._value    = vs._value; 
-	      vdb.push_back( vv );
+	   sprintf( fmt, "%%.%df,", _vec.Precision() );
+	   n   = upd.size();
+	   cp  = bp;
+	   cp += sprintf( cp, "[%04d values] ", (int)n );
+	   for ( i=0; i<n; i++ ) {
+	      vs  = upd[i];
+	      cp += sprintf( cp, "(%d,%d)=", vs._row, vs._col );
+	      cp += sprintf( cp, fmt, vs._value );
+	      if ( ( cp-bp ) >= 76 ) {
+	         cp += sprintf( cp, "\n" );
+	         s  += bp;
+	         cp  = bp;
+	         *cp = '\0';
+	      }    
+	   }    
+	   if ( cp-bp ) {
+	      cp += sprintf( cp, "\n" );
+	      s  += bp;
 	   }
-	   return _vec.Dump( vdb, bPage );
+	   return string( s ); 
 	}
 
 	////////////////////////////////////

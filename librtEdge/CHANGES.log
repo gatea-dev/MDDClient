@@ -23,9 +23,7 @@ Known Bugs
 
 Features To Add
 ---------------
-1) Vector atop ByteStream
-
-2) LVCAdmin.AddTickers( service, ticker [, FieldList ] )
+ * -# Surface.hpp
 
 */
 
@@ -45,9 +43,12 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 58 22-10-xx
+ * ### Build 59 22-10-xx
  *
- * -# Surface.hpp
+ * -# Crash in inc/hpp/*.hpp : Replace _MAX_CHAN array w/ hash_map : DUH!!  
+ * 
+ * 
+ * ### Build 58 22-10-25
  *
  * -# Vector.hpp
  *    - ByteStream.SetSnapshot()
@@ -59,6 +60,8 @@ Features To Add
  * -# CLI : cli::array<> so we can use namespace std in C/C++
  *
  * -# CLI : rtEdgeSubscriber default IsBinary()
+ * 
+ * -# Crash in inc/hpp/*.hpp : Replace _MAX_CHAN array w/ hash_map : DUH!!  
  * 
  * 
  * ### Build 57 22-10-14

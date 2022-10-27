@@ -17,6 +17,7 @@
 *     29 APR 2020 jcs  Build 43: OnOpenBDS()
 *     26 JUN 2020 jcs  Build 44: De-lint
 *     29 MAR 2022 jcs  Build 52: _bUnPacked
+*     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -29,11 +30,13 @@
 namespace RTEDGE
 {
 
-class PubChannel;  // Forward declaration for bInit_ / pchans_
+class PubChannel;
 class Update;
 
-static bool        bPubInit_ = false;
-static PubChannel *pchans_[_MAX_CHAN];
+#ifndef DOXYGEN_OMIT
+static CxtMap<PubChannel *> _pubChans;
+#endif // DOXYGEN_OMIT
+
 
 ////////////////////////////////////////////////
 //
@@ -78,15 +81,6 @@ public:
 	   _hopCnt( 0 ),
 	   _upd( (Update *)0 )
 	{
-	   int i;
-
-	   // Initialize channel lookup (ONCE)
-
-	   for ( i=0; !bPubInit_ && i<_MAX_CHAN; pchans_[i++]=(PubChannel *)0 );
-	   bPubInit_ = true;
-
-	   // Initialize us
-
 	   SetCache( true );
 	   ::memset( &_attr, 0, sizeof( _attr ) );
 	}
@@ -224,7 +218,7 @@ public:
 	   _attr._symQryCbk       = _symQryCbk;
 	   _attr._imgQryCbk       = _imgQryCbk;
 	   _cxt                   = ::rtEdge_PubInit( _attr );
-	   pchans_[_cxt]          = this;
+	   _pubChans.Add( _cxt, this );
 	   ::rtEdge_PubInitSchema( _cxt, _schemaCbk );
 	   ::rtEdge_ioctl( _cxt, ioctl_binary, (void *)_bBinary );
 	   ::rtEdge_ioctl( _cxt, ioctl_setUserPubMsgTy, (void *)_bUserMsgTy );
@@ -285,7 +279,7 @@ public:
 	   _attr._symQryCbk       = _symQryCbk;
 	   _attr._imgQryCbk       = _imgQryCbk;
 	   _cxt                   = ::rtEdge_PubInit( _attr );
-	   pchans_[_cxt]          = this;
+	   _pubChans.Add( _cxt, this );
 	   ::rtEdge_PubInitSchema( _cxt, _schemaCbk );
 	   ::rtEdge_ioctl( _cxt, ioctl_binary, (void *)_bBinary );
 	   SetIdleCallback( _bIdleCbk );
@@ -652,8 +646,7 @@ public:
 	 */
 	virtual void Stop()
 	{
-	   if ( _cxt )
-	      pchans_[_cxt] = (PubChannel *)0;
+	   _pubChans.Remove( _cxt );
 	   Channel::Stop();
 	}
 
@@ -859,7 +852,7 @@ private:
 	{
 	   PubChannel *us;
 
-	   if ( (us=pchans_[cxt]) )
+	   if ( (us=_pubChans.Get( cxt )) )
 	      us->OnConnect( msg, ( state == edg_up ) );
 	}
 
@@ -872,7 +865,7 @@ private:
 
 	   // tkr == NULL implies OnIdle()
 
-	   if ( (us=pchans_[cxt]) ) {
+	   if ( (us=_pubChans.Get( cxt )) ) {
 	      if ( !tkr )
 	         us->OnIdle();
 	      else if ( ::strstr( tkr, _BDS_PFX ) == tkr ) {
@@ -889,7 +882,7 @@ private:
 	   PubChannel *us;
 	   const char *bds;
 
-	   if ( (us=pchans_[cxt]) ) {
+	   if ( (us=_pubChans.Get( cxt )) ) {
 	      if ( ::strstr( tkr, _BDS_PFX ) == tkr ) {
 	         bds = tkr + strlen( _BDS_PFX );
 	         us->OnCloseBDS( bds );
@@ -903,7 +896,7 @@ private:
 	{ 
 	   PubChannel *us;
 
-	   if ( (us=pchans_[cxt]) )
+	   if ( (us=_pubChans.Get( cxt )) )
 	      us->_OnSchema( d );
 	} 
 
@@ -913,7 +906,7 @@ private:
 	{
 	   PubChannel *us;
 
-	   if ( (us=pchans_[cxt]) )
+	   if ( (us=_pubChans.Get( cxt )) )
 	      us->OnPermQuery( tuple, reqID );
 	}
 
@@ -922,7 +915,7 @@ private:
 	{
 	   PubChannel *us;
 
-	   if ( (us=pchans_[cxt]) )
+	   if ( (us=_pubChans.Get( cxt )) )
 	      us->OnSymListQuery( nSym );
 	}
 
@@ -932,7 +925,7 @@ private:
 	{
 	   PubChannel *us;
 
-	   if ( (us=pchans_[cxt]) )
+	   if ( (us=_pubChans.Get( cxt )) )
 	      us->OnRefreshImage( tkr, StreamID );
 	}
 

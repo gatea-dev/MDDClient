@@ -27,6 +27,7 @@
 *     29 APR 2020 jcs  Build 43: hash_set
 *     26 APR 2022 jcs  Build 53: MDDirectStats
 *      1 SEP 2022 jcs  Build 56: TapeChannel
+*     24 OCT 2022 jcs  Build 58: No extern "C" wrapping librtEdge.h : Cockpit.hpp
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -198,9 +199,7 @@ using namespace std;
 //////////////////////
 // Run-time Stats
 //////////////////////
-extern "C" {
 #include <librtEdge.h>
-}
 
 class GLmdStatsHdr
 {

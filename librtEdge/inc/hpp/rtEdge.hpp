@@ -22,6 +22,7 @@
 *     26 APR 2022 jcs  Build 53: Channel.SetMDDirectMon()
 *     23 MAY 2022 jcs  Build 54: Channel.OnError()
 *      6 SEP 2022 jcs  Build 56: GetMaxTxBufSize()
+*     26 OCT 2022 jcs  Build 58: CxtMap
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -39,6 +40,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <hpp/Mutex.hpp>
 
 #undef K
 #if !defined(hash_map)
@@ -82,13 +84,14 @@ typedef std::vector<std::string> Strings;
 class rtDate
 {
 public:
-	/** \brief 4-digit year */
-	int _year;
-	/** \brief Month : { 0 = Jan, ..., 11 = Dec } */
-	int _month;
-	/** \brief Day of month : { 0 .. 31 } */
-	int _mday;
-};
+   /** \brief 4-digit year */
+   int _year;
+   /** \brief Month : { 0 = Jan, ..., 11 = Dec } */
+   int _month;
+   /** \brief Day of month : { 0 .. 31 } */
+   int _mday;
+
+};  // class rtDate
 
 
 ////////////////////////////////////////////////
@@ -104,15 +107,16 @@ public:
 class rtTime
 {
 public:
-	/** \brief Hour : { 0, ..., 23 } */
-	int _hour;
-	/** \brief Minute : { 0, ..., 60 } */
-	int _minute;
-	/** \brief Second : { 0, ..., 60 } */
-	int _second;
-	/** \brief MicroSecond : { 0, ..., 999999 } */
-	int _micros;
-};
+   /** \brief Hour : { 0, ..., 23 } */
+   int _hour;
+   /** \brief Minute : { 0, ..., 60 } */
+   int _minute;
+   /** \brief Second : { 0, ..., 60 } */
+   int _second;
+   /** \brief MicroSecond : { 0, ..., 999999 } */
+   int _micros;
+
+}; // class rtTime
 
 
 ////////////////////////////////////////////////
@@ -128,11 +132,12 @@ public:
 class rtDateTime
 {
 public:
-	/** \brief Date : YMD */
-	rtDate _date;
-	/** \brief Time : HMS.uuuuuu */
-	rtTime _time;
-};
+   /** \brief Date : YMD */
+   rtDate _date;
+   /** \brief Time : HMS.uuuuuu */
+   rtTime _time;
+
+}; // class rtDateTime
 
 
 
@@ -1073,6 +1078,73 @@ private:
 	}
 
 };  // class Channel
+
+#ifndef DOXYGEN_OMIT
+
+////////////////////////////////////////////////
+//
+//        c l a s s    C x t M a p
+//
+////////////////////////////////////////////////
+
+/**
+ * \class CxtMap
+ * \brief Templatized channel lookup by context (integer)
+ */
+
+#define _CxtMap         hash_map<int, T>
+#define _CxtMapIterator hash_map<int, T>::iterator
+
+template <class T>
+class CxtMap
+{
+private:
+	_CxtMap _DB;
+	Mutex   _mtx;
+
+	/////////////////////
+	// Constructor
+	/////////////////////
+public:
+	CxtMap<T>() :
+	  _DB(),
+	  _mtx()
+	{ ; }
+
+	/////////////////////
+	// Operations
+	/////////////////////
+public:
+	T Get( int cxt )
+	{    
+	   Locker                     lck( _mtx );
+	   typename _CxtMap::iterator it;
+	   T                          rc;  
+
+	   it = _DB.find( cxt );
+	   rc = ( it != _DB.end() ) ? (*it).second : (T)0;
+	   return rc;
+	}    
+
+	void Add( int cxt, T chan )
+	{    
+	   Locker  lck( _mtx );
+
+	   _DB[cxt] = chan;
+	}
+
+	void Remove( int cxt )
+	{
+	   Locker                     lck( _mtx );
+	   typename _CxtMap::iterator it;
+
+	   if ( (it=_DB.find( cxt )) != _DB.end() )
+	      _DB.erase( it );
+	}
+
+}; // class CxtMap<T>
+
+#endif // DOXYGEN_OMIT
 
 } // namespace RTEDGE
 

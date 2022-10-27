@@ -11,6 +11,7 @@
 *     17 MAR 2022 jcs  Build 51: AddTickers()
 *     26 APR 2022 jcs  Build 53: _dtdBDS
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
+*     26 OCT 2022 jcs  Build 58: CockpitMap
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -189,8 +190,8 @@ public:
 	   _attr._connCbk     = _connCbk;
 	   _attr._dataCbk     = _dataCbk;
 	   _cxt               = ::Cockpit_Initialize( _attr );
-	   cchans_[_cxt]      = this;
-//    _msg               = new Message( _cxt );
+//	   _msg               = new Message( _cxt );
+	   _cockpits.Add( _cxt, this );
 	   SetIdleCallback( _bIdleCbk );
 	   return ::Cockpit_Start( _cxt );
 	}

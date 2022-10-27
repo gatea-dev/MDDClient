@@ -62,6 +62,8 @@ typedef struct {
    int       _Precision; 
    /** \brief true for complete Vector Image; false for Updates ... */
    bool      _bImg;
+   /** \brief Row Width; _nCol == _nVal for Vector */
+   int       _nCol;
    /** \brief Number of values */
    int       _nVal;
    /*
@@ -270,6 +272,7 @@ public:
 	   _upds(),
 	   _vals(),
 	   _precision( 0 ),
+	   _NumCol( 0 ),
 	   _precIn( 0.0 ),
 	   _precOut( 0.0 ),
 	   _bImg( true )
@@ -282,6 +285,14 @@ public:
 	{
 	   _vals.clear();
 	}
+
+#ifndef DOXYGEN_OMIT
+protected:
+	int  GetNumCol()          { return _NumCol; }
+	void SetNumCol( int wid ) { _NumCol = wid; }
+
+#endif //  DOXYGEN_OMIT
+
 
 	////////////////////////////////////
 	// Access
@@ -305,6 +316,16 @@ public:
 	const char *Ticker()
 	{
 	   return _str.Ticker();
+	}
+
+	/**
+	 * \brief Value precision
+	 *
+	 * \return Value precision
+	 */
+	int Precision()
+	{
+	   return _precision;
 	}
 
 	/**
@@ -500,6 +521,7 @@ public:
 	   h->_Precision = _precision;
 	   h->_bImg      = bImg;
 	   h->_nVal      = (int)n;
+	   h->_nCol      = _NumCol ? _NumCol : n; 
 	   cp           += sizeof( *h );
 	   img           = (u_int64_t *)cp;
 	   upd           = (VecWireUpdVal *)cp;
@@ -697,11 +719,12 @@ private:
 
 	   // Header
 
-	   bp  = buf._data;
-	   sz  = buf._dLen;
-	   cp  = bp;
-	   h   = (VecWireHdr *)cp;
-	   nv  = h->_nVal;
+	   bp      = buf._data;
+	   sz      = buf._dLen;
+	   cp      = bp;
+	   h       = (VecWireHdr *)cp;
+	   nv      = h->_nVal;
+	   _NumCol = h->_nCol;
 assert( h->_MsgSz == sz );
 	   cp += sizeof( VecWireHdr );
 	   SetPrecision( h->_Precision );
@@ -776,6 +799,7 @@ private:
 	VectorUpdate _upds;
 	VectorImage  _vals;
 	int          _precision;
+	int          _NumCol;
 	double       _precIn;
 	double       _precOut;
 	bool         _bImg;
