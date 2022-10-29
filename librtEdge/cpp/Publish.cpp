@@ -11,6 +11,7 @@
 *     16 MAR 2022 jcs  Build 51: De-lint
 *     29 MAR 2022 jcs  Build 52: ::getenv( "__JD_UNPACKED" )
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
+*     29 OCT 2022 jcs  Build 60: AddVector()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -286,9 +287,10 @@ public:
       Update        &u = upd();
       rtDateTime     dtTm;
       bool           bImg;
-      int            fid;
+      int            i, fid;
       u_int64_t      i64;
       double         r64;
+      Doubles        vdb;
       struct timeval tv;
 
       bImg       = ( w._rtl == 1 );
@@ -314,6 +316,8 @@ public:
       u.AddField( -2147483647, "-2147483647" );
       u.AddField( 16260000, "16260000" );
       u.AddField( 536870911, "536870911" );
+      for ( i=0; i<10; vdb.push_back( ::drand48() * 100.0 ), i++ );
+      u.AddVector( 12312312, vdb );
       u.Publish();
       w._rtl += 1;
    }
@@ -517,6 +521,7 @@ int main( int argc, char **argv )
 
    MyChannel pub( svc, vecSz, vPrec );
 
+   ::srand48( pub.TimeSec() ); 
    s = "";
    if ( pChn && (chn=pub.MapFile( pChn ))._dLen ) {
       string tmp( chn._data, chn._dLen );

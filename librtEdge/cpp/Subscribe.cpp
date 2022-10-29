@@ -99,7 +99,7 @@ public:
    // Asynchronous Callbacks
    ////////////////////////////////
 public:
-   virtual void OnData( VectorImage &img )
+   virtual void OnData( Doubles &img )
    {
       string s = Dump();
 

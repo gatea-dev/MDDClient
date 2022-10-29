@@ -24,6 +24,7 @@
 *      5 MAY 2022 jcs  Build 53: StatMap; SetMDDirectMon() bug fix
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     10 JUN 2022 jcs  Build 55: Remap : Same address
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -1482,6 +1483,7 @@ double rtEdge_atof( rtFIELD f )
 {
    rtVALUE &v = f._val;
    rtBUF   &b = v._buf;
+   double  *dv;
 
    switch( f._type ) {
       case rtFld_string:
@@ -1508,6 +1510,10 @@ double rtEdge_atof( rtFIELD f )
       case rtFld_int8:
       case rtFld_real:
       case rtFld_bytestream:
+         break;
+      case rtFld_vector: // 1st element
+         dv = (double *)b._data;;
+         return ( b._dLen >= sizeof( double ) ) ? dv[0] : 0.0;
          break;
    }
    return 0.0;

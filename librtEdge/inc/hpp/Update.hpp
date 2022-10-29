@@ -16,6 +16,7 @@
 *     29 MAR 2022 jcs  Build 52: pub.IsUnPacked()
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     22 OCT 2022 jcs  Build 58: ByteStream.Ticker()
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -535,6 +536,27 @@ public:
 	   dst._dLen = src._dLen;
 	   _Add( f );
 	}
+
+	/**
+	 * \brief Add Vector field to update
+	 * 
+	 * \param fid - Field ID
+	 * \param vector - Vector array to add
+	 */
+	void AddVector( int fid, Doubles &vector )
+	{
+	   rtFIELD f;
+	   rtBUF  &dst = f._val._buf;
+
+	   // TODO : Array of Doubles at some point ...
+
+	   f._type   = rtFld_vector;
+	   f._fid    = fid;
+	   dst._data = (char *)vector.data();
+	   dst._dLen = (int)( vector.size() * sizeof( double ) );
+	   _Add( f );
+	}
+
 
 	////////////////////////////////////
 	// Mutator - Chain 

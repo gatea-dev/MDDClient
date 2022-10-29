@@ -12,6 +12,7 @@
 *     16 APR 2016 jcs  Build 11: mddMt_query is XML in Publish.BuildMsg()
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
+*     28 OCT 2022 jcs  Build 16: mddFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -77,6 +78,7 @@ assert( b._dLen != (u_int)-1 );
       switch( f._type ) {
          case mddFld_string:
          case mddFld_bytestream:
+         case mddFld_vector:
             fSz = gmax( K, b._dLen+K );
             break;
          default:
@@ -683,6 +685,7 @@ int Publish::_ASCII_BuildFld( char *bp, mddField f )
          cp += sprintf( cp, fmt, f._fid );
          break;
       case mddFld_bytestream:
+      case mddFld_vector:
          fmt = "ERROR : FID %d; BINARY channel only for mddFld_bytestream";
          cp += sprintf( cp, fmt, f._fid );
          break;

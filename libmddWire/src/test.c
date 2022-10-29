@@ -6,6 +6,7 @@
 *     18 SEP 2013 jcs  Created (from librtEdge).
 *     12 NOV 2014 jcs  Build  8: -Wall
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
+*     28 OCT 2022 jcs  Build 16: mddFld_vector / mddFld_surface
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -93,6 +94,7 @@ void ShowFieldList( mddFieldList d )
          case mddFld_int64:
          case mddFld_real:
          case mddFld_bytestream:
+         case mddFld_vector:
          case mddFld_unixTime:
             break;
       }

@@ -16,6 +16,7 @@
 *     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: bld.hpp
+*     28 OCT 2022 jcs  Build 16: mddFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -151,7 +152,9 @@ typedef enum {
    /** \brief Bytestream field; Value in mddValue::_buf */
    mddFld_bytestream,
    /** \brief Nanos since epoch; Value in mddValue::_i64 */
-   mddFld_unixTime
+   mddFld_unixTime,
+   /** \brief Vector of doubles; Value in mddValue::_buf; Num = mddBuf::_dLen / sizeof( double ) */
+   mddFld_vector,
 } mddFldType;
 
 /**
@@ -1042,6 +1045,18 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
          case mddFld_bytestream:                                    \
             strcpy( buf, "TBD" );                                   \
             break;                                                  \
+         case mddFld_vector:                                        \
+         {                                                          \
+            double *dv;                                             \
+            char   *vp;                                             \
+            size_t  i, nv;                                          \
+                                                                    \
+            vp = buf;                                               \
+            dv = (double *)b._data;                                 \
+            nv = b._dLen / sizeof( double );                        \
+            for ( i=0; i<nv; vp+=sprintf( vp, "%.6f,", dv[i++] ) ); \
+            break;                                                  \
+         }                                                          \
          case mddFld_unixTime:                                      \
             tUnx  = v._i64 / _NANO;                                 \
             tNano = v._i64 % _NANO;                                 \

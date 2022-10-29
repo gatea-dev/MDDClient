@@ -5,12 +5,14 @@
 *
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
+*     29 OCT 2022 jcs  Build 60: Doubles.
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Vector_H
 #define __RTEDGE_Vector_H
 #include <assert.h>
+#include <hpp/rtEdge.hpp>
 #include <hpp/ByteStream.hpp>
 
 using namespace std;
@@ -102,7 +104,6 @@ public:
 
 }; // class VectorValue
 
-typedef vector<double>      VectorImage;
 typedef vector<VectorValue> VectorUpdate;
 
 #ifndef DOXYGEN_OMIT
@@ -130,7 +131,7 @@ public:
  * \brief A one-dimensional Vector of doubles : Pub or Sub
  *
  * When consuming you receive asynchronous notifications as follows:
- * + OnData( VectorImage & ) - Complete Vector Update
+ * + OnData( Doubles & ) - Complete Vector Update
  * + OnData( VectorUpdate & ) - Partial Vector Update
  * + OnError() - Error
  *
@@ -332,9 +333,9 @@ public:
 	 * \brief Return Vector Values
 	 *
 	 * \param img - Resultant Vector to populate
-	 * \return VectorImage of all values
+	 * \return Doubles of all values
 	 */
-	VectorImage &Get( VectorImage &img )
+	Doubles &Get( Doubles &img )
 	{
 	   img.clear();
 	   img = _vals;
@@ -351,7 +352,7 @@ public:
 	 * \param img - vector of values to load
 	 * \return Number loaded
 	 */
-	size_t Update( VectorImage &img )
+	size_t Update( Doubles &img )
 	{
 	   size_t i, n;
 
@@ -396,9 +397,9 @@ public:
 	 */
 	size_t ShiftLeft( size_t num, bool bRollToEnd=true )
 	{
-	   VectorImage tmp;
-	   size_t      i, n;
-	   double      dz;
+	   Doubles tmp;
+	   size_t  i, n;
+	   double  dz;
 
 	   // Up to _vals.size()
 
@@ -425,9 +426,9 @@ public:
 	 */
 	size_t ShiftRight( size_t num, bool bRollToFront=true )
 	{
-	   VectorImage tmp;
-	   size_t      i, n;
-	   double      dz;
+	   Doubles tmp;
+	   size_t  i, n;
+	   double  dz;
 
 	   // Up to _vals.size()
 
@@ -478,9 +479,9 @@ public:
 	 *
 	 * Vector State | Publish | Consumer Callback
 	 * --- | --- | ---
-	 * Unpublished | VectorImage | OnData( VectorImage & )
+	 * Unpublished | Doubles | OnData( Doubles & )
 	 * Published | VectorUpdate | OnData( VectorUpdate & )
-	 * Comletely Updated | VectorImage | OnData( VectorImage & )
+	 * Comletely Updated | Doubles | OnData( Doubles & )
 	 * Not Updated | None | None
 	 *
 	 * \param u - Update publishing object
@@ -640,7 +641,7 @@ public:
 	 *
 	 * \param img - Initial Image
 	 */
-	virtual void OnData( VectorImage &img )
+	virtual void OnData( Doubles &img )
 	{ ; }
 
 	/**
@@ -710,7 +711,7 @@ private:
 	   char          *bp, *cp;
 	   VecWireHdr    *h;
 	   VecWireUpdVal *udb;
-	   VectorImage    img;
+	   Doubles        img;
 	   VectorUpdate   upd;
 	   VectorValue    v;
 	   u_int64_t      sz, *vdb;
@@ -797,7 +798,7 @@ private:
 private:
 	VectorStream _str;
 	VectorUpdate _upds;
-	VectorImage  _vals;
+	Doubles      _vals;
 	int          _precision;
 	int          _NumCol;
 	double       _precIn;

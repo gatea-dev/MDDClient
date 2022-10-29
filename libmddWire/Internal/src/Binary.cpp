@@ -13,6 +13,7 @@
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: Unpacked mddFld_bytestream 
+*     28 OCT 2022 jcs  Build 16: mddFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -251,6 +252,10 @@ int Binary::Get( u_char *bp, mddField &f )
       case mddFld_bytestream:
          cp += Get( cp, v._buf );
          break;
+      case mddFld_vector:
+         cp += Get( cp, v._buf );
+         _GetVector( v._buf );
+         break;
       case mddFld_unixTime:
          cp += Get( cp, v._i64, bUnpack );
          break;
@@ -471,6 +476,9 @@ int Binary::Set( u_char *bp, mddField f )
       case mddFld_bytestream:
          cp += Set( cp, v._buf );
          break;
+      case mddFld_vector:
+         cp += Set( cp, _SetVector( v._buf ) );
+         break;
       case mddFld_unixTime:
          cp  += _u_pack( cp, v._i64, bPack );
          break;
@@ -641,6 +649,10 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
       case mddFld_bytestream:
          cp += Get( cp, v._buf );
          break;
+      case mddFld_vector:
+         cp += Get( cp, v._buf );
+         _GetVector( v._buf );
+         break;
       case mddFld_unixTime:
          _COPY_GET( v._i64, cp );
          break;
@@ -716,6 +728,9 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          break;
       case mddFld_bytestream:
          cp += Set( cp, v._buf );
+         break;
+      case mddFld_vector:
+         cp += Set( cp, _SetVector( v._buf ) );
          break;
       case mddFld_unixTime:
          _COPY_SET( v._i64, cp );
@@ -888,6 +903,41 @@ int Binary::_u_pack( u_char *bp, u_int64_t i64, bool &bPack )
       bPack = false;
    }
    return sz;
+}
+
+mddBuf Binary::_GetVector( mddBuf &b )
+{
+   u_int64_t *i64, tmp;
+   double    *dv;
+   int        i, nv;
+
+   // u_int64_t -> double
+
+   i64 = (u_int64_t *)b._data;
+   dv  = (double *)b._data;
+   nv  = _VectorSize( b );
+   for ( i=0; i<nv; dv[i] = (double)( _d_div * (tmp=i64[i]) ), i++ );
+   return b;
+}
+
+mddBuf Binary::_SetVector( mddBuf &b )
+{
+   u_int64_t *i64;
+   double    *dv, tmp;
+   int        i, nv;
+
+   // double -> u_int64_t
+
+   i64 = (u_int64_t *)b._data;
+   dv  = (double *)b._data;
+   nv  = _VectorSize( b );
+   for ( i=0; i<nv; i64[i] = (u_int64_t)( (tmp=dv[i]) * _d_mul ), i++ );
+   return b;
+}
+
+int Binary::_VectorSize( mddBuf &b )
+{
+   return  b._dLen / sizeof( u_int64_t );
 }
 
 #ifdef TODO

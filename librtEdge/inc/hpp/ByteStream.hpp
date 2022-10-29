@@ -10,6 +10,7 @@
 *     28 JUL 2020 jcs  Build 44: edg_streamDone
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     22 OCT 2022 jcs  Build 58: IsSnapshot()
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -440,6 +441,7 @@ private:
 	         case rtFld_int64:
 	         case rtFld_real:
 	         case rtFld_unixTime:
+	         case rtFld_vector:
 	            break;
 	         case rtFld_bytestream:
 	            fid = fld->Fid();

@@ -31,6 +31,13 @@ Features To Add
  * ## Change Log
  * 
  * 
+ * ### Build 16 22-10-29
+ * 
+ * -# mddFld_vector
+ *
+ * -# Huge FID Range : hash_map, not _ddb; No more MDDWIRE_PRIVATE.Schema._ddb
+ *
+ * 
  * ### Build 15 22-10-24
  * 
  * -# inc/bld.hpp

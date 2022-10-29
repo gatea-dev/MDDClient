@@ -10,6 +10,7 @@
 *     12 NOV 2014 jcs  Build 28: Record._fl
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -92,6 +93,7 @@ void Field::Cache( rtFIELD f )
          break;
       case rtFld_string:
       case rtFld_bytestream:
+      case rtFld_vector:
       {
          _buf._dLen = gmax( b._dLen, 0 );
          if ( _buf._dLen >= _buf._nAlloc ) {

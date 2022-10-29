@@ -10,6 +10,7 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
+*     28 OCT 2022 jcs  Build 16: _GetVector() / _SetVector()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -107,6 +108,9 @@ private:
 	int    _u_unpack( u_char *, u_int64_t & /* , bool */ );
 	int    _u_pack( u_char *, u_int );
 	int    _u_pack( u_char *, u_int64_t, bool & );
+	mddBuf _GetVector( mddBuf & );
+	mddBuf _SetVector( mddBuf & );
+	int    _VectorSize( mddBuf & );
 
 }; // class Binary
 

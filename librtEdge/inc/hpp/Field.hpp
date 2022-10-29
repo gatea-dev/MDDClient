@@ -18,6 +18,7 @@
 *     30 MAR 2022 jcs  Build 52: GetAsDateTime()
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -165,6 +166,7 @@ public:
 	   _bLVC( false ),
 	   _cxt( (rtEdge_Context)0 ),
 	   _bStr(),
+	   _vec(),
 	   _schemaType( rtFld_undef ),
 	   _dump(),
 	   _s()
@@ -368,6 +370,7 @@ public:
 	      case rtFld_int64:
 	      case rtFld_real:
 	      case rtFld_bytestream:
+	      case rtFld_vector:
 	      case rtFld_unixTime:
 	         break;
 	   }
@@ -423,6 +426,9 @@ public:
 	      case rtFld_bytestream:
 	         i8 = (u_char)atoi( GetAsString() );
 	         break;
+	      case rtFld_vector: // 1st element
+	         i8 = (u_char)GetAsInt64();
+	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
 	      case rtFld_time:
@@ -457,6 +463,9 @@ public:
 	      case rtFld_string:
 	      case rtFld_bytestream:
 	         i16 = (u_short)atoi( GetAsString() );
+	         break;
+	      case rtFld_vector: // 1st element
+	         i16 = (u_short)GetAsInt64();;
 	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
@@ -493,6 +502,9 @@ public:
 	      case rtFld_bytestream:
 	         i32 = atoi( GetAsString() );
 	         break;
+	      case rtFld_vector: // 1st element
+	         i32 = (int)GetAsInt64();;
+	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
 	      case rtFld_time:
@@ -510,7 +522,7 @@ public:
 	 */
 	u_int64_t GetAsInt64()
 	{
-	   rtVALUE  &v = _fld._val;
+	   rtVALUE  &v  = _fld._val;
 	   rtFldType ty;
 	   u_int64_t i64;
 
@@ -527,6 +539,9 @@ public:
 	      case rtFld_string:
 	      case rtFld_bytestream:
 	         i64 = atoi( GetAsString() );
+	         break;
+	      case rtFld_vector: // 1st element
+	         i64 = (u_int64_t)GetAsDouble();
 	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
@@ -563,6 +578,9 @@ public:
 	      case rtFld_bytestream:
 	         r32 = atof( GetAsString() );
 	         break;
+	      case rtFld_vector:
+	         r32 = GetAsDouble();
+	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
 	      case rtFld_time:
@@ -580,7 +598,9 @@ public:
 	 */
 	double GetAsDouble()
 	{
-	   rtVALUE  &v = _fld._val;
+	   rtVALUE  &v  = _fld._val;
+	   rtBUF    &b  = v._buf;
+	   double   *dv = (double *)b._data;
 	   rtFldType ty;
 	   double    r64;
 
@@ -597,6 +617,9 @@ public:
 	      case rtFld_string:
 	      case rtFld_bytestream:
 	         r64 = _str2dbl( GetAsString() );
+	         break;
+	      case rtFld_vector: // 1st element
+	         r64 = ( b._dLen >= sizeof( double ) ) ? dv[0] : 0.0;
 	         break;
 	      case rtFld_undef:
 	      case rtFld_date:
@@ -708,8 +731,8 @@ public:
 	   rtBUF      &b = v._buf;
 	   rtFldType   ty;
 	   mddField    f;
-	   int         sz;
-	   char       *cp, buf[K];
+	   int         sz, nv;
+	   char       *cp, buf[K], *bp;
 	   const char *rtn;
 
 	   rtn = "Wrong field type";
@@ -744,6 +767,16 @@ public:
 	         _s  = _StripTrailing0( buf );
 	         rtn = _s.data();
 	         break;
+	      case rtFld_vector:
+	      {
+	         nv  = gmax( 1, b._dLen / sizeof( double ) );
+	         bp  = new char[nv*32]; // %.6f
+	         mddWire_dumpField( f, bp );
+	         _s  = _StripTrailing0( buf );
+	         rtn = _s.data();
+	         delete[] bp;
+	         break;
+	      }
 	   }
 	   return rtn;
 	}
@@ -764,6 +797,7 @@ public:
 	   switch( ty ) {
 	      case rtFld_string:
 	      case rtFld_bytestream:
+	      case rtFld_vector:
 	         _bStr.Set( b );
 	         break;
 	      case rtFld_undef:
@@ -781,6 +815,27 @@ public:
 	         break;
 	   }
 	   return _bStr;
+	}
+
+	/**
+	 * \brief Returns field value as Vector
+	 *
+	 * \return Field Value as Vector
+	 */
+	Doubles &GetAsVector()
+	{
+	   rtBUF    &b  = _fld._val._buf;
+	   double   *dv;
+	   rtFldType ty;
+	   int       i, nv;
+
+	   _vec.clear();
+	   if ( (ty=TypeFromMsg()) == rtFld_vector ) {
+	      dv = (double *)b._data;
+	      nv = b._dLen / sizeof( double );
+	      for ( i=0; i<nv; _vec.push_back( dv[i] ), i++ );
+	   }
+	   return _vec;
 	}
 
 	/**
@@ -1034,6 +1089,7 @@ private:
 	rtEdge_Context _cxt;
 	rtFIELD        _fld;
 	ByteStreamFld  _bStr;
+	Doubles        _vec;
 	rtFldType      _schemaType;
 	std::string    _dump;
 	std::string    _s;

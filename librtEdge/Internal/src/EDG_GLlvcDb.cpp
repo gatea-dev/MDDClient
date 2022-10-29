@@ -19,6 +19,7 @@
 *     20 JAN 2018 jcs  Build 39: mtx()
 *     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive; rtFld_unixTime
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
+*     29 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -397,6 +398,7 @@ rtFIELD GLlvcDb::GetField( GLlvcFldHdr &h,
             // Not supported
             break;
          case mddFld_string:
+         case mddFld_vector:
             bStr = True;
             break;
          case mddFld_int32:

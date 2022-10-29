@@ -10,8 +10,9 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
 *     19 MAY 2022 jcs  Build 14: mddFldDef._i32 = _maxLen
+*     29 OCT 2022 jcs  Build 16: hash_map; No mo _ddb
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 
@@ -28,7 +29,6 @@ using namespace MDDWIRE_PRIVATE;
 // Constructor / Destructor
 ////////////////////////////////////////////
 Schema::Schema( const char *pDef ) :
-   _ddb( (mddFldDef **)0 ),
    _minFid( INFINITEs ),
    _maxFid( 0 ),
    _gfifId(),
@@ -70,24 +70,13 @@ Schema::Schema( const char *pDef ) :
 
    FldDefByIdMap           &vdb = _gfifId;
    FldDefByIdMap::iterator  it;
-   int                      rng, sz, rFid;
 
    ::memset( &_fl, 0, sizeof( _fl ) );
-   rng = ( _maxFid - _minFid );
-   if ( rng <= 0 )
-      return;
    _fl._nFld = Size();
    _fl._flds = new mddField[Size()];
-   rng += 1;
-   sz   = rng * sizeof( mddFldDef * );
-   rp   = new char[sz];
-   _ddb = (mddFldDef **)rp;
-   ::memset( rp, 0, sz );
    for ( i=0,it=vdb.begin(); it!=vdb.end(); i++,it++ ) {
       fid          = (*it).first;
-      rFid         = fid - _minFid;
       def          = (*it).second;
-      _ddb[rFid]   = def;
       _fl._flds[i] = def->_mdd;
    }
 }
@@ -96,13 +85,10 @@ Schema::~Schema()
 {
    FldDefByIdMap          &v = _gfifId;
    FldDefByIdMap::iterator ft;
-   char                   *bp;
 
    for ( ft=v.begin(); ft!=v.end(); delete (*ft).second,ft++ );
    _gfifId.clear();
    _gfifStr.clear();
-   if ( (bp=(char *)_ddb) )
-      delete[] bp;
    if ( _fl._flds )
       delete[] _fl._flds; 
 }
@@ -127,15 +113,11 @@ mddFldDef *Schema::GetDef( int fid )
    FldDefByIdMap          &v = _gfifId;
    FldDefByIdMap::iterator it;
    mddFldDef              *def;
-   int                     rFid;
 
    // Quickest : Array; Next quickest : map
 
-   def  = (mddFldDef *)0;
-   rFid = fid - _minFid;
-   if ( _ddb && InRange( _minFid, fid, _maxFid ) )
-      def = _ddb[rFid];
-   else if ( (it=v.find( fid )) != v.end() )
+   def = (mddFldDef *)0;
+   if ( (it=v.find( fid )) != v.end() )
       def = (*it).second;
    return def;
 }

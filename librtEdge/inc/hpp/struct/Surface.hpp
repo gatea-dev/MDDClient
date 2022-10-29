@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
+*     29 OCT 2022 jcs  Build 60: Doubles.
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -41,12 +42,10 @@ public:
 }; // class SurfaceValue
 
 
-/** \brief One row of a surface */
-typedef vector<double>           SurfaceRow;
 /** \brief Surface = List or SurfaceRow's */
-typedef vector< vector<double> > SurfaceRows;
+typedef vector< Doubles >    SurfaceRows;
 /** \brief Surface Update */
-typedef vector<SurfaceValue>     SurfaceUpdate;
+typedef vector<SurfaceValue> SurfaceUpdate;
 
 #ifndef DOXYGEN_OMIT
 
@@ -134,10 +133,10 @@ public:
 	   // Vector Interface
 	   ////////////////////////////////////
 	public:
-	   virtual void OnData( VectorImage &img )
+	   virtual void OnData( Doubles &img )
 	   {
 	      SurfaceRows &sdb = _surface;
-	      SurfaceRow   row;
+	      Doubles     row;
 
 	      // Chop up img into _Width rows
 
@@ -145,13 +144,13 @@ public:
 	      sdb.clear();
 	      for ( size_t i=0; i<img.size(); i++ ) {
 	         if ( i && !(i%_Width) ) {
-	            sdb.push_back( SurfaceRow( row ) );
+	            sdb.push_back( Doubles( row ) );
 	            row.clear();
 	         }
 	         row.push_back( img[i] );
 	      }
 	      if ( row.size() )
-	         sdb.push_back( SurfaceRow( row ) );
+	         sdb.push_back( Doubles( row ) );
 	      _iSurf.OnSurface( sdb );
 	   }
 
@@ -262,7 +261,7 @@ public:
 	 * \param img - vector of values to load
 	 * \return Number loaded
 	 */
-	size_t UpdateRow( VectorImage &img )
+	size_t UpdateRow( Doubles &img )
 	{
 	   size_t i, n;
 
@@ -379,7 +378,7 @@ public:
 	   cp  = bp;
 	   cp += sprintf( cp, "[%04d vals; %02d rows]\n", (int)np, (int)nr );
 	   for ( size_t r=0; r<nr; r++ ) {
-	      SurfaceRow &row = sdb[r];
+	      Doubles &row = sdb[r];
 
 	      nc  = row.size();
 	      cp += sprintf( cp, "[%d] ", (int)r );

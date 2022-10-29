@@ -8,8 +8,9 @@
 *     17 JAN 2015 jcs  Build  9: Kill 4244 / 4267 on WIN32
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 11: MDW_dNow(); MDW_SLEEP(); MDW_GLxml.h 
+*     29 OCT 2022 jcs  Build 16: hash_map
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #ifndef __MDW_INTERNAL_H
 #define __MDW_INTERNAL_H
@@ -65,6 +66,22 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#undef K
+#if !defined(hash_map)
+#if !defined(_GLIBCXX_UNORDERED_MAP) && !defined(WIN32)
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
+#define hash_map std::tr1::unordered_map
+#define hash_set std::tr1::unordered_set
+#else
+#include <unordered_map>
+#include <unordered_set>
+#define hash_map std::unordered_map
+#define hash_set std::unordered_set
+#endif // !defined(_GLIBCXX_UNORDERED_MAP)
+#endif // !defined(hash_map)
+#define K 1024
 
 #define u_int                unsigned int
 #define u_long               unsigned long
