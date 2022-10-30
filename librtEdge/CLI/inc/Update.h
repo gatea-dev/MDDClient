@@ -10,6 +10,7 @@
 *     30 MAR 2022 jcs  Build 52: doxygen; AddFieldAsDate() / Time()
 *     23 MAY 2022 jcs  Build 54: AddFieldAsUnixTime()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*     30 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -285,6 +286,14 @@ public:
 	void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
 
 	/**
+	 * \brief Add vector field to update
+	 *
+	 * \param fid - Field ID
+	 * \param vector - Field value as vector
+	 */
+	void AddFieldAsVector( int fid, cli::array<double> ^vector );
+
+	/**
 	 * \brief Add date-time field to update as DateTime
 	 *
 	 * \param fid - Field ID
@@ -390,6 +399,14 @@ public:
 	 * \param bStr - Field Value as ByteStreamFld
 	 */
 	void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
+
+	/**
+	 * \brief Add vector field to update
+	 *
+	 * \param pFld - Field Name
+	 * \param vector - Field value as vector
+	 */
+	void AddFieldAsVector( String ^pFld, cli::array<double> ^vector );
 
 	/**
 	 * \brief Add date-time field to update as MDD DateTime

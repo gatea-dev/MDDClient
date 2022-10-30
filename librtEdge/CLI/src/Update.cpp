@@ -8,6 +8,7 @@
 *      7 JUL 2015 jcs  Build 31: Publish( cli::array<Byte> ^ )
 *     28 MAR 2022 jcs  Build 52: AddFieldAsDateTime() filled in
 *     23 MAY 2022 jcs  Build 55: AddFieldAsUnixTime()
+*     30 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -173,6 +174,9 @@ void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
       case rtFldType::rtFld_unixTime:
          AddFieldAsUnixTime( fld->Fid(), fld->GetAsDateTime() );
          break;
+      case rtFldType::rtFld_vector:
+         AddFieldAsVector( fld->Fid(), fld->GetAsVector() );
+         break;
    }
 }
 
@@ -217,6 +221,14 @@ void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
 
    bs = bStr->bStr();
    _upd.AddField( fid, *bs );
+}
+
+void rtEdgePubUpdate::AddFieldAsVector( int fid, cli::array<double> ^vec )
+{
+   RTEDGE::Doubles vdb;
+
+   for ( int i=0; i<vec->Length; vdb.push_back( vec[i] ), i++ );
+   _upd.AddVector( fid, vdb );
 }
 
 void rtEdgePubUpdate::AddFieldAsDateTime( int fid, DateTime ^dt )
@@ -301,6 +313,14 @@ void rtEdgePubUpdate::AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr )
 
    if ( (fid=_pub->GetFid( pFld )) )
       AddFieldAsByteStream( fid, bStr );
+}
+
+void rtEdgePubUpdate::AddFieldAsVector( String ^pFld, cli::array<double> ^vec )
+{
+   int fid;
+
+   if ( (fid=_pub->GetFid( pFld )) )
+      AddFieldAsVector( fid, vec );
 }
 
 void rtEdgePubUpdate::AddFieldAsDateTime( String ^pFld, DateTime ^dt )

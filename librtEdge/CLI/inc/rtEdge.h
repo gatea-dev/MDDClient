@@ -15,6 +15,7 @@
 *     23 MAY 2022 jcs  Build 54: _iVal / _dVal
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*     30 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -116,7 +117,8 @@ public enum class rtFldType
 	rtFld_int64      = ::rtFld_int64,
 	rtFld_real       = ::rtFld_real,
 	rtFld_bytestream = ::rtFld_bytestream,
-	rtFld_unixTime   = ::rtFld_unixTime
+	rtFld_unixTime   = ::rtFld_unixTime,
+	rtFld_vector     = ::rtFld_vector
 };
 
 //////////////////////

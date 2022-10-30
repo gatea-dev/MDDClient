@@ -12,6 +12,7 @@
 *     30 MAR 2022 jcs  Build 52: long long GetAsInt64(); Native GetAsDateTime()
 *      2 JUN 2022 jcs  Build 55: GetAsString() wraps GetAsString(), not Dump()
 *     24 OCT 2022 jcs  Build 58: Opaque cpp()
+*     30 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -225,6 +226,17 @@ String ^rtEdgeField::Dump()
 ByteStreamFld ^rtEdgeField::GetAsByteStream()
 {
    return _bStr->Set( _fld->GetAsByteStream() );
+}
+
+cli::array<double> ^rtEdgeField::GetAsVector()
+{
+   RTEDGE::Doubles    &vdb = cpp()->GetAsVector();
+   size_t              n   = vdb.size();
+   cli::array<double> ^vec;
+
+   vec = n ? gcnew cli::array<double>( n ) : nullptr;
+   for ( size_t i=0; i<n; vec[i]=vdb[i], i++ );
+   return vec;
 }
 
 DateTime ^rtEdgeField::GetAsDateTime()
