@@ -915,7 +915,7 @@ mddBuf Binary::_GetVector( mddBuf &b )
 
    i64 = (u_int64_t *)b._data;
    dv  = (double *)b._data;
-   nv  = _VectorSize( b );
+   nv  = ::mddWire_vectorSize( b );
    for ( i=0; i<nv; dv[i] = (double)( _d_div * (tmp=i64[i]) ), i++ );
    return b;
 }
@@ -930,14 +930,9 @@ mddBuf Binary::_SetVector( mddBuf &b )
 
    i64 = (u_int64_t *)b._data;
    dv  = (double *)b._data;
-   nv  = _VectorSize( b );
+   nv  = ::mddWire_vectorSize( b );
    for ( i=0; i<nv; i64[i] = (u_int64_t)( (tmp=dv[i]) * _d_mul ), i++ );
    return b;
-}
-
-int Binary::_VectorSize( mddBuf &b )
-{
-   return  b._dLen / sizeof( u_int64_t );
 }
 
 #ifdef TODO

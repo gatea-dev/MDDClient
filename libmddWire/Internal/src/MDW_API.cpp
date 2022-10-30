@@ -7,8 +7,9 @@
 *     19 JUN 2014 jcs  Build  9: mddWire_Alloc() / Free()
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 11: MDW_SLEEP()
+*     30 OCT 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2022, Gatea Ltd. 
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -493,6 +494,12 @@ int mddWire_hexMsg( char *msg, int len, char *obuf )
    *op = '\0';
    return op-obuf;
 }
+
+int mddWire_vectorSize( mddBuf b )
+{
+   return b._dLen / sizeof( double );
+}
+
 
 /////////////////////////
 // Fucking WIN32 dll

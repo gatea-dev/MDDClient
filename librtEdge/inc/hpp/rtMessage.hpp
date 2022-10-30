@@ -14,6 +14,7 @@
 *      3 DEC 2020 jcs  Build 47: TapePos()
 *      5 APR 2022 jcs  Build 52: core : MsgTime() w/ LVC
 *      1 SEP 2022 jcs  Build 56: RTL()
+*     30 OCT 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -482,20 +483,51 @@ public:
 	 */
 	const char *Dump()
 	{
-	   char        buf[16*K], *cp;
+	   char        buf[16*K], *bp, *cp;
 	   const char *pd, *pm;
+	   int         nAlloc, vSz, mSz, estSz;
+	   Field      *f;
+	   rtFldType   ty;
+	   rtFIELD     ff;
+	   rtBUF      &b = ff._val._buf;
 	   std::string dt;
 
-	   cp  =  buf;
-	   pd  = pDateTimeMs( dt, MsgTime() );
-	   pm  = MsgType();
-	   cp += sprintf( cp, "%s {%s} (%s,%s)\n", pd, pm, Service(), Ticker() ); 
+	   nAlloc = 0;
+	   bp     = buf;
+	   cp     = bp;
+	   pd     = pDateTimeMs( dt, MsgTime() );
+	   pm     = MsgType();
+	   cp    += sprintf( cp, "%s {%s} (%s,%s)\n", pd, pm, Service(), Ticker() ); 
 	   for ( reset(); (*this)(); ) {
+	      f   = field();
+	      ty  = f->TypeFromMsg();
+	      /*
+	       * Ensure there is sizeof( buf ) room at end of buffer
+	       */
+	      if ( ty == rtFld_vector ) {
+	         ff     = f->field();
+	         vSz    = ::mddWire_vectorSize( (mddBuf)b );
+	         mSz    = ( cp-bp );
+	         estSz  = mSz + ( vSz * 64 ); // 64 bytes to sprintf( double )
+	         estSz += sizeof( buf );      // sizeof( buf ) padding at end
+	         if ( nAlloc < estSz ) {
+	            cp = bp;
+	            bp = new char[estSz];
+	            ::memcpy( bp, cp, mSz );
+	            if ( nAlloc )
+	               delete[] cp;
+	            nAlloc = estSz;
+	            cp     = bp;
+	            cp    += mSz;
+	         } 
+	      }
 	      cp += field()->Dump( cp, true );
 	      cp += sprintf( cp, "\n" );
 	   }
 	   cp   += sprintf( cp, "\n" );
-	   _dump = buf;
+	   _dump = bp;
+	   if ( nAlloc )
+	      delete[] bp;
 	   return _dump.data();
 	}
 

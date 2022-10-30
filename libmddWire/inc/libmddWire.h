@@ -16,7 +16,7 @@
 *     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: bld.hpp
-*     28 OCT 2022 jcs  Build 16: mddFld_vector
+*     30 OCT 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -788,6 +788,14 @@ void mddWire_Sleep( double tSlp );
  */
 int mddWire_hexMsg( char *msg, int len, char *outbuf );
 
+/**
+ * \brief Number of elements in vector, based on buffer size
+ *
+ * \param buf - mddBuf holding vector
+ * \return Number of elements in the vector
+ */
+int mddWire_vectorSize( mddBuf b );
+
 /* Windows DLL Horse Shit */
 
 /**
@@ -1049,11 +1057,12 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
          {                                                          \
             double *dv;                                             \
             char   *vp;                                             \
-            size_t  i, nv;                                          \
+            int     i, nv;                                          \
                                                                     \
-            vp = buf;                                               \
-            dv = (double *)b._data;                                 \
-            nv = b._dLen / sizeof( double );                        \
+            vp  = buf;                                              \
+            dv  = (double *)b._data;                                \
+            nv  = mddWire_vectorSize( b );                          \
+            vp += sprintf( vp, "[%d] ", nv );                       \
             for ( i=0; i<nv; vp+=sprintf( vp, "%.6f,", dv[i++] ) ); \
             break;                                                  \
          }                                                          \

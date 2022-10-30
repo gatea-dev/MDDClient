@@ -110,7 +110,6 @@ private:
 	int    _u_pack( u_char *, u_int64_t, bool & );
 	mddBuf _GetVector( mddBuf & );
 	mddBuf _SetVector( mddBuf & );
-	int    _VectorSize( mddBuf & );
 
 }; // class Binary
 
