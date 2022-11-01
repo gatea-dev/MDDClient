@@ -117,7 +117,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\Vector.cpp" />
     <ClCompile Include="..\src\ByteStream.cpp" />
     <ClCompile Include="..\src\Chain.cpp" />
     <ClCompile Include="..\src\ChartDB.cpp" />
@@ -131,6 +130,7 @@
     <ClCompile Include="..\src\Schema.cpp" />
     <ClCompile Include="..\src\SubChannel.cpp" />
     <ClCompile Include="..\src\Update.cpp" />
+    <ClCompile Include="..\src\Vector.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

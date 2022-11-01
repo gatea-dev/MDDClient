@@ -324,7 +324,7 @@ public:
       u.AddField( 536870911, "536870911" );
  */
       for ( i=0; i<10; vdb.push_back( ::drand48() * 100.0 ), i++ );
-      u.AddVector( -7151, vdb );
+      u.AddVector( -7151, vdb, _vecPrec );
       u.Publish();
       w._rtl += 1;
    }

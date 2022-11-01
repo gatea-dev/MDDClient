@@ -13,7 +13,7 @@
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: Unpacked mddFld_bytestream 
-*     28 OCT 2022 jcs  Build 16: mddFld_vector
+*      1 NOV 2022 jcs  Build 16: _GetVector() / _SetVector(); _wireMult()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -129,12 +129,14 @@ double Binary::_ymd_mul = 1000000.0;
 // Constructor / Destructor
 ////////////////////////////////////////////
 Binary::Binary( bool bPackFlds ) :
-   _bPackFlds( bPackFlds )
+   _bPackFlds( bPackFlds ),
+   _vBuf( ::mddBldBuf_Alloc( 64*K ) )
 {
 }
 
 Binary::~Binary()
 {
+   ::mddBldBuf_Free( _vBuf );
 }
 
 
@@ -477,7 +479,7 @@ int Binary::Set( u_char *bp, mddField f )
          cp += Set( cp, v._buf );
          break;
       case mddFld_vector:
-         cp += Set( cp, _SetVector( v._buf ) );
+         cp += Set( cp, _SetVector( v._buf, f._vPrecision ) );
          break;
       case mddFld_unixTime:
          cp  += _u_pack( cp, v._i64, bPack );
@@ -730,7 +732,7 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          cp += Set( cp, v._buf );
          break;
       case mddFld_vector:
-         cp += Set( cp, _SetVector( v._buf ) );
+         cp += Set( cp, _SetVector( v._buf, f._vPrecision ) );
          break;
       case mddFld_unixTime:
          _COPY_SET( v._i64, cp );
@@ -908,260 +910,104 @@ int Binary::_u_pack( u_char *bp, u_int64_t i64, bool &bPack )
 mddBuf Binary::_GetVector( mddBuf &b )
 {
    u_int64_t *i64, tmp;
-   double    *dv;
+   double    *dv, div;
+   char      *cp;
    int        i, nv;
 
-   // u_int64_t -> double
+   // <hint> then u_int64_t -> double
 
-   i64 = (u_int64_t *)b._data;
-   dv  = (double *)b._data;
+   cp  = b._data;
+   div = _wireMult( *cp++, false );
+   i64 = (u_int64_t *)cp;
+   dv  = (double *)cp;
    nv  = ::mddWire_vectorSize( b );
-   for ( i=0; i<nv; dv[i] = (double)( _d_div * (tmp=i64[i]) ), i++ );
+   for ( i=0; i<nv; dv[i] = (double)( div * (tmp=i64[i]) ), i++ );
    return b;
 }
 
-mddBuf Binary::_SetVector( mddBuf &b )
+mddBuf Binary::_SetVector( mddBuf &b, char hint )
 {
    u_int64_t *i64;
-   double    *dv, tmp;
-   int        i, nv;
+   mddBuf     rc;
+   double    *dv, mul;
+   char      *dp;
+   u_int      i, nv, reqSz, bufSz;
 
-   // double -> u_int64_t
-
-   i64 = (u_int64_t *)b._data;
+   /*
+    * 1) Must prepend hint since b._data is array of double's 
+    */
+   reqSz  = sizeof( hint );
+   reqSz += b._dLen;
+   bufSz  = _vBuf._nAlloc;
+   for ( i=0; reqSz > bufSz; bufSz *= 2, i++ );
+   if ( bufSz != _vBuf._nAlloc ) {
+      ::mddBldBuf_Free( _vBuf );
+      _vBuf = ::mddBldBuf_Alloc( bufSz );
+   }
+   rc._data = _vBuf._data;
+   rc._dLen = reqSz;
+   dp       = rc._data;
+   *dp++    = hint;
+   /*
+    * 2) Copy 'em in
+    */
+   mul = _wireMult( hint, true );
+   i64 = (u_int64_t *)dp;
    dv  = (double *)b._data;
-   nv  = ::mddWire_vectorSize( b );
-   for ( i=0; i<nv; i64[i] = (u_int64_t)( (tmp=dv[i]) * _d_mul ), i++ );
-   return b;
+   nv  = ::mddWire_vectorSize( rc );
+   for ( i=0; i<nv; i64[i] = (u_int64_t)( dv[i] * mul ), i++ );
+   return rc;
 }
 
-#ifdef TODO
-
-/////////////////////////////////////////////////////////////////////////////
-//
-//               c l a s s        G L m d B i n T a b l e
-//
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////
-// Constructor / Destructor
-/////////////////////////////////////
-BinaryTable::BinaryTable( char *bp, int dLen ) :
-   _b( (GLdynBuf *)0 ),
-   _rOff( (u_long *)0 ),
-   _bp( bp ),
-   _len( dLen )
+double Binary::_wireMult( char hint, bool bToWire )
 {
-   char *cp;
-   int   i, sz;
+   static double _dd_mul[] = { 1.0,
+                               10.0,
+                               100.0,
+                               1000.0,
+                               10000.0,
+                               100000.0,
+                               1000000.0,
+                               10000000.0,
+                               100000000.0,
+                               1000000000.0,
+                               10000000000.0,
+                               100000000000.0,
+                               1000000000000.0,
+                               10000000000000.0,
+                               100000000000000.0,
+                               1000000000000000.0,
+                               10000000000000000.0,
+                               100000000000000000.0,
+                               1000000000000000000.0,
+                               10000000000000000000.0,
+                               100000000000000000000.0
+                             };
+   static double _dd_div[] = { 1.0 / _dd_mul[0],
+                               1.0 / _dd_mul[1],
+                               1.0 / _dd_mul[2],
+                               1.0 / _dd_mul[3],
+                               1.0 / _dd_mul[4],
+                               1.0 / _dd_mul[5],
+                               1.0 / _dd_mul[6],
+                               1.0 / _dd_mul[7],
+                               1.0 / _dd_mul[8],
+                               1.0 / _dd_mul[9],
+                               1.0 / _dd_mul[10],
+                               1.0 / _dd_mul[11],
+                               1.0 / _dd_mul[12],
+                               1.0 / _dd_mul[13],
+                               1.0 / _dd_mul[14],
+                               1.0 / _dd_mul[15],
+                               1.0 / _dd_mul[16],
+                               1.0 / _dd_mul[17],
+                               1.0 / _dd_mul[18],
+                               1.0 / _dd_mul[19],
+                               1.0 / _dd_mul[20]
+                             };
+   int ix;
 
-   // Copy in; Endian
-
-   cp  = _bp;
-   ::memcpy( &_rh, cp, sizeof( _rh ) );
-   cp += sizeof( _rh );
-   _rh._nRow = ntohl( _rh._nRow );
-   _rh._nCol = ntohl( _rh._nCol );
-   _rh._hdrs = ntohl( _rh._hdrs );
-   if ( _rh._nRow ) {
-      _rOff = new u_long[_rh._nRow];
-      sz    = sizeof( u_long ) * nRow();
-      ::memcpy( _rOff, cp, sz );
-      for ( i=0; i<nRow(); i++ )
-         _rOff[i] = ntohl( _rOff[i] );
-   }
+   hint = ( hint == 0xff ) ? 10 : hint;
+   ix   = WithinRange( 0, hint, 20 );
+   return bToWire ? _dd_mul[ix] : _dd_div[ix];
 }
-
-BinaryTable::BinaryTable( GLdynBuf &b, 
-                          int       nRow, 
-                          int       nCol, 
-                          bool      bHdr ) :
-   _b( &b ),
-   _rOff( (u_long *)0 ),
-   _bp( b.bp() ),
-   _len( b.len() )
-{
-   BinaryTblHdr *rh;
-   char          *cp;
-   int            i, sz;
-
-   // Ensure space for big rows
-
-   sz = 0;
-   if ( nRow ) {
-      sz  = sizeof( u_long ) * nRow;
-      sz += sizeof( BinaryTblHdr );
-   }
-   for ( ; sz>b.nLeft(); b.Grow() );
-   _bp = b.bp();
-
-   // Init
-
-   b         = 0;
-   _len      = b.len();
-   rh        = (BinaryTblHdr *)b.bp();
-   b        += sizeof( BinaryTblHdr );
-   _rh._nRow = nRow;
-   _rh._nCol = nCol;
-   rh->_nRow = htonl( _rh._nRow );
-   rh->_nCol = htonl( _rh._nCol );
-   if ( _rh._nRow ) {
-      _rOff = (u_long *)b.cp();
-      sz    = sizeof( u_long ) * nRow;
-      b    += sz;
-      ::memset( _rOff, 0, sz );
-   }
-   _rh._hdrs = bHdr ? b.len() : 0;
-   rh->_hdrs = htonl( _rh._hdrs );
-}
-
-BinaryTable::~BinaryTable()
-{
-   if ( !_b && _rOff )
-      delete[] _rOff;
-}
-
-
-/////////////////////////////////////
-// Access - Retrieve
-/////////////////////////////////////
-int BinaryTable::nRow()
-{
-   return _rh._nRow;
-}
-
-int BinaryTable::nCol()
-{
-   return _rh._nCol;
-}
-
-bool BinaryTable::HasHdr()
-{
-   return( _rh._hdrs != 0 );
-}
-
-char *BinaryTable::pHdr( int c, GLOString &rtn )
-{
-   char  *rp, *cp;
-   u_long l;
-   int    n;
-
-   // Pre-condition
-
-   rtn.jreplace( "" );
-   if ( !nRow() )
-      return rtn.pName();
-
-   // Bounds-checking
-
-   c  = WithinRange( 0, c, nCol() );
-   rp = _bp + _rh._hdrs;
-   cp = rp;
-l = 0;
-#ifdef FOO
-   for ( n=0; n<c; n++ ) {
-      cp += Binary::Get( cp, l );
-      cp += l;
-   }
-   cp += Binary::Get( cp, l );
-#endif // FOO
-
-   GLOString t( cp, l );
-
-   rtn.jreplace( t.pName() );
-   return rtn.pName();
-}
-
-char *BinaryTable::pVal( int r, int c, GLOString &rtn )
-{
-   char  *rp, *cp;
-   u_long l;
-   int    n;
-
-   // Pre-condition
-
-   rtn.jreplace( "" );
-   if ( !nRow() )
-      return rtn.pName();
-
-   // Bounds-checking
-
-   r  = WithinRange( 0, r, nRow() );
-   c  = WithinRange( 0, c, nCol() );
-   rp = _bp + _rOff[r];
-   cp = rp;
-l = 0;
-#ifdef FOO
-   for ( n=0; n<c; n++ ) {
-      cp += Binary::Get( cp, l );
-      cp += l;
-   }
-   cp += Binary::Get( cp, l );
-#endif // FOO
-
-   GLOString t( cp, l );
-
-   rtn.jreplace( t.pName() );
-   return rtn.pName();
-}
-
-
-/////////////////////////////////////
-// Operations - Store
-/////////////////////////////////////
-bool BinaryTable::AddHdr( int c, char *pv )
-{
-   return AddVal( c, pv );
-}
-
-bool BinaryTable::AddHdr( char *pv, char *sep )
-{
-   return AddVal( pv, sep );
-}
-
-bool BinaryTable::AddRow( int r )
-{
-   if ( _b && ( r<nRow() ) ) {
-      _rOff[r] = htonl( _b->len() );
-      return true;
-   }
-   return false;
-}
-
-bool BinaryTable::AddVal( int c, char *pv )
-{
-   static bool _bAddLen = true;
-   char *pr;
-   int   ro;
-
-   // Update _bp and _rOff, as Append() can Grow() '_b'
-
-   if ( _b && ( c<nCol() ) ) {
-      _b->Append( pv, strlen( pv ), _bAddLen );
-      pr    = (char *)_rOff;
-      ro    = pr - _bp;
-      _bp   = _b->bp();
-      pr    = _bp + ro;
-      _rOff = (u_long *)pr;
-      return true;
-   }
-   return false;
-}
-
-bool BinaryTable::AddVal( char *pv, char *sep )
-{
-   RW94CString    rwb( pv );
-   RW94CString    t1;
-   RW94CTokenizer nxt( rwb );
-   char          *p1;
-   int            c;
-
-   for ( c=0; !(t1=nxt(sep)).isNull(); c++ ) {
-      p1 = (char *)t1.data();
-      if ( !AddVal( c, p1 ) )
-         return false;
-   }
-   return true;
-}
-
-#endif // TODO

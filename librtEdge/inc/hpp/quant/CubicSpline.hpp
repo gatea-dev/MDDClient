@@ -265,29 +265,29 @@ public:
 	 *
 	 * A natural spline has 2nd order derivitive = 0.0 at the boundaries.
 	 * 
-	 * \param X1 - M Sampled X-axis values
-	 * \param X2 - N Sampled X-axis values
-	 * \param Y  - Sampled Y-axis values
+	 * \param X - M Sampled X-axis values
+	 * \param Y - N Sampled Y-axis values
+	 * \param Z - MxN Sampled Z-axis values
 	 */
-	CubicSurface( Doubles &X1, Doubles &X2, DoubleGrid &Y ) :
-	   _X1(),
-	   _X2(),
+	CubicSurface( Doubles &X, Doubles &Y, DoubleGrid &Z ) :
+	   _X(),
 	   _Y(),
-	   _Y2(),
-	   _M( X1.size() ),
-	   _N( X2.size() )
+	   _Z(),
+	   _Z2(),
+	   _M( X.size() ),
+	   _N( Y.size() )
 	{
-	   Doubles y;
+	   Doubles z;
 
-	   for ( size_t m=0; m<_M; _X1.push_back( X1[m] ), m++ );
-	   for ( size_t n=0; n<_N; _X2.push_back( X2[n] ), n++ );
+	   for ( size_t m=0; m<_M; _X.push_back( X[m] ), m++ );
+	   for ( size_t n=0; n<_N; _Y.push_back( Y[n] ), n++ );
 	   /*
 	    * 0-based array
 	    */
 	   for ( size_t m=0; m<_M; m++ ) {
-	      y.clear();
-	      for ( size_t n=0; n<_N; y.push_back( Y[m][n] ), n++ );
-	      _Y.push_back( y );
+	      z.clear();
+	      for ( size_t n=0; n<_N; z.push_back( Z[m][n] ), n++ );
+	      _Z.push_back( z );
 	   }
 	   _Calc();
 	}
@@ -297,39 +297,39 @@ public:
 	////////////////////////////////////
 public:
 	/**
-	 * \brief Return calculated 2nd order derivitive array
+	 * \brief Return calculated 2nd order derivitive grid
 	 *
-	 * \return Calculated 2nd order derivitive array
+	 * \return Calculated 2nd order derivitive grid
 	 */
-	DoubleGrid &Y2()
+	DoubleGrid &Z2()
 	{
-	   return _Y2;
+	   return _Z2;
 	}
 
 	/**
-	 * \brief Calculate and return interpolated value at x
+	 * \brief Calculate and return interpolated value at ( x,y )
 	 *
 	 * splin2.c : From Numerical Recipes in C, (c) 1986-1992
 	 *
-	 * \param x1 - Independent variable
-	 * \param x2 - Independent variable
-	 * \return Interpolated value at ( x1, x2 )
+	 * \param x - Independent variable at x
+	 * \param y - Independent variable at Y
+	 * \return Interpolated value at ( x, y )
 	 */
-	double Surface( double x1, double x2 )
+	double Surface( double x, double y )
 	{
 	   Doubles y2;
-	   double  y;
+	   double  z;
 
 	   for ( size_t m=0; m<_M; m++ ) {
-	      CubicSpline cs2( _X2, _Y[m] );
+	      CubicSpline cs2( _Y, _Z[m] );
 
-	      y2.push_back( cs2.Spline( x2 ) );
+	      y2.push_back( cs2.Spline( y ) );
 	   }
 
-	   CubicSpline cs1( _X1, y2 );
+	   CubicSpline cs1( _X, y2 );
 
-	   y = cs1.Spline( x1 );
-	   return y;
+	   z = cs1.Spline( x );
+	   return z;
 	}
 
 #ifndef DOXYGEN_OMIT
@@ -343,9 +343,9 @@ private:
 	void _Calc()
 	{
 	   for ( size_t m=0; m<_M; m++ ) {
-	      CubicSpline cs( _X2, _Y[m] );
+	      CubicSpline cs( _Y, _Z[m] );
 
-	      _Y2.push_back( cs.Y2() );
+	      _Z2.push_back( cs.Y2() );
 	   }
 	}
 
@@ -354,13 +354,13 @@ private:
 	////////////////////////
 private:
 	/** \brief M X-axis values */
-	Doubles    _X1;
-	/** \brief N X-axis values */
-	Doubles    _X2;
-	/** \brief MxN sampled Y-axis values */
-	DoubleGrid _Y;
-	/** \brief 2nd order derivative at _Y : Calculated Values */
-	DoubleGrid _Y2;
+	Doubles    _X;
+	/** \brief N Y-axis values */
+	Doubles    _Y;
+	/** \brief MxN sampled Z-axis values */
+	DoubleGrid _Z;
+	/** \brief 2nd order derivative at _Z : Calculated Values */
+	DoubleGrid _Z2;
 	/** \brief _M x _N Grid of Points */
 	size_t     _M;
 	/** \brief _M x _N Grid of Points */

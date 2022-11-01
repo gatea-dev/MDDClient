@@ -286,12 +286,21 @@ public:
 	void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add vector field to update
+	 * \brief Add vector field to update w/ 10 digits of precision on the wire
 	 *
 	 * \param fid - Field ID
 	 * \param vector - Field value as vector
 	 */
 	void AddFieldAsVector( int fid, cli::array<double> ^vector );
+
+	/**
+	 * \brief Add vector field to update
+	 *
+	 * \param fid - Field ID
+	 * \param vector - Field value as vector
+	 * \param precision - Vector precision : 0 to 20
+	 */
+	void AddFieldAsVector( int fid, cli::array<double> ^vector, int precision );
 
 	/**
 	 * \brief Add date-time field to update as DateTime
@@ -401,12 +410,21 @@ public:
 	void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add vector field to update
+	 * \brief Add vector field to update w/ 10 digits of precision on the wire
 	 *
 	 * \param pFld - Field Name
 	 * \param vector - Field value as vector
 	 */
 	void AddFieldAsVector( String ^pFld, cli::array<double> ^vector );
+
+	/**
+	 * \brief Add vector field to update
+	 *
+	 * \param pFld - Field Name
+	 * \param vector - Field value as vector
+	 * \param precision - Vector precision : 0 to 20
+	 */
+	void AddFieldAsVector( String ^pFld, cli::array<double> ^vector, int precision );
 
 	/**
 	 * \brief Add date-time field to update as MDD DateTime

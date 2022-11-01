@@ -31,12 +31,14 @@ Features To Add
  * ## Change Log
  * 
  * 
- * ### Build 16 22-10-29
+ * ### Build 16 22-11-01
  * 
  * -# mddFld_vector
  *    - mddWire_vectorSize()
  *
  * -# Huge FID Range : hash_map, not _ddb; No more MDDWIRE_PRIVATE.Schema._ddb
+ *
+ * -# u_int64_t mddReal.value
  *
  * 
  * ### Build 15 22-10-24

@@ -31,7 +31,7 @@
 *      3 JUN 2022 jcs  Build 55: bld.cpp; LVCData._recXxxSiz
 *      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL
 *     22 OCT 2022 jcs  Build 58: hpp/struct
-*     28 OCT 2022 jcs  Build 60: rtFld_vector
+*      1 NOV 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -516,7 +516,7 @@ typedef enum {
    rtFld_bytestream = mddFld_bytestream,
    /** \brief Nanos since Epoch; Value in rtVALUE::_i64 */
    rtFld_unixTime   = mddFld_unixTime,
-   /** \brief Vector of doubles; Value in mddValue::_buf; Num = mddBuf::_dLen / sizeof( double ) */
+   /** \brief Vector of doubles; Size = mddWire_vectorSize() */
    rtFld_vector      = mddFld_vector,
 
 } rtFldType;
@@ -573,6 +573,8 @@ typedef struct {
    const char *_name;
    /** \brief Field type */
    rtFldType   _type;
+   /** \brief rtFld_vector Precision */
+   char        _vPrecision;
 } rtFIELD;
 
 /**

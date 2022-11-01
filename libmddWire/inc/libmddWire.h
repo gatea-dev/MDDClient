@@ -16,7 +16,7 @@
 *     29 MAR 2022 jcs  Build 13: mddIoctl_unpacked, etc.
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: bld.hpp
-*     30 OCT 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize
+*      1 NOV 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize; 64-bit mddReal
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -153,8 +153,8 @@ typedef enum {
    mddFld_bytestream,
    /** \brief Nanos since epoch; Value in mddValue::_i64 */
    mddFld_unixTime,
-   /** \brief Vector of doubles; Value in mddValue::_buf; Num = mddBuf::_dLen / sizeof( double ) */
-   mddFld_vector,
+   /** \brief Vector of doubles in mddValue::_buf; Num = mddWire_vectorSize() */
+   mddFld_vector
 } mddFldType;
 
 /**
@@ -193,11 +193,11 @@ typedef struct {
  */
 typedef struct {
    /** \brief Real data value */
-   u_int  value;
+   u_int64_t value;
    /** \brief Multiplier for value - Fractions, 0.0001, etc. */
-   u_char hint;
+   u_char    hint;
    /** \brief 1 if mddReal contains blank value */
-   u_char isBlank;
+   u_char    isBlank;
 } mddReal;
 
 /**
@@ -225,7 +225,7 @@ typedef union {
    u_int     _i32;
    /** \brief 64-bit long int value when mddField::_type == mddFld_int64. */
    u_int64_t _i64;
-   /** \brief Floating point value when mddField::_type == mddFld_readl. */
+   /** \brief Floating point value when mddField::_type == mddFld_real. */
    mddReal   _real;
 } mddValue;
 
@@ -242,6 +242,8 @@ typedef struct {
    const char *_name;
    /** \brief Field type */
    mddFldType  _type;
+   /** \brief mddFld_vector Precision : 0 to 20; 0xff = 10 */
+   char        _vPrecision;
 } mddField;
 
 /**
@@ -1056,14 +1058,17 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
          case mddFld_vector:                                        \
          {                                                          \
             double *dv;                                             \
-            char   *vp;                                             \
+            char   *vp, *dp, num, fmt[16];                          \
             int     i, nv;                                          \
                                                                     \
             vp  = buf;                                              \
-            dv  = (double *)b._data;                                \
+            dp  = b._data;                                          \
+            num = *dp++;                                            \
+            sprintf( fmt, "%%.%df,", num );                         \
+            dv  = (double *)dp;                                     \
             nv  = mddWire_vectorSize( b );                          \
             vp += sprintf( vp, "[%d] ", nv );                       \
-            for ( i=0; i<nv; vp+=sprintf( vp, "%.6f,", dv[i++] ) ); \
+            for ( i=0; i<nv; vp+=sprintf( vp, fmt, dv[i++] ) );     \
             break;                                                  \
          }                                                          \
          case mddFld_unixTime:                                      \

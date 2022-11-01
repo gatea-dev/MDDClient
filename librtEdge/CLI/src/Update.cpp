@@ -231,6 +231,16 @@ void rtEdgePubUpdate::AddFieldAsVector( int fid, cli::array<double> ^vec )
    _upd.AddVector( fid, vdb );
 }
 
+void rtEdgePubUpdate::AddFieldAsVector( int                 fid, 
+                                        cli::array<double> ^vec,
+                                        int                 precision )
+{
+   RTEDGE::Doubles vdb;
+
+   for ( int i=0; i<vec->Length; vdb.push_back( vec[i] ), i++ );
+   _upd.AddVector( fid, vdb, precision );
+}
+
 void rtEdgePubUpdate::AddFieldAsDateTime( int fid, DateTime ^dt )
 {
    _upd.AddField( fid, _ConvertDateTime( dt ) );
@@ -321,6 +331,16 @@ void rtEdgePubUpdate::AddFieldAsVector( String ^pFld, cli::array<double> ^vec )
 
    if ( (fid=_pub->GetFid( pFld )) )
       AddFieldAsVector( fid, vec );
+}
+
+void rtEdgePubUpdate::AddFieldAsVector( String             ^pFld,
+                                        cli::array<double> ^vec,
+                                        int                 precision )
+{
+   int fid;
+
+   if ( (fid=_pub->GetFid( pFld )) )
+      AddFieldAsVector( fid, vec, precision );
 }
 
 void rtEdgePubUpdate::AddFieldAsDateTime( String ^pFld, DateTime ^dt )

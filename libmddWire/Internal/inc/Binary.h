@@ -10,7 +10,7 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 10a:MDW_Internal.h
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
-*     28 OCT 2022 jcs  Build 16: _GetVector() / _SetVector()
+*      1 NOV 2022 jcs  Build 16: _GetVector() / _SetVector(); _wireMult()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -46,7 +46,9 @@ protected:
 	// Class-wide
 protected:
 	static bool _IsBig();
-};
+
+}; // class Endian
+
 
 /////////////////////////////////////////
 // Binary data
@@ -58,7 +60,8 @@ public:
 	static double _ymd_mul;
 
 private:
-	bool _bPackFlds;
+	bool      _bPackFlds;
+	mddBldBuf _vBuf;
 
 	// Constructor / Destructor
 public:
@@ -109,60 +112,11 @@ private:
 	int    _u_pack( u_char *, u_int );
 	int    _u_pack( u_char *, u_int64_t, bool & );
 	mddBuf _GetVector( mddBuf & );
-	mddBuf _SetVector( mddBuf & );
+	mddBuf _SetVector( mddBuf &, char );
+	double _wireMult( char, bool );
 
 }; // class Binary
 
-
-#ifdef TODO
-/////////////////////////////////
-// Table-based response
-/////////////////////////////////
-class BinaryTblHdr
-{
-public:
-   u_long _nRow;
-   u_long _nCol;
-   u_long _hdrs;
-/*
-   u_long _rowOff[_nRow];
- */
-};
-
-class BinaryTable
-{
-protected:
-	GLdynBuf    *_b;
-	BinaryTblHdr _rh;
-	u_long      *_rOff;
-	char        *_bp;
-	int          _len;
-
-	// Constructor / Destructor
-public:
-	BinaryTable( char *, int );
-	BinaryTable( GLdynBuf &, int, int, bool );
-	~BinaryTable();
-
-	// Access - Retrieve
-
-	int   nRow();
-	int   nCol();
-	bool  HasHdr();
-	char *pHdr( int, GLOString & );
-	char *pVal( int, int, GLOString & );
-
-	// Operations - Store
-
-	bool AddHdr( int, char * );
-	bool AddHdr( char *, char *sep="|" );
-	bool AddRow( int );
-	bool AddVal( int, char * );
-	bool AddVal( char *, char *sep="|" );
-};
-
-#endif // TODO
-
-} // namespace MDDWIRE_PRIVATE
+}  // namespace MDDWIRE_PRIVATE
 
 #endif // __MDD_BINARY_H
