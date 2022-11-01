@@ -2235,6 +2235,7 @@ _CPP_END
 #include <hpp/Update.hpp>
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
+#include <hpp/quant/CubicSpline.hpp>
 #include <hpp/struct/Vector.hpp>
 #ifdef _SURFACE_NOT_READY
 #include <hpp/struct/Surface.hpp>

@@ -22,6 +22,11 @@
 #define M_PI           3.14159265358979323846  /* pi */
 #endif // !defined(M_PI)
 
+#ifdef WIN32
+static double drand48() { return ( (double)::rand() / (double)RAND_MAX ); }
+#define srand48 srand
+#endif // WIN32
+
 #define _MAX_CHAIN (16*K)
 #define _LCL_PORT  4321
 
@@ -151,7 +156,7 @@ public:
 public:
    void PubVector( RTEDGE::Update &u )
    {
-      size_t ix = ( _RTL % _Size );
+      size_t ix  = ( _RTL % _Size );
  
       // Every 5th time
 
@@ -312,12 +317,14 @@ public:
       u.AddFieldAsUnixTime(  fid++, dtTm );
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
+/*
       u.AddField(  2147483647, "2147483647" );
       u.AddField( -2147483647, "-2147483647" );
       u.AddField( 16260000, "16260000" );
       u.AddField( 536870911, "536870911" );
+ */
       for ( i=0; i<10; vdb.push_back( ::drand48() * 100.0 ), i++ );
-      u.AddVector( 12312312, vdb );
+      u.AddVector( -7151, vdb );
       u.Publish();
       w._rtl += 1;
    }

@@ -7,6 +7,7 @@
 *
 *  REVISION HISTORY:
 *     24 OCT 2022 jcs  Created (from Pipe.cs)
+*     31 OCT 2022 jcs  -fp
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -70,7 +71,7 @@ class SwapSubscriber : rtEdgeSubscriber
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SwapSubscriber( string svr, string usr, string svc ) : 
+   public SwapSubscriber( string svr, string usr, string svc ) :
       base( svr, usr)
    {
       _svc = svc;
@@ -160,15 +161,19 @@ class SwapPublisher : rtEdgePublisher
    //////////////
    // Members
    //////////////
+   private string _tkr;
+   private bool   _bPubFld;
    private Vector _vec;
    private int    _StreamID; // Non-zero means it is watched
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SwapPublisher( string svr, string svc, string tkr ) :
+   public SwapPublisher( string svr, string svc, string tkr, bool bPubFld ) :
       base( svr, svc, true, false ) // binary, bStart
    {
+      _tkr      = tkr;
+      _bPubFld  = bPubFld;
       _vec      = new Vector( svc, tkr, SwapTicker._precision );
       _StreamID = 0;
    }
@@ -182,13 +187,39 @@ class SwapPublisher : rtEdgePublisher
       double[]    Z;
       int         x;
 
+      /*
+       * Use Vector class as:
+       *  1) !bPubFld : Container and Publisher
+       *  2) bPubFld  : Container only
+       */
       cs = new CubicSpline( X, Y );
       Z  = new double[xn];
       for ( x=0; x<xn; Z[x]=cs.Spline( x ), x++ );
       _vec.Update( Z );
       if ( _StreamID != 0 )
+         PubCurve();
+   }
+
+   public void PubCurve()
+   {
+      rtEdgePubUpdate u;
+      double[]        Z;
+
+      /*
+       * Use Vector class as:
+       *  1) !bPubFld : Container and Publisher
+       *  2) bPubFld  : Container only
+       */
+      if ( _bPubFld ) {
+         Z = _vec.Get();
+         u = new rtEdgePubUpdate( this, _tkr, (IntPtr)_StreamID, true );
+         u.AddFieldAsVector( "UNCLE_V", Z );
+         u.Publish();
+      }
+      else
          _vec.Publish( this, _StreamID, true );
    }
+
 
    ////////////////////////////////
    // rtEdgePublisher Interface
@@ -208,7 +239,7 @@ class SwapPublisher : rtEdgePublisher
       Console.WriteLine( "[{0}] OPEN  {1}", DateTimeMs(), tkr );
       if ( tkr == _vec.Ticker() ) {
          _StreamID = (int)arg;
-         _vec.Publish( this, _StreamID, true );
+         PubCurve();
       }
       else {
          u = new rtEdgePubUpdate( this, tkr, arg, false );
@@ -232,7 +263,7 @@ class SwapPublisher : rtEdgePublisher
          SwapSubscriber   sub;
          SwapPublisher    pub;
          int              i, argc, nt;
-         bool             aOK;
+         bool             aOK, bPubFld;
          string           s, pubSvr, pubSvc, pubTkr, subSvr, subUsr, subSvc;
          SwapTicker       tkr;
          List<SwapTicker> tkrs;
@@ -245,17 +276,19 @@ class SwapPublisher : rtEdgePublisher
             Console.WriteLine( rtEdge.Version() );
             return 0;
          }
-         subSvr = "localhost:9998";
-         subSvc = "velocity";
-         subUsr = "SwapCurve";
-         pubSvr = "localhost:9995";
-         pubSvc = subUsr;
-         pubTkr = subUsr;
+         subSvr  = "localhost:9998";
+         subSvc  = "velocity";
+         subUsr  = "SwapCurve";
+         pubSvr  = "localhost:9995";
+         pubSvc  = subUsr;
+         pubTkr  = subUsr;
+         bPubFld = false;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -hp  <Pub : host:port> ] \\ \n";
             s += "       [ -sp  <Pub Service> ] \\ \n";
             s += "       [ -tp  <Pub Ticker> ] \\ \n";
+            s += "       [ -fp  <Pub es rtFld_vector Field> ] \\ \n";
             s += "       [ -hs  <Sub : host:port> ] \\ \n";
             s += "       [ -ss  <Sub Service> ] \\ \n";
             s += "       [ -ts  <Sub Ticker:Length ] \\ \n";
@@ -265,6 +298,7 @@ class SwapPublisher : rtEdgePublisher
             Console.Write( "      -hp  : {0}\n", pubSvr );
             Console.Write( "      -sp  : {0}\n", pubSvc );
             Console.Write( "      -tp  : {0}\n", pubTkr );
+            Console.Write( "      -fp  : {0}\n", bPubFld );
             Console.Write( "      -hs  : {0}\n", subSvr );
             Console.Write( "      -ss  : {0}\n", subSvc );
             Console.Write( "      -ts  : <empty>\n" );
@@ -286,6 +320,8 @@ class SwapPublisher : rtEdgePublisher
                pubSvc = args[++i];
             else if ( args[i] == "-tp" )
                pubTkr = args[++i];
+            else if ( args[i] == "-fp" )
+               bPubFld = _IsTrue( args[++i] );
             else if ( args[i] == "-hs" )
                subSvr = args[++i];
             else if ( args[i] == "-ss" )
@@ -308,7 +344,7 @@ class SwapPublisher : rtEdgePublisher
          /////////////////////////////////////
          Console.WriteLine( rtEdge.Version() );
          sub = new SwapSubscriber( subSvr, subUsr, subSvc );
-         pub = new SwapPublisher( pubSvr, pubSvc, pubTkr );
+         pub = new SwapPublisher( pubSvr, pubSvc, pubTkr, bPubFld );
          sub.Start();
          for ( i=0; i<nt; sub.OpenKnot( pub, tkrs[i++] ) );
          pub.PubStart();
@@ -329,5 +365,10 @@ class SwapPublisher : rtEdgePublisher
       }
       return 0;
    } 
+
+   static bool _IsTrue( string p )
+   {
+      return( ( p == "YES" ) || ( p == "true" ) );
+   }
 
 } // SwapPublisher
