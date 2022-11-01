@@ -544,7 +544,7 @@ public:
 	 * \param vector - Vector array to add
 	 * \param precision - Vector Precision 0 to 20
 	 */
-	void AddVector( int fid, Doubles &vector, int precision=10 )
+	void AddVector( int fid, DoubleList &vector, int precision=10 )
 	{
 	   rtFIELD f;
 	   rtBUF  &dst = f._val._buf;

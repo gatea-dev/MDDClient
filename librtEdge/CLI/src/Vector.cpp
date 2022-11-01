@@ -35,7 +35,7 @@ VectorC::VectorC( librtEdgePRIVATE::IVector ^cli,
 //////////////////////////
 // Asynchronous Callbacks
 //////////////////////////
-void VectorC::OnData( RTEDGE::Doubles &img )
+void VectorC::OnData( RTEDGE::DoubleList &img )
 {
    cli::array<double> ^ddb;
    size_t              sz = img.size();
@@ -110,7 +110,7 @@ String ^Vector::Ticker()
 
 cli::array<double> ^Vector::Get()
 {
-   RTEDGE::Doubles     img;
+   RTEDGE::DoubleList     img;
    cli::array<double> ^ddb;
    size_t              sz = _vec->Get( img ).size();
 
@@ -125,7 +125,7 @@ cli::array<double> ^Vector::Get()
 /////////////////////////////////
 int Vector::Update( cli::array<double> ^ddb )
 {
-   RTEDGE::Doubles img;
+   RTEDGE::DoubleList img;
 
    for ( int i=0; i<ddb->Length; img.push_back( ddb[i++] ) );
    return (int)_vec->Update( img );

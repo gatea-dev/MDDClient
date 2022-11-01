@@ -822,7 +822,7 @@ public:
 	 *
 	 * \return Field Value as Vector
 	 */
-	Doubles &GetAsVector()
+	DoubleList &GetAsVector()
 	{
 	   rtBUF    &b  = _fld._val._buf;
 	   double   *dv;
@@ -1089,7 +1089,7 @@ private:
 	rtEdge_Context _cxt;
 	rtFIELD        _fld;
 	ByteStreamFld  _bStr;
-	Doubles        _vec;
+	DoubleList     _vec;
 	rtFldType      _schemaType;
 	std::string    _dump;
 	std::string    _s;

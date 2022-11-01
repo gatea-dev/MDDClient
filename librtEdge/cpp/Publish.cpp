@@ -295,7 +295,7 @@ public:
       int            i, fid;
       u_int64_t      i64;
       double         r64;
-      Doubles        vdb;
+      DoubleList     vdb;
       struct timeval tv;
 
       bImg       = ( w._rtl == 1 );

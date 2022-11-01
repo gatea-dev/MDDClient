@@ -5,7 +5,7 @@
 *
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
-*     29 OCT 2022 jcs  Build 60: Doubles.
+*     29 OCT 2022 jcs  Build 60: DoubleList.
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -131,7 +131,7 @@ public:
  * \brief A one-dimensional Vector of doubles : Pub or Sub
  *
  * When consuming you receive asynchronous notifications as follows:
- * + OnData( Doubles & ) - Complete Vector Update
+ * + OnData( DoubleList & ) - Complete Vector Update
  * + OnData( VectorUpdate & ) - Partial Vector Update
  * + OnError() - Error
  *
@@ -333,9 +333,9 @@ public:
 	 * \brief Return Vector Values
 	 *
 	 * \param img - Resultant Vector to populate
-	 * \return Doubles of all values
+	 * \return DoubleList of all values
 	 */
-	Doubles &Get( Doubles &img )
+	DoubleList &Get( DoubleList &img )
 	{
 	   img.clear();
 	   img = _vals;
@@ -352,7 +352,7 @@ public:
 	 * \param img - vector of values to load
 	 * \return Number loaded
 	 */
-	size_t Update( Doubles &img )
+	size_t Update( DoubleList &img )
 	{
 	   size_t i, n;
 
@@ -397,7 +397,7 @@ public:
 	 */
 	size_t ShiftLeft( size_t num, bool bRollToEnd=true )
 	{
-	   Doubles tmp;
+	   DoubleList tmp;
 	   size_t  i, n;
 	   double  dz;
 
@@ -426,7 +426,7 @@ public:
 	 */
 	size_t ShiftRight( size_t num, bool bRollToFront=true )
 	{
-	   Doubles tmp;
+	   DoubleList tmp;
 	   size_t  i, n;
 	   double  dz;
 
@@ -479,9 +479,9 @@ public:
 	 *
 	 * Vector State | Publish | Consumer Callback
 	 * --- | --- | ---
-	 * Unpublished | Doubles | OnData( Doubles & )
+	 * Unpublished | DoubleList | OnData( DoubleList & )
 	 * Published | VectorUpdate | OnData( VectorUpdate & )
-	 * Comletely Updated | Doubles | OnData( Doubles & )
+	 * Comletely Updated | DoubleList | OnData( DoubleList & )
 	 * Not Updated | None | None
 	 *
 	 * \param u - Update publishing object
@@ -641,7 +641,7 @@ public:
 	 *
 	 * \param img - Initial Image
 	 */
-	virtual void OnData( Doubles &img )
+	virtual void OnData( DoubleList &img )
 	{ ; }
 
 	/**
@@ -711,7 +711,7 @@ private:
 	   char          *bp, *cp;
 	   VecWireHdr    *h;
 	   VecWireUpdVal *udb;
-	   Doubles        img;
+	   DoubleList        img;
 	   VectorUpdate   upd;
 	   VectorValue    v;
 	   u_int64_t      sz, *vdb;
@@ -798,7 +798,7 @@ private:
 private:
 	VectorStream _str;
 	VectorUpdate _upds;
-	Doubles      _vals;
+	DoubleList   _vals;
 	int          _precision;
 	int          _NumCol;
 	double       _precIn;

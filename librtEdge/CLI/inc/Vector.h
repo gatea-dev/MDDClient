@@ -119,7 +119,7 @@ public:
 
 	// Asynchronous Callbacks
 protected:
-	virtual void OnData( RTEDGE::Doubles & );
+	virtual void OnData( RTEDGE::DoubleList & );
 	virtual void OnData( RTEDGE::VectorUpdate & );
 	virtual void OnError( const char * );
 	virtual void OnPublishComplete( int );
@@ -307,7 +307,7 @@ public:
 	{
 	   void   set( int idx, double val ) { _vec->UpdateAt( idx, val ); }
 	   double get( int idx ) {
-	      RTEDGE::Doubles img;
+	      RTEDGE::DoubleList img;
 	      size_t          sz;
 
 	      sz = _vec->Get( img ).size();

@@ -23,7 +23,7 @@
 *     23 MAY 2022 jcs  Build 54: Channel.OnError()
 *      6 SEP 2022 jcs  Build 56: GetMaxTxBufSize()
 *     26 OCT 2022 jcs  Build 58: CxtMap
-*     29 OCT 2022 jcs  Build 60: Doubles
+*     29 OCT 2022 jcs  Build 60: DoubleList
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -68,8 +68,9 @@
 namespace RTEDGE
 {
 
-typedef std::vector<std::string> Strings;
-typedef std::vector<double>      Doubles;
+typedef std::vector<std::string>  Strings;
+typedef std::vector<double>       DoubleList;
+typedef std::vector< DoubleList > DoubleGrid;
 
 
 ////////////////////////////////////////////////

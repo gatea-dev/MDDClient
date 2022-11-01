@@ -11,18 +11,11 @@
 ******************************************************************************/
 #ifndef __CubicSpline_H
 #define __CubicSpline_H
-#include <math.h>
-#include <vector>
 
 using namespace std;
 
 namespace QUANT
 {
-
-/** \brief Vector of values */
-typedef vector<double>    Doubles;
-/** \brief 2-D grid of values : Vector of Doubles */
-typedef vector< Doubles > DoubleGrid;
 
 #ifndef DOXYGEN_OMIT
 #define _HUGE 0.99e30
@@ -61,7 +54,7 @@ public:
 	 * \param X - Sampled X-axis values
 	 * \param Y - Sampled Y-axis values
 	 */
-	CubicSpline( Doubles &X, Doubles &Y ) :
+	CubicSpline( RTEDGE::DoubleList &X, RTEDGE::DoubleList &Y ) :
 	   _X(),
 	   _Y(),
 	   _Y2(),
@@ -88,7 +81,7 @@ public:
 	 * \param yp1 - 2nd order derivitive at left boundary 
 	 * \param ypN - 2nd order derivitive at right boundary 
 	 */
-	CubicSpline( Doubles &X, Doubles &Y, double yp1, double ypN ) : 
+	CubicSpline( RTEDGE::DoubleList &X, RTEDGE::DoubleList &Y, double yp1, double ypN ) : 
 	   _X(),
 	   _Y(),
 	   _Y2(),
@@ -117,7 +110,7 @@ public:
 	 *
 	 * \return Calculated 2nd order derivitive array
 	 */
-	Doubles &Y2()
+	RTEDGE::DoubleList &Y2()
 	{
 	   return _Y2;
 	}
@@ -168,12 +161,12 @@ private:
 	 */
 	void _Calc()
 	{
-	   Doubles &x  = _X;
-	   Doubles &y  = _Y;
-	   Doubles &y2 = _Y2;
-	   Doubles u;
-	   size_t  i, k, n;
-	   double  p, qn, sig, un;
+	   RTEDGE::DoubleList &x  = _X;
+	   RTEDGE::DoubleList &y  = _Y;
+	   RTEDGE::DoubleList &y2 = _Y2;
+	   RTEDGE::DoubleList u;
+	   size_t     i, k, n;
+	   double     p, qn, sig, un;
 
 	   n = _Size;
 	   u.resize( n+1 );
@@ -215,13 +208,13 @@ private:
 	////////////////////////
 private:
 	/** \brief Sampled X-axis values */
-	Doubles _X;
+	RTEDGE::DoubleList _X;
 	/** \brief Sampled Y-axis values */
-	Doubles _Y;
+	RTEDGE::DoubleList _Y;
 	/** \brief 2nd order derivative at _Y : Calculated Values */
-	Doubles _Y2;
+	RTEDGE::DoubleList _Y2;
 	/** \brief gmin( _X.size(), _Y.size() ) */
-	size_t  _Size;
+	size_t     _Size;
 	/** 
 	 * \brief 2nd order derivative at _X[0]
 	 *
@@ -251,8 +244,8 @@ private:
  *
  * You pass in the sampled values into the Constructor, which calculates and 
  * stores the 2nd order derivitive at each sampled point.  Then you iterate 
- * over the X-axis at your discretion and call Spline( Doubles, Doubles ) to 
- * get the value at each iteration point
+ * over the X-axis at your discretion and call 
+ * Spline( RTEDGE::DoubleList, RTEDGE::DoubleList ) to get the value at each iteration point
  */
 class CubicSurface
 {
@@ -269,7 +262,7 @@ public:
 	 * \param Y - N Sampled Y-axis values
 	 * \param Z - MxN Sampled Z-axis values
 	 */
-	CubicSurface( Doubles &X, Doubles &Y, DoubleGrid &Z ) :
+	CubicSurface( RTEDGE::DoubleList &X, RTEDGE::DoubleList &Y, RTEDGE::DoubleGrid &Z ) :
 	   _X(),
 	   _Y(),
 	   _Z(),
@@ -277,7 +270,7 @@ public:
 	   _M( X.size() ),
 	   _N( Y.size() )
 	{
-	   Doubles z;
+	   RTEDGE::DoubleList z;
 
 	   for ( size_t m=0; m<_M; _X.push_back( X[m] ), m++ );
 	   for ( size_t n=0; n<_N; _Y.push_back( Y[n] ), n++ );
@@ -301,7 +294,7 @@ public:
 	 *
 	 * \return Calculated 2nd order derivitive grid
 	 */
-	DoubleGrid &Z2()
+	RTEDGE::DoubleGrid &Z2()
 	{
 	   return _Z2;
 	}
@@ -317,8 +310,8 @@ public:
 	 */
 	double Surface( double x, double y )
 	{
-	   Doubles y2;
-	   double  z;
+	   RTEDGE::DoubleList y2;
+	   double     z;
 
 	   for ( size_t m=0; m<_M; m++ ) {
 	      CubicSpline cs2( _Y, _Z[m] );
@@ -354,13 +347,13 @@ private:
 	////////////////////////
 private:
 	/** \brief M X-axis values */
-	Doubles    _X;
+	RTEDGE::DoubleList    _X;
 	/** \brief N Y-axis values */
-	Doubles    _Y;
+	RTEDGE::DoubleList    _Y;
 	/** \brief MxN sampled Z-axis values */
-	DoubleGrid _Z;
+	RTEDGE::DoubleGrid _Z;
 	/** \brief 2nd order derivative at _Z : Calculated Values */
-	DoubleGrid _Z2;
+	RTEDGE::DoubleGrid _Z2;
 	/** \brief _M x _N Grid of Points */
 	size_t     _M;
 	/** \brief _M x _N Grid of Points */
