@@ -49,6 +49,8 @@ Features To Add
  * ### Build 60 22-10-26
  *
  * -# rtFld_vector
+ *    - mddField._vPrecision
+ *    - Precision : Update.AddVector( ..., precision )
  * 
  * 
  * ### Build 59 22-10-26

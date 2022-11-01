@@ -33,8 +33,10 @@ Features To Add
  * 
  * ### Build 16 22-11-01
  * 
- * -# mddFld_vector
+ * -# mddFld_vector w/ precision
  *    - mddWire_vectorSize()
+ *    - mddField._vPrecision
+ *    - Precision : Update.AddVector( ..., precision )
  *
  * -# Huge FID Range : hash_map, not _ddb; No more MDDWIRE_PRIVATE.Schema._ddb
  *
