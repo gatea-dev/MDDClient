@@ -230,7 +230,7 @@ ByteStreamFld ^rtEdgeField::GetAsByteStream()
 
 cli::array<double> ^rtEdgeField::GetAsVector()
 {
-   RTEDGE::Doubles    &vdb = cpp()->GetAsVector();
+   RTEDGE::DoubleList &vdb = cpp()->GetAsVector();
    size_t              n   = vdb.size();
    cli::array<double> ^vec;
 

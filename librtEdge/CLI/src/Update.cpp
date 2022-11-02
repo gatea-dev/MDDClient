@@ -225,7 +225,7 @@ void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
 
 void rtEdgePubUpdate::AddFieldAsVector( int fid, cli::array<double> ^vec )
 {
-   RTEDGE::Doubles vdb;
+   RTEDGE::DoublesList vdb;
 
    for ( int i=0; i<vec->Length; vdb.push_back( vec[i] ), i++ );
    _upd.AddVector( fid, vdb );
@@ -235,7 +235,7 @@ void rtEdgePubUpdate::AddFieldAsVector( int                 fid,
                                         cli::array<double> ^vec,
                                         int                 precision )
 {
-   RTEDGE::Doubles vdb;
+   RTEDGE::DoublesList vdb;
 
    for ( int i=0; i<vec->Length; vdb.push_back( vec[i] ), i++ );
    _upd.AddVector( fid, vdb, precision );

@@ -99,7 +99,7 @@ public:
    // Asynchronous Callbacks
    ////////////////////////////////
 public:
-   virtual void OnData( Doubles &img )
+   virtual void OnData( DoubleList &img )
    {
       string s = Dump();
 
