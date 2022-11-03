@@ -25,13 +25,12 @@ FOR %%X in (libmddWire librtEdge) DO (
          Call :BuildStuff2 %%X %%Y
          copy %%X\bin64\%%Y\%%Y.exe .\bin64
       )
-      set MK=%%Y
-      if exist %%X\CLI\examples\%MK%\%MK%CLI.cs (
-         echo Building %%X\CLI\examples\%MK%\%MK%CLI
-         cd %%X\CLI\examples\%MK%
-         devenv /build %BLD_TYPE% %MK%CLI.sln /project %MK%CLI
+      if exist %%X\CLI\examples\%%Y\%%Y%CLI.cs (
+         echo Building %%X\CLI\examples\%%Y\%%Y%CLI
+         cd %%X\CLI\examples\%%Y
+         devenv /build %BLD_TYPE% %%Y%CLI.sln /project %%Y%CLI
          cd ..\..\..\..
-         copy %%X\CLI\examples\%MK%CLI\%MK%CLI.exe .\bin64
+         copy %%X\CLI\examples\%%Y\%%Y%CLI.exe .\bin64
       )
    )
    if exist %%X\CLI\lib64 (
@@ -49,6 +48,7 @@ goto Done
 :: #############################
 :BuildStuff2
    cd %1/%VS%
+   del /f /s /q ..\Release64
    set MK=%1%
    set M2=%2%
    devenv /build %BLD_TYPE% %MK%64.sln /project %M2%
@@ -62,7 +62,7 @@ goto Done
 
 :BuildStuff64
    cd %1\%VS%
-   del /f /s /q ..Release64
+   del /f /s /q ..\Release64
    set MK=%1%
    devenv /build %BLD_TYPE% %MK%64.sln /project %MK%64
    if exist %MK%MD64.vcxproj (
