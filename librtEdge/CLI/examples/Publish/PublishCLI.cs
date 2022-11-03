@@ -327,8 +327,7 @@ class PublishCLI : rtEdgePublisher
          Console.WriteLine( rtEdge.Version() );
          pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bFldV );
          pub.PubStart();
-         if ( vecSz == 0 )
-            pub.SetUnPacked( !bPack );
+         pub.SetUnPacked( !bPack );
          pub.SetHeartbeat( hbeat );
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );

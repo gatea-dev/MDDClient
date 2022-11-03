@@ -27,7 +27,8 @@ FOR %%X in (libmddWire librtEdge) DO (
       )
       set MK=%%Y
       if exist %%X\CLI\examples\%MK%\%MK%CLI.cs (
-         cd %%X\CLI\examples\%MK%CLI
+         echo Building %%X\CLI\examples\%MK%\%MK%CLI
+         cd %%X\CLI\examples\%MK%
          devenv /build %BLD_TYPE% %MK%CLI.sln /project %MK%CLI
          cd ..\..\..\..
          copy %%X\CLI\examples\%MK%CLI\%MK%CLI.exe .\bin64

@@ -429,6 +429,18 @@ public:
       }
    }
 
+   virtual void OnPermQuery( const char **tuple, int reqID )
+   {
+      const char *svc = tuple[0];
+      const char *tkr = tuple[1];
+      const char *usr = tuple[2];
+      const char *loc = tuple[3];
+      const char *fmt = "OnPermQuery( %s,%s,%s,%s ) : %d\n";
+
+      ::fprintf( stdout, fmt, svc, tkr, usr, loc, reqID );
+      ::fflush( stdout );
+   }
+
 
    ////////////////////////////////////
    // PubChannel Interface
@@ -558,6 +570,9 @@ int main( int argc, char **argv )
    }
    pub.SetBinary( true );
    pub.SetHeartbeat( hBeat );
+#ifdef TODO_PERMS_BUT_NOT_NOW
+   pub.SetPerms( true );
+#endif // TODO_PERMS_BUT_NOT_NOW
    ::fprintf( stdout, "%s\n", pub.Start( svr ) );
    pub.SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
    ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
