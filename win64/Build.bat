@@ -28,9 +28,11 @@ FOR %%X in (libmddWire librtEdge) DO (
       if exist %%X\CLI\examples\%%Y\%%Y%CLI.cs (
          echo Building %%X\CLI\examples\%%Y\%%Y%CLI
          cd %%X\CLI\examples\%%Y
-         devenv /build %BLD_TYPE% %%Y%CLI.sln /project %%Y%CLI
+         pwd
+         echo devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
+         devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
          cd ..\..\..\..
-         copy %%X\CLI\examples\%%Y\%%Y%CLI.exe .\bin64
+         copy %%X\CLI\examples\%%Y\%%YCLI.exe .\bin64
       )
    )
    if exist %%X\CLI\lib64 (
