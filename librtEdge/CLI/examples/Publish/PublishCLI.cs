@@ -126,12 +126,12 @@ class PublishCLI : rtEdgePublisher
       u.AddFieldAsString( 16260000, "16260000" );
       u.AddFieldAsString( 536870911, "536870911" );
  */
-      if ( _vecSz && _bVecFld ) {
+      if ( ( _vecSz > 0 ) && _bVecFld ) {
          Random   rnd = new Random();
          double[] vdb = new double[_vecSz];
 
          for ( i=0; i<_vecSz; vdb[i++] = rnd.NextDouble() * 100.0 );
-         u.AddVector( -7151, vdb, _vecPrec );
+         u.AddFieldAsVector( -7151, vdb, _vPrec );
       }
       u.Publish();
       _rtl += 1;
@@ -185,7 +185,7 @@ class PublishCLI : rtEdgePublisher
             Console.WriteLine( "Exception: " + e.Message );
          }
       }
-      if ( !_bVecFld && ( _vecSz > 0 ) {
+      if ( !_bVecFld && ( _vecSz > 0 ) ) {
          lock( _wlV ) {
             if ( !_wlV.TryGetValue( tkr, out vec ) ) {
                vec = new MyVector( this, tkr, _vecSz, _vPrec, arg );
@@ -330,14 +330,12 @@ class PublishCLI : rtEdgePublisher
          Console.WriteLine( rtEdge.Version() );
          pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bFldV );
          pub.PubStart();
-//         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
          if ( vecSz == 0 )
             pub.SetUnPacked( !bPack );
          pub.SetHeartbeat( hbeat );
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
-//         Console.WriteLine( "Stats in " + mdd );
-         if ( vecSz ) {
+         if ( vecSz > 0 ) {
             ty = bFldV ? "FIELD" : "BYTESTREAM";
             Console.WriteLine( "{0} VECTOR as {1}", vecSz, ty );
          }
