@@ -52,6 +52,8 @@ Features To Add
  *    - mddField._vPrecision
  *    - Precision : Update.AddVector( ..., precision )
  * 
+ * -# CLI : XmlParser
+ * 
  * 
  * ### Build 59 22-10-26
  *

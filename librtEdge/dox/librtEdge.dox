@@ -870,6 +870,7 @@ EXCLUDE_SYMBOLS        = RTEDGE::CxtMap \
                          RTEDGE::IVector \
                          RTEDGE::Vector::VectorStream \
                          RTEDGE::ISurface \
+                         RTEDGE::KeyValue \
                          RTEDGE::Surface::_SurfVector
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories

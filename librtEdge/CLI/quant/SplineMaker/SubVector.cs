@@ -1,10 +1,10 @@
 /******************************************************************************
 *
-*  SubCurve.cs
-*     librtEdge .NET Subscribe to Vector
+*  SubVector.cs
+*     librtEdge .NET Subscribe to ByteStream-fed Vector 
 *
 *  REVISION HISTORY:
-*     25 OCT 2022 jcs  Created (from SubCurve)
+*      3 NOV 2022 jcs  Created
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -16,15 +16,15 @@ using librtEdge;
 
 /////////////////////////////////////
 //
-//   c l a s s   S u b C u r v e
+//   c l a s s   S u b V e c t o r
 //
 /////////////////////////////////////
-class SubCurve : rtEdgeSubscriber 
+class SubVector : rtEdgeSubscriber 
 {
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SubCurve( string svr, string usr ) :
+   public SubVector( string svr, string usr ) :
       base( svr, usr, true )
    { ; }
 
@@ -56,7 +56,7 @@ class SubCurve : rtEdgeSubscriber
    public static int Main(String[] args) 
    {
       try {
-         SubCurve   sub;
+         SubVector   sub;
          int        i, nt, argc;
          bool       aOK;
          string[]   tkrs;
@@ -72,7 +72,7 @@ class SubCurve : rtEdgeSubscriber
             return 0;
          }
          svr   = "localhost:9998";
-         usr   = "SubCurve";
+         usr   = "SubVector";
          svc   = "bloomberg";
          tkr   = null;
          tkrs  = null;
@@ -112,7 +112,7 @@ class SubCurve : rtEdgeSubscriber
             }
          }
          Console.WriteLine( rtEdge.Version() );
-         sub = new SubCurve( svr, usr );
+         sub = new SubVector( svr, usr );
          sub.SetBinary( true );
          Console.WriteLine( "BINARY" );
          Console.WriteLine( sub.Start() );
@@ -160,7 +160,7 @@ class SubCurve : rtEdgeSubscriber
       return rtn;
    }
 
-} // class SubCurve
+} // class SubVector
 
 
 /////////////////////////////////////

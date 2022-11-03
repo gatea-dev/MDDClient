@@ -97,12 +97,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CubicSpline.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PubCurve.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="CubicSpline.cs" />
+    <Compile Include="PubCurve.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

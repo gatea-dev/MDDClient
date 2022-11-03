@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *      3 MAY 2022 jcs  Created (from elsewhere).
+*      3 NOV 2022 jcs  Do not expose KeyValue
 *
 *  (c) 1994-2022, Gatea Ltd.
 *******************************************************************************/
@@ -25,6 +26,7 @@ typedef void *XML_Parser;
 namespace RTEDGE
 {
 
+#ifndef DOXYGEN_OMIT
 // Forwards
 
 class XmlElem;
@@ -139,6 +141,8 @@ public:
 
 }; // class KeyValue
 
+#endif // DOXYGEN_OMIT
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -152,11 +156,11 @@ public:
 class XmlElem : public KeyValue
 {
 private:
-	XmlElem    *_parent;
-	XmlElemVector  _elems;
-	XmlElemMap  _elemsH;
-	KeyValVector _attrs;
-	KeyValMap _attrsH;
+	XmlElem      *_parent;
+	XmlElemVector _elems;
+	XmlElemMap    _elemsH;
+	KeyValVector  _attrs;
+	KeyValMap     _attrsH;
 
 	/////////////////////////////
 	// Constructor / Destructor
@@ -504,7 +508,7 @@ public:
 	   _elemsH[key] = rtn;
 	   return rtn;
 	}
-
+private:
 	KeyValue *addAttr( char *pKey, char *pVal )
 	{
 	   KeyValue   *rtn;
@@ -595,6 +599,7 @@ public:
 	/** 
 	 * \brief Load XML document from file 
 	 *
+	 * \param pFile : Filename to load
 	 * \return isValid()
 	 */
 	bool Load( const char *pFile )
