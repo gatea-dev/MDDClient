@@ -130,7 +130,7 @@ class PublishCLI : rtEdgePublisher
          Random   rnd = new Random();
          double[] vdb = new double[_vecSz];
 
-         for ( i=0; i<_vecSz; vdb[i++] = rnd.NextDouble() * 100.0 );
+         for ( int i=0; i<_vecSz; vdb[i++] = rnd.NextDouble() * 100.0 );
          u.AddFieldAsVector( -7151, vdb, _vPrec );
       }
       u.Publish();
