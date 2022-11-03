@@ -9,6 +9,7 @@
 *     23 JAN 2015 jcs  Chains
 *      5 MAY 2022 jcs  Build 53: New constructor; SetMDDirectMon()
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
+*      3 NOV 2022 jcs  Build 60: Native vector field type
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -31,6 +32,7 @@ class PublishCLI : rtEdgePublisher
    ////////////////////////////////
    private int                          _vecSz;
    private int                          _vPrec;
+   private bool                         _bVecFld;
    private Dictionary<string, IntPtr>   _wl;
    private Dictionary<string, MyVector> _wlV;
    private Timer                        _tmr;
@@ -45,19 +47,21 @@ class PublishCLI : rtEdgePublisher
                       string svc, 
                       double tTmr, 
                       int    vecSz,
-                      int    vPrec ) :
+                      int    vPrec,
+                      bool   bVecFld ) :
       base( svr, svc, true, false ) // binary, bStart 
    {
       int tMs;
 
       // Fields / Watchlist
 
-      _vecSz = vecSz;
-      _vPrec = vPrec;
-      _wl    = new Dictionary<string, IntPtr>();
-      _wlV   = new Dictionary<string, MyVector>();
-      _rtl   = 0;
-      _chn   = null;
+      _vecSz   = vecSz;
+      _vPrec   = vPrec;
+      _bVecFld = bVecFld;
+      _wl      = new Dictionary<string, IntPtr>();
+      _wlV     = new Dictionary<string, MyVector>();
+      _rtl     = 0;
+      _chn     = null;
 
       // Timer Callback
 
@@ -116,9 +120,19 @@ class PublishCLI : rtEdgePublisher
       r64        = 3.14159265358979323846;
       u.AddFieldAsDouble(  fid++, r64 );
       u.AddFieldAsUnixTime(  fid++, DateTime.Now );
+/*
       u.AddFieldAsString(  2147483647, "2147483647" );
       u.AddFieldAsString( -2147483647, "-2147483647" );
       u.AddFieldAsString( 16260000, "16260000" );
+      u.AddFieldAsString( 536870911, "536870911" );
+ */
+      if ( _vecSz && _bVecFld ) {
+         Random   rnd = new Random();
+         double[] vdb = new double[_vecSz];
+
+         for ( i=0; i<_vecSz; vdb[i++] = rnd.NextDouble() * 100.0 );
+         u.AddVector( -7151, vdb, _vecPrec );
+      }
       u.Publish();
       _rtl += 1;
    }
@@ -171,7 +185,7 @@ class PublishCLI : rtEdgePublisher
             Console.WriteLine( "Exception: " + e.Message );
          }
       }
-      if ( _vecSz > 0 ) {
+      if ( !_bVecFld && ( _vecSz > 0 ) {
          lock( _wlV ) {
             if ( !_wlV.TryGetValue( tkr, out vec ) ) {
                vec = new MyVector( this, tkr, _vecSz, _vPrec, arg );
@@ -239,10 +253,10 @@ class PublishCLI : rtEdgePublisher
    {
       try {
          PublishCLI pub;
-         string     s, svr, svc;
+         string     s, svr, svc, ty;
          int        i, argc,  hbeat, vecSz, vPrec;
          double     tRun, tPub;
-         bool       aOK, bPack;
+         bool       aOK, bPack, bFldV;
 
          /////////////////////
          // Quickie checks
@@ -259,6 +273,7 @@ class PublishCLI : rtEdgePublisher
          tPub  = 1.0;
          vecSz = 0;
          vPrec = 2;
+         bFldV = false;
          bPack = true;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
@@ -266,8 +281,9 @@ class PublishCLI : rtEdgePublisher
             s += "       [ -s       <Service> ] \\ \n";
             s += "       [ -pub     <Publication Interval> ] \\ \n";
             s += "       [ -run     <App Run Time> ] \\ \n";
-            s += "       [ -vector  <Non-zero for vector; 0 for Field List> ] \\ \n";
+            s += "       [ -vector  <Vector length; 0 for no vector> ] \\ \n";
             s += "       [ -vecPrec <Vector Precision> ] \\ \n";
+            s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
             s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
             s += "       [ -hbeat   <Heartbeat> ] \\ \n";
             Console.WriteLine( s );
@@ -278,6 +294,7 @@ class PublishCLI : rtEdgePublisher
             Console.Write( "      -run     : {0}\n", tRun );
             Console.Write( "      -vector  : {0}\n", vecSz );
             Console.Write( "      -vecPrec : {0}\n", vPrec );
+            Console.Write( "      -vecFld  : {0}\n", bFldV );
             Console.Write( "      -packed  : {0}\n", bPack );
             Console.Write( "      -hbeat   : {0}\n", hbeat );
             return 0;
@@ -311,7 +328,7 @@ class PublishCLI : rtEdgePublisher
          // Rock on
 
          Console.WriteLine( rtEdge.Version() );
-         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec );
+         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bFldV );
          pub.PubStart();
 //         pub.SetMDDirectMon( mdd, "PublishCLI", "PublishCLI" );
          if ( vecSz == 0 )
@@ -320,6 +337,10 @@ class PublishCLI : rtEdgePublisher
          Console.WriteLine( pub.pConn() );
          Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
 //         Console.WriteLine( "Stats in " + mdd );
+         if ( vecSz ) {
+            ty = bFldV ? "FIELD" : "BYTESTREAM";
+            Console.WriteLine( "{0} VECTOR as {1}", vecSz, ty );
+         }
          Console.WriteLine( "Hit <ENTER> to terminate..." );
          Console.ReadLine();
          pub.Stop();
@@ -359,11 +380,13 @@ class MyVector : Vector
                     IntPtr          StreamID ) :
       base( pub.pPubName(), tkr, vecPrec )
    {
+      Random rnd = new Random();
+
       _pub      = pub;
       _Size     = vecSz;
       _StreamID = StreamID;
       _RTL      = 1;
-      for ( int i=0; i<vecSz; UpdateAt( i, Math.PI * i ), i++ );
+      for ( int i=0; i<vecSz; UpdateAt( i++, rnd.NextDouble() * 100.0 ) );
    }
 
 

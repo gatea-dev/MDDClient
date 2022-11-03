@@ -11,7 +11,7 @@
 *     16 MAR 2022 jcs  Build 51: De-lint
 *     29 MAR 2022 jcs  Build 52: ::getenv( "__JD_UNPACKED" )
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
-*     29 OCT 2022 jcs  Build 60: AddVector()
+*      3 NOV 2022 jcs  Build 60: AddVector()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -66,16 +66,16 @@ private:
    string _tkr;
    rtBUF  _upd;
 public:
-   void  *_arg;
+   int    _StreamID;
    int    _rtl;
 
    ///////////////////
    // Constructor
    ///////////////////
 public:
-   Watch( const char *tkr, void *arg ) :
+   Watch( const char *tkr, int StreamID ) :
       _tkr( tkr ),
-      _arg( arg ),
+      _StreamID( StreamID ),
       _rtl( 1 )
    {
       ::memset( &_upd, 0, sizeof( _upd ) );
@@ -140,10 +140,10 @@ public:
              const char *tkr, 
              int         vecSz,
              int         precision,
-             void       *arg ) :
+             int         StreamID ) :
       Vector( svc, tkr, precision ),
       _Size( vecSz ),
-      _StreamID( (int)(size_t)arg ),
+      _StreamID( StreamID ),
       _RTL( 1 )
    {
       for ( int i=0; i<vecSz; UpdateAt( i, M_PI * i ), i++ );
@@ -188,6 +188,7 @@ class MyChannel : public PubChannel
 private:
    int          _vecSz;
    int          _vecPrec;
+   bool         _bVecFld;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
@@ -198,10 +199,11 @@ private:
    // Constructor
    ////////////////////////////////
 public:
-   MyChannel( const char *svc, int vecSz, int vecPrec ) :
+   MyChannel( const char *svc, int vecSz, int vecPrec, bool bVecFld ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
+      _bVecFld( bVecFld ),
       _wl(),
       _wlV(),
       _mtx(),
@@ -216,26 +218,26 @@ public:
    // Operations
    ////////////////////////////////
 public:
-   Watch *AddWatch( const char *tkr, void *arg )
+   Watch *AddWatch( const char *tkr, int sid )
    {
       Locker              lck( _mtx );
       WatchList::iterator it;
       string         s( tkr );
 
       if ( (it=_wl.find( s )) == _wl.end() )
-         _wl[s] = new Watch( tkr, arg );
+         _wl[s] = new Watch( tkr, sid );
       it = _wl.find( s );
       return (*it).second;
    }
 
-   MyVector *AddVector( const char *tkr, void *arg )
+   MyVector *AddVector( const char *tkr, int sid )
    {
       Locker               lck( _mtx );
       WatchListV::iterator vt;
       string               s( tkr );
 
       if ( (vt=_wlV.find( s )) == _wlV.end() )
-         _wlV[s] = new MyVector( pPubName(), tkr, _vecSz, _vecPrec, arg );
+         _wlV[s] = new MyVector( pPubName(), tkr, _vecSz, _vecPrec, sid );
       vt = _wlV.find( s );
       return (*vt).second;
    }
@@ -274,7 +276,7 @@ public:
       bool    bImg;
 
       bImg = ( w._rtl == 1 );
-      u.Init( w.tkr(), w._arg, bImg );
+      u.Init( w.tkr(), w._StreamID, bImg );
       u.AddField(  22, 1.02 );
       u.AddField(  25, 1.03 );
       u.AddField(  30, 100 );
@@ -299,7 +301,7 @@ public:
       struct timeval tv;
 
       bImg       = ( w._rtl == 1 );
-      u.Init( w.tkr(), w._arg, bImg );
+      u.Init( w.tkr(), w._StreamID, bImg );
       fid        = 6;
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
@@ -323,8 +325,10 @@ public:
       u.AddField( 16260000, "16260000" );
       u.AddField( 536870911, "536870911" );
  */
-      for ( i=0; i<10; vdb.push_back( ::drand48() * 100.0 ), i++ );
-      u.AddVector( -7151, vdb, _vecPrec );
+      if ( _vecSz && _bVecFld ) {
+         for ( i=0; i<_vecSz; vdb.push_back( ::drand48() * 100.0 ), i++ );
+         u.AddVector( -7151, vdb, _vecPrec );
+      }
       u.Publish();
       w._rtl += 1;
    }
@@ -373,19 +377,20 @@ public:
       MyVector *v;
       char     *pfx, *ric;
       bool      bChn;
+      int       StreamID = (int)(size_t)arg;
 
       pfx  = ::strtok( (char *)tmp.data(), "#" );
       ric  = ::strtok( NULL, "#" );
       bChn = _chn && ric;
-      ::fprintf( stdout, "OPEN %s\n", tkr ); ::fflush( stdout );
+      ::fprintf( stdout, "OPEN [%6d] %s\n", StreamID, tkr ); ::fflush( stdout );
       if ( bChn )
          PubChainLink( atoi( pfx ), ric, arg );
-      else if ( _vecSz ) {
-         v = AddVector( tkr, arg );
+      else if ( _vecSz && !_bVecFld ) {
+         v = AddVector( tkr, StreamID );
          v->PubVector( upd() );
       }
       else {
-         w = AddWatch( tkr, arg );
+         w = AddWatch( tkr, StreamID );
          PubTkr( *w );
       }
    }
@@ -415,7 +420,7 @@ public:
       ::fflush( stdout );
    }
 
-   virtual void OnRefreshImage( const char *tkr, void *arg )
+   virtual void OnRefreshImage( const char *tkr, int StreamID )
    {
       Locker              lck( _mtx );
       WatchList::iterator it;
@@ -453,12 +458,12 @@ static bool _IsTrue( const char *p )
 
 int main( int argc, char **argv )
 {
-   const char *svr, *svc, *pChn;
+   const char *svr, *svc, *pChn, *ty;
    const char *lnks[_MAX_CHAIN];
    char       *cp;
    double      tPub, tRun, d0, dn;
    int         i, nl, nt, hBeat, vecSz, vPrec;
-   bool        bCfg, bPack, aOK;
+   bool        bCfg, bPack, bFldV, aOK;
    string      s;
    rtBuf64     chn;
 
@@ -478,6 +483,7 @@ int main( int argc, char **argv )
    tPub  = 1.0;
    vecSz = 0;
    vPrec = 2;
+   bFldV = false;
    bPack = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
@@ -486,8 +492,9 @@ int main( int argc, char **argv )
       s += "       [ -s       <Service> ] \\ \n";
       s += "       [ -pub     <Publication Interval> ] \\ \n";
       s += "       [ -run     <App Run Time> ] \\ \n";
-      s += "       [ -vector  <Non-zero for vector; 0 for Field List> ] \\ \n";
+      s += "       [ -vector  <Vector length; 0 for no vector> ] \\ \n";
       s += "       [ -vecPrec <Vector Precision> ] \\ \n";
+      s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
       s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
       s += "       [ -hbeat   <Heartbeat> ] \\ \n";
       printf( s.data(), argv[0] );
@@ -498,6 +505,7 @@ int main( int argc, char **argv )
       printf( "      -run     : %.1f\n", tRun );
       printf( "      -vector  : %d\n", vecSz );
       printf( "      -vecPrec : %d\n", vPrec );
+      printf( "      -vecFld  : %s\n", bFldV ? "YES" : "NO" );
       printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
       printf( "      -hbeat   : %d\n", hBeat );
       return 0;
@@ -520,13 +528,17 @@ int main( int argc, char **argv )
          tRun = atof( argv[++i] );
       else if ( !::strcmp( argv[i], "-vector" ) )
          vecSz = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-vecPrec" ) )
+         vPrec = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-vecFld" ) )
+         bFldV = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-packed" ) )
          bPack = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-packed" ) )
          hBeat = _IsTrue( argv[++i] );
    }
 
-   MyChannel pub( svc, vecSz, vPrec );
+   MyChannel pub( svc, vecSz, vPrec, bFldV );
 
    ::srand48( pub.TimeSec() ); 
    s = "";
@@ -546,6 +558,10 @@ int main( int argc, char **argv )
    pub.SetChain( lnks, nl );
    ::fprintf( stdout, "%s\n", pub.Version() );
    ::fprintf( stdout, "%sPACKED\n", pub.IsUnPacked() ? "UN" : "" );
+   if ( vecSz ) {
+      ty = bFldV ? "FIELD" : "BYTESTREAM";
+      ::fprintf( stdout, "%d VECTOR as %s\n", vecSz, ty );
+   }
    pub.SetBinary( true );
    pub.SetHeartbeat( hBeat );
    pub.SetPerms( true );
