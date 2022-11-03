@@ -255,7 +255,7 @@ class PublishCLI : rtEdgePublisher
          PublishCLI pub;
          string     s, svr, svc, ty;
          int        i, argc,  hbeat, vecSz, vPrec;
-         double     tRun, tPub;
+         double     tPub;
          bool       aOK, bPack, bFldV;
 
          /////////////////////
@@ -269,7 +269,6 @@ class PublishCLI : rtEdgePublisher
          svr   = "localhost:9995";
          svc   = "my_publisher";
          hbeat = 15;
-         tRun  = 60.0;
          tPub  = 1.0;
          vecSz = 0;
          vPrec = 2;
@@ -280,7 +279,6 @@ class PublishCLI : rtEdgePublisher
             s += "       [ -h       <Source : host:port> ] \\ \n";
             s += "       [ -s       <Service> ] \\ \n";
             s += "       [ -pub     <Publication Interval> ] \\ \n";
-            s += "       [ -run     <App Run Time> ] \\ \n";
             s += "       [ -vector  <Vector length; 0 for no vector> ] \\ \n";
             s += "       [ -vecPrec <Vector Precision> ] \\ \n";
             s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
@@ -291,7 +289,6 @@ class PublishCLI : rtEdgePublisher
             Console.Write( "      -h       : {0}\n", svr );
             Console.Write( "      -s       : {0}\n", svc );
             Console.Write( "      -pub     : {0}\n", tPub );
-            Console.Write( "      -run     : {0}\n", tRun );
             Console.Write( "      -vector  : {0}\n", vecSz );
             Console.Write( "      -vecPrec : {0}\n", vPrec );
             Console.Write( "      -vecFld  : {0}\n", bFldV );
@@ -313,12 +310,12 @@ class PublishCLI : rtEdgePublisher
                svc = args[++i];
             else if ( args[i] == "-pub" )
                tPub = Convert.ToDouble( args[++i] );
-            else if ( args[i] == "-run" )
-               tRun = Convert.ToDouble( args[++i] );
             else if ( args[i] == "-vector" )
                vecSz = Convert.ToInt32( args[++i], 10 );
             else if ( args[i] == "-vecPrec" )
                vPrec = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-vecFld" )
+               bFldV = _IsTrue( args[++i] );
             else if ( args[i] == "-packed" )
                bPack = _IsTrue( args[++i] );
             else if ( args[i] == "-hbeat" )

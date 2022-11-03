@@ -67,6 +67,7 @@ private:
    rtBUF  _upd;
 public:
    int    _StreamID;
+   bool   _bImg;
    int    _rtl;
 
    ///////////////////
@@ -76,6 +77,7 @@ public:
    Watch( const char *tkr, int StreamID ) :
       _tkr( tkr ),
       _StreamID( StreamID ),
+      _bImg( true ),
       _rtl( 1 )
    {
       ::memset( &_upd, 0, sizeof( _upd ) );
@@ -154,18 +156,20 @@ public:
    // Operations
    ///////////////////
 public:
-   void PubVector( RTEDGE::Update &u )
+   size_t PubVector( RTEDGE::Update &u )
    {
       size_t ix  = ( _RTL % _Size );
+      size_t nt;
  
       // Every 5th time
 
       _RTL += 1;
-      Publish( u, _StreamID );
+      nt = Publish( u, _StreamID );
       if ( ( _RTL % 5 ) == 0 )
          UpdateAt( ix, M_E );
       else
          ShiftRight( 1 );
+      return nt;
    }
 
 }; // class MyVector
@@ -222,12 +226,15 @@ public:
    {
       Locker              lck( _mtx );
       WatchList::iterator it;
-      string         s( tkr );
+      Watch              *w;
+      string              s( tkr );
 
       if ( (it=_wl.find( s )) == _wl.end() )
          _wl[s] = new Watch( tkr, sid );
       it = _wl.find( s );
-      return (*it).second;
+      w  = (*it).second;
+      w->_bImg = true;
+      return w;
    }
 
    MyVector *AddVector( const char *tkr, int sid )
@@ -255,53 +262,40 @@ public:
       WatchListV::iterator vt;
       Watch               *w;
       MyVector            *v;
+      size_t               nt, nb;
 
       // Not synchronized; Quick Hack
 
-      for ( it=_wl.begin(); it!=_wl.end(); it++ ) {
-         w = (*it).second;
-         PubTkr( *w );
+      for ( nb=0,it=_wl.begin(); it!=_wl.end(); it++ ) {
+         w   = (*it).second;
+         nb += PubTkr( *w );
       }
       for ( vt=_wlV.begin(); vt!=_wlV.end(); vt++ ) {
-         v = (*vt).second;
-         v->PubVector( upd() );
+         v   = (*vt).second;
+         nb += v->PubVector( upd() );
       }
-      return( _wl.size() + _wlV.size() );
+      nt = _wl.size() + _wlV.size();
+      if ( nt )
+         ::fprintf( stdout, "Publish %ld tkrs; %ld bytes\n", nt, nb );
+      ::fflush( stdout );
+      return nt;
    }
 
-   void PubTkr_THIN( Watch &w )
-   {
-      Locker  lck( _mtx );
-      Update &u = upd();
-      bool    bImg;
-
-      bImg = ( w._rtl == 1 );
-      u.Init( w.tkr(), w._StreamID, bImg );
-      u.AddField(  22, 1.02 );
-      u.AddField(  25, 1.03 );
-      u.AddField(  30, 100 );
-      u.AddField(  31, 100 );
-      u.AddField( 1021, w._rtl );
-      u.Publish();
-      if ( bImg )
-         ::fprintf( stdout, "IMAGE  %s\n", w.tkr() );
-      w._rtl += 1;
-   }
-
-   void PubTkr( Watch &w )
+   size_t PubTkr( Watch &w )
    {
       Locker         lck( _mtx );
       Update        &u = upd();
       rtDateTime     dtTm;
-      bool           bImg;
       int            i, fid;
       u_int64_t      i64;
       double         r64;
       DoubleList     vdb;
       struct timeval tv;
 
-      bImg       = ( w._rtl == 1 );
-      u.Init( w.tkr(), w._StreamID, bImg );
+      if ( w._bImg )
+         ::fprintf( stdout, "IMG [%d] : %s\n", w._StreamID, w.tkr() );
+      u.Init( w.tkr(), w._StreamID, w._bImg );
+      w._bImg    = false;
       fid        = 6;
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
@@ -329,8 +323,8 @@ public:
          for ( i=0; i<_vecSz; vdb.push_back( ::drand48() * 100.0 ), i++ );
          u.AddVector( -7151, vdb, _vecPrec );
       }
-      u.Publish();
       w._rtl += 1;
+      return u.Publish();
    }
 
    void PubChainLink( int lnk, const char *chain, void *arg )
@@ -442,7 +436,7 @@ public:
 protected:
    virtual Update *CreateUpdate()
    {
-      return new Update( *this );
+      return new RTEDGE::Update( *this );
    }
 
 }; // class MyChannel
@@ -564,7 +558,6 @@ int main( int argc, char **argv )
    }
    pub.SetBinary( true );
    pub.SetHeartbeat( hBeat );
-   pub.SetPerms( true );
    ::fprintf( stdout, "%s\n", pub.Start( svr ) );
    pub.SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
    ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
@@ -572,10 +565,6 @@ int main( int argc, char **argv )
    for ( i=0,d0=dn=pub.TimeNs(); ( dn-d0 ) < tRun; i++ ) {
       pub.Sleep( tPub );
       nt = pub.PublishAll();
-      dn = pub.TimeNs();
-      if ( nt )
-         ::fprintf( stdout, "[%04d,%6.1f] Publish %d tkrs\n", i, dn-d0, nt ); 
-      ::fflush( stdout );
    }
 
    // Clean up
