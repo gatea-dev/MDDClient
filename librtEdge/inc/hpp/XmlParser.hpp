@@ -30,6 +30,7 @@ namespace RTEDGE
 // Forwards
 
 class XmlElem;
+class XmlParser;
 class KeyValue;
 
 // Templatized vector collections
@@ -155,6 +156,7 @@ public:
  */
 class XmlElem : public KeyValue
 {
+friend class XmlParser;
 private:
 	XmlElem      *_parent;
 	XmlElemVector _elems;
@@ -497,6 +499,7 @@ public:
 	// Operations
 	////////////////////////////////////////////
 #ifndef DOXYGEN_OMIT
+private:
 	XmlElem *addElement( char *pName )
 	{
 	   XmlElem    *rtn;
@@ -508,7 +511,7 @@ public:
 	   _elemsH[key] = rtn;
 	   return rtn;
 	}
-private:
+
 	KeyValue *addAttr( char *pKey, char *pVal )
 	{
 	   KeyValue   *rtn;
