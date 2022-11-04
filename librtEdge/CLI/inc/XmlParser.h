@@ -225,7 +225,7 @@ public:
 	 * \param elemName - Element name to find
 	 * \return Element reference if found; null if not.
 	 */
-	XmlElem ^getElem( String ^elemName, bool bRecurse )
+	XmlElem ^getElem( String ^elemName )
 	{
 	   return getElem( elemName, true );
 	}
