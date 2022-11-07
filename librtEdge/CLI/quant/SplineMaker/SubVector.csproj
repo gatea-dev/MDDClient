@@ -87,7 +87,7 @@
   <ItemGroup>
     <Reference Include="librtEdgeCLI64">
       <Name>librtEdgeCLI64</Name>
-      <HintPath>.\librtEdgeCLI64.dll</HintPath>
+      <HintPath>..\..\lib64\librtEdgeCLI64.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <Name>MSCorLib</Name>

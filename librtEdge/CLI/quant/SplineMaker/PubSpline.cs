@@ -1,14 +1,13 @@
 /******************************************************************************
 *
 *  PubSpline.cs
-*     Publish SwapSpline from velocity
+*     Publish Spline
 *
 *     We publish 1 ticker specified by the user as a librEdge.Vector
 *
 *  REVISION HISTORY:
 *     24 OCT 2022 jcs  Created (from Pipe.cs)
-*     31 OCT 2022 jcs  -fp
-*      2 NOV 2022 jcs  -xi
+*      7 NOV 2022 jcs  XML config
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -55,7 +54,7 @@ class DTD
    public static string _attr_inc    = "Increment";
    public static string _attr_curve  = "Curve";
 
-}; // DTD
+} // DTD
 
 
 ////////////////////////////////////////
@@ -83,9 +82,9 @@ class KnotWatch
    // Access
    ////////////////////////////////
    public double X() { return _X; }
-   public double Y() { return _knot.Y();; }
+   public double Y() { return _knot.Y(); }
 
-}; // class KnotWatch
+} // class KnotWatch
 
 
 ////////////////////////////////////////
@@ -119,7 +118,7 @@ class Knot
    // Access / Mutator
    ////////////////////////////////
    public double Y()        { return _Y; }
-   public int    StreamID{} { return _StreamID; }
+   public int    StreamID() { return _StreamID; }
    
    public int Subscribe( SwapSubscriber sub, string svc )
    {
@@ -131,7 +130,7 @@ class Knot
    {
       KnotWatch w;
 
-      _curves.Add( (w=new KnotWatch( this, c, intvl )) );
+      _wl.Add( (w=new KnotWatch( this, c, intvl )) );
       return w;
    }
 
@@ -141,7 +140,7 @@ class Knot
    ////////////////////////////////
    public void OnData( SwapSubscriber sub, rtEdgeField f )
    {
-      int    i;
+      int    i, nw;
       string tm;
 
       // Pre-condition(s)
@@ -152,10 +151,10 @@ class Knot
       // Set Value / On-pass to Curve(s)
 
       _Y = f.GetAsDouble();
-      tm = sub.DateTimeMs();
+      tm = rtEdge.DateTimeMs();
       nw = _wl.Count;
       Console.WriteLine( "[{0}] {1} = {2}", tm, _Ticker, f.Dump() );
-      for ( i=0; i<nw; _wl[i]._curve.OnData( this, _wl[i]._X ), i++ );
+      for ( i=0; i<nw; _wl[i]._curve.OnData( this ), i++ );
    }
 
 } // class Knot
@@ -187,7 +186,7 @@ class Curve
       XmlElem[] edb = xe.elements();
       double    X;
       string    tkr;
-      int       i, nk;
+      int       i, nw;
 
       /*
        * <Curve Name="Swaps">
@@ -196,7 +195,7 @@ class Curve
        * </Curve Name="Swaps">
        */
       _sub     = sub;
-      _name    = getAttrValue( DTD._attr_name, null );
+      _name    = xe.getAttrValue( DTD._attr_name, null );
       _kdb     = new List<KnotWatch>();
       _splines = new List<Spline>();
       _Xmax    = 1.0;
@@ -210,7 +209,6 @@ class Curve
          if ( (X=edb[i].getAttrValue( DTD._attr_intvl, 0.0 )) == 0.0 )
             continue; // for-i
          _kdb.Add( sub.AddWatch( this, tkr, X ) );
-         _Xmax = Math.max( X, _Xmax );
       }
       if ( (nw=_kdb.Count) == 0 )
          return;
@@ -238,7 +236,7 @@ class Curve
       _splines.Add( s );
    }
 
-   public void OnData( Knot k, double X )
+   public void OnData( Knot k )
    {
       int i, nw, ns;
 
@@ -249,8 +247,9 @@ class Curve
 
       // 2) On-pass to Spines
 
-      ns = _slines.Count;
-      for ( i=0; i<nsCount; _splines[i++].CalcSpline( X(), Y(), _Xmax ) );
+      ns = _splines.Count;
+      for ( i=0; i<ns; _splines[i++].Calc( _X, _Y, _Xmax ) );
+   }
 
 } // class Curve
 
@@ -267,7 +266,8 @@ class Spline
    // Members
    //////////////
    private SwapPublisher _pub;
-   private string        _name;
+   private string        _tkr;
+   private double        _dInc;
    private IntPtr        _StreamID;
    private double[]      _X;
    private double[]      _Z;
@@ -276,10 +276,11 @@ class Spline
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public Spline( SwapPublisher pub, string tkr, Curve curve )
+   public Spline( SwapPublisher pub, string tkr, double dInc, Curve curve )
    {
       _pub      = pub;
-      _name     = tkr;
+      _tkr      = tkr;
+      _dInc     = dInc;
       _StreamID = (IntPtr)0;
       _X        = null;
       _Z        = null;
@@ -301,7 +302,7 @@ class Spline
       _StreamID = (IntPtr)0;
    }
 
-   public void CalcSpline( double[] X, double[] Y, double xn )
+   public void Calc( double[] X, double[] Y, double xn )
    {
       CubicSpline cs;
       double      x;
@@ -313,14 +314,14 @@ class Spline
        *  2) bPubFld  : Container only
        */
       cs = new CubicSpline( X, Y );
-      nx = (int)( xn / _xInc );
+      nx = (int)( xn / _dInc );
       _X = new double[nx];
       _Z = new double[nx];
       for ( i=0,x=0.0; i<nx && x<xn; i++, x++ ) {
          _X[i] = x;
          _Z[i] = cs.Spline( _X[i] );
       }
-      if ( _StreamID != 0 )
+      if ( _StreamID != (IntPtr)0 )
          Publish();
    }
 
@@ -328,7 +329,7 @@ class Spline
    {
       rtEdgePubUpdate u;
 
-      u = new rtEdgePubUpdate( this, _name, (IntPtr)_StreamID, true );
+      u = new rtEdgePubUpdate( _pub, _tkr, (IntPtr)_StreamID, true );
       u.AddFieldAsVector( DTD._fid_X, _X );
       u.AddFieldAsVector( DTD._fid_Y, _Z );
       u.Publish();
@@ -367,7 +368,7 @@ class SwapSubscriber : rtEdgeSubscriber
       /*
        * 1) Collections
        */
-      _svc    = xe.getAttrValue( DTD._attr_svc, "velocity" ) )
+      _svc    = xe.getAttrValue( DTD._attr_svc, "velocity" );
       _byId   = new Dictionary<int, Knot>();
       _byName = new Dictionary<string, Knot>();
       _curves = new Dictionary<string, Curve>();
@@ -385,11 +386,6 @@ class SwapSubscriber : rtEdgeSubscriber
    ////////////////////////////////
    // Access / /Operations
    ////////////////////////////////
-   public bool IsValid()
-   {
-      return( ( _curves.Length > 0 ) && ( _byName.Length > 0 ) );
-   }
-
    public Curve GetCurve( string k )
    {
       Curve rc;
@@ -409,12 +405,12 @@ class SwapSubscriber : rtEdgeSubscriber
          rc         = new Knot( k );
          _byName[k] = rc;
       }
-      return k.AddWatch( crv, X );
+      return rc.AddWatch( crv, X );
    }
 
    public int Size()
    {
-      return _byName.Length;
+      return _byName.Count;
    }
 
    public void OpenAll()
@@ -431,13 +427,6 @@ class SwapSubscriber : rtEdgeSubscriber
       }
    }
 
-
-   ////////////////////////////////
-   // rtEdgeSubscriber Interface
-   ////////////////////////////////
-   public override void OnConnect( string pConn, rtEdgeState state )
-   {
-      bool   bUp = ( state == rtEdgeState.edg_up );
 
    ////////////////////////////////
    // rtEdgeSubscriber Interface
@@ -463,10 +452,8 @@ class SwapSubscriber : rtEdgeSubscriber
    {
       Knot k;
 
-      // On-pass
-
-      if ( _wl.TryGetValue( d._StreamID, out k ) )
-         k.OnData( d.GetField( DTD._fidVal ) );
+      if ( _byId.TryGetValue( d._StreamID, out k ) )
+         k.OnData( this, d.GetField( DTD._fidVal ) );
    }
 
 } // class SwapSubscriber
@@ -482,6 +469,7 @@ class SwapPublisher : rtEdgePublisher
    //////////////
    // Members
    //////////////
+   private XmlElem                    _xp;
    private Dictionary<string, Spline> _splines;
 
    ////////////////////////////////
@@ -493,6 +481,7 @@ class SwapPublisher : rtEdgePublisher
             true,     // bBinary
             false )   // bStart
    {
+      _xp      = xp;
       _splines = new Dictionary<string, Spline>();
    }
 
@@ -504,10 +493,11 @@ class SwapPublisher : rtEdgePublisher
       return _splines.Count;
    }
 
-   public int OpenSplines( SwapPublisher, XmlElem xp )
+   public int OpenSplines( SwapSubscriber sub )
    {
-      XmlElem[] edb = xe.elements();
+      XmlElem[] edb = _xp.elements();
       string    k, tkr;
+      double    dInc;
       Curve     crv;
 
       for ( int i=0; i<edb.Length; i++ ) {
@@ -517,7 +507,8 @@ class SwapPublisher : rtEdgePublisher
             continue; // for-k
          if ( (crv=sub.GetCurve( k )) == null )
             continue; // for-k
-         _splines[k] = new Spline( this, tkr, crv );
+         dInc        = edb[i].getAttrValue( DTD._attr_inc, 1.0 );
+         _splines[k] = new Spline( this, tkr, dInc, crv );
       }
       return Size();
    }
@@ -552,15 +543,23 @@ class SwapPublisher : rtEdgePublisher
 
    public override void OnClose( string tkr )
    {
-      rtEdgePubUpdate u;
-      Spline          s;
+      Spline s;
 
       Console.WriteLine( "[{0}] CLOSE {1}", DateTimeMs(), tkr );
       if ( _splines.TryGetValue( tkr, out s ) )
          s.ClearWatch();
    }
 
+} // SwapPublisher
 
+
+/////////////////////////////////////
+//
+//   c l a s s   P u b S p l i n e
+//
+/////////////////////////////////////
+class PubSpline
+{
    ////////////////////////////////
    // main()
    ////////////////////////////////
@@ -570,7 +569,7 @@ class SwapPublisher : rtEdgePublisher
          SwapSubscriber sub;
          SwapPublisher  pub;
          XmlParser      cfg;
-         int            i, argc, nc, ns;
+         int            argc, nc, ns;
 
          /////////////////////
          // Quickie checks
@@ -605,12 +604,12 @@ class SwapPublisher : rtEdgePublisher
             Console.Write( "<{0}> not found; Exitting ...\n", pp );
             return 0;
          }
-         if ( ( (sdb=xs.elements()) == null )) || ( sdb.Length == 0 ) ) {
+         if ( ( (sdb=xs.elements()) == null ) || ( sdb.Length == 0 ) ) {
             Console.Write( "No Curves in <{0}> not found; Exitting ...\n", ps );
             return 0;
          }
 
-         if ( ( (pdb=xp.elements()) == null )) || ( pdb.Length == 0 ) ) {
+         if ( ( (pdb=xp.elements()) == null ) || ( pdb.Length == 0 ) ) {
             Console.Write( "No Splines in <{0}> not found; Exitting ...\n", pp );
             return 0;
          }
@@ -631,16 +630,12 @@ class SwapPublisher : rtEdgePublisher
          }
 
          /////////////////////////////////////
-         // Pub / Sub Channels
+         // Do it
          /////////////////////////////////////
          Console.WriteLine( rtEdge.Version() );
-         pub = new SwapPublisher( pubSvr, pubSvc, pubTkr, xInc, bPubFld );
          sub.Start();
          sub.OpenAll();
          pub.PubStart();
-
-         // Do it
-
          Console.WriteLine( "SUB : {0} : {1} Curves", sub.pConn(), nc );
          Console.WriteLine( "PUB : {0} : {1} Splines", pub.pConn(), ns );
          Console.WriteLine( "Hit <ENTER> to terminate..." );
@@ -660,4 +655,4 @@ class SwapPublisher : rtEdgePublisher
       return( ( p == "YES" ) || ( p == "true" ) );
    }
 
-} // SwapPublisher
+} // PubSpline
