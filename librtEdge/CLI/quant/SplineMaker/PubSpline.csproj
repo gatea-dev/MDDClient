@@ -8,7 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon />
     <AssemblyKeyContainerName />
-    <AssemblyName>PubCurve</AssemblyName>
+    <AssemblyName>PubSpline</AssemblyName>
     <AssemblyOriginatorKeyFile />
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Flow</DefaultHTMLPageLayout>
@@ -20,7 +20,7 @@
     <StartupObject />
     <FileUpgradeFlags>
     </FileUpgradeFlags>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>0.0</OldToolsVersion>
@@ -87,7 +87,7 @@
   <ItemGroup>
     <Reference Include="librtEdgeCLI64">
       <Name>librtEdgeCLI64</Name>
-      <HintPath>.\librtEdgeCLI64.dll</HintPath>
+      <HintPath>..\..\lib64\librtEdgeCLI64.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <Name>MSCorLib</Name>
@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CubicSpline.cs" />
-    <Compile Include="PubCurve.cs" />
+    <Compile Include="PubSpline.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

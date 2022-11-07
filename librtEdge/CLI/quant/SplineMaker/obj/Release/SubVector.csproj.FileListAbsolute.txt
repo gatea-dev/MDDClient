@@ -1,0 +1,6 @@
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\SubVector.csprojAssemblyReference.cache
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\SubVector.csproj.CoreCompileInputs.cache
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\SubVector.csproj.CopyComplete
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\SubVector.exe.config
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\SubVector.exe
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\SubVector.exe

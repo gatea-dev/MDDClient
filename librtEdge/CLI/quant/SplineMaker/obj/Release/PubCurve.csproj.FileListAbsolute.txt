@@ -1,0 +1,8 @@
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\PubCurve.csprojAssemblyReference.cache
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\PubCurve.csproj.CoreCompileInputs.cache
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\PubCurve.csproj.CopyComplete
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\PubCurve.exe.config
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\obj\Release\PubCurve.exe
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\PubCurve.exe
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\librtEdgeCLI64.dll
+C:\Gatea\GIT\MDDClient\librtEdge\CLI\quant\SplineMaker\librtEdgeCLI64.pdb

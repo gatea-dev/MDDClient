@@ -45,6 +45,22 @@ public:
 	// Elements
 	//////////////////////////////
 	/**
+	 * \brief Return list of elements
+	 *
+	 * \return List of elements
+	 */
+	cli::array<XmlElem ^> ^elements()
+	{
+	   RTEDGE::XmlElemVector &edb = _cpp->elements();
+	   size_t                 ne  = edb.size();
+	   cli::array<XmlElem ^> ^rc;
+
+	   rc = ( ne > 0 ) ? gcnew cli::array<XmlElem ^>( ne ) : nullptr;
+	   for ( size_t i=0; i<ne; rc[i] = gcnew XmlElem( edb[i] ), i++ );
+	   return rc;
+	}
+
+	/**
 	 * \brief Return element value as string, returning default if not found
 	 *
 	 * \param prop - Element name to find
