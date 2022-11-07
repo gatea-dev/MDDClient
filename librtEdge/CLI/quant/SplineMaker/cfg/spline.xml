@@ -1,32 +1,36 @@
+<SplineMaker>
+   <Subscriber Service  = "velocity" 
+               Username = "SplineMaker" 
+               Server   = "localhost:9998" >
+      <Curve Name="Swaps">
+         <Knot Ticker="RATES.SWAP.USD.PAR.3M"  Interval="3" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.6M"  Interval="6" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.1Y"  Interval="12" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.2Y"  Interval="24" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.3Y"  Interval="36" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.5Y"  Interval="60" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.7Y"  Interval="84" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.10Y" Interval="120" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.20Y" Interval="240" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.30Y" Interval="360" />
+      </Curve>
+      <Curve Name="UST">
+         <Knot Ticker="RATES.TSY.OTR.1Y.YIELD"  Interval="12" />
+         <Knot Ticker="RATES.TSY.OTR.2Y.YIELD"  Interval="24" />
+         <Knot Ticker="RATES.TSY.OTR.3Y.YIELD"  Interval="36" />
+         <Knot Ticker="RATES.TSY.OTR.5Y.YIELD"  Interval="60" />
+         <Knot Ticker="RATES.TSY.OTR.7Y.YIELD"  Interval="84" />
+         <Knot Ticker="RATES.TSY.OTR.10Y.YIELD" Interval="120" />
+         <Knot Ticker="RATES.TSY.OTR.20Y.YIELD" Interval="240" />
+         <Knot Ticker="RATES.TSY.OTR.30Y.YIELD" Interval="360" />
+      </Curve>
+   </Subscriber>
 
-<Subscriber Service="velocity" Username="SplineMaker" Hostname="localhost:9998" >
-   <Curve Name="Swaps">
-      <Knot Ticker="RATES.SWAP.USD.PAR.3M"  Interval="3" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.6M"  Interval="6" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.1Y"  Interval="12" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.2Y"  Interval="24" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.3Y"  Interval="36" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.5Y"  Interval="60" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.7Y"  Interval="84" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.10Y" Interval="120" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.20Y" Interval="240" />
-      <Knot Ticker="RATES.SWAP.USD.PAR.30Y" Interval="360" />
-   </Curve Name="Swaps">
-   <Curve Name="UST">
-      <Knot Ticker="RATES.TSY.OTR.1Y.YIELD"  Interval="12" />
-      <Knot Ticker="RATES.TSY.OTR.2Y.YIELD"  Interval="24" />
-      <Knot Ticker="RATES.TSY.OTR.3Y.YIELD"  Interval="36" />
-      <Knot Ticker="RATES.TSY.OTR.5Y.YIELD"  Interval="60" />
-      <Knot Ticker="RATES.TSY.OTR.7Y.YIELD"  Interval="84" />
-      <Knot Ticker="RATES.TSY.OTR.10Y.YIELD" Interval="120" />
-      <Knot Ticker="RATES.TSY.OTR.20Y.YIELD" Interval="240" />
-      <Knot Ticker="RATES.TSY.OTR.30Y.YIELD" Interval="360" />
-   </Curve Name="UST">
-</Subscriber>
+   <Publisher Service="twap" Server="localhost:9985" >
+      <Spline Name="SwapByDay" Increment="0.03333" Curve="Swaps" />
+      <Spline Name="SwapByMon" Increment="1.0"     Curve="Swaps" />
+      <Spline Name="USTByDay"  Increment="0.03333" Curve="UST" />
+      <Spline Name="USTByMon"  Increment="1.0"     Curve="UST" />
+   </Publisher>
 
-<Publisher Service="twap" Hostname="localhost:9985" >
-   <Spline Name="SwapByDay" Increment="0.03333" Curve="Swaps" />
-   <Spline Name="SwapByMon" Increment="1.0"     Curve="Swaps" />
-   <Spline Name="USTByDay"  Increment="0.03333" Curve="UST" />
-   <Spline Name="USTByMon"  Increment="1.0"     Curve="UST" />
-</Publisher>
+</SplineMaker>

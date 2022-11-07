@@ -29,10 +29,12 @@ class DTD
    ////////////////////////
    // Hard-coded
    ////////////////////////
-   public static double _min_dInc = 0.001;
-   public static int    _fid_X    = -8001; // UNCLE_VX
-   public static int    _fid_Y    = -8002; // UNCLE_VY
-   public static int    _fidVal   = 6;
+   public static double _min_dInc  = 0.001;
+   public static int    _fid_X     = -8001; // UNCLE_VX
+   public static int    _fid_Y     = -8002; // UNCLE_VY
+   public static int    _fidVal    = 6;
+   public static int    _precision = 4;
+
 
    ////////////////////////
    // Elements
@@ -94,7 +96,6 @@ class KnotWatch
 ////////////////////////////////////////
 class Knot
 {
-   public static int _precision = 4;
    //////////////
    // Members
    //////////////
@@ -305,7 +306,8 @@ class Spline
    public void Calc( double[] X, double[] Y, double xn )
    {
       CubicSpline cs;
-      double      x;
+      string      pd;
+      double      x, d0, dd;
       int         i, nx;
 
       /*
@@ -313,13 +315,19 @@ class Spline
        *  1) !bPubFld : Container and Publisher
        *  2) bPubFld  : Container only
        */
+      d0 = rtEdge.TimeNs();
       cs = new CubicSpline( X, Y );
       nx = (int)( xn / _dInc );
       _X = new double[nx];
       _Z = new double[nx];
-      for ( i=0,x=0.0; i<nx && x<xn; i++, x++ ) {
+      for ( i=0,x=0.0; i<nx && x<xn; i++, x+=_dInc ) {
          _X[i] = x;
          _Z[i] = cs.Spline( _X[i] );
+      }
+      dd = 1000.0 * ( rtEdge.TimeNs() - d0 );
+      if ( dd >= 1.0 ) {
+         pd = dd.ToString( "F1" );
+         Console.WriteLine( "Spline {0} Calc'ed in {1}mS", _tkr, pd );
       }
       if ( _StreamID != (IntPtr)0 )
          Publish();
@@ -330,8 +338,10 @@ class Spline
       rtEdgePubUpdate u;
 
       u = new rtEdgePubUpdate( _pub, _tkr, (IntPtr)_StreamID, true );
-      u.AddFieldAsVector( DTD._fid_X, _X );
-      u.AddFieldAsVector( DTD._fid_Y, _Z );
+      u.AddFieldAsVector( DTD._fid_X, _X, 2 );
+      u.Publish();
+      u.Init( _tkr, (IntPtr)_StreamID, true );
+      u.AddFieldAsVector( DTD._fid_Y, _Z, DTD._precision );
       u.Publish();
    }
 
@@ -507,8 +517,9 @@ class SwapPublisher : rtEdgePublisher
             continue; // for-k
          if ( (crv=sub.GetCurve( k )) == null )
             continue; // for-k
-         dInc        = edb[i].getAttrValue( DTD._attr_inc, 1.0 );
-         _splines[k] = new Spline( this, tkr, dInc, crv );
+         dInc          = edb[i].getAttrValue( DTD._attr_inc, 1.0 );
+         _splines[tkr] = new Spline( this, tkr, dInc, crv );
+         Console.WriteLine( "Spline {0} added", tkr );
       }
       return Size();
    }
