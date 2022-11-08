@@ -18,7 +18,7 @@
 *     30 MAR 2022 jcs  Build 52: GetAsDateTime()
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
-*     29 OCT 2022 jcs  Build 60: rtFld_vector
+*      8 NOV 2022 jcs  Build 60: rtFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -769,6 +769,7 @@ public:
 	         break;
 	      case rtFld_vector:
 	      {
+	         ::memcpy( &f, &_fld, sizeof( _fld ) );
 	         nv  = gmax( 1, b._dLen / sizeof( double ) );
 	         bp  = new char[nv*32]; // %.6f
 	         mddWire_dumpField( f, bp );

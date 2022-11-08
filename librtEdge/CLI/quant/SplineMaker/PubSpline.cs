@@ -13,7 +13,7 @@
 ******************************************************************************/
 using System;
 using System.IO;
-using System.Collections;
+// using System.Collections;
 using System.Collections.Generic;
 using librtEdge;
 using QUANT;
@@ -50,6 +50,7 @@ class DTD
    public static string _attr_svc    = "Service";
    public static string _attr_usr    = "Username";
    public static string _attr_svr    = "Server";
+   public static string _attr_bds    = "BDS";
    public static string _attr_tkr    = "Ticker";
    public static string _attr_intvl  = "Interval";
    public static string _attr_name   = "Name";
@@ -481,6 +482,8 @@ class SwapPublisher : rtEdgePublisher
    //////////////
    private XmlElem                    _xp;
    private Dictionary<string, Spline> _splines;
+   private string                     _bds;
+   private IntPtr                     _bdsStreamID;
 
    ////////////////////////////////
    // Constructor
@@ -491,8 +494,10 @@ class SwapPublisher : rtEdgePublisher
             true,     // bBinary
             false )   // bStart
    {
-      _xp      = xp;
-      _splines = new Dictionary<string, Spline>();
+      _xp          = xp;
+      _splines     = new Dictionary<string, Spline>();
+      _bds         = xp.getAttrValue( DTD._attr_bds, pPubName() );
+      _bdsStreamID = (IntPtr)0;
    }
 
    ////////////////////////////////
@@ -559,6 +564,37 @@ class SwapPublisher : rtEdgePublisher
       Console.WriteLine( "[{0}] CLOSE {1}", DateTimeMs(), tkr );
       if ( _splines.TryGetValue( tkr, out s ) )
          s.ClearWatch();
+   }
+
+   public override void OnOpenBDS( string tkr, IntPtr arg )
+   {
+      rtEdgePubUpdate u;
+      string          err;
+      string[]        tkrs;
+      int             i, nc;
+
+      Console.WriteLine( "[{0}] OPEN.BDS {1}", DateTimeMs(), tkr );
+      if ( tkr == _bds ) {
+         _bdsStreamID =  arg;
+//         tkrs         = _splines.Keys.ToArray();  // WTF?????
+         nc           = _splines.Count;
+         tkrs         = new string[nc];
+         i = 0;
+         foreach ( var kv in _splines )
+            tkrs[i++] = kv.Key;
+         PublishBDS( _bds, (int)_bdsStreamID, tkrs );
+      }
+      else {
+         err = "Unsupported BDS " + tkr + "; Request " + _bds + " instead";
+         u   = new rtEdgePubUpdate( this, tkr, arg, false );
+         u.PubError( err );
+      }
+   }
+
+   public override void OnCloseBDS( string tkr )
+   {
+      Console.WriteLine( "[{0}] CLOSE.BDS {1}", DateTimeMs(), tkr );
+      _bdsStreamID = (IntPtr)0;
    }
 
 } // SwapPublisher
