@@ -773,7 +773,7 @@ public:
 	         nv  = gmax( 1, b._dLen / sizeof( double ) );
 	         bp  = new char[nv*32]; // %.6f
 	         mddWire_dumpField( f, bp );
-	         _s  = _StripTrailing0( buf );
+	         _s  = _StripTrailing0( bp );
 	         rtn = _s.data();
 	         delete[] bp;
 	         break;
