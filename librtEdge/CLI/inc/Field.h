@@ -12,6 +12,7 @@
 *     18 MAR 2022 jcs  Build 52: long long GetAsInt64()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*     10 NOV 2022 jcs  Build 61: DateTime in vector
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -277,11 +278,17 @@ public:
 	 */
 	ByteStreamFld ^GetAsByteStream();
 
-	/** \brief Returns field value as vector
+	/** \brief Returns field value as vector of doubles
 	 *
-	 * \return Field value as vector
+	 * \return Field value as vector of doubles
 	 */
 	cli::array<double> ^GetAsVector();
+
+	/** \brief Returns field value as vector of DateTime's
+	 *
+	 * \return Field value as vector of DateTime's
+	 */
+	cli::array<DateTime ^> ^GetAsDateTimeVector();
 
 	/**
 	 * \brief Dumps field contents as string

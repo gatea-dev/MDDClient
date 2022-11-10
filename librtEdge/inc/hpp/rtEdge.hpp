@@ -24,6 +24,7 @@
 *      6 SEP 2022 jcs  Build 56: GetMaxTxBufSize()
 *     26 OCT 2022 jcs  Build 58: CxtMap
 *     29 OCT 2022 jcs  Build 60: DoubleList
+*     10 NOV 2022 jcs  Build 61: DateTimeList
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -59,18 +60,19 @@
 #endif // !defined(hash_map)
 #define K 1024
 
+#ifndef DOXYGEN_OMIT
+static double e_MIL     =  1000000.0;
+
 #if !defined(VOID_PTR)
 #define VOID_PTR       void *)(size_t
 #endif // !defined(VOID_PTR)
 
 #define _BDS_PFX       "~~SYM_LIST~~"
 
+#endif // DOXYGEN_OMIT
+
 namespace RTEDGE
 {
-
-typedef std::vector<std::string>  Strings;
-typedef std::vector<double>       DoubleList;
-typedef std::vector< DoubleList > DoubleGrid;
 
 
 ////////////////////////////////////////////////
@@ -141,6 +143,11 @@ public:
 
 }; // class rtDateTime
 
+
+typedef std::vector<std::string>  Strings;
+typedef std::vector<double>       DoubleList;
+typedef std::vector<rtDateTime>   DateTimeList;
+typedef std::vector< DoubleList > DoubleGrid;
 
 
 ////////////////////////////////////////////////
@@ -278,6 +285,32 @@ public:
 	}
 
 	/**
+	 * \brief Converts rtDateTime to Unix time as double
+	 *
+	 * \param dtTm - Date/Time to convert
+	 * \return Unix time as double
+	 */
+	static double rtEdgeDateTime2unix( rtDateTime dtTm )
+	{
+	   time_t    now = TimeSec();
+	   rtDate   &dt  = dtTm._date;
+	   rtTime   &tm  = dtTm._time;
+	   struct tm lt;
+	   double    rc;
+
+	   ::localtime_r( &now, &lt );
+	   lt.tm_year = dt._year - 1900;
+	   lt.tm_mon  = dt._month;
+	   lt.tm_mday = dt._mday;
+	   lt.tm_hour = tm._hour;
+	   lt.tm_min  = tm._minute;
+	   lt.tm_sec  = tm._second;
+	   rc         = ::mktime( &lt ); 
+	   rc        += ( 1.0 / e_MIL ) * tm._micros;
+	   return rc;
+	}
+
+	/**
 	 * \brief Converts Unix time to rtDateTime
 	 *
 	 * \param tv - Unix time in struct timeval
@@ -304,6 +337,23 @@ public:
 	}
 
 	/**
+	 * \brief Converts Unix time to rtDateTime
+	 *
+	 * \param dtTm - Unix time as double
+	 * \return rtDateTime
+	 */
+	static rtDateTime unix2rtDateTime( double dtTm ) 
+	{
+	   struct timeval tv;
+	   double         uS;
+
+	   tv.tv_sec  = (time_t)dtTm;
+	   uS         = ( dtTm - tv.tv_sec ) * e_MIL;
+	   tv.tv_usec = uS;
+	   return unix2rtDateTime( tv );
+	}
+
+	/**
 	 * \brief Converts Unix time to rtTime
 	 *
 	 * \param tv - Unix time in struct timeval
@@ -323,7 +373,6 @@ public:
 	   rt._micros = tv.tv_usec;
 	   return rt;
 	}
-
 
 	/**
 	 * \brief Sleeps for requested period of time.

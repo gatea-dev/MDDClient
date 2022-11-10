@@ -19,6 +19,7 @@
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
 *      8 NOV 2022 jcs  Build 60: rtFld_vector
+*     11 NOV 2022 jcs  Build 61: DateTimeList
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -167,6 +168,7 @@ public:
 	   _cxt( (rtEdge_Context)0 ),
 	   _bStr(),
 	   _vec(),
+	   _vecDt(),
 	   _schemaType( rtFld_undef ),
 	   _dump(),
 	   _s()
@@ -819,9 +821,9 @@ public:
 	}
 
 	/**
-	 * \brief Returns field value as Vector
+	 * \brief Returns field value as Vector of doubles
 	 *
-	 * \return Field Value as Vector
+	 * \return Field Value as Vector of doubles
 	 */
 	DoubleList &GetAsVector()
 	{
@@ -837,6 +839,23 @@ public:
 	      for ( i=0; i<nv; _vec.push_back( dv[i] ), i++ );
 	   }
 	   return _vec;
+	}
+
+	/**
+	 * \brief Returns field value as Vector of rtDateTime's
+	 *
+	 * \return Field Value as Vector of rtDateTime's
+	 */
+	DateTimeList &GetAsDateTimeVector()
+	{
+	   DoubleList &ddb = GetAsVector();
+	   size_t      i, n;
+
+	   _vecDt.clear();
+	   n = ddb.size();
+	   for ( i=0; i<n; i++ )
+	      _vecDt.push_back( rtEdge::unix2rtDateTime( ddb[i] ) );
+	   return _vecDt;
 	}
 
 	/**
@@ -1091,6 +1110,7 @@ private:
 	rtFIELD        _fld;
 	ByteStreamFld  _bStr;
 	DoubleList     _vec;
+	DateTimeList   _vecDt;
 	rtFldType      _schemaType;
 	std::string    _dump;
 	std::string    _s;

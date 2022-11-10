@@ -11,6 +11,7 @@
 *     23 MAY 2022 jcs  Build 54: AddFieldAsUnixTime()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -286,21 +287,29 @@ public:
 	void AddFieldAsByteStream( int fid, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add vector field to update w/ 10 digits of precision on the wire
+	 * \brief Add vector of doubles field to update w/ 10 digits of precision on the wire
 	 *
 	 * \param fid - Field ID
-	 * \param vector - Field value as vector
+	 * \param vector - Field value as vector of doubles
 	 */
 	void AddFieldAsVector( int fid, cli::array<double> ^vector );
 
 	/**
-	 * \brief Add vector field to update
+	 * \brief Add vector of doubles field to update
 	 *
 	 * \param fid - Field ID
-	 * \param vector - Field value as vector
+	 * \param vector - Field value as vector of doubles
 	 * \param precision - Vector precision : 0 to 20
 	 */
 	void AddFieldAsVector( int fid, cli::array<double> ^vector, int precision );
+
+	/**
+	 * \brief Add vector of DateTimes field to update
+	 *
+	 * \param vector - Field value as vector
+	 * \return Array of doubles to store until calling Publish()
+	 */
+	void AddFieldAsVector( int fid, cli::array<DateTime ^> ^vector );
 
 	/**
 	 * \brief Add date-time field to update as DateTime
@@ -410,21 +419,29 @@ public:
 	void AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr );
 
 	/**
-	 * \brief Add vector field to update w/ 10 digits of precision on the wire
+	 * \brief Add vector of doubles field to update w/ 10 digits of precision on the wire
 	 *
 	 * \param pFld - Field Name
-	 * \param vector - Field value as vector
+	 * \param vector - Field value as vector of doubles
 	 */
 	void AddFieldAsVector( String ^pFld, cli::array<double> ^vector );
 
 	/**
-	 * \brief Add vector field to update
+	 * \brief Add vector of doubles field to update
 	 *
 	 * \param pFld - Field Name
-	 * \param vector - Field value as vector
+	 * \param vector - Field value as vector of doubles
 	 * \param precision - Vector precision : 0 to 20
 	 */
 	void AddFieldAsVector( String ^pFld, cli::array<double> ^vector, int precision );
+
+	/**
+	 * \brief Add vector of DateTimes field to update
+	 *
+	 * \param pFld - Field Name
+	 * \param vector - Field value as vector of DateTimes
+	 */
+	void AddFieldAsVector( String ^pFld, cli::array<DateTime ^> ^vector );
 
 	/**
 	 * \brief Add date-time field to update as MDD DateTime

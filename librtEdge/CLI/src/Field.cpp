@@ -13,6 +13,7 @@
 *      2 JUN 2022 jcs  Build 55: GetAsString() wraps GetAsString(), not Dump()
 *     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*     10 NOV 2022 jcs  Build 61: DateTime in vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -239,6 +240,29 @@ cli::array<double> ^rtEdgeField::GetAsVector()
    return vec;
 }
 
+cli::array<DateTime ^> ^rtEdgeField::GetAsDateTimeVector()
+{
+   RTEDGE::DateTimeList   &vdb = cpp()->GetAsDateTimeVector();
+   size_t                  n   = vdb.size();
+   cli::array<DateTime ^> ^vec;
+   RTEDGE::rtDateTime      dtTm;
+   RTEDGE::rtDate         &dt = dtTm._date;
+   RTEDGE::rtTime         &tm = dtTm._time;
+
+   vec = n ? gcnew cli::array<DateTime ^>( n ) : nullptr;
+   for ( size_t i=0; i<n; i++ ) {
+      dtTm = vdb[i];
+      vec[i] = gcnew DateTime( _WithinRange( 0, dt._year, 9999 ),
+                               _WithinRange( 1, dt._month + 1, 12 ),
+                               _WithinRange( 1, dt._mday, 31 ),
+                               _WithinRange( 0, tm._hour, 23 ),
+                               _WithinRange( 0, tm._minute, 59 ),
+                               _WithinRange( 0, tm._second, 59 ),
+                               _WithinRange( 0, tm._micros / 1000, 999 ) );
+   }
+   return vec;
+}
+
 DateTime ^rtEdgeField::GetAsDateTime()
 {
    DateTime          ^dt;
@@ -255,42 +279,6 @@ DateTime ^rtEdgeField::GetAsDateTime()
                          _WithinRange( 0, rTm._micros / 1000, 999 ) );
    return dt;
 }
-
-#ifdef OBSOLETE_NATIVE_GetAsDateTime
-DateTime ^rtEdgeField::GetAsDateTime()
-{
-   DateTime      ^dt, ^now;
-   ::rtFldType    ty;
-   RTEDGE::rtDate rDt;
-   RTEDGE::rtTime rTm;
-
-   ty = _fld->Type();
-   switch( ty ) {
-      case ::rtFld_date:
-         rDt = _fld->GetAsDate();
-         dt  = gcnew DateTime( _WithinRange( 0, rDt._year, 9999 ),
-                               _WithinRange( 1, rDt._month + 1, 12 ),
-                               _WithinRange( 1, rDt._mday, 31 ) );
-         break;
-      case ::rtFld_time:
-      case ::rtFld_timeSec:
-         now = DateTime::Now; // gcnew DateTime();
-         rTm = _fld->GetAsTime();
-         dt  = gcnew DateTime( now->Year,
-                               now->Month,
-                               now->Day,
-                               _WithinRange( 0, rTm._hour, 23 ),
-                               _WithinRange( 0, rTm._minute, 59 ),
-                               _WithinRange( 0, rTm._second, 59 ),
-                               _WithinRange( 0, rTm._micros / 1000, 999 ) );
-         break;
-      default:
-         dt = DateTime::Now; // gcnew DateTime();
-         break;
-   }
-   return dt;
-}
-#endif // OBSOLETE_NATIVE_GetAsDateTime
 
 
 /////////////////////////////////

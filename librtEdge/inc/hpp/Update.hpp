@@ -17,6 +17,7 @@
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     22 OCT 2022 jcs  Build 58: ByteStream.Ticker()
 *      1 NOV 2022 jcs  Build 60: AddVector( precision )
+*     10 NOV 2022 jcs  Build 61: AddVector( DateTimeList )
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -68,7 +69,8 @@ public:
 	   _tkr(),
 	   _flds( new rtFIELD[K] ),
 	   _nAlloc( K ),
-	   _bPubByteStr( false )
+	   _bPubByteStr( false ),
+	   _rawVec()
 	{
 	}
 
@@ -538,23 +540,40 @@ public:
 	}
 
 	/**
-	 * \brief Add Vector field to update
+	 * \brief Add Vector field of doubles to update
 	 * 
 	 * \param fid - Field ID
-	 * \param vector - Vector array to add
+	 * \param src - Vector array of doubles to add
 	 * \param precision - Vector Precision 0 to 20
+	 * \see Publish()
 	 */
-	void AddVector( int fid, DoubleList &vector, int precision=10 )
+	void AddVector( int fid, DoubleList &src, int precision=10 )
 	{
 	   rtFIELD f;
-	   rtBUF  &dst = f._val._buf;
 
 	   f._type       = rtFld_vector;
 	   f._fid        = fid;
 	   f._vPrecision = precision;
-	   dst._data     = (char *)vector.data();
-	   dst._dLen     = (int)( vector.size() * sizeof( double ) );
+	   f._val._buf   = _StoreVector( src );
 	   _Add( f );
+	}
+
+	/**
+	 * \brief Add Vector field of DateTime's to update
+	 * 
+	 * \param fid - Field ID
+	 * \param src - Vector array of DateTime's to add
+	 * \param dst - Destination array holding converted DateTime's
+	 * \see Publish()
+	 */
+	void AddVector( int fid, DateTimeList &src )
+	{
+	   DoubleList dst;
+	   size_t     i, n;
+
+	   n = src.size();
+	   for ( i=0; i<n; dst.push_back( rtEdgeDateTime2unix( src[i] ) ), i++ );
+	   AddVector( fid, dst, 6 ); 
 	}
 
 
@@ -790,7 +809,12 @@ public:
 private:
 	void _Clear()
 	{
+	   size_t i, n;
+
 	   ::memset( &_d, 0, sizeof( _d ) );
+	   n = _rawVec.size();
+	   for ( i=0; i<n; delete[] _rawVec[i++]._data );
+	   _rawVec.clear();
 	}
 
 	void _Add( rtFIELD f )
@@ -821,17 +845,29 @@ private:
 	   _d._nFld += 1;
 	}
 
+	rtBUF _StoreVector( DoubleList &v )
+	{
+	   rtBUF rc;
+
+	   rc._dLen  = (int)( v.size() * sizeof( double ) );
+	   rc._data  = new char[rc._dLen+4];
+	   ::memcpy( rc._data, (char *)v.data(), rc._dLen );
+	   _rawVec.push_back( rc );
+	   return rc;
+	}
+
 	////////////////////////
 	// Private Members
 	////////////////////////
 private:
-	PubChannel  &_pub;
-	std::string  _svc;
-	std::string  _tkr;
-	rtEdgeData   _d;
-	rtFIELD     *_flds;
-	int          _nAlloc;
-	bool         _bPubByteStr;
+	PubChannel        &_pub;
+	std::string        _svc;
+	std::string        _tkr;
+	rtEdgeData         _d;
+	rtFIELD           *_flds;
+	int                _nAlloc;
+	bool               _bPubByteStr;
+	std::vector<rtBUF> _rawVec;
 
 };  // class Update
 

@@ -24,10 +24,7 @@ Known Bugs
 Features To Add
 ---------------
  * -# Surface.hpp
- * -# rtFld_vector : User-configurable precision 
- *    - char precision; u_int64_t[]
- *    - RTEDGE.Update.AddVector( int, Doubles, int precision=10 )
- *
+ * -# rtFld_vector : AddVector( string[] )
 */
 
 /**
@@ -45,6 +42,13 @@ Features To Add
  *
  * ## Change Log
  *
+ *
+ * ### Build 61 22-11-xx
+ *
+ * -# rtFld_vector : DateTimeList
+ *    - Field.AddVector( DateTimeList )
+ *    - Update.AddVector( DateTimeList )
+ * 
  *
  * ### Build 60 22-10-26
  *

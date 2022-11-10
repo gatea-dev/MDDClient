@@ -9,6 +9,7 @@
 *     28 MAR 2022 jcs  Build 52: AddFieldAsDateTime() filled in
 *     23 MAY 2022 jcs  Build 55: AddFieldAsUnixTime()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -232,13 +233,24 @@ void rtEdgePubUpdate::AddFieldAsVector( int fid, cli::array<double> ^vec )
 }
 
 void rtEdgePubUpdate::AddFieldAsVector( int                 fid, 
-                                        cli::array<double> ^vec,
+                                        cli::array<double> ^src,
                                         int                 precision )
 {
-   RTEDGE::DoubleList vdb;
+   RTEDGE::DoubleList dst;
 
-   for ( int i=0; i<vec->Length; vdb.push_back( vec[i] ), i++ );
-   _upd.AddVector( fid, vdb, precision );
+   for ( int i=0; i<src->Length; dst.push_back( src[i++] ) );
+   _upd.AddVector( fid, dst, precision );
+}
+
+void rtEdgePubUpdate::AddFieldAsVector( int                     fid, 
+                                        cli::array<DateTime ^> ^src )
+{
+   RTEDGE::DateTimeList dst;
+   int                  i, n;
+
+   n = src->Length;
+   for ( i=0; i<n; dst.push_back( _ConvertDateTime( src[i++] ) ) );
+   _upd.AddVector( fid, dst );
 }
 
 void rtEdgePubUpdate::AddFieldAsDateTime( int fid, DateTime ^dt )
@@ -341,6 +353,15 @@ void rtEdgePubUpdate::AddFieldAsVector( String             ^pFld,
 
    if ( (fid=_pub->GetFid( pFld )) )
       AddFieldAsVector( fid, vec, precision );
+}
+
+void rtEdgePubUpdate::AddFieldAsVector( String                 ^pFld,
+                                        cli::array<DateTime ^> ^vec )
+{
+   int fid;
+
+   if ( (fid=_pub->GetFid( pFld )) )
+      AddFieldAsVector( fid, vec );
 }
 
 void rtEdgePubUpdate::AddFieldAsDateTime( String ^pFld, DateTime ^dt )
