@@ -27,6 +27,7 @@
 #define __RTEDGE_Field_H
 #include <hpp/rtEdge.hpp>
 #include <math.h>
+#include <assert.h>
 
 #ifndef DOXYGEN_OMIT
 static double f_MIL     =  1000000.0;
@@ -883,7 +884,8 @@ public:
 	         dSz = K;
 	         break;
 	   }
-	   bp = new char[dSz*2];
+	   dSz = gmax( dSz, K );
+	   bp  = new char[dSz*2];
 	   Dump( bp, bFid );
 	   _dump = bp;
 	   delete[] bp;
