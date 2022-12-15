@@ -241,7 +241,7 @@ int main( int argc, char **argv )
          printf( "[%04d] %s\n", sch.field()->Fid(), sch.field()->Name() );
       ::fflush( stdout );
    }
-   else if ( bAllS && bAllT ) {
+   else if ( bAllS || bAllT ) {
       LVCAll   &all = lvc.ViewAll();
       Messages &mdb = all.msgs();
       int       nb  = all.Size();
@@ -249,7 +249,20 @@ int main( int argc, char **argv )
       double    tMs = 1000.0 * all.dSnap();
 
       printf( "[%d bytes] : %ld tickers in %.2fmS\n", nb, nt, tMs );
-      for ( size_t i=0; i<nt; _DumpOne( mdb[i++], fids ) );
+      if ( bAllS && bAllT )
+         for ( size_t i=0; i<nt; _DumpOne( mdb[i], fids ), i++ );
+      else if ( bAllS ) {
+         for ( size_t i=0; i<nt; i++ ) {
+            if ( !::strcmp( tkr, mdb[i]->Ticker() ) )
+               _DumpOne( mdb[i], fids );
+         }
+      }
+      else if ( bAllT ) {
+         for ( size_t i=0; i<nt; i++ ) {
+            if ( !::strcmp( svc, mdb[i]->Service() ) )
+               _DumpOne( mdb[i], fids );
+         }
+      }
    }
    else { 
       for ( size_t i=0; i<tkrs.size(); i++ ) {
