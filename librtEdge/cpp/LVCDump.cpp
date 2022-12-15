@@ -6,6 +6,7 @@
 *     13 NOV 2014 jcs  Created (from Subscribe.cpp)
 *     . . .
 *     14 JUN 2022 jcs  Build 55: LVCDump.cpp
+*     12 DEC 2022 jcs  Build 61: Show Snap Time
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -241,9 +242,14 @@ int main( int argc, char **argv )
       ::fflush( stdout );
    }
    else if ( bAllS && bAllT ) {
-      Messages &mdb = lvc.ViewAll().msgs();
+      LVCAll   &all = lvc.ViewAll();
+      Messages &mdb = all.msgs();
+      int       nb  = all.Size();
+      size_t    nt  = mdb.size();
+      double    tMs = 1000.0 * all.dSnap();
 
-      for ( size_t i=0; i<mdb.size(); _DumpOne( mdb[i], fids ), i++ );
+      printf( "[%d bytes] : %ld tickers in %.2fmS\n", nb, nt, tMs );
+      for ( size_t i=0; i<nt; _DumpOne( mdb[i++], fids ) );
    }
    else { 
       for ( size_t i=0; i<tkrs.size(); i++ ) {

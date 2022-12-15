@@ -24,7 +24,7 @@
 *      6 SEP 2022 jcs  Build 56: GetMaxTxBufSize()
 *     26 OCT 2022 jcs  Build 58: CxtMap
 *     29 OCT 2022 jcs  Build 60: DoubleList
-*     10 NOV 2022 jcs  Build 61: DateTimeList
+*     26 NOV 2022 jcs  Build 61: DateTimeList; DoubleXY
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -144,10 +144,51 @@ public:
 }; // class rtDateTime
 
 
+////////////////////////////////////////////////
+//
+//      c l a s s   D o u b l e X Y
+//
+////////////////////////////////////////////////
+
+/**
+ * \class DoubleXY
+ * \brief ( x,y ) tuple
+ */
+class DoubleXY
+{
+public:
+   /** \brief X value */
+   double _x;
+   /** \brief Y value */
+   double _y;
+
+}; // class DoubleXY
+
+
+////////////////////////////////////////////////
+//
+//      c l a s s   D o u b l e X Y Z
+//
+////////////////////////////////////////////////
+
+/**
+ * \class DoubleXYZ
+ * \brief ( x,y ) tuple
+ */
+class DoubleXYZ : public DoubleXY
+{
+public:
+   /** \brief Z value */
+   double _z;
+
+}; // class DoubleXYZ
+
 typedef std::vector<std::string>  Strings;
 typedef std::vector<double>       DoubleList;
+typedef std::vector<DoubleXY>     DoubleXYList;
+typedef std::vector<DoubleXYZ>    DoubleXYZList;
+typedef std::vector<DoubleList>   DoubleGrid;
 typedef std::vector<rtDateTime>   DateTimeList;
-typedef std::vector< DoubleList > DoubleGrid;
 
 
 ////////////////////////////////////////////////

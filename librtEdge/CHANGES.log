@@ -43,12 +43,18 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 61 22-11-xx
+ * ### Build 61 22-12-xx
  *
  * -# rtFld_vector : DateTimeList
  *    - Field.AddVector( DateTimeList )
  *    - Update.AddVector( DateTimeList )
  * 
+ * -# quant : DoubleXY, DoubleXYZ, not DoubleGrid
+ *
+ * -# Field.Dump() : new char always
+ *
+ * -# LVCDump : Snap Time, NumMsg, NumByte, etc.
+ *
  *
  * ### Build 60 22-10-26
  *

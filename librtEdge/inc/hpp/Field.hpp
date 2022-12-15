@@ -19,7 +19,7 @@
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
 *      8 NOV 2022 jcs  Build 60: rtFld_vector
-*     11 NOV 2022 jcs  Build 61: DateTimeList
+*     15 DEC 2022 jcs  Build 61: DateTimeList; Dump() buffer overflow w/ vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -866,10 +866,27 @@ public:
 	 */
 	const char *Dump( bool bFid=false )
 	{
-	   char buf[K];
+	   rtVALUE  &v = _fld._val;
+	   rtBUF    &b = v._buf;
+	   rtFldType ty;
+	   char     *bp;
+	   int       dSz;
 
-	   Dump( buf, bFid );
-	   _dump = buf;
+	   ty = TypeFromMsg();
+	   switch( ty ) {
+	      case rtFld_string:
+	      case rtFld_bytestream:
+	      case rtFld_vector:
+	         dSz = b._dLen;
+	         break;
+	      default:
+	         dSz = K;
+	         break;
+	   }
+	   bp = new char[dSz*2];
+	   Dump( bp, bFid );
+	   _dump = bp;
+	   delete[] bp;
 	   return _dump.data();
 	}
 
