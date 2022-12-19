@@ -6,10 +6,10 @@
 *  REVISION HISTORY:
 *      3 MAY 2022 jcs  Created (from elsewhere).
 *      3 NOV 2022 jcs  Do not expose KeyValue
+*     19 DEC 2022 jcs  No mo -Dxml
 *
 *  (c) 1994-2022, Gatea Ltd.
 *******************************************************************************/
-#if defined(xml) || defined(DOXYGEN_INCLUDE)
 #ifndef __RTEDGE_XmlParser_H
 #define __RTEDGE_XmlParser_H
 #include <hpp/rtEdge.hpp>
@@ -845,5 +845,3 @@ private:
 }  // namespace RTEDGE
 
 #endif // __RTEDGE_XmlParser_H
-
-#endif // defined(xml) || defined(DOXYGEN_INCLUDE)

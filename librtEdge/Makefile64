@@ -52,7 +52,7 @@ MDW_LIBS += $(MDW_ROOT)/expat/lib/libexpat.a
 ## Compiler, Linker, etc.
 
 CPP       = $(CCC)
-CFLAGS    = -g -c -I./inc $(MDW_INC) -Dxml
+CFLAGS    = -g -c -I./inc $(MDW_INC)
 #CFLAGS   += -D_REENTRANT -DPOSIX
 INC_FLAGS = -I./Internal/inc
 CPPFLAGS  = $(SOFLAGS) $(CFLAGS) $(INC_FLAGS)
