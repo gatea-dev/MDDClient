@@ -20,6 +20,7 @@
 #     14 MAY 2020 jcs  Build 44: git-ready
 #      3 MAY 2022 jcs  Build 53: MDD2DataDog
 #      1 SEP 2022 jcs  Build 56: TapeChannel
+#     17 SEP 2022 jcs  Build 56: SplineMaker
 #
 # (c) 1994-2022, Gatea Ltd.
 #######################################################
@@ -51,7 +52,7 @@ MDW_LIBS += $(MDW_ROOT)/expat/lib/libexpat.a
 ## Compiler, Linker, etc.
 
 CPP       = $(CCC)
-CFLAGS    = -g -c -I./inc $(MDW_INC)
+CFLAGS    = -g -c -I./inc $(MDW_INC) -Dxml
 #CFLAGS   += -D_REENTRANT -DPOSIX
 INC_FLAGS = -I./Internal/inc
 CPPFLAGS  = $(SOFLAGS) $(CFLAGS) $(INC_FLAGS)
@@ -175,6 +176,11 @@ QueryCache: clear QueryCache.o
 	mv *.o ./obj
 
 Publish: clear Publish.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+SplineMaker: clear SplineMaker.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
