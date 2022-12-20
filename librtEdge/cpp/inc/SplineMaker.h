@@ -60,6 +60,7 @@ public:
 	////////////////////////
 	// Attributes
 	////////////////////////
+	const char *_attr_enter;
 	const char *_attr_svc;
 	const char *_attr_usr;
 	const char *_attr_svr;
@@ -83,6 +84,7 @@ public:
 	   _elem_pub( "Publisher" ),
 	   _elem_knot( "Knot" ),
 	   _elem_spline( "Spline" ),
+	   _attr_enter( "RunInForeground" ),
 	   _attr_svc( "Service" ),
 	   _attr_usr( "Username" ),
 	   _attr_svr( "Server" ),

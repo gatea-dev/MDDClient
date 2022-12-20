@@ -9,8 +9,11 @@
 ******************************************************************************/
 #include "inc/SplineMaker.h"
 #include <stdarg.h>
+#include <set>
 
 static DTD _dtd;
+
+typedef set<string, less<string> >   SortedStringSet;
 
 /////////////////////////////////////
 // Handy-dandy Logger
@@ -542,19 +545,25 @@ void SplinePublisher::OnPubClose( const char *tkr )
 
 void SplinePublisher::OnOpenBDS( const char *bds, void *tag )
 {
-   Update             &u   = upd();
-   SplineMap          &sdb = _splines;
-   SplineMap::iterator it;
-   string              tm;
-   char                err[K], *tkr;
-   vector<char *>      tkrs;
+   Update                   &u   = upd();
+   SplineMap                &sdb = _splines;
+   SplineMap::iterator       it;
+   SortedStringSet           srt;
+   SortedStringSet::iterator st;
+   string                    tm, k;
+   char                      err[K], *tkr;
+   vector<char *>            tkrs;
 
    LOG( "[%s] OPEN.BDS %s", pDateTimeMs( tm ), bds );
    if ( !::strcmp( bds, _bds.data() ) ) {
       _bdsStreamID =  (size_t)tag;
-      for ( it=sdb.begin(); it!=sdb.end(); it++ ) {
-         tkr = (char *)(*it).second->tkr();
-         tkrs.push_back( tkr );
+      for ( it=sdb.begin(); it!=sdb.end(); srt.insert( (*it).first ), it++ );
+      for ( st=srt.begin(); st!=srt.end(); st++ ) {
+         k   = (*st);
+         if ( (it=sdb.find( k )) != sdb.end() ) {
+            tkr = (char *)(*it).second->tkr();
+            tkrs.push_back( tkr );
+         }
       }
       tkrs.push_back( (char *)0 );
       PublishBDS( bds, _bdsStreamID, tkrs.data() );
@@ -604,6 +613,7 @@ int main( int argc, char **argv )
       return 0;
    }
    XmlElem &root = *x.root();
+   bool     bEnter = root.getAttrValue( _dtd._attr_enter, true );
 
    if ( !(xs=root.find( _dtd._elem_sub )) ) {
       LOG( "%s not found; Exitting ...", _dtd._elem_sub );
@@ -637,8 +647,14 @@ int main( int argc, char **argv )
    pp = pub.PubStart();
    LOG( "SUB : %s : %ld Curves", ps, sub.Size() );
    LOG( "PUB : %s : %ld Splines", pp, pub.Size() );
-   LOG( "Running; <CTRL>-C to terminate ..." );
-   for ( ; true; pub.Sleep( 0.25 ) );
+   if ( bEnter ) {
+      LOG( "Running; <Enter> to terminate ..." );
+      getchar();
+   }
+   else {
+      LOG( "Running; <CTRL>-C to terminate ..." );
+      for ( ; true; pub.Sleep( 0.25 ) );
+   }
    LOG( "Shutting down ..." );
    sub.Stop();
    pub.Stop();
