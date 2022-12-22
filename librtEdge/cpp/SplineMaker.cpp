@@ -4,6 +4,7 @@
 *
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
+*     22 DEC 2022 jcs  Build 61: SubChannel or LVC
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -106,12 +107,12 @@ Knot::Knot( string &tkr, int fid ) :
 ////////////////////////////////
 // Access / Mutator
 ////////////////////////////////
-int Knot::Subscribe( SplineSubscriber &sub, string &service )
+int Knot::Subscribe( KnotSource &src, string &service )
 {
    const char *svc = service.data();
    const char *tkr = _Ticker.data();
 
-   _StreamID = sub.Subscribe( svc, tkr, arg_ );
+   _StreamID = src.IOpenKnot( svc, tkr, arg_ );
    return StreamID();
 }
 
@@ -128,11 +129,10 @@ KnotWatch *Knot::AddWatch( Curve &c, double intvl )
 ////////////////////////////////
 // Operations
 ////////////////////////////////
-void Knot::OnData( SplineSubscriber &sub, Field *f )
+void Knot::OnData( const char *tm, Field *f )
 {
    size_t      i, nw;
-   string      tm;
-   const char *pt, *tkr;
+   const char *tkr;
 
    // Pre-condition(s)
 
@@ -143,11 +143,11 @@ void Knot::OnData( SplineSubscriber &sub, Field *f )
 
    _Y  = f->GetAsDouble();
    tkr = _Ticker.data();
-   pt  = sub.pDateTimeMs( tm );
    nw  = _wl.size();
-   LOG( "[%s] %s = %s", pt, tkr, f->GetAsString() );
+   LOG( "[%s] %s = %s", tm, tkr, f->GetAsString() );
    for ( i=0; i<nw; _wl[i++]->_curve.OnData( *this ) );
 }
+
 
 
 ////////////////////////////////////////
@@ -159,8 +159,8 @@ void Knot::OnData( SplineSubscriber &sub, Field *f )
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-Curve::Curve( SplineSubscriber &sub, XmlElem &xe ) :
-   _sub( sub ),
+Curve::Curve( KnotSource &src, XmlElem &xe ) :
+   _src( src ),
    _name( xe.getAttrValue( _dtd._attr_name, "" ) ),
    _Xmax( 1.0 ),
    _X(),
@@ -189,7 +189,7 @@ Curve::Curve( SplineSubscriber &sub, XmlElem &xe ) :
          continue; // for-i
       if ( !(fid=edb[i]->getAttrValue( _dtd._attr_fid, 0 )) )
          continue; // for-i
-      _kdb.push_back( sub.AddWatch( *this, tkr, fid, X ) );
+      _kdb.push_back( _src.AddWatch( *this, tkr, fid, X ) );
    }
    if ( !(nw=_kdb.size()) )
       return;
@@ -304,18 +304,16 @@ void Spline::Publish()
 
 
 
-
 ////////////////////////////////////////
 //
-//    S p l i n e S u b s c r i b e r
+//       K n o t S o u r c e
 //
 ////////////////////////////////////////
 
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-SplineSubscriber::SplineSubscriber( XmlElem &xe ) :
-   SubChannel(),
+KnotSource::KnotSource( XmlElem &xe ) :
    _xe( xe ),
    _svc( xe.getAttrValue( _dtd._attr_svc, "velocity" ) ),
    _byId(),
@@ -327,13 +325,7 @@ SplineSubscriber::SplineSubscriber( XmlElem &xe ) :
 ////////////////////////////////
 // Access / /Operations
 ////////////////////////////////
-const char *SplineSubscriber::StartMD()
-{
-   return Start( _xe.getAttrValue( _dtd._attr_svr, "localhost:9998" ),
-                _xe.getAttrValue( _dtd._attr_usr, "SwapSpline" ) );
-}
-
-size_t SplineSubscriber::LoadCurves()
+size_t KnotSource::LoadCurves()
 {
    XmlElemVector &edb = _xe.elements();
    string         k;
@@ -350,7 +342,7 @@ size_t SplineSubscriber::LoadCurves()
    return Size();
 }
 
-Curve *SplineSubscriber::GetCurve( string &k )
+Curve *KnotSource::GetCurve( string &k )
 {
    CurveMap          &cdb = _curves;
    CurveMap::iterator it;
@@ -360,10 +352,10 @@ Curve *SplineSubscriber::GetCurve( string &k )
    return rc;
 }
 
-KnotWatch *SplineSubscriber::AddWatch( Curve      &crv, 
-                                       const char *tkr, 
-                                       int         fid,
-                                       double      X )
+KnotWatch *KnotSource::AddWatch( Curve      &crv, 
+                                 const char *tkr, 
+                                 int         fid,
+                                 double      X )
 {
    KnotByName          &kdb = _byName;
    KnotByName::iterator it;
@@ -381,12 +373,12 @@ KnotWatch *SplineSubscriber::AddWatch( Curve      &crv,
    return rc->AddWatch( crv, X );
 }
 
-size_t SplineSubscriber::Size()
+size_t KnotSource::Size()
 {
    return _curves.size();
 }
 
-void SplineSubscriber::OpenAll()
+void KnotSource::OpenAll()
 {
    KnotByName          &kdb = _byName;
    KnotById            &idb = _byId;
@@ -403,11 +395,45 @@ void SplineSubscriber::OpenAll()
    }
 }
 
+////////////////////////////////////////
+//
+//      E d g e 3 S o u r c e
+//
+////////////////////////////////////////
+
+////////////////////////////////
+// Constructor
+////////////////////////////////
+Edge3Source::Edge3Source( XmlElem &xe ) :
+   KnotSource( xe ),
+   SubChannel()
+{ ; }
+
+
+////////////////////////////////
+// KnotSource InterfaceOperations
+////////////////////////////////
+const char *Edge3Source::StartMD()
+{
+   return Start( _xe.getAttrValue( _dtd._attr_svr, "localhost:9998" ),
+                 _xe.getAttrValue( _dtd._attr_usr, "SwapSpline" ) );
+}
+
+void Edge3Source::StopMD()
+{
+   SubChannel::Stop();
+}
+
+int Edge3Source::IOpenKnot( const char *svc, const char *tkr, void *arg )
+{
+   return SubChannel::Subscribe( svc, tkr, arg );
+}
+
 
 ////////////////////////////////
 // rtEdgeSubscriber Interface
 ////////////////////////////////
-void SplineSubscriber::OnConnect( const char *msg, bool bUp )
+void Edge3Source::OnConnect( const char *msg, bool bUp )
 {
    const char *ty = bUp ? "UP" : "DOWN";
    string      tm;
@@ -415,7 +441,7 @@ void SplineSubscriber::OnConnect( const char *msg, bool bUp )
    LOG( "[%s] SUB-CONN %s : %s", pDateTimeMs( tm ), msg, ty );
 }
 
-void SplineSubscriber::OnService( const char *svc, bool bUp )
+void Edge3Source::OnService( const char *svc, bool bUp )
 {
    const char *ty = bUp ? "UP" : "DOWN";
    string      tm;
@@ -424,16 +450,58 @@ void SplineSubscriber::OnService( const char *svc, bool bUp )
       LOG( "[%s] SUB-SVC %s : %s", pDateTimeMs( tm ), svc, ty );
 }
 
-void SplineSubscriber::OnData( Message &msg )
+void Edge3Source::OnData( Message &msg )
 {
    int                sid = msg.StreamID();
    KnotById          &idb = _byId;
    KnotById::iterator it;
    Knot              *k;
+   const char        *tm;
+   string             tt;
 
    if ( (it=idb.find( sid )) != idb.end() ) {
-      k = (*it).second;
-      k->OnData( *this, msg.GetField( k->fid() ) );
+      k  = (*it).second;
+      tm = pDateTimeMs( tt );
+      k->OnData( tm, msg.GetField( k->fid() ) );
+   }
+}
+
+
+////////////////////////////////////////
+//
+//         L V C S o u r c e
+//
+////////////////////////////////////////
+
+////////////////////////////////
+// Constructor
+////////////////////////////////
+LVCSource::LVCSource( XmlElem &xe ) :
+   KnotSource( xe ),
+   LVC( _xe.getAttrValue( _dtd._attr_svr, "./cache.lvc" ) )
+{ ; }
+
+
+////////////////////////////////
+// KnotSource Interface
+////////////////////////////////
+void LVCSource::Pump()
+{
+   KnotByName          &idb = _byName;
+   KnotByName::iterator it;
+   Knot                *k;
+   Message             *msg;
+   const char          *tm, *svc, *tkr;
+   string               tt;
+
+   for ( it=idb.begin(); it!=idb.end(); it++ ) {
+      k   = (*it).second;
+      svc = _svc.data();
+      tkr = k->tkr();
+      if ( (msg=Snap( svc, tkr )) ) {
+         tm = pDateTimeMs( tt );
+         k->OnData( tm, msg->GetField( k->fid() ) );
+      }
    }
 }
 
@@ -466,7 +534,7 @@ size_t SplinePublisher::Size()
    return _splines.size();
 }
 
-size_t SplinePublisher::OpenSplines( SplineSubscriber &sub )
+size_t SplinePublisher::OpenSplines( KnotSource &src )
 {
    XmlElemVector &edb = _xp.elements();
    SplineMap     &sdb = _splines;
@@ -481,7 +549,7 @@ size_t SplinePublisher::OpenSplines( SplineSubscriber &sub )
       if ( !(pc=edb[i]->getAttrValue( _dtd._attr_curve, (const char *)0 )) )
          continue; // for-k
       s = pc;
-      if ( !(crv=sub.GetCurve( s )) )
+      if ( !(crv=src.GetCurve( s )) )
          continue; // for-k
       s      = tkr;
       dInc   = edb[i]->getAttrValue( _dtd._attr_inc, 1.0 );
@@ -597,8 +665,8 @@ Update *SplinePublisher::CreateUpdate()
 /////////////////////////////////////
 int main( int argc, char **argv )
 {
-   XmlParser x;
-   XmlElem  *xs, *xp;
+   XmlParser   x;
+   XmlElem    *xs, *xp;
 
    /////////////////////
    // Quickie checks
@@ -612,8 +680,10 @@ int main( int argc, char **argv )
       LOG( "Invalid XML file %s; Exitting ...", argv[1] );
       return 0;
    }
-   XmlElem &root = *x.root();
-   bool     bEnter = root.getAttrValue( _dtd._attr_enter, true );
+   XmlElem    &root   = *x.root();
+   bool        bEnter = root.getAttrValue( _dtd._attr_enter, true );
+   const char *ty     = root.getAttrValue( _dtd._attr_dataSrc, "Edge3" );
+   bool        bLVC   = !::strcmp( ty, "LVC" );
 
    if ( !(xs=root.find( _dtd._elem_sub )) ) {
       LOG( "%s not found; Exitting ...", _dtd._elem_sub );
@@ -624,14 +694,19 @@ int main( int argc, char **argv )
       return 0;
    }
 
-   SplineSubscriber sub( *xs ); 
-   SplinePublisher  pub( *xp );
+   SplinePublisher pub( *xp );
+   KnotSource     *src;
 
-   if ( !sub.LoadCurves() ) {
+   if ( bLVC )
+      src = new LVCSource( *xs );
+   else
+      src = new Edge3Source( *xs );
+   if ( !src->LoadCurves() ) {
       LOG( "No Curves in %s; Exitting ...", _dtd._elem_sub );
+      delete src;
       return 0;
    }
-   if ( !pub.OpenSplines( sub ) ) {
+   if ( !pub.OpenSplines( *src ) ) {
       LOG( "No Splines in %s; Exitting ...", _dtd._elem_pub );
       return 0;
    }
@@ -642,22 +717,26 @@ int main( int argc, char **argv )
    const char *ps, *pp;
 
    LOG( "%s", pub.Version() );
-   ps = sub.StartMD();
-   sub.OpenAll();
+   ps = src->StartMD();
+   src->OpenAll();
    pp = pub.PubStart();
-   LOG( "SUB : %s : %ld Curves", ps, sub.Size() );
+   LOG( "SUB : %s : %ld Curves", ps, src->Size() );
    LOG( "PUB : %s : %ld Splines", pp, pub.Size() );
-   if ( bEnter ) {
+   if ( bEnter && !bLVC ) {
       LOG( "Running; <Enter> to terminate ..." );
       getchar();
    }
    else {
       LOG( "Running; <CTRL>-C to terminate ..." );
-      for ( ; true; pub.Sleep( 0.25 ) );
+      for ( size_t i=0; true; pub.Sleep( 0.25 ), i++ ) {
+         if ( !( i%20 ) )
+            src->Pump(); // Every 5 seconds : TODO : Configurable attr
+      }
    }
    LOG( "Shutting down ..." );
-   sub.Stop();
+   src->StopMD();
    pub.Stop();
+   delete src;
    LOG( "Done!!" );
    return 0;
 

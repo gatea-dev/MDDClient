@@ -20,11 +20,13 @@ static void *arg_ = (void *)"User-supplied argument";
 // Forwards / Collections
 
 class Curve;
+class Edge3Source;
 class Knot;
+class KnotSource;
 class KnotWatch;
+class LVCSource;
 class Spline;
 class SplinePublisher;
-class SplineSubscriber;
 
 typedef vector<KnotWatch *>        KnotWatchList;
 typedef hash_map<int, Knot *>      KnotById;
@@ -60,6 +62,7 @@ public:
 	////////////////////////
 	// Attributes
 	////////////////////////
+	const char *_attr_dataSrc;
 	const char *_attr_enter;
 	const char *_attr_svc;
 	const char *_attr_usr;
@@ -84,6 +87,7 @@ public:
 	   _elem_pub( "Publisher" ),
 	   _elem_knot( "Knot" ),
 	   _elem_spline( "Spline" ),
+	   _attr_dataSrc( "DataSource" ),
 	   _attr_enter( "RunInForeground" ),
 	   _attr_svc( "Service" ),
 	   _attr_usr( "Username" ),
@@ -148,12 +152,12 @@ public:
 	int         fid()      { return _fid; }
 	double      Y()        { return _Y; }
 	int         StreamID() { return _StreamID; }
-	int         Subscribe( SplineSubscriber &sub, string &svc );
+	int         Subscribe( KnotSource &, string & );
 	KnotWatch  *AddWatch( Curve &c, double intvl );
 
 	// Operations
 public:
-	void OnData( SplineSubscriber &sub, Field * );
+	void OnData( const char *, Field * );
 
 }; // class Knot
 
@@ -166,17 +170,17 @@ public:
 class Curve
 {
 private:
-	SplineSubscriber &_sub;
-	string            _name;
-	double            _Xmax;
-	DoubleList        _X;
-	DoubleList        _Y;
-	KnotWatchList     _kdb;
-	SplineList        _splines;
+	KnotSource   &_src;
+	string        _name;
+	double        _Xmax;
+	DoubleList    _X;
+	DoubleList    _Y;
+	KnotWatchList _kdb;
+	SplineList    _splines;
 
 	// Constructor
 public:
-	Curve( SplineSubscriber &sub, XmlElem &xe );
+	Curve( KnotSource &, XmlElem & );
 
 	// Access
 public:
@@ -226,12 +230,12 @@ public:
 
 ////////////////////////////////////////
 //
-//    S p l i n e S u b s c r i b e r
+//        K n o t S o u r c e
 //
 ////////////////////////////////////////
-class SplineSubscriber : public RTEDGE::SubChannel  
+class KnotSource
 {
-private:
+protected:
 	XmlElem   &_xe;
 	string     _svc;
 	KnotById   _byId;
@@ -240,16 +244,44 @@ private:
 
 	// Constructor
 public:
-	SplineSubscriber( XmlElem &xe );
+	KnotSource( XmlElem &xe );
+	virtual ~KnotSource() { ; }
 
 	// Access / /Operations
 public:
-	const char *StartMD();
 	size_t      LoadCurves();
 	Curve      *GetCurve( string & );
 	KnotWatch  *AddWatch( Curve &, const char *, int, double );
 	size_t      Size();
 	void        OpenAll();
+
+	// KnotSource Interface
+public:
+	virtual const char *StartMD() = 0;
+	virtual void        StopMD() = 0;
+	virtual int         IOpenKnot( const char *, const char *, void * ) = 0;
+	virtual void        Pump() = 0;
+
+}; // class KnotSource
+
+
+////////////////////////////////////////
+//
+//       E d g e 3 S o u r c e
+//
+////////////////////////////////////////
+class Edge3Source : public KnotSource,
+                    public RTEDGE::SubChannel  
+{
+public:
+	Edge3Source( XmlElem &xe );
+
+	// KnotSource Interface
+public:
+	virtual const char *StartMD();
+	virtual void        StopMD();
+	virtual int         IOpenKnot( const char *, const char *, void * );
+	virtual void        Pump() { ; }
 
 	// RTEDGE::SubChannel Interface
 protected:
@@ -257,7 +289,29 @@ protected:
 	virtual void OnService( const char *, bool );
 	virtual void OnData( Message & );
 
-}; // class SplineSubscriber
+}; // class Edge3Source
+
+
+////////////////////////////////////////
+//
+//       L V C S o u r c e
+//
+////////////////////////////////////////
+class LVCSource : public KnotSource,
+                  public RTEDGE::LVC  
+{
+public:
+	LVCSource( XmlElem &xe );
+
+	// KnotSource Interface
+public:
+	virtual const char *StartMD() { return pFilename(); }
+	virtual void        StopMD() { ; }
+	virtual int         IOpenKnot( const char *, const char *, void * ) { return 0; }
+	virtual void        Pump();
+
+}; // class LVCSource
+
 
 
 ////////////////////////////////////////
@@ -280,7 +334,7 @@ public:
 	// Access / Operations
 public:
 	size_t      Size();
-	size_t      OpenSplines( SplineSubscriber & );
+	size_t      OpenSplines( KnotSource & );
 	const char *PubStart();
 
 	// RTEDGE::PubChannel Interface

@@ -217,7 +217,7 @@ int main( int argc, char **argv )
    }
    if ( (nt=fids.size()) ) {
       cp  = sTkr;
-      cp += sprintf( cp, "Time,Service,Ticker,Active,Age,NumUpd," );
+      cp += sprintf( cp, "Time,Service,Ticker,Active,Age,NumFld,NumUpd," );
       for ( size_t i=0; i<nt; i++ ) {
          if ( (fd=sch.GetDef( fids[i] )) )
             cp += sprintf( cp, "%s,", fd->pName() );
