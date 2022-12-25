@@ -32,6 +32,14 @@ do
    echo ${LIB}
    cd ${GHOME}/${LIB}
    make -f Makefile64
+   if [ -f ./cpp/LVCDump.cpp ]; then
+      EDG_VER=55
+      for TOOL in LVCAdmin LVCDump SplineMaker Subscribe
+      do
+         make -f Makefile64 ${TOOL}
+         mv bin64/${TOOL} ${GHOME}/bin64/${TOOL}.Debug.${EDG_VER}
+      done
+   fi
    if [ -d ./py/linux64 ]; then
       cd ./py
       ./linux64/Build.bash
