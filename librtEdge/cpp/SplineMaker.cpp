@@ -288,18 +288,19 @@ void Spline::Calc( DoubleList &X, DoubleList &Y, double xn )
    }
    dd = 1000.0 * ( _pub.TimeNs() - d0 );
    LOG( "Spline %s Cal'ed in %.2fmS", tkr(), dd );
-   if ( _StreamID )
-      Publish();
+   Publish();
 }
 
 void Spline::Publish()
 {
    Update &u = _pub.upd();
 
-   u.Init( tkr(), _StreamID, true );
-   u.AddVector( _dtd._fid_X, _X, 2 );
-   u.AddVector( _dtd._fid_Y, _Z, _dtd._precision );
-   u.Publish();
+   if ( _StreamID && _pub.XON() ) {
+      u.Init( tkr(), _StreamID, true );
+      u.AddVector( _dtd._fid_X, _X, 2 );
+      u.AddVector( _dtd._fid_Y, _Z, _dtd._precision );
+      u.Publish();
+   }
 }
 
 
@@ -313,7 +314,8 @@ void Spline::Publish()
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-KnotSource::KnotSource( XmlElem &xe ) :
+KnotSource::KnotSource( SplinePublisher &pub, XmlElem &xe ) :
+   _pub( pub ),
    _xe( xe ),
    _svc( xe.getAttrValue( _dtd._attr_svc, "velocity" ) ),
    _byId(),
@@ -404,8 +406,8 @@ void KnotSource::OpenAll()
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-Edge3Source::Edge3Source( XmlElem &xe ) :
-   KnotSource( xe ),
+Edge3Source::Edge3Source( SplinePublisher &pub, XmlElem &xe ) :
+   KnotSource( pub, xe ),
    SubChannel()
 { ; }
 
@@ -476,8 +478,8 @@ void Edge3Source::OnData( Message &msg )
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-LVCSource::LVCSource( XmlElem &xe ) :
-   KnotSource( xe ),
+LVCSource::LVCSource( SplinePublisher &pub, XmlElem &xe ) :
+   KnotSource( pub, xe ),
    LVC( _xe.getAttrValue( _dtd._attr_svr, "./cache.lvc" ) )
 { ; }
 
@@ -494,6 +496,7 @@ void LVCSource::Pump()
    const char          *tm, *svc, *tkr;
    string               tt;
 
+   _pub.SetXON( false );
    for ( it=idb.begin(); it!=idb.end(); it++ ) {
       k   = (*it).second;
       svc = _svc.data();
@@ -503,6 +506,7 @@ void LVCSource::Pump()
          k->OnData( tm, msg->GetField( k->fid() ) );
       }
    }
+   _pub.SetXON( true );
 }
 
 
@@ -521,7 +525,8 @@ SplinePublisher::SplinePublisher( XmlElem &xp ) :
    _xp( xp ),
    _bds( xp.getAttrValue( _dtd._attr_bds, pPubName() ) ),
    _splines(),
-   _bdsStreamID( 0 )
+   _bdsStreamID( 0 ),
+   _XON( true )
 {
    SetBinary( true );
 }
@@ -564,6 +569,21 @@ const char *SplinePublisher::PubStart()
    return Start( _xp.getAttrValue( _dtd._attr_svr, "localhost:9995" ) );
 }
 
+bool SplinePublisher::XON()
+{
+   return _XON;
+}
+
+void SplinePublisher::SetXON( bool xon )
+{
+   SplineMap          &sdb = _splines;
+   SplineMap::iterator it;
+
+   // xon == true implies publish
+
+   _XON = xon;
+   for ( it=sdb.begin(); it!=sdb.end() && _XON; (*it).second->Publish(), it++ );
+}
 
 
 ////////////////////////////////
@@ -699,9 +719,9 @@ int main( int argc, char **argv )
    KnotSource     *src;
 
    if ( bLVC )
-      src = new LVCSource( *xs );
+      src = new LVCSource( pub, *xs );
    else
-      src = new Edge3Source( *xs );
+      src = new Edge3Source( pub, *xs );
    if ( !src->LoadCurves() ) {
       LOG( "No Curves in %s; Exitting ...", _dtd._elem_sub );
       delete src;

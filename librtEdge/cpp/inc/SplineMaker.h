@@ -4,6 +4,7 @@
 *
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
+*     25 DEC 2022 jcs  XON
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -238,15 +239,16 @@ public:
 class KnotSource
 {
 protected:
-	XmlElem   &_xe;
-	string     _svc;
-	KnotById   _byId;
-	KnotByName _byName;
-	CurveMap   _curves;
+	SplinePublisher &_pub;
+	XmlElem         &_xe;
+	string           _svc;
+	KnotById         _byId;
+	KnotByName       _byName;
+	CurveMap         _curves;
 
 	// Constructor
 public:
-	KnotSource( XmlElem &xe );
+	KnotSource( SplinePublisher &, XmlElem &xe );
 	virtual ~KnotSource() { ; }
 
 	// Access / /Operations
@@ -276,7 +278,7 @@ class Edge3Source : public KnotSource,
                     public RTEDGE::SubChannel  
 {
 public:
-	Edge3Source( XmlElem &xe );
+	Edge3Source( SplinePublisher &, XmlElem &xe );
 
 	// KnotSource Interface
 public:
@@ -303,7 +305,7 @@ class LVCSource : public KnotSource,
                   public RTEDGE::LVC  
 {
 public:
-	LVCSource( XmlElem &xe );
+	LVCSource( SplinePublisher &, XmlElem &xe );
 
 	// KnotSource Interface
 public:
@@ -328,6 +330,7 @@ private:
 	string    _bds;
 	SplineMap _splines;
 	int       _bdsStreamID;
+	bool      _XON;
 
 	// Constructor
 public:
@@ -338,6 +341,8 @@ public:
 	size_t      Size();
 	size_t      OpenSplines( KnotSource & );
 	const char *PubStart();
+	bool        XON();
+	void        SetXON( bool );
 
 	// RTEDGE::PubChannel Interface
 protected:
