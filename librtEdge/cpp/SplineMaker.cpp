@@ -682,6 +682,7 @@ int main( int argc, char **argv )
    }
    XmlElem    &root   = *x.root();
    bool        bEnter = root.getAttrValue( _dtd._attr_enter, true );
+   double      dPmp   = root.getAttrValue( _dtd._attr_pumpIntvl, 5.0 );
    const char *ty     = root.getAttrValue( _dtd._attr_dataSrc, "Edge3" );
    bool        bLVC   = !::strcmp( ty, "LVC" );
 
@@ -727,7 +728,11 @@ int main( int argc, char **argv )
       getchar();
    }
    else {
-      LOG( "Running; <CTRL>-C to terminate ..." );
+      if ( bLVC )
+         LOG( "Pumping from %s every %.1fs", ps, dPmp  );
+      else
+         LOG( "Pumping from %s", ps );
+      LOG( "<CTRL>-C to terminate ..." );
       for ( size_t i=0; true; pub.Sleep( 0.25 ), i++ ) {
          if ( !( i%20 ) )
             src->Pump(); // Every 5 seconds : TODO : Configurable attr

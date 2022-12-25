@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 61 22-12-xx
+ * ### Build 61 22-12-25
  *
  * -# rtFld_vector : DateTimeList
  *    - Field.AddVector( DateTimeList )
@@ -54,6 +54,8 @@ Features To Add
  * -# Field.Dump() : new char always
  *
  * -# LVCDump : Snap Time, NumMsg, NumByte, etc.
+ *
+ * -# libmddWire Build 17 : Signed Vector
  *
  *
  * ### Build 60 22-10-26

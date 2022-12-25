@@ -14,6 +14,7 @@
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: Unpacked mddFld_bytestream 
 *      1 NOV 2022 jcs  Build 16: _GetVector() / _SetVector(); _wireMult()
+*     25 DEC 2022 jcs  Build 17: Signed mddFld_vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -909,16 +910,16 @@ int Binary::_u_pack( u_char *bp, u_int64_t i64, bool &bPack )
 
 mddBuf Binary::_GetVector( mddBuf &b )
 {
-   u_int64_t *i64, tmp;
-   double    *dv, div;
-   char      *cp;
-   int        i, nv;
+   int64_t *i64, tmp;
+   double  *dv, div;
+   char    *cp;
+   int      i, nv;
 
-   // <hint> then u_int64_t -> double
+   // <hint> then int64_t -> double
 
    cp  = b._data;
    div = _wireMult( *cp++, false );
-   i64 = (u_int64_t *)cp;
+   i64 = (int64_t *)cp;
    dv  = (double *)cp;
    nv  = ::mddWire_vectorSize( b );
    for ( i=0; i<nv; dv[i] = (double)( div * (tmp=i64[i]) ), i++ );
@@ -927,11 +928,11 @@ mddBuf Binary::_GetVector( mddBuf &b )
 
 mddBuf Binary::_SetVector( mddBuf &b, char hint )
 {
-   u_int64_t *i64;
-   mddBuf     rc;
-   double    *dv, mul;
-   char      *dp;
-   u_int      i, nv, reqSz, bufSz;
+   int64_t *i64;
+   mddBuf   rc;
+   double  *dv, mul;
+   char    *dp;
+   u_int    i, nv, reqSz, bufSz;
 
    /*
     * 1) Must prepend hint since b._data is array of double's 
@@ -952,10 +953,10 @@ mddBuf Binary::_SetVector( mddBuf &b, char hint )
     * 2) Copy 'em in
     */
    mul = _wireMult( hint, true );
-   i64 = (u_int64_t *)dp;
+   i64 = (int64_t *)dp;
    dv  = (double *)b._data;
    nv  = ::mddWire_vectorSize( rc );
-   for ( i=0; i<nv; i64[i] = (u_int64_t)( dv[i] * mul ), i++ );
+   for ( i=0; i<nv; i64[i] = (int64_t)( dv[i] * mul ), i++ );
    return rc;
 }
 

@@ -31,6 +31,12 @@ Features To Add
  * ## Change Log
  * 
  * 
+ * ### Build 17 22-12-25
+ * 
+ * -# Signed mddFld_vector
+ *    - Binary._XxxVector() : ::int64_t, not u_int64_t
+ * 
+ * 
  * ### Build 16 22-11-01
  * 
  * -# mddFld_vector w/ precision

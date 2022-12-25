@@ -63,6 +63,7 @@ public:
 	// Attributes
 	////////////////////////
 	const char *_attr_dataSrc;
+	const char *_attr_pumpIntvl;
 	const char *_attr_enter;
 	const char *_attr_svc;
 	const char *_attr_usr;
@@ -88,6 +89,7 @@ public:
 	   _elem_knot( "Knot" ),
 	   _elem_spline( "Spline" ),
 	   _attr_dataSrc( "DataSource" ),
+	   _attr_pumpIntvl( "PumpInterval" ),
 	   _attr_enter( "RunInForeground" ),
 	   _attr_svc( "Service" ),
 	   _attr_usr( "Username" ),
