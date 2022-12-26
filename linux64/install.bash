@@ -9,5 +9,5 @@ GIT_HOME=`pwd`
 for EXE in `ls bin64`
 do
    echo "Installing ${EXE}"
-   cp -p ${GIT_HOME}/bin64/${EXE}* ${HOME}/bin/MDDTools/bin64
+   sudo cp -p ${GIT_HOME}/bin64/${EXE}* /usr/local/bin/MDDTools/bin64
 done
