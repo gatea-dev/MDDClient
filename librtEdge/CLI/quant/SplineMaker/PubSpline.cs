@@ -30,6 +30,7 @@ class DTD
    // Hard-coded
    ////////////////////////
    public static double _min_dInc  = 0.001;
+   public static int    _fid_Inc   =     6;
    public static int    _fid_X     = -8001; // UNCLE_VX
    public static int    _fid_Y     = -8002; // UNCLE_VY
    public static int    _fidVal    = 6;
@@ -339,8 +340,8 @@ class Spline
       rtEdgePubUpdate u;
 
       u = new rtEdgePubUpdate( _pub, _tkr, (IntPtr)_StreamID, true );
+      u.AddField( DTD._fid_Inc, _dInc );
       u.AddFieldAsVector( DTD._fid_X, _X, 2 );
-      u.Publish();
       u.Init( _tkr, (IntPtr)_StreamID, true );
       u.AddFieldAsVector( DTD._fid_Y, _Z, DTD._precision );
       u.Publish();

@@ -297,6 +297,7 @@ void Spline::Publish()
 
    if ( _StreamID && _pub.XON() ) {
       u.Init( tkr(), _StreamID, true );
+      u.AddField( _dtd._fid_Inc, _dInc );
       u.AddVector( _dtd._fid_X, _X, 2 );
       u.AddVector( _dtd._fid_Y, _Z, _dtd._precision );
       u.Publish();

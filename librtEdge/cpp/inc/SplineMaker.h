@@ -46,6 +46,7 @@ class DTD
 {
 public:
 	double _min_dInc;
+	int    _fid_Inc;
 	int    _fid_X;
 	int    _fid_Y;
 	int    _fidVal;
@@ -81,6 +82,7 @@ public:
 public:
 	DTD() :
 	   _min_dInc( 0.001 ),
+	   _fid_Inc( 6 ),
 	   _fid_X( -8001 ),
 	   _fid_Y( -8002 ),
 	   _fidVal( 6 ),
