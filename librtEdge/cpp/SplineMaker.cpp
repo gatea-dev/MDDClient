@@ -737,6 +737,7 @@ int main( int argc, char **argv )
    // Do it
    /////////////////////////////////////
    const char *ps, *pp;
+   double      d0, age;
 
    LOG( "%s", pub.Version() );
    ps = src->StartMD();
@@ -754,9 +755,13 @@ int main( int argc, char **argv )
       else
          LOG( "Pumping from %s", ps );
       LOG( "<CTRL>-C to terminate ..." );
+      d0 = pub.TimeNs();
       for ( size_t i=0; true; pub.Sleep( 0.25 ), i++ ) {
-         if ( !( i%20 ) )
-            src->Pump(); // Every 5 seconds : TODO : Configurable attr
+         age = pub.TimeNs() - d0;
+         if ( age > dPmp ) {
+            src->Pump();
+            d0 = pub.TimeNs();
+         }
       }
    }
    LOG( "Shutting down ..." );
