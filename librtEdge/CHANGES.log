@@ -43,11 +43,12 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 61 22-12-25
+ * ### Build 61 22-12-27
  *
  * -# rtFld_vector : DateTimeList
  *    - Field.AddVector( DateTimeList )
  *    - Update.AddVector( DateTimeList )
+ *    - Update.AddFieldList() : Handle Vector
  * 
  * -# quant : DoubleXY, DoubleXYZ, not DoubleGrid
  *

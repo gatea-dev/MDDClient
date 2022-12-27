@@ -17,7 +17,7 @@
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     22 OCT 2022 jcs  Build 58: ByteStream.Ticker()
 *      1 NOV 2022 jcs  Build 60: AddVector( precision )
-*     10 NOV 2022 jcs  Build 61: AddVector( DateTimeList )
+*     27 DEC 2022 jcs  Build 61: AddFieldList() : Handle vector
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -25,14 +25,14 @@
 #define __RTEDGE_Update_H
 #include <hpp/rtEdge.hpp>
 
-#ifndef DOXYGEN_OMIT	
+#ifndef DOXYGEN_OMIT   
 /*
  * TODO : New libmddWire bumps this to 1750
  */
 static double _MIL       = 1000000.0;
 static double _MAX_DBL   =     879.0; // 879.6093022207 = 0x7ffffffffff 
 static double _MAX_FLOAT =   53000.0; // 53687.0911 = 0x1fffffff 
-#endif // DOXYGEN_OMIT	
+#endif // DOXYGEN_OMIT   
 
 namespace RTEDGE
 {
@@ -193,6 +193,7 @@ public:
 	   mddField f;
 	   rtFIELD  rf;
 	   rtVALUE &v   = rf._val;
+	   rtBUF   &b   = v._buf;
 	   double  &r64 = f._val._r64;
 	   bool     bDbl, bPacked;
 
@@ -218,7 +219,21 @@ public:
 	         rf._type = (rtFldType)f._type;
 	         rf._val  = f._val;
 	      }
-	      _Add( rf );
+
+	      // Vector??
+
+	      if ( f._type == mddFld_vector ) {
+	         DoubleList ddb; 
+	         double    *dv;
+	         size_t     i, nv;
+
+	         dv = (double *)b._data;
+	         nv = b._dLen / sizeof( double );
+	         for ( i=0; i<nv; ddb.push_back( dv[i] ), i++ ); 
+	         AddVector( f._fid, ddb, f._vPrecision );
+	      }
+	      else
+	         _Add( rf );
 	   }
 	}
 
