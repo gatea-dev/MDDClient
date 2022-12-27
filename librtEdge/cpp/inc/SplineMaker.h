@@ -46,10 +46,6 @@ class DTD
 {
 public:
 	double _min_dInc;
-	int    _fid_Inc;
-	int    _fid_X;
-	int    _fid_Y;
-	int    _fidVal;
 	int    _precision;
 
 	////////////////////////
@@ -70,6 +66,9 @@ public:
 	const char *_attr_svc;
 	const char *_attr_usr;
 	const char *_attr_svr;
+	const char *_attr_fidX;
+	const char *_attr_fidY;
+	const char *_attr_fidInc;
 	const char *_attr_bds;
 	const char *_attr_tkr;
 	const char *_attr_fid;
@@ -82,10 +81,6 @@ public:
 public:
 	DTD() :
 	   _min_dInc( 0.001 ),
-	   _fid_Inc( 6 ),
-	   _fid_X( -8001 ),
-	   _fid_Y( -8002 ),
-	   _fidVal( 6 ),
 	   _precision( 4 ),
 	   _elem_sub( "Subscriber" ),
 	   _elem_pub( "Publisher" ),
@@ -97,6 +92,9 @@ public:
 	   _attr_svc( "Service" ),
 	   _attr_usr( "Username" ),
 	   _attr_svr( "Server" ),
+	   _attr_fidX( "FID_X" ),
+	   _attr_fidY( "FID_Y" ),
+	   _attr_fidInc( "FID_INC" ),
 	   _attr_bds( "BDS" ),
 	   _attr_tkr( "Ticker" ),
 	   _attr_fid( "FieldID" ),
@@ -209,6 +207,10 @@ public:
 ////////////////////////////////////////
 class Spline : public string
 {
+public:
+	static int _fidX;
+	static int _fidY;
+	static int _fidInc;
 private:
 	SplinePublisher &_pub;
 	double           _dInc;

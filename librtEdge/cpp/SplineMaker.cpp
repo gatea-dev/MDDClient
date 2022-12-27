@@ -229,6 +229,10 @@ void Curve::OnData( Knot &k )
 //
 ////////////////////////////////////////
 
+int Spline::_fidX   = -8001;
+int Spline::_fidY   = -8002;
+int Spline::_fidInc =     6;
+
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
@@ -297,9 +301,11 @@ void Spline::Publish()
 
    if ( _StreamID && _pub.XON() ) {
       u.Init( tkr(), _StreamID, true );
-      u.AddField( _dtd._fid_Inc, _dInc );
-      u.AddVector( _dtd._fid_X, _X, 2 );
-      u.AddVector( _dtd._fid_Y, _Z, _dtd._precision );
+      u.AddField( _fidInc, _dInc );
+      if ( _fidX )
+         u.AddVector( _fidX, _X, 2 );
+      if ( _fidY )
+         u.AddVector( _fidY, _Z, _dtd._precision );
       u.Publish();
    }
 }
@@ -719,6 +725,9 @@ int main( int argc, char **argv )
    SplinePublisher pub( *xp );
    KnotSource     *src;
 
+   Spline::_fidX   = xp->getAttrValue( _dtd._attr_fidX,   Spline::_fidX ); 
+   Spline::_fidY   = xp->getAttrValue( _dtd._attr_fidY,   Spline::_fidY ); 
+   Spline::_fidInc = xp->getAttrValue( _dtd._attr_fidInc, Spline::_fidInc ); 
    if ( bLVC )
       src = new LVCSource( pub, *xs );
    else
