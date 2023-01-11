@@ -6,8 +6,9 @@
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
 *     29 OCT 2022 jcs  Build 60: DoubleList.
+*     10 JAN 2023 jcs  Build 61: de-lint
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Vector_H
 #define __RTEDGE_Vector_H
@@ -727,6 +728,8 @@ private:
 	   nv      = h->_nVal;
 	   _NumCol = h->_nCol;
 assert( h->_MsgSz == sz );
+	   if ( h->_MsgSz != sz )
+	      rtEdge::breakpoint();
 	   cp += sizeof( VecWireHdr );
 	   SetPrecision( h->_Precision );
 

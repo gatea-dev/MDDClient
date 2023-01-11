@@ -12,8 +12,9 @@
 *      3 FEB 2022 jcs  Build  5: PyList_PackX()
 *     16 MAR 2022 jcs  Build  6: error C2760
 *     19 JUL 2022 jcs  Build  8: LVCAdmin
-*     
-*  (c) 1994-2022, Gatea, Ltd.  
+*     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
+*
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #ifndef _MDDPY_PYTHON_H
 #define _MDDPY_PYTHON_H
@@ -39,13 +40,15 @@ typedef struct IUnknown IUnknown;
 // Python 3
 
 #if PY_MAJOR_VERSION >= 3
-#define PyInt_AsLong               PyLong_AsLong
-#define PyInt_FromLong             PyLong_FromLong
-#define PyString_AsString          PyUnicode_AsString
-#define PyString_FromFormat        PyUnicode_FromFormat
-#define PyString_FromString        PyUnicode_FromString
-#define PyString_FromStringAndSize PyUnicode_FromStringAndSize
-#define PyTuple_SET_ITEM           PyTuple_SetItem
+#define _PyInt_AsInt                  PyLong_AsLong
+#define PyInt_AsLong                  PyLong_AsLong
+#define PyInt_Check                   PyLong_Check
+#define PyInt_FromLong                PyLong_FromLong
+// #define PyString_AsString             PyBytes_AsString
+#define PyString_Check                PyUnicode_Check
+#define PyString_FromString           PyUnicode_FromString
+#define PyString_FromStringAndSize    PyUnicode_FromStringAndSize
+#define PyString_FromFormat           PyUnicode_FromFormat
 #endif // PY_MAJOR_VERSION >= 3
 
 // stl::unordered_map

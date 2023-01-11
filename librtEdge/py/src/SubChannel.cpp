@@ -10,8 +10,9 @@
 *     20 NOV 2020 jcs  Build  2: OnStreamDone()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
+*     11 JAN 2023 jcs  Build  9: PumpTapeXxx()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -307,13 +308,13 @@ PyObject *MDDpySubChan::SnapTape( PyTapeSnapQry &qry )
    if ( qry._t0 && qry._t1 ) {
       if ( (tInt=qry._tSample) && qry._flds ) {
          SetTapeDirection( false );
-         StartTapeSliceSample( qry._t0, qry._t1, tInt, qry._flds );
+         PumpTapeSliceSample( qry._t0, qry._t1, tInt, qry._flds );
       }
       else
-         StartTapeSlice( qry._t0, qry._t1 );
+         PumpTapeSlice( qry._t0, qry._t1 );
    }
    else
-      StartTape();
+      PumpTape();
    d0  = TimeNs();
    age = 0.0;
    for ( ; age<qry._tmout && !snp._bDone; ) {

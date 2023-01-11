@@ -5,12 +5,7 @@
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
-
-// Build
-
-#if !defined(_BLD)
-#define _BLD "8"
-#endif // !defined(_BLD)
+#include <bld.cpp>
 
 // Platform-specific
 
@@ -33,7 +28,7 @@ char *MDDirectID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s", GL64, _BLD );
+      cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s", GL64, _PYMDD_LIB_BLD );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       cp    += sprintf( cp, "\n" );
       cp    += sprintf( cp, ::Py_GetVersion() );

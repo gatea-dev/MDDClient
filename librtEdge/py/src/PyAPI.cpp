@@ -12,19 +12,12 @@
 *     25 JAN 2022 jcs  Build  4: MDDirectxy
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
+*     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
-#if PY_MAJOR_VERSION >= 3
-#define PyInt_AsLong        PyLong_AsLong
-#define PyInt_Check         PyLong_Check
-#define PyInt_FromLong      PyLong_FromLong
-#define PyString_AsString   PyBytes_AsString
-#define PyString_Check      PyUnicode_Check
-#define PyString_FromString PyUnicode_FromString
-#endif // PY_MAJOR_VERSION >= 3
 
 /////////////////////
 // Forwards
@@ -39,6 +32,22 @@ static PyObject *_PyReturn( PyObject *obj )
 {
    Py_INCREF( obj );
    return obj;
+}
+
+static const char *_Py_GetString( PyObject *pyo, string &rc )
+{
+#if PY_MAJOR_VERSION >= 3
+   Py_ssize_t sz;
+   wchar_t   *pw = ::PyUnicode_AsWideCharString( pyo, &sz );
+   wstring    wc( pw );
+   string     ss( wc.begin(), wc.end() );
+
+   rc = ss.data();
+   ::PyMem_Free( pw );
+#else
+   rc = ::PyString_AsString( pyo );
+#endif // PY_MAJOR_VERSION >= 3
+   return rc.data();
 }
 
 
@@ -246,9 +255,9 @@ static PyObject *PumpTape( PyObject *self, PyObject *args )
       return _PyReturn( Py_None );
    if ( (ch=_GetSub( cxt )) ) {
       if ( t0 && t1 )
-         ch->StartTapeSlice( t0, t1 );
+         ch->PumpTapeSlice( t0, t1 );
       else
-         ch->StartTape();
+         ch->PumpTape();
    }
    return _PyReturn( ch ? Py_True : Py_False );
 }
@@ -554,11 +563,13 @@ static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
 
 static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 {
-   MDDpyLVCAdmin *adm;
-   const char    *svc;
-   const char   **tkrs;
-   PyObject      *lst, *pyK;
-   int            cxt, i, nf;
+   MDDpyLVCAdmin   *adm;
+   const char      *svc;
+   const char     **tkrs;
+   PyObject        *lst, *pyK;
+   int              cxt, i, nf;
+   string          *s;
+   vector<string *> sdb;
 
    // Usage : LVCAddTickers( cxt, svc, tkrs )
 
@@ -569,12 +580,15 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
    if ( (adm=_GetLVCAdmin( cxt )) ) {
       tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
+         s       = new string();
          pyK     = PyList_GetItem( lst, i );
-         tkrs[i] = PyString_AsString( pyK );
+         tkrs[i] = _Py_GetString( pyK, *s );
+         sdb.push_back( s );
       }
       tkrs[i] = NULL;
       adm->PyAddTickers( svc, tkrs );
       delete[] tkrs;
+      for ( i=0; i<nf; delete sdb[i++] );
    }
    return Py_None;
 }
@@ -599,11 +613,13 @@ static PyObject *LVCAdmRfrshTkr( PyObject *self, PyObject *args )
 
 static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
 {
-   MDDpyLVCAdmin *adm;
-   const char    *svc;
-   const char   **tkrs;
-   PyObject      *lst, *pyK;
-   int            cxt, i, nf;
+   MDDpyLVCAdmin  *adm;
+   const char     *svc;
+   const char    **tkrs;
+   PyObject       *lst, *pyK;
+   int             cxt, i, nf;
+   string          *s;
+   vector<string *> sdb;
 
    // Usage : LVCRefreshTickers( cxt, svc, tkrs )
 
@@ -615,11 +631,14 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
       tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
          pyK     = PyList_GetItem( lst, i );
-         tkrs[i] = PyString_AsString( pyK );
+         s       = new string();
+         tkrs[i] = _Py_GetString( pyK, *s );
+         sdb.push_back( s );
       }
       tkrs[i] = NULL;
       adm->PyRefreshTickers( svc, tkrs );
       delete[] tkrs;
+      for ( i=0; i<nf; delete sdb[i++] );
    }
    return Py_None;
 }
@@ -1024,18 +1043,24 @@ static PyMethodDef EdgeMethods[] =
     { NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-#ifdef _MDD_PYTHON3
-static PyModuleDef mddModule = { PyModuleDef_HEAD_INIT,
-                                 "MDDirect39",
-                                 "MD-Direct for Python 3.x",
-                                 -1,
-                                 EdgeMethods
-                               };
+#if PY_MAJOR_VERSION >= 3
+static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
+                                  "MDDirect39",
+                                  "MD-Direct for Python 3.x",
+                                  -1,
+                                  EdgeMethods
+                                };
+
+static PyObject *PyInit_mddModule()
+{
+   return ::PyModule_Create( &_mddModule );
+}
 
 PyMODINIT_FUNC PyInit_MDDirect39( void )
 {
-   _pMethods = EdgeMethods;
-   return PyModule_Create( &mddModule );
+   ::PyImport_AppendInittab( "MDDirect39", &PyInit_mddModule );
+   ::Py_Initialize();
+   return _PyReturn( Py_None );
 } 
 #else
 PyMODINIT_FUNC initMDDirect27( void )
@@ -1043,4 +1068,5 @@ PyMODINIT_FUNC initMDDirect27( void )
    _pMethods = EdgeMethods;
    Py_InitModule( "MDDirect27", EdgeMethods );
 }
-#endif // _MDD_PYTHON3 
+
+#endif // PY_MAJOR_VERSION >= 3
