@@ -25,14 +25,16 @@ FOR %%X in (libmddWire librtEdge) DO (
          Call :BuildStuff2 %%X %%Y
          copy %%X\bin64\%%Y\%%Y.exe .\bin64
       )
-      if exist %%X\CLI\examples\%%Y\%%Y%CLI.cs (
-         echo Building %%X\CLI\examples\%%Y\%%Y%CLI
-         cd %%X\CLI\examples\%%Y
-         pwd
-         echo devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
-         devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
-         cd ..\..\..\..
-         copy %%X\CLI\examples\%%Y\%%YCLI.exe .\bin64
+      FOR %%D in (examples quant) DO (
+         if exist %%X\CLI\%%D\%%Y\%%Y%CLI.cs (
+            echo Building %%X\CLI\%%D\%%Y\%%Y%CLI
+            cd %%X\CLI\%%D\%%Y
+            pwd
+            echo devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
+            devenv /build %BLD_TYPE% %%YCLI.sln /project %%YCLI
+            cd ..\..\..\..
+            copy %%X\CLI\%%D\%%Y\%%YCLI.exe .\bin64
+         )
       )
    )
    if exist %%X\CLI\lib64 (
