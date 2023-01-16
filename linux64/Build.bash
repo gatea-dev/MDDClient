@@ -43,7 +43,9 @@ do
    if [ -d ./py/linux64 ]; then
       cd ./py
       ./linux64/Build.bash
+      mv ./build/bin64/MDDirect27.so ${GHOME}/bin64
+      ./linux64/Build.bash 3
+      mv ./build/bin64/MDDirect39.*.so ${GHOME}/bin64
       cd ..
-      mv py//build/lib.linux-x86_64*/MDDirect27.so ${GHOME}/bin64
    fi
 done
