@@ -58,7 +58,7 @@
          ..\..\libmddWire\expat\xmlparse;
          %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;MDW_NEED_U_INT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -72,13 +72,11 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalIncludeDirectories>
-         ..\inc;
-         ..\..\libmddWire\inc;
-         ..\..\libmddWire\expat\xmltok;
-         ..\..\libmddWire\expat\xmlparse;
-         %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
+      <AdditionalDependencies>
+         ..\lib64\librtEdge64.lib;
+         ..\..\libmddWire\lib64\libmddWire64.lib;
+         pdh.lib;wsock32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
       <OutputFile>.\..\bin64\Publish/Publish.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -99,7 +97,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\inc;..\..\libmddWire\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;MDW_NEED_U_INT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
