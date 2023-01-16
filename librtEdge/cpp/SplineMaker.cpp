@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     22 DEC 2022 jcs  Build 61: SubChannel or LVC
+*     15 JAN 2023 jcs  Build 62: Curve-specific service
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include "inc/SplineMaker.h"
 #include <stdarg.h>
@@ -95,7 +96,8 @@ double KnotWatch::Y()
 ////////////////////////////////
 // Constructor
 ////////////////////////////////
-Knot::Knot( string &tkr, int fid ) :
+Knot::Knot( Curve &crv, string &tkr, int fid ) :
+   _curve( crv ),
    _Ticker( tkr ),
    _fid( fid ),
    _wl(),
@@ -107,9 +109,9 @@ Knot::Knot( string &tkr, int fid ) :
 ////////////////////////////////
 // Access / Mutator
 ////////////////////////////////
-int Knot::Subscribe( KnotSource &src, string &service )
+int Knot::Subscribe( KnotSource &src )
 {
-   const char *svc = service.data();
+   const char *svc = _curve.svc();
    const char *tkr = _Ticker.data();
 
    _StreamID = src.IOpenKnot( svc, tkr, arg_ );
@@ -161,7 +163,9 @@ void Knot::OnData( const char *tm, Field *f )
 ////////////////////////////////
 Curve::Curve( KnotSource &src, XmlElem &xe ) :
    _src( src ),
+   _svc( xe.getAttrValue( _dtd._attr_svc, src.svc() ) ),
    _name( xe.getAttrValue( _dtd._attr_name, "" ) ),
+   _fid( xe.getAttrValue( _dtd._attr_fid, 0 ) ),
    _Xmax( 1.0 ),
    _X(),
    _Y(),
@@ -175,7 +179,7 @@ Curve::Curve( KnotSource &src, XmlElem &xe ) :
    int            fid;
 
    /*
-    * <Curve Name="Swaps">
+    * <Curve Name="Swaps" Service="velocity">
     *    <Knot Ticker="RATES.SWAP.USD.PAR.3M"  FID="6" Interval="3" />
     *    <Knot Ticker="RATES.SWAP.USD.PAR.6M"  FID="6" Interval="6" />
     * </Curve Name="Swaps">
@@ -188,8 +192,9 @@ Curve::Curve( KnotSource &src, XmlElem &xe ) :
       if ( (X=edb[i]->getAttrValue( _dtd._attr_intvl, 0.0 )) == 0.0 )
          continue; // for-i
       if ( !(fid=edb[i]->getAttrValue( _dtd._attr_fid, 0 )) )
-         continue; // for-i
-      _kdb.push_back( _src.AddWatch( *this, tkr, fid, X ) );
+         fid = _fid;
+      if ( fid )
+         _kdb.push_back( _src.AddWatch( *this, tkr, fid, X ) );
    }
    if ( !(nw=_kdb.size()) )
       return;
@@ -351,6 +356,11 @@ size_t KnotSource::LoadCurves()
    return Size();
 }
 
+const char *KnotSource::svc()
+{
+   return _svc.data();
+}
+
 Curve *KnotSource::GetCurve( string &k )
 {
    CurveMap          &cdb = _curves;
@@ -374,7 +384,7 @@ KnotWatch *KnotSource::AddWatch( Curve      &crv,
    // Create if necessary
 
    if ( (it=kdb.find( k )) == kdb.end() ) {
-      rc     = new Knot( k, fid );
+      rc     = new Knot( crv, k, fid );
       kdb[k] = rc;
    }
    else
@@ -399,7 +409,7 @@ void KnotSource::OpenAll()
    for ( it=kdb.begin(); it!=kdb.end(); it++ ) {
       tkr      = (*it).first;
       knot     = (*it).second;
-      sid      = knot->Subscribe( *this, _svc );
+      sid      = knot->Subscribe( *this );
       idb[sid] = knot;
    }
 }

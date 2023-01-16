@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     25 DEC 2022 jcs  XON
+*     15 JAN 2023 jcs  Build 62: Curve-specific service
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __SPLINE_MAKER_H
 #define __SPLINE_MAKER_H
@@ -139,6 +140,7 @@ public:
 class Knot
 {
 private:
+	Curve        &_curve;
 	string        _Ticker;
 	int           _fid;
 	KnotWatchList _wl;
@@ -147,7 +149,7 @@ private:
 
 	// Constructor
 public:
-	Knot( string &, int );
+	Knot( Curve &, string &, int );
 
 	// Access / Mutator
 public:
@@ -155,7 +157,7 @@ public:
 	int         fid()      { return _fid; }
 	double      Y()        { return _Y; }
 	int         StreamID() { return _StreamID; }
-	int         Subscribe( KnotSource &, string & );
+	int         Subscribe( KnotSource & );
 	KnotWatch  *AddWatch( Curve &c, double intvl );
 
 	// Operations
@@ -174,7 +176,9 @@ class Curve
 {
 private:
 	KnotSource   &_src;
+	string        _svc;
 	string        _name;
+	int           _fid;
 	double        _Xmax;
 	DoubleList    _X;
 	DoubleList    _Y;
@@ -187,7 +191,8 @@ public:
 
 	// Access
 public:
-	bool        IsValid() { return _Y.size() > 0; }
+	bool        IsValid() { return( _Y.size() > 0 ); }
+	const char *svc()     { return _svc.data(); }
 	const char *Name()    { return _name.data(); }
 	DoubleList &X()       { return _X; }
 	DoubleList &Y()       { return _Y; }
@@ -234,7 +239,6 @@ public:
 }; // class Spline
 
 
-
 ////////////////////////////////////////
 //
 //        K n o t S o u r c e
@@ -258,6 +262,7 @@ public:
 	// Access / /Operations
 public:
 	size_t      LoadCurves();
+	const char *svc();
 	Curve      *GetCurve( string & );
 	KnotWatch  *AddWatch( Curve &, const char *, int, double );
 	size_t      Size();

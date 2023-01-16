@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  PubSpline.cs
+*  SplineMakerCLI.cs
 *     Publish Spline
 *
 *     We publish 1 ticker specified by the user as a librEdge.Vector
@@ -8,12 +8,12 @@
 *  REVISION HISTORY:
 *     24 OCT 2022 jcs  Created (from Pipe.cs)
 *      7 NOV 2022 jcs  XML config
+*     15 JAN 2023 jcs  Build 62:  SplineMakerCLI
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.IO;
-// using System.Collections;
 using System.Collections.Generic;
 using librtEdge;
 using QUANT;
@@ -29,13 +29,7 @@ class DTD
    ////////////////////////
    // Hard-coded
    ////////////////////////
-   public static double _min_dInc  = 0.001;
-   public static int    _fid_Inc   =     6;
-   public static int    _fid_X     = -8001; // UNCLE_VX
-   public static int    _fid_Y     = -8002; // UNCLE_VY
-   public static int    _fidVal    = 6;
-   public static int    _precision = 4;
-
+   public static int _precision = 4;
 
    ////////////////////////
    // Elements
@@ -48,15 +42,22 @@ class DTD
    ////////////////////////
    // Attributes
    ////////////////////////
-   public static string _attr_svc    = "Service";
-   public static string _attr_usr    = "Username";
-   public static string _attr_svr    = "Server";
-   public static string _attr_bds    = "BDS";
-   public static string _attr_tkr    = "Ticker";
-   public static string _attr_intvl  = "Interval";
-   public static string _attr_name   = "Name";
-   public static string _attr_inc    = "Increment";
-   public static string _attr_curve  = "Curve";
+   public string _attr_dataSrc   = "DataSource";
+   public string _attr_pumpIntvl = "PumpInterval";
+   public string _attr_enter     = "RunInForeground";
+   public string _attr_svc       = "Service";
+   public string _attr_usr       = "Username";
+   public string _attr_svr       = "Server";
+   public string _attr_fidX      = "FID_X";
+   public string _attr_fidY      = "FID_Y";
+   public string _attr_fidInc    = "FID_INC";
+   public string _attr_bds       = "BDS";
+   public string _attr_tkr       = "Ticker";
+   public string _attr_fid       = "FieldID";
+   public string _attr_intvl     = "Interval";
+   public string _attr_name      = "Name";
+   public string _attr_inc       = "Increment";
+   public string _attr_curve     = "Curve";
 
 } // DTD
 
@@ -101,18 +102,22 @@ class Knot
    //////////////
    // Members
    //////////////
-   private List<KnotWatch> _wl;
+   private Curve           _curve;
    private string          _Ticker;
+   private int             _fid;
+   private List<KnotWatch> _wl;
    private double          _Y;
    private int             _StreamID;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public Knot( string tkr )
+   public Knot( Curve crv, string tkr, int fid )
    {
-      _wl       = new List<KnotWatch>();
+      _curve    = crv;
       _Ticker   = tkr;
+      _fid      = fid;
+      _wl       = new List<KnotWatch>();
       _Y        = 0.0;
       _StreamID = 0;
    }
@@ -120,12 +125,14 @@ class Knot
    ////////////////////////////////
    // Access / Mutator
    ////////////////////////////////
+   public string tkr()      { return _tkr; }
+   public int    fid()      { return _fid; }
    public double Y()        { return _Y; }
    public int    StreamID() { return _StreamID; }
    
-   public int Subscribe( SwapSubscriber sub, string svc )
+   public int Subscribe( Edge3Source sub )
    {
-      _StreamID = sub.Subscribe( svc, _Ticker, 0 );
+      _StreamID = sub.Subscribe( _curve.svc(), _Ticker, 0 );
       return StreamID();
    }
 
@@ -141,7 +148,7 @@ class Knot
    ////////////////////////////////
    // Operations
    ////////////////////////////////
-   public void OnData( SwapSubscriber sub, rtEdgeField f )
+   public void OnData( Edge3Source sub, rtEdgeField f )
    {
       int    i, nw;
       string tm;
@@ -173,8 +180,10 @@ class Curve
    //////////////
    // Members
    //////////////
-   private SwapSubscriber  _sub;
+   private Edge3Source     _src;
+   private string          _svc;
    private string          _name;
+   private int             _fid;
    private double          _Xmax;
    private double[]        _X;
    private double[]        _Y;
@@ -184,12 +193,12 @@ class Curve
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public Curve( SwapSubscriber sub, XmlElem xe )
+   public Curve( Edge3Source src, XmlElem xe )
    {
       XmlElem[] edb = xe.elements();
       double    X;
       string    tkr;
-      int       i, nw;
+      int       i, nw, fid;
 
       /*
        * <Curve Name="Swaps">
@@ -197,8 +206,10 @@ class Curve
        *    <Knot Ticker="RATES.SWAP.USD.PAR.6M"  Interval="6" />
        * </Curve Name="Swaps">
        */
-      _sub     = sub;
+      _src     = src;
       _name    = xe.getAttrValue( DTD._attr_name, null );
+      _svc     = xe.getAttrValue( DTD._attr_svc, src.svc() );
+      _fid     = xe.getAttrValue( DTD._attr_fid, 0 );
       _kdb     = new List<KnotWatch>();
       _splines = new List<Spline>();
       _Xmax    = 1.0;
@@ -211,7 +222,10 @@ class Curve
             continue; // for-i
          if ( (X=edb[i].getAttrValue( DTD._attr_intvl, 0.0 )) == 0.0 )
             continue; // for-i
-         _kdb.Add( sub.AddWatch( this, tkr, X ) );
+         if ( (fid=edb[i].getAttrValue( DTD._attr_fid, 0 )) == 0 )
+            fid = _fid;
+         if ( fid )
+            _kdb.Add( src.AddWatch( this, tkr, fid, X ) );
       }
       if ( (nw=_kdb.Count) == 0 )
          return;
@@ -226,6 +240,7 @@ class Curve
    // Access
    ////////////////////////////////
    public bool     IsValid() { return _Y != null; }
+   public string   svc()     { return _svc; }
    public string   Name()    { return _name; }
    public double[] X()       { return _X; }
    public double[] Y()       { return _Y; }
@@ -266,9 +281,16 @@ class Curve
 class Spline
 {
    //////////////
+   // Class-wide
+   //////////////
+   public static int _fidX   = -8001;
+   public static int _fidY   = -8002;
+   public static int _fidInc =     6;
+
+   //////////////
    // Members
    //////////////
-   private SwapPublisher _pub;
+   private SplinePublisher _pub;
    private string        _tkr;
    private double        _dInc;
    private IntPtr        _StreamID;
@@ -279,7 +301,7 @@ class Spline
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public Spline( SwapPublisher pub, string tkr, double dInc, Curve curve )
+   public Spline( SplinePublisher pub, string tkr, double dInc, Curve curve )
    {
       _pub      = pub;
       _tkr      = tkr;
@@ -340,10 +362,12 @@ class Spline
       rtEdgePubUpdate u;
 
       u = new rtEdgePubUpdate( _pub, _tkr, (IntPtr)_StreamID, true );
-      u.AddField( DTD._fid_Inc, _dInc );
-      u.AddFieldAsVector( DTD._fid_X, _X, 2 );
       u.Init( _tkr, (IntPtr)_StreamID, true );
-      u.AddFieldAsVector( DTD._fid_Y, _Z, DTD._precision );
+      u.AddField( Spline._fidInc, _dInc );
+      if ( Spline._fidX )
+         u.AddFieldAsVector( Spline._fidX, _X, 2 );
+      if ( Spline._fidY )
+         u.AddFieldAsVector( Spline._fidY, _Z, DTD._precision );
       u.Publish();
    }
 
@@ -353,10 +377,10 @@ class Spline
 
 ////////////////////////////////////////
 //
-//    S w a p S u b s c r i b e r
+//        E d g e 3 S o u r c e
 //
 ////////////////////////////////////////
-class SwapSubscriber : rtEdgeSubscriber  
+class Edge3Source : rtEdgeSubscriber  
 {
    //////////////
    // Members
@@ -369,7 +393,7 @@ class SwapSubscriber : rtEdgeSubscriber
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SwapSubscriber( XmlElem xe ) :
+   public Edge3Source( XmlElem xe ) :
       base( xe.getAttrValue( DTD._attr_svr, "localhost:9998" ), 
             xe.getAttrValue( DTD._attr_usr, "SwapSpline" ) )
    {
@@ -398,6 +422,8 @@ class SwapSubscriber : rtEdgeSubscriber
    ////////////////////////////////
    // Access / /Operations
    ////////////////////////////////
+   public string svc() { return _svc; }
+
    public Curve GetCurve( string k )
    {
       Curve rc;
@@ -407,14 +433,14 @@ class SwapSubscriber : rtEdgeSubscriber
       return null;
    }
 
-   public KnotWatch AddWatch( Curve crv, string k, double X )
+   public KnotWatch AddWatch( Curve crv, string k, int fid, double X )
    {
       Knot rc;
 
       // Create if necessary
 
       if ( !_byName.TryGetValue( k, out rc ) ) {
-         rc         = new Knot( k );
+         rc         = new Knot( crv, k, fid );
          _byName[k] = rc;
       }
       return rc.AddWatch( crv, X );
@@ -434,7 +460,7 @@ class SwapSubscriber : rtEdgeSubscriber
       foreach( var kv in _byName ) {
          tkr        = (string)kv.Key;
          knot       = (Knot)kv.Value;
-         sid        = knot.Subscribe( this, _svc );
+         sid        = knot.Subscribe( this );
          _byId[sid] = knot;
       }
    }
@@ -465,18 +491,18 @@ class SwapSubscriber : rtEdgeSubscriber
       Knot k;
 
       if ( _byId.TryGetValue( d._StreamID, out k ) )
-         k.OnData( this, d.GetField( DTD._fidVal ) );
+         k.OnData( this, d.GetField( k.fid() ) );
    }
 
-} // class SwapSubscriber
+} // class Edge3Source
 
 
 ////////////////////////////////////////
 //
-//    S w a p P u b l i s h e r
+//    S p l i n e P u b l i s h e r
 //
 ////////////////////////////////////////
-class SwapPublisher : rtEdgePublisher  
+class SplinePublisher : rtEdgePublisher  
 {
    //////////////
    // Members
@@ -489,7 +515,7 @@ class SwapPublisher : rtEdgePublisher
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public SwapPublisher( XmlElem xp ) :
+   public SplinePublisher( XmlElem xp ) :
       base( xp.getAttrValue( DTD._attr_svr, "localhost:9995" ),
             xp.getAttrValue( DTD._attr_svc, "SwapSpline" ),
             true,     // bBinary
@@ -509,7 +535,7 @@ class SwapPublisher : rtEdgePublisher
       return _splines.Count;
    }
 
-   public int OpenSplines( SwapSubscriber sub )
+   public int OpenSplines( Edge3Source src )
    {
       XmlElem[] edb = _xp.elements();
       string    k, tkr;
@@ -521,7 +547,7 @@ class SwapPublisher : rtEdgePublisher
             continue; // for-k
          if ( (k=edb[i].getAttrValue( DTD._attr_curve, null )) == null )
             continue; // for-k
-         if ( (crv=sub.GetCurve( k )) == null )
+         if ( (crv=src.GetCurve( k )) == null )
             continue; // for-k
          dInc          = edb[i].getAttrValue( DTD._attr_inc, 1.0 );
          _splines[tkr] = new Spline( this, tkr, dInc, crv );
@@ -598,7 +624,7 @@ class SwapPublisher : rtEdgePublisher
       _bdsStreamID = (IntPtr)0;
    }
 
-} // SwapPublisher
+} // SplinePublisher
 
 
 /////////////////////////////////////
@@ -606,7 +632,7 @@ class SwapPublisher : rtEdgePublisher
 //   c l a s s   P u b S p l i n e
 //
 /////////////////////////////////////
-class PubSpline
+class SplineMakerCLI
 {
    ////////////////////////////////
    // main()
@@ -614,10 +640,10 @@ class PubSpline
    public static int Main( String[] args ) 
    {
       try {
-         SwapSubscriber sub;
-         SwapPublisher  pub;
-         XmlParser      cfg;
-         int            argc, nc, ns;
+         Edge3Source   sub;
+         SplinePublisher pub;
+         XmlParser     cfg;
+         int           argc, nc, ns;
 
          /////////////////////
          // Quickie checks
@@ -628,7 +654,8 @@ class PubSpline
             return 0;
          }
          if ( argc == 0 ) {
-            Console.Write( "Usage: PubSpline.exe <XML_cfgFile>; Exitting ...\n" );
+            Console.Write( "Usage: SplineMakerCLI.exe <XML_cfgFile>; " );
+            Console.Write( "Exitting ...\n" );
             return 0;
          }
 
@@ -656,18 +683,20 @@ class PubSpline
             Console.Write( "No Curves in <{0}> not found; Exitting ...\n", ps );
             return 0;
          }
-
          if ( ( (pdb=xp.elements()) == null ) || ( pdb.Length == 0 ) ) {
             Console.Write( "No Splines in <{0}> not found; Exitting ...\n", pp );
             return 0;
          }
+         Spline._fidX   = xp.getAttrValue( DTD._attr_fidX,   Spline._fidX );
+         Spline._fidY   = xp.getAttrValue( DTD._attr_fidY,   Spline._fidY );
+         Spline._fidInc = xp.getAttrValue( DTD._attr_fidInc, Spline._fidInc );
 
          /////////////////////////////////////
          // Pub / Sub Channels
          /////////////////////////////////////
          Console.WriteLine( rtEdge.Version() );
-         sub = new SwapSubscriber( xs );
-         pub = new SwapPublisher( xp );
+         sub = new Edge3Source( xs );
+         pub = new SplinePublisher( xp );
          if ( (nc=sub.Size()) == 0 ) {
             Console.Write( "No Curves found in {0}; Exitting ...\n", ps );
             return 0;
@@ -703,4 +732,4 @@ class PubSpline
       return( ( p == "YES" ) || ( p == "true" ) );
    }
 
-} // PubSpline
+} // SplineMakerCLI

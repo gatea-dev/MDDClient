@@ -3,4 +3,4 @@ echo off
 
 cls
 
-PubSpline.exe ./cfg/spline.xml
+SplineMakerCLI.exe ./cfg/spline.xml

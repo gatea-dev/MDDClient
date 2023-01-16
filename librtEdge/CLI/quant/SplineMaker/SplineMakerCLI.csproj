@@ -8,7 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon />
     <AssemblyKeyContainerName />
-    <AssemblyName>PubSpline</AssemblyName>
+    <AssemblyName>SplineMakerCLI</AssemblyName>
     <AssemblyOriginatorKeyFile />
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Flow</DefaultHTMLPageLayout>
@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CubicSpline.cs" />
-    <Compile Include="PubSpline.cs" />
+    <Compile Include="SplineMakerCLI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

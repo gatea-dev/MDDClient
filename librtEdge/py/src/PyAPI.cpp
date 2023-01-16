@@ -1051,16 +1051,9 @@ static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
                                   EdgeMethods
                                 };
 
-static PyObject *PyInit_mddModule()
-{
-   return ::PyModule_Create( &_mddModule );
-}
-
 PyMODINIT_FUNC PyInit_MDDirect39( void )
 {
-   ::PyImport_AppendInittab( "MDDirect39", &PyInit_mddModule );
-   ::Py_Initialize();
-   return _PyReturn( Py_None );
+   return ::PyModule_Create( &_mddModule );
 } 
 #else
 PyMODINIT_FUNC initMDDirect27( void )
