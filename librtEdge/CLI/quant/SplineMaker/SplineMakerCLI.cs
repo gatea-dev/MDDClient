@@ -42,22 +42,22 @@ class DTD
    ////////////////////////
    // Attributes
    ////////////////////////
-   public string _attr_dataSrc   = "DataSource";
-   public string _attr_pumpIntvl = "PumpInterval";
-   public string _attr_enter     = "RunInForeground";
-   public string _attr_svc       = "Service";
-   public string _attr_usr       = "Username";
-   public string _attr_svr       = "Server";
-   public string _attr_fidX      = "FID_X";
-   public string _attr_fidY      = "FID_Y";
-   public string _attr_fidInc    = "FID_INC";
-   public string _attr_bds       = "BDS";
-   public string _attr_tkr       = "Ticker";
-   public string _attr_fid       = "FieldID";
-   public string _attr_intvl     = "Interval";
-   public string _attr_name      = "Name";
-   public string _attr_inc       = "Increment";
-   public string _attr_curve     = "Curve";
+   public static string _attr_dataSrc   = "DataSource";
+   public static string _attr_pumpIntvl = "PumpInterval";
+   public static string _attr_enter     = "RunInForeground";
+   public static string _attr_svc       = "Service";
+   public static string _attr_usr       = "Username";
+   public static string _attr_svr       = "Server";
+   public static string _attr_fidX      = "FID_X";
+   public static string _attr_fidY      = "FID_Y";
+   public static string _attr_fidInc    = "FID_INC";
+   public static string _attr_bds       = "BDS";
+   public static string _attr_tkr       = "Ticker";
+   public static string _attr_fid       = "FieldID";
+   public static string _attr_intvl     = "Interval";
+   public static string _attr_name      = "Name";
+   public static string _attr_inc       = "Increment";
+   public static string _attr_curve     = "Curve";
 
 } // DTD
 
@@ -125,7 +125,7 @@ class Knot
    ////////////////////////////////
    // Access / Mutator
    ////////////////////////////////
-   public string tkr()      { return _tkr; }
+   public string tkr()      { return _Ticker; }
    public int    fid()      { return _fid; }
    public double Y()        { return _Y; }
    public int    StreamID() { return _StreamID; }
@@ -224,7 +224,7 @@ class Curve
             continue; // for-i
          if ( (fid=edb[i].getAttrValue( DTD._attr_fid, 0 )) == 0 )
             fid = _fid;
-         if ( fid )
+         if ( fid != 0 )
             _kdb.Add( src.AddWatch( this, tkr, fid, X ) );
       }
       if ( (nw=_kdb.Count) == 0 )
@@ -363,10 +363,10 @@ class Spline
 
       u = new rtEdgePubUpdate( _pub, _tkr, (IntPtr)_StreamID, true );
       u.Init( _tkr, (IntPtr)_StreamID, true );
-      u.AddField( Spline._fidInc, _dInc );
-      if ( Spline._fidX )
+      u.AddFieldAsDouble( Spline._fidInc, _dInc );
+      if ( Spline._fidX != 0 )
          u.AddFieldAsVector( Spline._fidX, _X, 2 );
-      if ( Spline._fidY )
+      if ( Spline._fidY != 0 )
          u.AddFieldAsVector( Spline._fidY, _Z, DTD._precision );
       u.Publish();
    }
