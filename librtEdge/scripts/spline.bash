@@ -8,5 +8,6 @@ if [ -n "$PID" ]; then
    sleep 1
 fi
 
+/bin/rm -f ./nohup.out
 ## SplineMaker /tmp/fumunder.xml > /tmp/log_splineMaker.log 
-nohup SplineMaker /tmp/spline.xml > /tmp/log_splineMaker.log  &
+nohup SplineMaker ./scripts/cfg/spline.xml > /tmp/log_splineMaker.log  &

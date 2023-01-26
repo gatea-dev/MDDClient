@@ -626,6 +626,24 @@ static bool _IsTrue( const char *p )
    return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
 }
 
+#ifdef _VALIDATE_ON_ALL_PLATFORMS
+
+#include <GLrecDb.h>
+int main( int argc, char **argv )
+{
+   printf( "sizeof( Sentinel )       = %ld\n", sizeof( Sentinel ) );
+   printf( "sizeof( GLrecDailyIdx )  = %ld\n", sizeof( GLrecDailyIdx ) );
+   printf( "sizeof( GLrecUpdStats )  = %ld\n", sizeof( GLrecUpdStats ) );
+   printf( "sizeof( GLrecChanStats ) = %ld\n", sizeof( GLrecChanStats ) );
+   printf( "sizeof( GLrecTapeHdr )   = %ld\n", sizeof( GLrecTapeHdr ) );
+   printf( "sizeof( GLrecTapeRec )   = %ld\n", sizeof( GLrecTapeRec ) );
+   printf( "sizeof( GLrecTapeMsg )   = %ld\n", sizeof( GLrecTapeMsg ) );
+   printf( "sizeof( struct timeval ) = %ld\n", sizeof( struct timeval ) );
+   printf( "sizeof( long )           = %ld\n", sizeof( long ) );
+   return 0;
+}
+#endif // _VALIDATE_ON_ALL_PLATFORMS
+
 int main( int argc, char **argv )
 {
    MyChannel   ch;

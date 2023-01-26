@@ -12,8 +12,9 @@
 *     29 MAR 2022 jcs  Build 52: ::getenv( "__JD_UNPACKED" )
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *      3 NOV 2022 jcs  Build 60: AddVector()
+*     26 JAN 2023 jcs  Build 62: PubTkr_SIMPLE()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -282,6 +283,33 @@ public:
    }
 
    size_t PubTkr( Watch &w )
+   {
+      return PubTkr_SIMPLE( w );
+   }
+
+   size_t PubTkr_SIMPLE( Watch &w )
+   {
+      Locker         lck( _mtx );
+      Update        &u = upd();
+      rtDateTime     dtTm;
+      struct timeval tv;
+      int            fid;
+
+      if ( w._bImg )
+         ::fprintf( stdout, "IMG [%d] : %s\n", w._StreamID, w.tkr() );
+      u.Init( w.tkr(), w._StreamID, w._bImg );
+      w._bImg    = false;
+      fid        = 6;
+      tv.tv_sec  = TimeSec();
+      tv.tv_usec = 0;
+      dtTm       = unix2rtDateTime( tv );
+      u.AddField( fid++, dtTm );
+      u.AddField( fid++, w._rtl++ );
+      u.AddField( fid++, M_PI );
+      return u.Publish();
+   }
+
+   size_t PubTkr_FULL( Watch &w )
    {
       Locker         lck( _mtx );
       Update        &u = upd();

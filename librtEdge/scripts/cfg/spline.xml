@@ -1,0 +1,602 @@
+<SplineMaker DataSource="LVC" RunInForeground="false" PumpInterval="15.0" >
+   <Subscriber Service  = "velocity"
+               Username = "SplineMaker"
+               Server   = "/RAMDISK//LVC/Velocity_20230108.lvc"
+               Server_MDD   = "gatea.com:9998" >
+
+      <Curve Name="Swaps" FieldID="6" >
+         <Knot Ticker="RATES.SWAP.USD.PAR.3M"  Interval="3" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.6M"  Interval="6" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.1Y"  Interval="12" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.2Y"  Interval="24" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.3Y"  Interval="36" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.5Y"  Interval="60" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.7Y"  Interval="84" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.10Y" Interval="120" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.20Y" Interval="240" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.30Y" Interval="360" />
+      </Curve>
+
+      <Curve Name="UST" FieldID="6" >
+         <Knot Ticker="RATES.TSY.OTR.1M.YIELD"  Interval="1" />
+         <Knot Ticker="RATES.TSY.OTR.3M.YIELD"  Interval="3" />
+         <Knot Ticker="RATES.TSY.OTR.6M.YIELD"  Interval="6" />
+         <Knot Ticker="RATES.TSY.OTR.1Y.YIELD"  Interval="12" />
+         <Knot Ticker="RATES.TSY.OTR.2Y.YIELD"  Interval="24" />
+         <Knot Ticker="RATES.TSY.OTR.3Y.YIELD"  Interval="36" />
+         <Knot Ticker="RATES.TSY.OTR.5Y.YIELD"  Interval="60" />
+         <Knot Ticker="RATES.TSY.OTR.7Y.YIELD"  Interval="84" />
+         <Knot Ticker="RATES.TSY.OTR.10Y.YIELD" Interval="120" />
+         <Knot Ticker="RATES.TSY.OTR.20Y.YIELD" Interval="240" />
+         <Knot Ticker="RATES.TSY.OTR.30Y.YIELD" Interval="360" />
+      </Curve>
+
+      <Curve Name="AUD.USD" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.AUD.USD.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.CHF" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.CHF.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.DKK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.DKK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.GBP" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.GBP.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.NOK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.NOK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.SEK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.SEK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.USD" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.EUR.USD.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="GBP.USD" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.GBP.USD.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="NZD.USD" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.NZD.USD.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CAD" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CAD.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CHF" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CHF.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CZK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.CZK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.DKK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.DKK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.HUF" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.HUF.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.JPY" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.JPY.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.MXN" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.MXN.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.NOK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.NOK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.PLN" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.PLN.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.SEK" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.SEK.10Y.CITI" Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.ZAR" FieldID="6" >
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.1M.CITI"  Interval="1" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.2M.CITI"  Interval="2" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.3M.CITI"  Interval="3" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.4M.CITI"  Interval="4" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.5M.CITI"  Interval="5" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.6M.CITI"  Interval="6" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.7M.CITI"  Interval="7" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.8M.CITI"  Interval="8" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.9M.CITI"  Interval="9" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.10M.CITI" Interval="10" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.11M.CITI" Interval="11" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.1Y.CITI"  Interval="12" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.15M.CITI" Interval="15" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.18M.CITI" Interval="18" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.2Y.CITI"  Interval="24" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.3Y.CITI"  Interval="36" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.4Y.CITI"  Interval="48" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.5Y.CITI"  Interval="60" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.6Y.CITI"  Interval="72" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.7Y.CITI"  Interval="84" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.8Y.CITI"  Interval="96" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.9Y.CITI"  Interval="108" />
+        <Knot Ticker="FX.FORWARD.FWD_POINT_PIP.USD.ZAR.10Y.CITI" Interval="120" />
+      </Curve>
+
+   </Subscriber>
+
+   <Publisher Service="splinemaker" Server="gatea.com:9011">
+      <Spline Name="Swap"      Increment="1.0"      Curve="Swaps" />
+      <Spline Name="Swap.D"    Increment="0.032876" Curve="Swaps" />
+      <Spline Name="UST"       Increment="1.0"      Curve="UST" />
+      <Spline Name="UST.D"     Increment="0.032876" Curve="UST" />
+      <Spline Name="AUD.USD"   Increment="1.0"      Curve="AUD.USD" />
+      <Spline Name="AUD.USD.D" Increment="0.032876" Curve="AUD.USD" />
+      <Spline Name="EUR.CHF"   Increment="1.0"      Curve="EUR.CHF" />
+      <Spline Name="EUR.CHF.D" Increment="0.032876" Curve="EUR.CHF" />
+      <Spline Name="EUR.DKK"   Increment="1.0"      Curve="EUR.DKK" />
+      <Spline Name="EUR.DKK.D" Increment="0.032876" Curve="EUR.DKK" />
+      <Spline Name="EUR.GBP"   Increment="1.0"      Curve="EUR.GBP" />
+      <Spline Name="EUR.GBP.D" Increment="0.032876" Curve="EUR.GBP" />
+      <Spline Name="EUR.NOK"   Increment="1.0"      Curve="EUR.NOK" />
+      <Spline Name="EUR.NOK.D" Increment="0.032876" Curve="EUR.NOK" />
+      <Spline Name="EUR.SEK"   Increment="1.0"      Curve="EUR.SEK" />
+      <Spline Name="EUR.SEK.D" Increment="0.032876" Curve="EUR.SEK" />
+      <Spline Name="EUR.USD"   Increment="1.0"      Curve="EUR.USD" />
+      <Spline Name="EUR.USD.D" Increment="0.032876" Curve="EUR.USD" />
+      <Spline Name="NZD.USD"   Increment="1.0"      Curve="NZD.USD" />
+      <Spline Name="NZD.USD.D" Increment="0.032876" Curve="NZD.USD" />
+      <Spline Name="USD.CAD"   Increment="1.0"      Curve="USD.CAD" />
+      <Spline Name="USD.CAD.D" Increment="0.032876" Curve="USD.CAD" />
+      <Spline Name="USD.CHF"   Increment="1.0"      Curve="USD.CHF" />
+      <Spline Name="USD.CHF.D" Increment="0.032876" Curve="USD.CHF" />
+      <Spline Name="USD.CZK"   Increment="1.0"      Curve="USD.CZK" />
+      <Spline Name="USD.CZK.D" Increment="0.032876" Curve="USD.CZK" />
+      <Spline Name="USD.DKK"   Increment="1.0"      Curve="USD.DKK" />
+      <Spline Name="USD.DKK.D" Increment="0.032876" Curve="USD.DKK" />
+      <Spline Name="USD.HUF"   Increment="1.0"      Curve="USD.HUF" />
+      <Spline Name="USD.HUF.D" Increment="0.032876" Curve="USD.HUF" />
+      <Spline Name="USD.JPY"   Increment="1.0"      Curve="USD.JPY" />
+      <Spline Name="USD.JPY.D" Increment="0.032876" Curve="USD.JPY" />
+      <Spline Name="USD.MXN"   Increment="1.0"      Curve="USD.MXN" />
+      <Spline Name="USD.MXN.D" Increment="0.032876" Curve="USD.MXN" />
+      <Spline Name="USD.NOK"   Increment="1.0"      Curve="USD.NOK" />
+      <Spline Name="USD.NOK.D" Increment="0.032876" Curve="USD.NOK" />
+      <Spline Name="USD.PLN"   Increment="1.0"      Curve="USD.PLN" />
+      <Spline Name="USD.PLN.D" Increment="0.032876" Curve="USD.PLN" />
+      <Spline Name="USD.SEK"   Increment="1.0"      Curve="USD.SEK" />
+      <Spline Name="USD.SEK.D" Increment="0.032876" Curve="USD.SEK" />
+      <Spline Name="USD.ZAR"   Increment="1.0"      Curve="USD.ZAR" />
+      <Spline Name="USD.ZAR.D" Increment="0.032876" Curve="USD.ZAR" />
+
+   </Publisher>
+
+</SplineMaker>
