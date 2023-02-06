@@ -8,8 +8,9 @@
 *     12 NOV 2014 jcs  Build 28: RTEDGE_PRIVATE
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     10 SEP 2020 jcs  Build 44: MDDResult
+*      6 FEB 2023 jcs  Build 62: GLchtDbItem._idx
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_CHARTDB_DB_H
 #define __EDGLIB_CHARTDB_DB_H
@@ -44,6 +45,7 @@ class GLchtDbItem
 public:
    char   _svc[CDB_SVCLEN];
    char   _tkr[CDB_ITEMLEN];
+   int    _idx;
    int    _fid;
    int    _interval;    // Seconds
    int    _curTck;

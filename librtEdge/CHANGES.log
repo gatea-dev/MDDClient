@@ -43,11 +43,13 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 62 23-01-xx
+ * ### Build 62 23-02-xx
  *
  * -# SplineMaker.cpp / SplineMakerCLI.cs : 
  *    = Curve-specific service 
  *    = Curve-specific default FieldID
+ *
+ * -# ChartDb : GLchtDbItem._idx
  * 
  *
  * ### Build 61 22-12-27
