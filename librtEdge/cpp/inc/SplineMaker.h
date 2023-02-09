@@ -5,7 +5,7 @@
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     25 DEC 2022 jcs  XON
-*     15 JAN 2023 jcs  Build 62: Curve-specific service
+*      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -70,6 +70,7 @@ public:
 	const char *_attr_fidX;
 	const char *_attr_fidY;
 	const char *_attr_fidInc;
+	const char *_attr_fidKnot;
 	const char *_attr_bds;
 	const char *_attr_tkr;
 	const char *_attr_fid;
@@ -96,6 +97,7 @@ public:
 	   _attr_fidX( "FID_X" ),
 	   _attr_fidY( "FID_Y" ),
 	   _attr_fidInc( "FID_INC" ),
+	   _attr_fidKnot( "FID_KNOT" ),
 	   _attr_bds( "BDS" ),
 	   _attr_tkr( "Ticker" ),
 	   _attr_fid( "FieldID" ),
@@ -191,11 +193,12 @@ public:
 
 	// Access
 public:
-	bool        IsValid() { return( _Y.size() > 0 ); }
-	const char *svc()     { return _svc.data(); }
-	const char *Name()    { return _name.data(); }
-	DoubleList &X()       { return _X; }
-	DoubleList &Y()       { return _Y; }
+	bool           IsValid() { return( _Y.size() > 0 ); }
+	const char    *svc()     { return _svc.data(); }
+	const char    *Name()    { return _name.data(); }
+	DoubleList    &X()       { return _X; }
+	DoubleList    &Y()       { return _Y; }
+	KnotWatchList &wl()      { return _kdb; }
 
 	// Mutator / Operations
 public:
@@ -216,6 +219,7 @@ public:
 	static int _fidX;
 	static int _fidY;
 	static int _fidInc;
+	static int _fidKnot;
 private:
 	SplinePublisher &_pub;
 	double           _dInc;

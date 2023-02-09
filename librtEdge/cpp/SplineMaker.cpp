@@ -5,7 +5,7 @@
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     22 DEC 2022 jcs  Build 61: SubChannel or LVC
-*     15 JAN 2023 jcs  Build 62: Curve-specific service
+*      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -234,9 +234,10 @@ void Curve::OnData( Knot &k )
 //
 ////////////////////////////////////////
 
-int Spline::_fidX   = -8001;
-int Spline::_fidY   = -8002;
-int Spline::_fidInc =     6;
+int Spline::_fidX    = -8001;
+int Spline::_fidY    = -8002;
+int Spline::_fidInc  =     6;
+int Spline::_fidKnot = -8101;
 
 ////////////////////////////////
 // Constructor
@@ -302,11 +303,15 @@ void Spline::Calc( DoubleList &X, DoubleList &Y, double xn )
 
 void Spline::Publish()
 {
-   Update &u = _pub.upd();
+   Update        &u = _pub.upd();
+   KnotWatchList &wl = _curve.wl();
+   size_t         i, n;
 
    if ( _StreamID && _pub.XON() ) {
+      n = _fidKnot ? wl.size() : 0;
       u.Init( tkr(), _StreamID, true );
       u.AddField( _fidInc, _dInc );
+      for ( i=0; i<n; u.AddField( _fidKnot-i, wl[i]->Y() ), i++ );
       if ( _fidX )
          u.AddVector( _fidX, _X, 2 );
       if ( _fidY )
