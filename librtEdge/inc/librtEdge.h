@@ -32,8 +32,9 @@
 *      1 SEP 2022 jcs  Build 56: rtEdgeData._RTL
 *     22 OCT 2022 jcs  Build 58: hpp/struct
 *      1 NOV 2022 jcs  Build 60: rtFld_vector
+*     14 FEB 2023 jcs  Build 62: quant/LU.hpp
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -2238,6 +2239,7 @@ _CPP_END
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
 #include <hpp/quant/CubicSpline.hpp>
+#include <hpp/quant/LU.hpp>
 #include <hpp/struct/Vector.hpp>
 #ifdef _SURFACE_NOT_READY
 #include <hpp/struct/Surface.hpp>

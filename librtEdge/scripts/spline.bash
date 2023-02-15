@@ -9,5 +9,5 @@ if [ -n "$PID" ]; then
 fi
 
 /bin/rm -f ./nohup.out
-nohup ./bin64/SplineMaker ./scripts/cfg/spline.xml > /tmp/log_splineMaker.log  &
-## nohup SplineMaker ./scripts/cfg/spline.xml > /tmp/log_splineMaker.log  &
+## nohup ./bin64/SplineMaker ./scripts/cfg/spline.xml > /tmp/log_SplineMkr.log  &
+nohup SplineMaker ./scripts/cfg/spline.xml > /tmp/log_SplineMkr.log  &

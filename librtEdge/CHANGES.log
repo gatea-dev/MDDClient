@@ -50,6 +50,8 @@ Features To Add
  *    = Curve-specific default FieldID
  *
  * -# ChartDb : GLchtDbItem._idx
+ *
+ * -# quant/LU.hpp
  * 
  *
  * ### Build 61 22-12-27
