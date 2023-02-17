@@ -18,7 +18,6 @@ static DTD _dtd;
 typedef set<string, less<string> >   SortedStringSet;
 
 static DoubleGrid A;
-static LU         lu( A );
 
 /////////////////////////////////////
 // Handy-dandy Logger

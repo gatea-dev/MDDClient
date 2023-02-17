@@ -25,8 +25,9 @@
 *     26 OCT 2022 jcs  Build 58: CxtMap
 *     29 OCT 2022 jcs  Build 60: DoubleList
 *     26 NOV 2022 jcs  Build 61: DateTimeList; DoubleXY
+*     17 FEB 2023 jcs  Build 62: Dump( DoubleGrid & );
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_rtEdge_H
 #define __RTEDGE_rtEdge_H
@@ -88,12 +89,12 @@ namespace RTEDGE
 class rtDate
 {
 public:
-   /** \brief 4-digit year */
-   int _year;
-   /** \brief Month : { 0 = Jan, ..., 11 = Dec } */
-   int _month;
-   /** \brief Day of month : { 0 .. 31 } */
-   int _mday;
+	/** \brief 4-digit year */
+	int _year;
+	/** \brief Month : { 0 = Jan, ..., 11 = Dec } */
+	int _month;
+	/** \brief Day of month : { 0 .. 31 } */
+	int _mday;
 
 };  // class rtDate
 
@@ -111,14 +112,14 @@ public:
 class rtTime
 {
 public:
-   /** \brief Hour : { 0, ..., 23 } */
-   int _hour;
-   /** \brief Minute : { 0, ..., 60 } */
-   int _minute;
-   /** \brief Second : { 0, ..., 60 } */
-   int _second;
-   /** \brief MicroSecond : { 0, ..., 999999 } */
-   int _micros;
+	/** \brief Hour : { 0, ..., 23 } */
+	int _hour;
+	/** \brief Minute : { 0, ..., 60 } */
+	int _minute;
+	/** \brief Second : { 0, ..., 60 } */
+	int _second;
+	/** \brief MicroSecond : { 0, ..., 999999 } */
+	int _micros;
 
 }; // class rtTime
 
@@ -136,10 +137,10 @@ public:
 class rtDateTime
 {
 public:
-   /** \brief Date : YMD */
-   rtDate _date;
-   /** \brief Time : HMS.uuuuuu */
-   rtTime _time;
+	/** \brief Date : YMD */
+	rtDate _date;
+	/** \brief Time : HMS.uuuuuu */
+	rtTime _time;
 
 }; // class rtDateTime
 
@@ -157,10 +158,10 @@ public:
 class DoubleXY
 {
 public:
-   /** \brief X value */
-   double _x;
-   /** \brief Y value */
-   double _y;
+	/** \brief X value */
+	double _x;
+	/** \brief Y value */
+	double _y;
 
 }; // class DoubleXY
 
@@ -178,8 +179,8 @@ public:
 class DoubleXYZ : public DoubleXY
 {
 public:
-   /** \brief Z value */
-   double _z;
+	/** \brief Z value */
+	double _z;
 
 }; // class DoubleXYZ
 
@@ -566,6 +567,54 @@ public:
 	   *(cp+1) = '\0';
 
 	   return rtn;
+	}
+
+	/**
+	 * \brief Dump vector as CSV 
+	 *
+	 * \param g : Grid of doubles
+	 * \param obuf : Destination string
+	 * \return obuf.data()
+	 */
+	static const char *Dump( DoubleGrid &g, std::string &obuf )
+	{
+	   size_t      i, n;
+	   std::string r;
+
+	   obuf.clear();
+	   n = g.size();
+	   for ( i=0; i<n; i++ ) {
+	      obuf += "[ ";
+	      obuf += Dump( g[i], r );
+	      obuf += "]\n";
+	   }
+	   return obuf.data();
+	}
+
+	/**
+	 * \brief Dump vector as CSV 
+	 *
+	 * \param v : List of doubles to dump
+	 * \param obuf : Output buffer
+	 * \return obuf.data()
+	 */
+	static const char *Dump( DoubleList &v, std::string &obuf )
+	{
+	   char  *bp, *cp;
+	   size_t i, n;
+
+	   obuf.clear();
+	   if ( (n=v.size()) ) {
+	      bp = new char[(n+4)*100];
+	      cp = bp;
+	      for ( i=0; i<n; i++ ) {
+	         cp += i ? sprintf( cp, "," ) : 0;
+	         cp += sprintf( cp, "%.4f", v[i] );
+	      }
+	      obuf = bp;
+	      delete[] bp;
+	   }
+	   return obuf.data();
 	}
 
 	////////////////////////////////////

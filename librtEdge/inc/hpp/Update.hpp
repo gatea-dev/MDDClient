@@ -578,7 +578,6 @@ public:
 	 * 
 	 * \param fid - Field ID
 	 * \param src - Vector array of DateTime's to add
-	 * \param dst - Destination array holding converted DateTime's
 	 * \see Publish()
 	 */
 	void AddVector( int fid, DateTimeList &src )
