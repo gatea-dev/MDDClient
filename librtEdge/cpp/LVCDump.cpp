@@ -313,11 +313,14 @@ int main( int argc, char **argv )
    }
    else if ( !::strcmp( cmd, "MEM" ) ) {
       if ( nThr > 1 ) {
+         ::fprintf( stdout, "MEM1 = %d (Kb)\n", lvc.MemSize() );
          for ( i=0; i<nThr; thrs.push_back( new MyThread( svr ) ), i++ );
          for ( i=0; i<nThr; thrs[i]->StartThread(), i++ );
          ::fprintf( stdout, "Hit <ENTER> to iterate ..." ); getchar();
          for ( i=0; i<nThr; thrs[i]->StopThread(), i++ );
+         ::fprintf( stdout, "MEM2 = %d (Kb)\n", lvc.MemSize() );
          for ( i=0; i<nThr; delete thrs[i], i++ );
+         ::fprintf( stdout, "MEM3 = %d (Kb)\n", lvc.MemSize() );
          thrs.clear();
       }
       else {

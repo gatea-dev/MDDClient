@@ -67,6 +67,9 @@ Features To Add
  * -# Re-entrant LVC.SnapAll()
  *    - SnapAll_safe(() / ViewAll_safe()
  *
+ * -# LVC Leak :
+ *    - rtFld_vector in LVC_Free() : DUH!!
+ *
  *
  * ### Build 61 22-12-27
  *

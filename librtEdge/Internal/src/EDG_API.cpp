@@ -976,8 +976,15 @@ void LVC_Free( LVCData *d )
          bFldCopy = ( !d->_bShallow && !d->_copy );
          for ( i=0; bFldCopy && i<nf; i++ ) {
             f = d->_flds[i];
-            if ( f._type == rtFld_string && b._data )
-               delete[] b._data;
+            switch( f._type ) {
+               case rtFld_string:
+               case rtFld_vector:
+                  if ( b._data )
+                     delete[] b._data;
+                  break;
+               default:
+                  break;
+            }
          }
          delete[] d->_flds;
       }
