@@ -9,9 +9,9 @@
 *      5 FEB 2016 jcs  Build 32: LVC : public rtEdge
 *     25 SEP 2017 jcs  Build 35: No mo admin; Use LVCAdmin.hpp instead
 *     14 JAN 2018 jcs  Build 39: _FreeSchema() / _mtx
-
+*      8 MAR 2023 jcs  Build 62: Re-entrant SnanpAll( LVCAll * )
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_LVC_H
 #define __RTEDGE_LVC_H
@@ -325,11 +325,13 @@ public:
 	/**
 	 * \brief Query LVC for current values for ALL tickers
 	 *
+	 * This method is not re-entrant and unsafe
+	 *
 	 * \return Current contents of LVC Cache in LVCAll struct
 	 */
 	LVCAll &SnapAll()
 	{
-	   Locker lck( _qryMtx );
+	   Locker  lck( _qryMtx );
 
 	   return _all->Set( _cxt, ::LVC_SnapAll( _cxt ) );
 	}
@@ -337,11 +339,41 @@ public:
 	/**
 	 * \brief Query LVC for current values for ALL tickers
 	 *
-	 * \return Current values in Message[] list
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \return Current contents of LVC Cache in LVCAll struct
+	 * \see SnapAll()
 	 */
 	LVCAll &ViewAll()
 	{
 	   return SnapAll();
+	}
+
+	/**
+	 * \brief Query LVC for current values for ALL tickers
+	 *
+	 * This method may be called simultaneously by multiple threads. 
+	 *
+	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \return dst
+	 */
+	LVCAll &SnapAll_safe( LVCAll &dst )
+	{
+	   return dst.Set( _cxt, ::LVC_SnapAll( _cxt ) );
+	}
+
+	/**
+	 * \brief Query LVC for current values for ALL tickers
+	 *
+	 * This method may be called simultaneously by multiple threads. 
+	 *
+	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \return dst
+	 * \see SnapAll_aafe()
+	 */
+	LVCAll &ViewAll_safe( LVCAll &dst )
+	{
+	   return SnapAll_safe( dst );
 	}
 
 	/**

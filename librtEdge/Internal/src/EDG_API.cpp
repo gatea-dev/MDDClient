@@ -25,8 +25,9 @@
 *     23 MAY 2022 jcs  Build 54: rtFld_unixTime
 *     10 JUN 2022 jcs  Build 55: Remap : Same address
 *     29 OCT 2022 jcs  Build 60: rtFld_vector
+*      8 MAR 2023 jcs  Build 62: _lvcMtx; static rtEdge_ioctl's
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 #include <OS_cpu.h>
@@ -84,6 +85,7 @@ static ChartDbMap     _cdb;
 static CockpitMap     _cock;
 static ThreadMap      _work;
 static MDDStatMap     _MDDStats;
+static Mutex          _lvcMtx;
 static long           _nCxt   = 1;
 static struct timeval _tStart = { 0,0 };
 
@@ -100,6 +102,10 @@ static void _Touch()
    ::srand( _tStart.tv_sec );
 }
 
+/**
+ * \brief Called a ton by rtEdge_GetField() if user asking for field by ID or name
+ *
+ */
 static EdgChannel *_GetSub( int cxt )
 {
    EdgChanMap          &edb = _subs;
@@ -111,6 +117,10 @@ static EdgChannel *_GetSub( int cxt )
    return rc;
 }
 
+/**
+ * \brief Called a ton by rtEdge_Publish()
+ * 
+ */
 static PubChannel *_GetPub( int cxt )
 {
    PubChanMap          &edb = _pubs;
@@ -124,6 +134,7 @@ static PubChannel *_GetPub( int cxt )
 
 static LVCDef *_GetLVC( int cxt )
 {
+   Locker              lck( _lvcMtx );
    LVCDefMap          &edb = _lvc;
    LVCDefMap::iterator it;
    LVCDef             *rc;
@@ -304,11 +315,21 @@ void rtEdge_ioctl( rtEdge_Context cxt, rtEdgeIoctl ty, void *arg )
    PubChannel *pub;
    Cockpit    *pit;
    Logger     *lf;
+   u_int64_t  *i64;
 
    // Logging
 
    if ( (lf=Socket::_log) )
       lf->logT( 3, "rtEdge_ioctl( %d )\n", ty );
+
+
+   // Do not require context
+
+   if ( !cxt ) {
+      if ( ( ty == ioctl_getThreadId ) && (i64=(u_int64_t *)arg) )
+         *i64 = Thread::CurrentThreadID();
+      return;
+   }
 
    // Operation
 
@@ -797,6 +818,7 @@ void LVC_SetLock( char bLock, long dwWaitMillis )
 
 LVC_Context LVC_Initialize( const char *pFile )
 {
+   Locker  lck( _lvcMtx );
    LVCDef *lvc;
    Logger *lf;
    long    rtn;
@@ -1039,6 +1061,7 @@ void LVC_FreeAll( LVCDataAll *d )
 
 void LVC_Destroy( LVC_Context cxt )
 {
+   Locker              lck( _lvcMtx );
    Logger             *lf;
    LVCDefMap::iterator it;
    LVCDef             *qod;

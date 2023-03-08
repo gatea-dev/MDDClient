@@ -88,7 +88,7 @@ PUBSUB_OBJS  = config.o PubSub.o
 PIPE_OBJS    = config.o Pipe.o
 
 #all:	librtEdge$(BITS) test ByteClient FileSvr Publish Subscribe etc move_objs
-all:	librtEdge$(BITS) Publish Subscribe etc move_objs
+all:	librtEdge$(BITS) Publish Subscribe LVCDump etc move_objs
 
 #etc:	Correlate PubSub TradeLog CrossMkt
 etc:	

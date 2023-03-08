@@ -11,8 +11,9 @@
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -179,17 +180,41 @@ public:
 
 	/** 
 	 * \brief Query LVC for current values of a ALL market data records
-	 *   
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
 	 * \return Current values in LVCDataAll
 	 */  
 	LVCDataAll ^SnapAll();
 
 	/** 
 	 * \brief Query LVC for current values of a ALL market data records
-	 *   
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
 	 * \return Current values in LVCDataAll
 	 */  
 	LVCDataAll ^ViewAll();
+
+	/** 
+	 * \brief Query LVC for current values of a ALL market data records
+	 *
+	 * This method may be called simultaneously by multiple threads.
+	 *
+	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \return dst
+	 */  
+	LVCDataAll ^SnapAll_safe( LVCDataAll ^dst );
+
+	/** 
+	 * \brief Query LVC for current values of a ALL market data records
+	 *
+	 * This method may be called simultaneously by multiple threads.
+	 *
+	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \return dst
+	 */  
+	LVCDataAll ^ViewAll_safe( LVCDataAll ^dst );
 
 	/** 
 	 * \brief Release resources associated with last call to ViewAll() 

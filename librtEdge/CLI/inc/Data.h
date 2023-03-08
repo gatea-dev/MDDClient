@@ -20,8 +20,9 @@
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
 *      1 SEP 2022 jcs  Build 56: _RTL
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -614,9 +615,10 @@ private:
 public ref class LVCDataAll
 {
 private:
-	RTEDGE::LVCAll   *_all; 
-	LVCData          ^_data;
-	int               _itr;
+	RTEDGE::LVCAll        *_all; 
+	bool                   _bFromLib;
+	LVCData               ^_data;
+	int                    _itr;
 	cli::array<LVCData ^> ^_fdb;
 	cli::array<LVCData ^> ^_heap;
 
@@ -723,19 +725,21 @@ public:
 	//  Operations
 	/////////////////////////////////
 public:
+#ifndef DOXYGEN_OMIT
 	/**
 	 * \brief Called by LVC::Snap() or LVC::View() to set the internal 
 	 * state of this reusable messsage.
 	 *
 	 * \param res - Current contents of the LVC
+	 * \param bFromLib - true if 'owned' by library; false if all ours
 	 */
-	void Set( RTEDGE::LVCAll &res );
+	void Set( RTEDGE::LVCAll &res, bool bFromLib );
 
 	/**
 	 * \brief Clear out internal state so this message may be reused.
 	 */
 	void Clear();
-
+#endif // DOXYGEN_OMIT
 
 
 	/////////////////////////////////

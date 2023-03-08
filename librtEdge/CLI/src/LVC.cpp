@@ -10,8 +10,9 @@
 *     26 APR 2022 jcs  Build 53: LVCAdmin.AddBDS()
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
@@ -139,15 +140,33 @@ void LVC::Free()
 LVCDataAll ^LVC::SnapAll()
 {
    FreeAll();
-   _qryAll->Set( _lvc->SnapAll() );
+   _qryAll->Set( _lvc->SnapAll(), true );
    return _qryAll;
 }
 
 LVCDataAll ^LVC::ViewAll()
 {
    FreeAll();
-   _qryAll->Set( _lvc->ViewAll() );
+   _qryAll->Set( _lvc->ViewAll(), true );
    return _qryAll;
+}
+
+LVCDataAll ^LVC::SnapAll_safe( LVCDataAll ^dst )
+{
+   RTEDGE::LVCAll *all;
+
+   all = new RTEDGE::LVCAll( cpp(), cpp().GetSchema( false ) );
+   dst->Set( _lvc->SnapAll_safe( *all ), false );
+   return dst;
+}
+
+LVCDataAll ^LVC::ViewAll_safe( LVCDataAll ^dst )
+{
+   RTEDGE::LVCAll *all;
+
+   all = new RTEDGE::LVCAll( cpp(), cpp().GetSchema( false ) );
+   dst->Set( _lvc->ViewAll_safe( *all ), false );
+   return dst;
 }
 
 void LVC::FreeAll()

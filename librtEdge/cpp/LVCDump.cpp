@@ -7,8 +7,9 @@
 *     . . .
 *     14 JUN 2022 jcs  Build 55: LVCDump.cpp
 *     12 DEC 2022 jcs  Build 61: Show Snap Time
+*      8 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -92,6 +93,67 @@ static void _DumpOne( Message *msg, Ints &fids )
 }
 
 
+/////////////////////////////////////
+//
+//   c l a s s   M y T h r e a d
+//
+/////////////////////////////////////
+class MyThread : public SubChannel
+{
+private:
+   string    _lvcFile;
+   u_int64_t _tid;
+   u_int64_t _num;
+
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+public:
+   MyThread( const char *lvcFile ) :
+      _lvcFile( lvcFile ),
+      _tid( 0 ),
+      _num( 0 )
+   { ; }
+
+   ~MyThread()
+   {
+      ::fprintf( stdout, "[0x%lx] : %ld SnapAll()'s\n", _tid, _num );
+   }
+
+   ////////////////////////////////
+   // Operations
+   ////////////////////////////////
+public:
+   void SnapAll( bool bLog )
+   {
+      LVC     lvc( _lvcFile.data() );
+      LVCAll &all = lvc.ViewAll();
+      int     nt  = all.Size();
+      char    buf[K];
+
+      _tid  = GetThreadID();
+      _num += 1;
+      if ( bLog ) {
+         sprintf( buf, "[0x%lx] %d tkrs; MEM=%d (Kb)", _tid, nt, MemSize() );
+         ::fprintf( stdout, buf );
+         ::fflush( stdout );
+      }
+   }
+
+   ////////////////////////////////
+   // Asynchronous Callbacks
+   ////////////////////////////////
+protected:
+   virtual void OnWorkerThread()
+   {
+      SnapAll( false );
+   }
+
+}; // class MyThread
+
+typedef vector<MyThread *> MyThreads;
+
+
 //////////////////////////
 // main()
 //////////////////////////
@@ -103,7 +165,7 @@ int main( int argc, char **argv )
    char        sTkr[4*K], *cp, *rp;
    bool        aOK, bCfg, bAllS, bAllT;
    size_t      nt;
-   int         fid;
+   int         i, fid, nThr;
    FILE       *fp;
    const char *cmd, *svr, *svc, *tkr, *flds;
 
@@ -117,19 +179,21 @@ int main( int argc, char **argv )
 
    // cmd-line args
 
-   cmd   = "DUMP";
-   svr   = "./cache.lvc";
-   svc   = "*";
-   tkr   = "*";
-   flds  = "";
-   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   cmd  = "DUMP";
+   svr  = "./cache.lvc";
+   svc  = "*";
+   tkr  = "*";
+   flds = "";
+   nThr = 1;
+   bCfg = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
-      s += "       [ -c  <DUMP | DICT> ] \\ \n";
-      s += "       [ -h  <LVC d/b filename> ] \\ \n";
-      s += "       [ -s  <Service> ] \\ \n";
-      s += "       [ -t  <Ticker : CSV or Filename flat ASCII or * for all> ] \\ \n";
-      s += "       [ -f  <CSV Fids or empty for all> ] \\ \\n";
+      s += "       [ -c       <DUMP | DICT | MEM> ] \\ \n";
+      s += "       [ -h       <LVC d/b filename> ] \\ \n";
+      s += "       [ -s       <Service> ] \\ \n";
+      s += "       [ -t       <Ticker : CSV, filename or * for all> ] \\ \n";
+      s += "       [ -f       <CSV Fids or empty for all> ] \\ \\n";
+      s += "       [ -threads <NumThreads; Implies MEM> ] \\ \\n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -c       : %s\n", cmd );
@@ -137,13 +201,14 @@ int main( int argc, char **argv )
       printf( "      -s       : %s\n", svc );
       printf( "      -t       : %s\n", tkr );
       printf( "      -f       : <empty>\n" );
+      printf( "      -threads : %d\n", nThr );
       return 0;
    }
 
    /////////////////////
    // cmd-line args
    /////////////////////
-   for ( int i=1; i<argc; i++ ) {
+   for ( i=1; i<argc; i++ ) {
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
@@ -157,7 +222,11 @@ int main( int argc, char **argv )
          tkr = argv[++i];
       else if ( !::strcmp( argv[i], "-f" ) )
          flds = argv[++i];
+      else if ( !::strcmp( argv[i], "-threads" ) )
+         nThr = atoi( argv[++i] );
    }
+   nThr = WithinRange( 1, nThr, K );
+   cmd  = ( nThr > 1 ) ? "MEM" : cmd;
 
    /////////////////////
    // Tickers
@@ -203,6 +272,7 @@ int main( int argc, char **argv )
    Message  *msg;
    FieldDef *fd;
    Schema   &sch = lvc.GetSchema();
+   MyThreads thrs;
 
    /*
     * CSV : Field Name or FID
@@ -232,14 +302,34 @@ int main( int argc, char **argv )
    /*
     * 1) Dict only??
     * 2) Else Dump All
-    * 3) Else Pick 'em
+    * 3) Else Mem
+    * 4) Else Pick 'em
     */
    if ( !::strcmp( cmd, "DICT" ) ) {
-
       ::fprintf( stdout, "Schema : %d fields\n", sch.Size() );
       for ( sch.reset(); (sch)(); )
          printf( "[%04d] %s\n", sch.field()->Fid(), sch.field()->Name() );
       ::fflush( stdout );
+   }
+   else if ( !::strcmp( cmd, "MEM" ) ) {
+      if ( nThr > 1 ) {
+         for ( i=0; i<nThr; thrs.push_back( new MyThread( svr ) ), i++ );
+         for ( i=0; i<nThr; thrs[i]->StartThread(), i++ );
+         ::fprintf( stdout, "Hit <ENTER> to iterate ..." ); getchar();
+         for ( i=0; i<nThr; thrs[i]->StopThread(), i++ );
+         for ( i=0; i<nThr; delete thrs[i], i++ );
+         thrs.clear();
+      }
+      else {
+         MyThread thr( svr );
+
+         ::fprintf( stdout, "QUIT to terminate; <ENTER> to iterate ..." );
+         while( ::fgets( sTkr, K, stdin ) ) {
+            if ( ::strstr( sTkr, "QUIT" ) )
+               break; // while-fgets
+            thr.SnapAll( true );
+         }
+      }
    }
    else if ( bAllS || bAllT ) {
       LVCAll   &all = lvc.ViewAll();
@@ -273,7 +363,6 @@ int main( int argc, char **argv )
             ::fprintf( stdout, "(%s,%s) NOT FOUND\n", svc, tkr );
       }
    }
-   ::fprintf( stdout, "Hit  <ENTER> to continue ..." ); getchar();
    ::fprintf( stdout, "Done!!\n " );
    ::fflush( stdout );
    return 1;

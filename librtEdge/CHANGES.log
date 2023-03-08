@@ -13,11 +13,12 @@
 
 Performance
 -----------
-1) Publish : 33 mikes to the wire on 2.9 GHz Linux
+-# Publish : 33 mikes to the wire on 2.9 GHz Linux
 
 
 Known Bugs
 ----------
+-# LVC.SnapAll( LVCAll *deepCopy=(LVCAll *)0 ) : Thread-safe
 
 
 Features To Add
@@ -42,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 62 23-02-xx
+ * ### Build 62 23-03-xx
  *
  * -# SplineMaker.cpp / SplineMakerCLI.cs : 
  *    = Curve-specific service 
@@ -51,7 +52,21 @@ Features To Add
  * -# ChartDb : GLchtDbItem._idx
  *
  * -# quant/LU.hpp
+ *
+ * -# LVC Snap crash:
+ *    - EDG_API.cpp : _lvcMtx
+ *
+ * -# LVCDump :
+ *    - MEM
+ *    - -threads (implies MEM)
+ *    - <ENTER> to terminate
  * 
+ * -# static ioctl's : Do not require context
+ *    - ioctl_getThreadId
+ *
+ * -# Re-entrant LVC.SnapAll()
+ *    - SnapAll_safe(() / ViewAll_safe()
+ *
  *
  * ### Build 61 22-12-27
  *

@@ -8,8 +8,9 @@
 *     11 JAN 2018 jcs  Build 39: Leak : _FreeHeap()
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Data.h>
@@ -357,6 +358,7 @@ void LVCData::_FreeHeap()
 /////////////////////////////////
 LVCDataAll::LVCDataAll() :
    _all( (RTEDGE::LVCAll *)0 ),
+   _bFromLib( true ),
    _data( gcnew LVCData() ),
    _itr( -1 ),
    _fdb( nullptr ),
@@ -492,15 +494,18 @@ cli::array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
 /////////////////////////////////
 //  Operations
 /////////////////////////////////
-void LVCDataAll::Set( RTEDGE::LVCAll &all )
+void LVCDataAll::Set( RTEDGE::LVCAll &all, bool bFromLib )
 {
    Clear();
-   _all = &all;
+   _all      = &all;
+   _bFromLib = bFromLib;
    _data->Clear();
 }
 
 void LVCDataAll::Clear()
 {
+   if ( _all && !_bFromLib )
+      delete _all;
    _all = (RTEDGE::LVCAll *)0;
    _fdb = nullptr;
 }
