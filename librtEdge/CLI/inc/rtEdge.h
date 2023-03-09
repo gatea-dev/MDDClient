@@ -200,7 +200,7 @@ public:
 	 *      
 	 * \return Thread ID of the current thread 
 	 */     
-	static long long GetCurrentThreadID()
+	static long long GetCurrentThreadID();
 
 	/**
 	 * \brief Return number of CLI objects created by librtEdgeCLI

@@ -131,7 +131,7 @@ void rtEdge::_DecObj()
    InterlockedDecrement( &_nObjCLI );
 }
 
-static long long rtEdge::GetCurrentThreadID()
+long long rtEdge::GetCurrentThreadID()
 {
    return RTEDGE::rtEdge::GetCurrentThreadID();
 }

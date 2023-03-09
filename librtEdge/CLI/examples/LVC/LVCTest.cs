@@ -41,6 +41,8 @@ class MyThread
 {
    private string _lvcFile;
    private int    _tid;
+   private LVC    _lvc;
+   private bool   _bSafe;
    private int    _num;
    private long   _nTkr;
    private bool   _bRun;
@@ -49,13 +51,15 @@ class MyThread
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public MyThread( string lvcFile, int tid )
+   public MyThread( string lvcFile, int tid, LVC lvc, bool bSafe )
    {
       ThreadStart beg;
 
       beg      = new ThreadStart( this.Run );
       _lvcFile = lvcFile;
       _tid     = tid;
+      _lvc     = lvc;
+      _bSafe   = bSafe;
       _num     = 0;
       _nTkr    = 0;
       _bRun    = true;
@@ -81,7 +85,10 @@ class MyThread
    private void Run()
    {
       for ( _num=0; _bRun; SnapAll(), _num++ );
-      Console.WriteLine( "[{0}] : {1} SnapAll()'s", _tid, _num );
+      Console.Write( "[{0}] : {1} SnapAll()'s", _tid, _num );
+      if ( _tid == 0 )
+         Console.Write( "; MEM = {0} (Kb)", rtEdge.MemSize() );
+      Console.WriteLine( "" );
    }
 
 
@@ -90,10 +97,20 @@ class MyThread
    ///////////////////////
    private void SnapAll()
    {
-      LVC        lvc = new LVC( _lvcFile );
-      LVCDataAll la  = lvc.ViewAll();
+      bool       bShare = ( _lvc != null );
+      LVC        lvc    = bShare ? _lvc : new LVC( _lvcFile ;
+      LVCDataAll la;
 
+      if ( _bSafe ) {
+         la = new LVCDataAll;
+         lvc.ViewAll_safe( la );
+      }
+      else
+         la = lvc.ViewAll();
       _nTkr += la._nTkr;
+      la.Clear();
+      if ( !bShare )
+         lvc.Destroy();
    }
 
 };  // class MyThread
@@ -207,17 +224,24 @@ class LVCTest
       Console.WriteLine( "MEM3 = {0} (Kb)", rtEdge.MemSize() );
    }
 
-   public static void MemTestN( string lvcFile, int nThr )
+   public static void MemTestN( string lvcFile, int nThr, bool bShare, bool bSafe )
    {
       List<MyThread> tdb;
+      LVC            lvc;
       int            i;
 
+      lvc = bShare ? new LVC( lvcFile ) : null;
+      Console.Write( "MEM1 = {0} (Kb)", rtEdge.MemSize() );
+      Console.WriteLine( "; Share={0}; Safe={1}", bShare, bSafe );
       tdb = new List<MyThread> ();
-      for ( i=0; i<nThr; tdb.Add( new MyThread( lvcFile, i ) ), i++ );
+      for ( i=0; i<nThr; tdb.Add( new MyThread( lvcFile, i, lvc, bSafe ) ), i++ );
       for ( i=0; i<nThr; tdb[i++].Start() );
       Console.WriteLine( "Hit <ENTER> to terminate ..." );
       Console.ReadLine();
       for ( i=0; i<nThr; tdb[i++].Stop() );
+      if ( bShare )
+         lvc.Destroy();
+      Console.WriteLine( "MEM2 = {0} (Kb)", rtEdge.MemSize() );
    }
 
    public static void Dump( LVC      lvc, 
@@ -411,6 +435,11 @@ class LVCTest
 
    } // SnapAndCheck()
 
+   static bool _IsTrue( string p )
+   {
+      return( ( p.ToUpper() == "YES" ) || ( p.ToUpper() == "TRUE" ) );
+   }
+
 
     ////////////////////////////////
     // main()
@@ -420,7 +449,7 @@ class LVCTest
       LVC      lvc;
       String   cmd, svr, svc, tkr, fld, s;
       String[] tkrs, flds;
-      bool     aOK;
+      bool     aOK, bSafe, bShr;
       int      i, argc, slpMs, nThr;
 
       /////////////////////
@@ -439,6 +468,8 @@ class LVCTest
       flds  = null;
       slpMs = 1000;
       nThr  = 1;
+      bSafe = true;
+      bShr  = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db      <LVC d/b file> ] \\ \n";
@@ -449,6 +480,8 @@ class LVCTest
          s += "       [ -f       <Fields : CSV or Filename or *> ] \\ \n";
          s += "       [ -z       <tSleepMs> ] \\ \n";
          s += "       [ -threads <NumThreads; Implies MEM> ] \\ \n";
+         s += "       [ -shared  <1 LVC if -threads> ] \\ \n";
+         s += "       [ -safe    <ViewAll_safe() if -threads> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", svr );
@@ -458,6 +491,8 @@ class LVCTest
          Console.Write( "      -f       : <empty>\n" );
          Console.Write( "      -z       : {0}\n", slpMs );
          Console.Write( "      -threads : {0}\n", nThr );
+         Console.Write( "      -shared  : {0}\n", bShr );
+         Console.Write( "      -safe    : {0}\n", bSafe );
          return 0;
       }
 
@@ -482,6 +517,10 @@ class LVCTest
             Int32.TryParse( args[++i], out slpMs );
          else if ( args[i] == "-threads" )
             Int32.TryParse( args[++i], out nThr );
+         else if ( args[i] == "-shared" )
+            bShr = _IsTrue( argc[++i] );
+         else if ( args[i] == "-unsafe" )
+            bSafe = _IsTrue( argc[++i] );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
@@ -502,7 +541,7 @@ class LVCTest
             if ( nThr == 1 )
                MemTest1( (lvc=new LVC( svr )) );
             else
-               MemTestN( svr, nThr );
+               MemTestN( svr, nThr, bShr, bSafe );
          }
          else
             Dump( (lvc=new LVC( svr )), svc, tkrs, flds);
