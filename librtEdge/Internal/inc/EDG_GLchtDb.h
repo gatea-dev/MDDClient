@@ -8,7 +8,7 @@
 *     12 NOV 2014 jcs  Build 28: RTEDGE_PRIVATE
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     10 SEP 2020 jcs  Build 44: MDDResult
-*      6 FEB 2023 jcs  Build 62: GLchtDbItem._idx
+*      9 MAR 2023 jcs  Build 62: GLchtDbItem._idx; u_int64_t _fileSiz
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -31,11 +31,11 @@ namespace RTEDGE_PRIVATE
 class GLchtDbHdr
 {
 public:
-   CDBlong      _fileSiz;
-   CDBint       _freeIdx;
-   CDBint       _nTkr;
-   CDBint       _hdrSiz;
-   CDBlong      _date;    // YYYYMMDD
+   u_int64_t    _fileSiz;
+   u_int64_t    _freeIdx;
+   u_int64_t    _nTkr;
+   u_int32_t    _hdrSiz;
+   u_int32_t    _date;    // YYYYMMDD
    char         _signature[16];
 //   GLchtDbItem  _items[0];
 };
@@ -67,12 +67,12 @@ public:
 class GLchtDb : public RTEDGE_PRIVATE::GLmmap
 {
 protected:
-	string _admin;
-	RecMap _recs;
-	string _name;
-	CDBint _freeIdx;
-	Mutex  _mtx;
-	bool   _bFullCopy;
+	string    _admin;
+	RecMap    _recs;
+	string    _name;
+	u_int64_t _freeIdx;
+	Mutex     _mtx;
+	bool      _bFullCopy;
 
 	// Constructor / Destructor
 public:

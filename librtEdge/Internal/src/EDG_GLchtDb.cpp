@@ -8,8 +8,9 @@
 *     12 NOV 2014 jcs  Build 28: -Wall
 *     20 MAR 2016 jcs  Build 32: Linux compatibility in libmddWire
 *     10 SEP 2020 jcs  Build 44: MDDResult
+*      9 MAR 2023 jcs  Build 62: GLchtDbItem._idx; u_int64_t _fileSiz
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -222,7 +223,7 @@ void GLchtDb::Load()
    GLchtDbItem     *rec;
    string           s;
    char            *bp, *pn;
-   int              off;
+   u_int64_t        off;
 
    // Pre-condition
 

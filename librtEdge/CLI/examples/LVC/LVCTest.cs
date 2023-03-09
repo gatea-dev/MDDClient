@@ -5,16 +5,12 @@
 *
 *  REVISION HISTORY:
 *     11 MAY 2011 jcs  Created.
-*     31 JUL 2011 jcs  Build  6: GetSchema() / LVCSnap
-*     17 JAN 2012 jcs  Build  9: SnapAll() / ViewAll() on 64-bit 
-*     20 JAN 2012 jcs  Build 10: rtEdgeField
-*     12 JUN 2013 jcs  Build 18: GetAsString()
-*     10 FEB 2016 jcs  Build 32: Binary / Performance
-*     12 JAN 2018 jcs  Build 39: main_MEM()
+*     . . .
 *     20 NOV 2020 jcs  Build 46: Beefed up : arg switches
 *      2 JUN 2022 jcs  Build 55: Single-field dump
+*      9 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.Collections.Generic;
@@ -22,6 +18,12 @@ using System.IO;
 using System.Threading;
 using librtEdge;
 
+
+/////////////////////////////////////
+//
+// c l a s s   D a t a R e c o r d
+//
+/////////////////////////////////////
 public class DataRecord
 {
     public string Ticker { get; set; }
@@ -30,6 +32,59 @@ public class DataRecord
 
 }
 
+/////////////////////////////////////
+//
+//   c l a s s   M y T h r e a d
+//
+/////////////////////////////////////
+class MyThread : public SubChannel
+{
+private:
+   string    _lvcFile;
+   u_int64_t _tid;
+   u_int64_t _num;
+
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+public:
+   MyThread( const char *lvcFile ) :
+      _lvcFile( lvcFile ),
+      _tid( 0 ),
+      _num( 0 )
+   { ; }
+
+   ~MyThread()
+   {
+      ::fprintf( stdout, "[0x%lx] : %ld SnapAll()'s\n", _tid, _num );
+   }
+
+   ////////////////////////////////
+   // Operations
+   ////////////////////////////////
+public:
+   void SnapAll( bool bLog )
+   {
+      LVC     lvc( _lvcFile.data() );
+      LVCAll &all = lvc.ViewAll();
+      int     nt  = all.Size();
+      char    buf[K];
+
+      _tid  = GetThreadID();
+      _num += 1;
+      if ( bLog ) {
+         sprintf( buf, "[0x%lx] %d tkrs; MEM=%d (Kb)", _tid, nt, MemSize() );
+         ::fprintf( stdout, buf );
+         ::fflush( stdout );
+      }
+   }
+
+
+/////////////////////////////////////
+//
+//   c l a s s   L V C T e s t
+//
+/////////////////////////////////////
 class LVCTest 
 {
    ////////////////////////////////
@@ -218,7 +273,8 @@ class LVCTest
       }
       Console.WriteLine($"2nd : {i} snaps; {nt} tkrs in {(DateTime.Now - startTime).TotalMilliseconds:0.0} ms");
         Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
-   }
+
+   } // PerfTest()
 
    private const int FidLastUpdated = 5;
    private const int FidLastPrice = 6;
@@ -263,7 +319,9 @@ class LVCTest
        Console.Write($"Snapped {res.Count} tickers in {(time1 - startTime).TotalMilliseconds:0.0} ms, processed in {(DateTime.Now - time1).TotalMilliseconds:0.0} ms; ");
        Console.WriteLine( "{0} CLI objects", rtEdge.NumObj() );
        return res;
-   }
+
+   } // SnapData()
+
 
    public static void SnapAndCheck(string db, int nSnp, int tSleepMs )
    {
@@ -307,7 +365,8 @@ class LVCTest
             lastSnap = newSnap;
             Thread.Sleep( tSleepMs );
        }
-   }
+
+   } // SnapAndCheck()
 
 
     ////////////////////////////////
@@ -316,10 +375,10 @@ class LVCTest
     public static int Main( String[] args ) 
    {
       LVC      lvc;
-      String   db, svc, tkr, fld, s;
+      String   svr, svc, tkr, fld, s;
       String[] tkrs, flds;
-      bool     bPrf, aOK;
-      int      i, argc, slpMs;
+      bool     bPrf, aOK, diff;
+      int      i, argc, slpMs, nThr;
 
       /////////////////////
       // Quickie checks
@@ -329,14 +388,15 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      db    = "./db/cache.lvc";
+      svrb  = "./cache.lvc";
       bPrf  = false;
-      var diff = false;
-      svc   = "ultrafeed";
-      tkr   = "IBM";
+      diff  = false;
+      svc   = "*";
+      tkr   = "*";
       fld   = null;
       flds  = null;
       slpMs = 1000;
+      nThr  = 1;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db  <LVC d/b file> ] \\ \n";
@@ -347,10 +407,10 @@ class LVCTest
          s += "       [ -z   <tSleepMs> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
-         Console.Write( "      -db      : {0}\n", db );
+         Console.Write( "      -db      : {0}\n", svrb );
          Console.Write( "      -ty      : {0}\n", bPrf );
-         Console.Write( "      -s       : <empty>\n" );
-         Console.Write( "      -t       : <empty>\n" );
+         Console.Write( "      -s       : {0}\n", svc );
+         Console.Write( "      -t       : {0}\n", tkr );
          Console.Write( "      -f       : <empty>\n" );
          Console.Write( "      -z       : {0}\n", slpMs );
          return 0;
@@ -364,7 +424,7 @@ class LVCTest
          if ( !aOK )
             break; // for-i
          if ( args[i] == "-db" )
-            db = args[++i];
+            svr = args[++i];
          else if ( args[i] == "-diff" )
             diff = true;
          else if ( args[i] == "-p" )
@@ -384,31 +444,28 @@ class LVCTest
       if ( fld != null )
          flds = fld.Split(',');
       Console.WriteLine( rtEdge.Version() );
-      lvc = diff ? null : new LVC( db );
+      lvc = diff ? null : new LVC( svr );
       /*
        * By Type
        */
-      try
-      {
-          if (diff)
-              SnapAndCheck(db, 0, slpMs);
-          else if (bPrf)
-              PerfTest(lvc, 2);
-          else
-              Dump(lvc, svc, tkrs, flds);
+      try {
+         if ( diff ) 
+            SnapAndCheck( db, 0, slpMs );
+         else if ( bPrf )
+            PerfTest( lvc, 2 );
+         else
+            Dump(lvc, svc, tkrs, flds);
+      } catch (Exception e) {
+         Console.WriteLine( e.ToString() );
+         Console.WriteLine( e.StackTrace );
+      } finally {
+         Console.WriteLine( "Hit <ENTER> to terminate ..." );
+         Console.ReadLine();
+         lvc.Destroy();
       }
-      catch (Exception e)
-      {
-          Console.WriteLine(e.ToString());
-          Console.WriteLine(e.StackTrace);
-      }
-      finally
-      {
-          lvc.Destroy();
-      }
-      Console.WriteLine( "Hit <ENTER> to terminate ..." );
-      Console.ReadLine();
       Console.WriteLine( "Done!!" );
       return 0;
-   }
-}
+
+   } // main()
+
+} // class LVCTest

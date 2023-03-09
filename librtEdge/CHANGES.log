@@ -70,6 +70,8 @@ Features To Add
  * -# LVC Leak :
  *    - rtFld_vector in LVC_Free() : DUH!!
  *
+ * -# ChartDb : u_int64_t _fileSiz
+ *
  *
  * ### Build 61 22-12-27
  *
