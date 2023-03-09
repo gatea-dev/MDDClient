@@ -36,7 +36,7 @@ GLchtDb::GLchtDb( char *pn, const char *pAdmin ) :
    _mtx(),
    _bFullCopy( false )
 {
-   int fSz;
+   u_int64_t fSz;
 
    // Remap to file size / Load
 
