@@ -98,11 +98,11 @@ class MyThread
    private void SnapAll()
    {
       bool       bShare = ( _lvc != null );
-      LVC        lvc    = bShare ? _lvc : new LVC( _lvcFile ;
+      LVC        lvc    = bShare ? _lvc : new LVC( _lvcFile );
       LVCDataAll la;
 
       if ( _bSafe ) {
-         la = new LVCDataAll;
+         la = new LVCDataAll();
          lvc.ViewAll_safe( la );
       }
       else
