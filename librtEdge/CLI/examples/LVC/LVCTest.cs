@@ -518,9 +518,9 @@ class LVCTest
          else if ( args[i] == "-threads" )
             Int32.TryParse( args[++i], out nThr );
          else if ( args[i] == "-shared" )
-            bShr = _IsTrue( argc[++i] );
+            bShr = _IsTrue( args[++i] );
          else if ( args[i] == "-unsafe" )
-            bSafe = _IsTrue( argc[++i] );
+            bSafe = _IsTrue( args[++i] );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
