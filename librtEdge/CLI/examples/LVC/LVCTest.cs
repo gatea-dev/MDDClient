@@ -519,7 +519,7 @@ class LVCTest
             Int32.TryParse( args[++i], out nThr );
          else if ( args[i] == "-shared" )
             bShr = _IsTrue( args[++i] );
-         else if ( args[i] == "-unsafe" )
+         else if ( args[i] == "-safe" )
             bSafe = _IsTrue( args[++i] );
       }
       tkrs = ReadLines( tkr );
