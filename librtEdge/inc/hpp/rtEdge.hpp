@@ -25,7 +25,7 @@
 *     26 OCT 2022 jcs  Build 58: CxtMap
 *     29 OCT 2022 jcs  Build 60: DoubleList
 *     26 NOV 2022 jcs  Build 61: DateTimeList; DoubleXY
-*     17 FEB 2023 jcs  Build 62: Dump( DoubleGrid & );
+*      9 MAR 2023 jcs  Build 62: Dump( DoubleGrid & ); static GetThreadID()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -238,6 +238,20 @@ public:
 	 */
 	static void breakpoint()
 	{
+	}
+
+	/**
+	 * \brief Get the thread ID of the current thread
+	 *
+	 * \return Thread ID of the current thread
+	 */
+	static u_int64_t GetCurrentThreadID()
+	{
+	   u_int64_t tid;
+
+	   tid = 0;
+	   ::rtEdge_ioctl( 0, ioctl_getThreadId, &tid );
+	   return tid;
 	}
 
 	/**
@@ -904,6 +918,21 @@ public:
 	}
 
 	/**
+	 * \brief Get the thread ID of the library thread
+	 *
+	 * \return Thread ID of the library thread
+	 */
+	u_int64_t GetThreadID()
+	{
+	   u_int64_t tid;
+
+	   tid = 0;
+	   if ( _cxt )
+	      ::rtEdge_ioctl( _cxt, ioctl_getThreadId, &tid );
+	   return tid;
+	}
+
+	/**
 	 * \brief Tie this channel thread to a specific CPU
 	 *
 	 * \param cpu - CPU core to attach this channel thread to
@@ -927,20 +956,6 @@ public:
 	   cpu = 0;
 	   ::rtEdge_ioctl( _cxt, ioctl_getThreadProcessor, &cpu );
 	   return cpu;
-	}
-
-	/**
-	 * \brief Get the thread ID of the library thread
-	 *
-	 * \return Thread ID of the library thread
-	 */
-	u_int64_t GetThreadID()
-	{
-	   u_int64_t tid;
-
-	   tid = 0;
-	   ::rtEdge_ioctl( _cxt, ioctl_getThreadId, &tid );
-	   return tid;
 	}
 
 	/**

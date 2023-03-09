@@ -16,8 +16,9 @@
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*      9 MAR 2023 jcs  Build 62: GetCurrentThreadID()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -193,6 +194,13 @@ public:
 	static void _IncObj();
 	static void _DecObj();
 #endif // DOXYGEN_OMIT
+
+	/**    
+	 * \brief Get the thread ID of the library thread 
+	 *      
+	 * \return Thread ID of the current thread 
+	 */     
+	static long long GetCurrentThreadID()
 
 	/**
 	 * \brief Return number of CLI objects created by librtEdgeCLI

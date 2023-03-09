@@ -12,8 +12,9 @@
 *      7 MAR 2022 jcs  Build 53: IsValid(); Channel.SetMDDirectMon(); GetStats()
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*      9 MAR 2023 jcs  Build 62: GetCurrentThreadID()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <rtEdge.h>
@@ -128,6 +129,11 @@ void rtEdge::_IncObj()
 void rtEdge::_DecObj()
 {
    InterlockedDecrement( &_nObjCLI );
+}
+
+static long long rtEdge::GetCurrentThreadID()
+{
+   return RTEDGE::rtEdge::GetCurrentThreadID();
 }
 
 int rtEdge::NumObj()

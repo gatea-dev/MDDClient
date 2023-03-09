@@ -61,8 +61,7 @@ Features To Add
  *    - -threads (implies MEM)
  *    - <ENTER> to terminate
  * 
- * -# static ioctl's : Do not require context
- *    - ioctl_getThreadId
+ * -# static rtEdge.GetCurrentThreadID()
  *
  * -# Re-entrant LVC.SnapAll()
  *    - SnapAll_safe(() / ViewAll_safe()

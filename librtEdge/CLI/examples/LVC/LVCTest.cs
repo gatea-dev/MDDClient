@@ -37,47 +37,66 @@ public class DataRecord
 //   c l a s s   M y T h r e a d
 //
 /////////////////////////////////////
-class MyThread : public SubChannel
+class MyThread
 {
-private:
-   string    _lvcFile;
-   u_int64_t _tid;
-   u_int64_t _num;
+   private string _lvcFile;
+   private int    _tid;
+   private int    _num;
+   private long   _nTkr;
+   private bool   _bRun;
+   private Thread _thr;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-public:
-   MyThread( const char *lvcFile ) :
-      _lvcFile( lvcFile ),
-      _tid( 0 ),
-      _num( 0 )
-   { ; }
-
-   ~MyThread()
+   public MyThread( string lvcFile, int tid )
    {
-      ::fprintf( stdout, "[0x%lx] : %ld SnapAll()'s\n", _tid, _num );
+      ThreadStart beg;
+
+      beg      = new ThreadStart( this.Run );
+      _lvcFile = lvcFile;
+      _tid     = tid;
+      _num     = 0;
+      _nTkr    = 0;
+      _bRun    = true;
+      _thr     = new Thread( beg );
    }
 
-   ////////////////////////////////
-   // Operations
-   ////////////////////////////////
-public:
-   void SnapAll( bool bLog )
+   ///////////////////////
+   // Thread Shit
+   ///////////////////////
+   public void Start()
    {
-      LVC     lvc( _lvcFile.data() );
-      LVCAll &all = lvc.ViewAll();
-      int     nt  = all.Size();
-      char    buf[K];
-
-      _tid  = GetThreadID();
-      _num += 1;
-      if ( bLog ) {
-         sprintf( buf, "[0x%lx] %d tkrs; MEM=%d (Kb)", _tid, nt, MemSize() );
-         ::fprintf( stdout, buf );
-         ::fflush( stdout );
-      }
+      _thr.Start();
    }
+
+   public void Stop()
+   {
+      _bRun = false;
+      if ( _thr != null )
+         _thr.Join();
+      _thr = null;
+   }
+
+   private void Run()
+   {
+      for ( _num=0; _bRun; SnapAll(), _num++ );
+      Console.WriteLine( "[{0}] : {1} SnapAll()'s", _tid, _num );
+   }
+
+
+   ///////////////////////
+   // Helpers
+   ///////////////////////
+   private void SnapAll()
+   {
+      LVC        lvc = new LVC( _lvcFile );
+      LVCDataAll la  = lvc.ViewAll();
+
+      _nTkr += la._nTkr;
+   }
+
+};  // class MyThread
 
 
 /////////////////////////////////////
@@ -177,6 +196,30 @@ class LVCTest
    ////////////////////////////////
    // Main Functions
    ////////////////////////////////
+   public static void MemTest1( LVC lvc )
+   {
+      LVCDataAll la;
+
+      Console.WriteLine( "MEM1 = {0} (Kb)", rtEdge.MemSize() );
+      la = lvc.ViewAll();
+      Console.WriteLine( "MEM2 = {0} (Kb); {1} tkrs", rtEdge.MemSize(), la._nTkr );
+      la.Clear();
+      Console.WriteLine( "MEM3 = {0} (Kb)", rtEdge.MemSize() );
+   }
+
+   public static void MemTestN( string lvcFile, int nThr )
+   {
+      List<MyThread> tdb;
+      int            i;
+
+      tdb = new List<MyThread> ();
+      for ( i=0; i<nThr; tdb.Add( new MyThread( lvcFile, i ) ), i++ );
+      for ( i=0; i<nThr; tdb[i++].Start() );
+      Console.WriteLine( "Hit <ENTER> to terminate ..." );
+      Console.ReadLine();
+      for ( i=0; i<nThr; tdb[i++].Stop() );
+   }
+
    public static void Dump( LVC      lvc, 
                             String   svc, 
                             String[] tkrs, 
@@ -375,9 +418,9 @@ class LVCTest
     public static int Main( String[] args ) 
    {
       LVC      lvc;
-      String   svr, svc, tkr, fld, s;
+      String   cmd, svr, svc, tkr, fld, s;
       String[] tkrs, flds;
-      bool     bPrf, aOK, diff;
+      bool     aOK;
       int      i, argc, slpMs, nThr;
 
       /////////////////////
@@ -388,9 +431,8 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      svrb  = "./cache.lvc";
-      bPrf  = false;
-      diff  = false;
+      svr   = "./cache.lvc";
+      cmd   = "DUMP";
       svc   = "*";
       tkr   = "*";
       fld   = null;
@@ -399,20 +441,23 @@ class LVCTest
       nThr  = 1;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
-         s += "       [ -db  <LVC d/b file> ] \\ \n";
-         s += "       [ -p   <Performance : Snap All> ] \\ \n";
-         s += "       [ -s   <Service> ] \\ \n";
-         s += "       [ -t   <Ticker : CSV or Filename or *> ] \\ \n";
-         s += "       [ -f   <Fields : CSV or Filename or *> ] \\ \n";
-         s += "       [ -z   <tSleepMs> ] \\ \n";
+         s += "       [ -db      <LVC d/b file> ] \\ \n";
+         s += "       [ -ty      <DUMP | PERF | DIFF | MEM> ] \\ \n";
+         s += "       [ -p       <Performance : Snap All> ] \\ \n";
+         s += "       [ -s       <Service> ] \\ \n";
+         s += "       [ -t       <Ticker : CSV or Filename or *> ] \\ \n";
+         s += "       [ -f       <Fields : CSV or Filename or *> ] \\ \n";
+         s += "       [ -z       <tSleepMs> ] \\ \n";
+         s += "       [ -threads <NumThreads; Implies MEM> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
-         Console.Write( "      -db      : {0}\n", svrb );
-         Console.Write( "      -ty      : {0}\n", bPrf );
+         Console.Write( "      -db      : {0}\n", svr );
+         Console.Write( "      -ty      : {0}\n", cmd );
          Console.Write( "      -s       : {0}\n", svc );
          Console.Write( "      -t       : {0}\n", tkr );
          Console.Write( "      -f       : <empty>\n" );
          Console.Write( "      -z       : {0}\n", slpMs );
+         Console.Write( "      -threads : {0}\n", nThr );
          return 0;
       }
 
@@ -425,10 +470,8 @@ class LVCTest
             break; // for-i
          if ( args[i] == "-db" )
             svr = args[++i];
-         else if ( args[i] == "-diff" )
-            diff = true;
-         else if ( args[i] == "-p" )
-            bPrf = true;
+         else if ( args[i] == "-ty" )
+            cmd = args[++i];
          else if ( args[i] == "-s" )
             svc = args[++i];
          else if ( args[i] == "-t" )
@@ -437,6 +480,8 @@ class LVCTest
             fld = args[++i];
          else if ( args[i] == "-z" )
             Int32.TryParse( args[++i], out slpMs );
+         else if ( args[i] == "-threads" )
+            Int32.TryParse( args[++i], out nThr );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
@@ -444,24 +489,30 @@ class LVCTest
       if ( fld != null )
          flds = fld.Split(',');
       Console.WriteLine( rtEdge.Version() );
-      lvc = diff ? null : new LVC( svr );
+      lvc = null;
       /*
        * By Type
        */
       try {
-         if ( diff ) 
-            SnapAndCheck( db, 0, slpMs );
-         else if ( bPrf )
-            PerfTest( lvc, 2 );
+         if ( cmd == "DIFF" ) 
+            SnapAndCheck( svr, 0, slpMs );
+         else if ( cmd == "PERF" )
+            PerfTest( (lvc=new LVC( svr )), 2 );
+         else if ( cmd == "MEM" ) {
+            if ( nThr == 1 )
+               MemTest1( (lvc=new LVC( svr )) );
+            else
+               MemTestN( svr, nThr );
+         }
          else
-            Dump(lvc, svc, tkrs, flds);
+            Dump( (lvc=new LVC( svr )), svc, tkrs, flds);
       } catch (Exception e) {
          Console.WriteLine( e.ToString() );
          Console.WriteLine( e.StackTrace );
       } finally {
-         Console.WriteLine( "Hit <ENTER> to terminate ..." );
-         Console.ReadLine();
-         lvc.Destroy();
+         Console.WriteLine( "Shutting down ..." );
+         if ( lvc != null )
+             lvc.Destroy();
       }
       Console.WriteLine( "Done!!" );
       return 0;

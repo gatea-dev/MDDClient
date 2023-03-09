@@ -188,7 +188,7 @@ int main( int argc, char **argv )
    bCfg = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
-      s += "       [ -c       <DUMP | DICT | MEM> ] \\ \n";
+      s += "       [ -ty      <DUMP | DICT | MEM> ] \\ \n";
       s += "       [ -h       <LVC d/b filename> ] \\ \n";
       s += "       [ -s       <Service> ] \\ \n";
       s += "       [ -t       <Ticker : CSV, filename or * for all> ] \\ \n";
@@ -196,7 +196,7 @@ int main( int argc, char **argv )
       s += "       [ -threads <NumThreads; Implies MEM> ] \\ \\n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
-      printf( "      -c       : %s\n", cmd );
+      printf( "      -ty      : %s\n", cmd );
       printf( "      -h       : %s\n", svr );
       printf( "      -s       : %s\n", svc );
       printf( "      -t       : %s\n", tkr );
@@ -212,7 +212,7 @@ int main( int argc, char **argv )
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
-      if ( !::strcmp( argv[i], "-c" ) )
+      if ( !::strcmp( argv[i], "-ty" ) )
          cmd = argv[++i];
       else if ( !::strcmp( argv[i], "-h" ) )
          svr = argv[++i];
@@ -316,7 +316,7 @@ int main( int argc, char **argv )
          ::fprintf( stdout, "MEM1 = %d (Kb)\n", lvc.MemSize() );
          for ( i=0; i<nThr; thrs.push_back( new MyThread( svr ) ), i++ );
          for ( i=0; i<nThr; thrs[i]->StartThread(), i++ );
-         ::fprintf( stdout, "Hit <ENTER> to iterate ..." ); getchar();
+         ::fprintf( stdout, "Hit <ENTER> to terminate ..." ); getchar();
          for ( i=0; i<nThr; thrs[i]->StopThread(), i++ );
          ::fprintf( stdout, "MEM2 = %d (Kb)\n", lvc.MemSize() );
          for ( i=0; i<nThr; delete thrs[i], i++ );
