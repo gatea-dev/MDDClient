@@ -1034,7 +1034,7 @@ LVCDataAll LVC_SnapAll( LVC_Context cxt )
       pSvc     = ::strtok_r( bp, LVC_SVCSEP, &rp );
       pTkr     = ::strtok_r( NULL, LVC_SVCSEP, &rp );
       d2       = dNow();
-      d        = lvc.GetItem( pSvc, pTkr, False );
+      d        = lvc.GetItem_safe( pSvc, pTkr, False );
       d3       = dNow();
       d._dSnap = ( d3-d2 );
       tkrs[i]  = d;

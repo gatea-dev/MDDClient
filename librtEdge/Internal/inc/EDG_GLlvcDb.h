@@ -19,8 +19,10 @@
 *     12 SEP 2017 jcs  Build 35: hash_map; No mo XxxTicker()
 *     20 JAN 2018 jcs  Build 39: mtx()
 *     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
+*     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
+*     13 MAR 2023 jcs  Build 62: GetItem_safe()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_LVC_DB_H
 #define __EDGLIB_LVC_DB_H
@@ -174,6 +176,7 @@ public:
 	int          FieldOffset( int );
 	bool         CanAddField( int );
 	LVCData      GetItem( const char *, const char *, Bool );
+	LVCData      GetItem_safe( const char *, const char *, Bool );
 	int          SetFilter( const char * );
 	Bool         IsBinary();
 	Mutex       &mtx();

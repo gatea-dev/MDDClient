@@ -71,6 +71,10 @@ Features To Add
  *
  * -# ChartDb : u_int64_t _fileSiz
  *
+ * -# LVC_SnapAll() core when LVC changing (ChartDbSvr):
+ *    - GLlvcDb.GetItem() calls Load() which changes _recs
+ *    - GLlvcDb.GetItem_safe()
+ *
  *
  * ### Build 61 22-12-27
  *

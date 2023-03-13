@@ -188,9 +188,17 @@ bool GLlvcDb::CanAddField( int fid )
    return bRtn;
 }
 
-LVCData GLlvcDb::GetItem( const char *pSvc, 
-                          const char *pTkr,
-                          Bool        bShallow )
+LVCData GLlvcDb::GetItem( const char *svc, const char *tkr, Bool bShallow )
+{
+   Locker lck( _mtx );
+
+   Load();
+   return GetItem_safe( svc, tkr, bShallow );
+}
+
+LVCData GLlvcDb::GetItem_safe( const char *pSvc, 
+                               const char *pTkr,
+                               Bool        bShallow )
 {
    Locker           lck( _mtx );
    RecMap::iterator it;
@@ -215,7 +223,6 @@ LVCData GLlvcDb::GetItem( const char *pSvc,
 
    // 2) Find
 
-   Load();
    if ( (it=_recs.find( s )) == _recs.end() ) {
       d._ty   = edg_dead;
       d._pErr = "Item Not Found";
@@ -274,6 +281,7 @@ LVCData GLlvcDb::GetItem( const char *pSvc,
    d._nFld = n;
    return d;
 }
+
 
 int GLlvcDb::SetFilter( const char *pFids )
 {
