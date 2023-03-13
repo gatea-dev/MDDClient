@@ -20,8 +20,9 @@
 *     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive; rtFld_unixTime
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
 *     29 OCT 2022 jcs  Build 60: rtFld_vector
+*     13 MAR 2023 jcs  Build 62: GetItem_safe()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
