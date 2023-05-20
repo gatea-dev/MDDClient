@@ -27,9 +27,10 @@ using librtEdge;
 /////////////////////////////////////
 public class TestCfg
 {
-    public bool bSafe   { get; set; }
-    public bool bShare  { get; set; }
-    public bool bSchema { get; set; }
+    public bool bSafe    { get; set; }
+    public bool bShare   { get; set; }
+    public bool bSchema  { get; set; }
+    public bool bSchemaQ { get; set; }
 }
 
 
@@ -114,8 +115,8 @@ class MyThread
       LVC        lvc = _cfg.bShare ? _lvc : new LVC( _lvcFile );
       LVCDataAll la;
 
-      if ( _cfg.bSchema )
-         lvc.GetSchema();
+      if ( _cfg.bSchema || _cfg.bSchemaQ )
+         lvc.GetSchema( _cfg.bSchemaQ );
       if ( _cfg.bSafe ) {
          la = new LVCDataAll();
          lvc.ViewAll_safe( la );
@@ -249,7 +250,8 @@ class LVCTest
       Console.Write( "MEM1 = {0} (Kb)", rtEdge.MemSize() );
       Console.Write( "; Share={0}", cfg.bShare );
       Console.Write( "; Safe={0}", cfg.bSafe );
-      Console.WriteLine( "; Schema={0}", cfg.bSchema );
+      Console.Write( "; Schema={0}", cfg.bSchema );
+      Console.WriteLine( "; SchemaQ={0}", cfg.bSchemaQ );
       tdb = new List<MyThread> ();
       for ( i=0; i<nThr; i++ )
          tdb.Add( new MyThread( lvcFile, i, lvc, cfg ) );
@@ -479,18 +481,19 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      cfg         = new TestCfg();
-      svr         = "./cache.lvc";
-      cmd         = "DUMP";
-      svc         = "*";
-      tkr         = "*";
-      fld         = null;
-      flds        = null;
-      slpMs       = 1000;
-      nThr        = 1;
-      cfg.bSafe   = true;
-      cfg.bShare  = false;
-      cfg.bSchema = false;
+      cfg          = new TestCfg();
+      svr          = "./cache.lvc";
+      cmd          = "DUMP";
+      svc          = "*";
+      tkr          = "*";
+      fld          = null;
+      flds         = null;
+      slpMs        = 1000;
+      nThr         = 1;
+      cfg.bSafe    = true;
+      cfg.bShare   = false;
+      cfg.bSchema  = false;
+      cfg.bSchemaQ = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db      <LVC d/b file> ] \\ \n";
@@ -503,7 +506,8 @@ class LVCTest
          s += "       [ -threads <NumThreads; Implies MEM> ] \\ \n";
          s += "       [ -shared  <1 LVC if -threads> ] \\ \n";
          s += "       [ -safe    <ViewAll_safe() if -threads> ] \\ \n";
-         s += "       [ -schema  <GetSchema before ViewAll> ] \\ \n";
+         s += "       [ -schema  <GetSchema reference before ViewAll> ] \\ \n";
+         s += "       [ -schemaQ <GetSchema query before ViewAll> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", svr );
@@ -516,6 +520,7 @@ class LVCTest
          Console.Write( "      -shared  : {0}\n", cfg.bShare );
          Console.Write( "      -safe    : {0}\n", cfg.bSafe );
          Console.Write( "      -schema  : {0}\n", cfg.bSchema );
+         Console.Write( "      -schemaQ : {0}\n", cfg.bSchemaQ );
          return 0;
       }
 
@@ -546,6 +551,8 @@ class LVCTest
             cfg.bSafe = _IsTrue( args[++i] );
          else if ( args[i] == "-schema" )
             cfg.bSchema = _IsTrue( args[++i] );
+         else if ( args[i] == "-schemaQ" )
+            cfg.bSchemaQ = _IsTrue( args[++i] );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
