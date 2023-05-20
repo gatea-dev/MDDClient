@@ -8,6 +8,7 @@
 *     14 JUN 2022 jcs  Build 55: LVCDump.cpp
 *     12 DEC 2022 jcs  Build 61: Show Snap Time
 *      8 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
+*     19 MAY 2023 jcs  Build 63: -schema
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -101,23 +102,35 @@ static void _DumpOne( Message *msg, Ints &fids )
 class MyThread : public SubChannel
 {
 private:
+   LVC      *_lvc;
    string    _lvcFile;
-   u_int64_t _tid;
+   bool      _bSchema;
+   int       _tid;
    u_int64_t _num;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
 public:
-   MyThread( const char *lvcFile ) :
+   MyThread( const char *lvcFile, bool bSchema, int tid ) :
+      _lvc( (LVC *)0 ),
       _lvcFile( lvcFile ),
-      _tid( 0 ),
+      _bSchema( bSchema ),
+      _tid( tid ),
+      _num( 0 )
+   { ; }
+
+   MyThread( LVC &lvc, bool bSchema, int tid ) :
+      _lvc( &lvc ),
+      _lvcFile( lvc.pFilename() ),
+      _bSchema( bSchema ),
+      _tid( tid ),
       _num( 0 )
    { ; }
 
    ~MyThread()
    {
-      ::fprintf( stdout, "[0x%lx] : %ld SnapAll()'s\n", _tid, _num );
+      ::fprintf( stdout, "[0x%d] : %ld SnapAll()'s\n", _tid, _num );
    }
 
    ////////////////////////////////
@@ -126,17 +139,12 @@ public:
 public:
    void SnapAll( bool bLog )
    {
-      LVC     lvc( _lvcFile.data() );
-      LVCAll &all = lvc.ViewAll();
-      int     nt  = all.Size();
-      char    buf[K];
+      if ( _lvc )
+         _Doit( *_lvc, bLog );
+      else {
+         LVC lvc( _lvcFile.data() );
 
-      _tid  = GetThreadID();
-      _num += 1;
-      if ( bLog ) {
-         sprintf( buf, "[0x%lx] %d tkrs; MEM=%d (Kb)", _tid, nt, MemSize() );
-         ::fprintf( stdout, buf );
-         ::fflush( stdout );
+         _Doit( lvc, bLog );
       }
    }
 
@@ -149,6 +157,27 @@ protected:
       SnapAll( false );
    }
 
+   /////////////////////////////////
+   // Helpers
+   /////////////////////////////////
+private:
+   void _Doit( LVC &lvc, bool bLog )
+   {
+      LVCAll  dst( lvc, lvc.GetSchema( false ) );
+      LVCAll &all = lvc.ViewAll_safe( dst );
+      int     nt  = all.Size();
+      char    buf[K];
+
+      if ( _bSchema )
+         lvc.GetSchema( true );
+      _num += 1;
+      if ( bLog ) {
+         sprintf( buf, "[0x%d] %d tkrs; MEM=%d (Kb)", _tid, nt, MemSize() );
+         ::fprintf( stdout, buf );
+         ::fflush( stdout );
+      }
+   }
+
 }; // class MyThread
 
 typedef vector<MyThread *> MyThreads;
@@ -157,13 +186,23 @@ typedef vector<MyThread *> MyThreads;
 //////////////////////////
 // main()
 //////////////////////////
+static const char *_pBool( bool b )
+{
+   return b ? "true" : "false";
+}
+
+static bool _IsTrue( const char *p )
+{
+   return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
+}
+
 int main( int argc, char **argv )
 {
    Strings     tkrs;
    Ints        fids;
    std::string s;
    char        sTkr[4*K], *cp, *rp;
-   bool        aOK, bCfg, bAllS, bAllT;
+   bool        aOK, bCfg, bAllS, bAllT, bSch, bShr;
    size_t      nt;
    int         i, fid, nThr;
    FILE       *fp;
@@ -186,22 +225,28 @@ int main( int argc, char **argv )
    flds = "";
    nThr = 1;
    bCfg = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   bSch = false;
+   bShr = false;
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
+      s += "       [ -db      <LVC d/b filename> ] \\ \n";
       s += "       [ -ty      <DUMP | DICT | MEM> ] \\ \n";
-      s += "       [ -h       <LVC d/b filename> ] \\ \n";
       s += "       [ -s       <Service> ] \\ \n";
       s += "       [ -t       <Ticker : CSV, filename or * for all> ] \\ \n";
-      s += "       [ -f       <CSV Fids or empty for all> ] \\ \\n";
-      s += "       [ -threads <NumThreads; Implies MEM> ] \\ \\n";
+      s += "       [ -f       <CSV Fids or empty for all> ] \\ \n";
+      s += "       [ -threads <NumThreads; Implies MEM> ] \\ \n";
+      s += "       [ -shared  <if -threads, 1 LVC>> ] \\ \n";
+      s += "       [ -schema  <GetSchema before ViewAll> ] \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
+      printf( "      -db      : %s\n", svr );
       printf( "      -ty      : %s\n", cmd );
-      printf( "      -h       : %s\n", svr );
       printf( "      -s       : %s\n", svc );
       printf( "      -t       : %s\n", tkr );
       printf( "      -f       : <empty>\n" );
       printf( "      -threads : %d\n", nThr );
+      printf( "      -shared  : false\n" );
+      printf( "      -schema  : false\n" );
       return 0;
    }
 
@@ -214,7 +259,7 @@ int main( int argc, char **argv )
          break; // for-i
       if ( !::strcmp( argv[i], "-ty" ) )
          cmd = argv[++i];
-      else if ( !::strcmp( argv[i], "-h" ) )
+      else if ( !::strcmp( argv[i], "-db" ) )
          svr = argv[++i];
       else if ( !::strcmp( argv[i], "-s" ) )
          svc = argv[++i];
@@ -224,6 +269,10 @@ int main( int argc, char **argv )
          flds = argv[++i];
       else if ( !::strcmp( argv[i], "-threads" ) )
          nThr = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-schema" ) )
+         bSch = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-shared" ) )
+         bShr = _IsTrue( argv[++i] );
    }
    nThr = WithinRange( 1, nThr, K );
    cmd  = ( nThr > 1 ) ? "MEM" : cmd;
@@ -312,27 +361,23 @@ int main( int argc, char **argv )
       ::fflush( stdout );
    }
    else if ( !::strcmp( cmd, "MEM" ) ) {
-      if ( nThr > 1 ) {
-         ::fprintf( stdout, "MEM1 = %d (Kb)\n", lvc.MemSize() );
-         for ( i=0; i<nThr; thrs.push_back( new MyThread( svr ) ), i++ );
-         for ( i=0; i<nThr; thrs[i]->StartThread(), i++ );
-         ::fprintf( stdout, "Hit <ENTER> to terminate ..." ); getchar();
-         for ( i=0; i<nThr; thrs[i]->StopThread(), i++ );
-         ::fprintf( stdout, "MEM2 = %d (Kb)\n", lvc.MemSize() );
-         for ( i=0; i<nThr; delete thrs[i], i++ );
-         ::fprintf( stdout, "MEM3 = %d (Kb)\n", lvc.MemSize() );
-         thrs.clear();
+      ::fprintf( stdout, "MEM1 = %d (Kb); %d threads", lvc.MemSize(), nThr );
+      ::fprintf( stdout, "; Share=%s", _pBool( bShr ) );
+      ::fprintf( stdout, "; Schema=%s", _pBool( bSch ) );
+      ::fprintf( stdout, "\n" );
+      for ( i=0; i<nThr; i++ ) {
+         if ( bShr )
+            thrs.push_back( new MyThread( lvc, bSch, i ) );
+         else
+            thrs.push_back( new MyThread( svr, bSch, i ) );
       }
-      else {
-         MyThread thr( svr );
-
-         ::fprintf( stdout, "QUIT to terminate; <ENTER> to iterate ..." );
-         while( ::fgets( sTkr, K, stdin ) ) {
-            if ( ::strstr( sTkr, "QUIT" ) )
-               break; // while-fgets
-            thr.SnapAll( true );
-         }
-      }
+      for ( i=0; i<nThr; thrs[i]->StartThread(), i++ );
+      ::fprintf( stdout, "Hit <ENTER> to terminate ..." ); getchar();
+      for ( i=0; i<nThr; thrs[i]->StopThread(), i++ );
+      ::fprintf( stdout, "MEM2 = %d (Kb)\n", lvc.MemSize() );
+      for ( i=0; i<nThr; delete thrs[i], i++ );
+      ::fprintf( stdout, "MEM3 = %d (Kb)\n", lvc.MemSize() );
+      thrs.clear();
    }
    else if ( bAllS || bAllT ) {
       LVCAll   &all = lvc.ViewAll();

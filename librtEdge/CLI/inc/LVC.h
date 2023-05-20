@@ -12,6 +12,7 @@
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
+*     20 MAY 2023 jcs  Build 63: GetSchema( bool )
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -148,11 +149,19 @@ public:
 	////////////////////////////////////
 public:
 	/** 
-	 * \brief Query LVC for current schema
+	 * \brief Return reference to LVC current schema
 	 *   
 	 * \return Current schema in LVCData
 	 */  
 	rtEdgeSchema ^GetSchema();
+
+	/** 
+	 * \brief Query LVC for current schema
+	 *   
+	 * \param bQry - true to query; false to simply return reference
+	 * \return Current schema in LVCData
+	 */  
+	rtEdgeSchema ^GetSchema( bool bQry );
 
 	/** 
 	 * \brief Query LVC for current values of a single market data record

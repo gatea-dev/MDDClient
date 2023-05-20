@@ -9,6 +9,7 @@
 *     20 NOV 2020 jcs  Build 46: Beefed up : arg switches
 *      2 JUN 2022 jcs  Build 55: Single-field dump
 *      9 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
+*     18 MAY 2023 jcs  Build 63: -schema
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -17,6 +18,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using librtEdge;
+
+
+/////////////////////////////////////
+//
+//    c l a s s   T e s t C f g
+//
+/////////////////////////////////////
+public class TestCfg
+{
+    public bool bSafe   { get; set; }
+    public bool bShare  { get; set; }
+    public bool bSchema { get; set; }
+}
 
 
 /////////////////////////////////////
@@ -39,19 +53,19 @@ public class DataRecord
 /////////////////////////////////////
 class MyThread
 {
-   private string _lvcFile;
-   private int    _tid;
-   private LVC    _lvc;
-   private bool   _bSafe;
-   private int    _num;
-   private long   _nTkr;
-   private bool   _bRun;
-   private Thread _thr;
+   private string  _lvcFile;
+   private int     _tid;
+   private LVC     _lvc;
+   private TestCfg _cfg;
+   private int     _num;
+   private long    _nTkr;
+   private bool    _bRun;
+   private Thread  _thr;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public MyThread( string lvcFile, int tid, LVC lvc, bool bSafe )
+   public MyThread( string lvcFile, int tid, LVC lvc, TestCfg cfg )
    {
       ThreadStart beg;
 
@@ -59,7 +73,7 @@ class MyThread
       _lvcFile = lvcFile;
       _tid     = tid;
       _lvc     = lvc;
-      _bSafe   = bSafe;
+      _cfg     = cfg;
       _num     = 0;
       _nTkr    = 0;
       _bRun    = true;
@@ -97,11 +111,12 @@ class MyThread
    ///////////////////////
    private void SnapAll()
    {
-      bool       bShare = ( _lvc != null );
-      LVC        lvc    = bShare ? _lvc : new LVC( _lvcFile );
+      LVC        lvc = _cfg.bShare ? _lvc : new LVC( _lvcFile );
       LVCDataAll la;
 
-      if ( _bSafe ) {
+      if ( _cfg.bSchema )
+         lvc.GetSchema();
+      if ( _cfg.bSafe ) {
          la = new LVCDataAll();
          lvc.ViewAll_safe( la );
       }
@@ -109,7 +124,7 @@ class MyThread
          la = lvc.ViewAll();
       _nTkr += la._nTkr;
       la.Clear();
-      if ( !bShare )
+      if ( !_cfg.bShare )
          lvc.Destroy();
    }
 
@@ -213,7 +228,7 @@ class LVCTest
    ////////////////////////////////
    // Main Functions
    ////////////////////////////////
-   public static void MemTest1( LVC lvc )
+   public static void MemTest1( LVC lvc, TestCfg cfg )
    {
       LVCDataAll la;
 
@@ -224,22 +239,25 @@ class LVCTest
       Console.WriteLine( "MEM3 = {0} (Kb)", rtEdge.MemSize() );
    }
 
-   public static void MemTestN( string lvcFile, int nThr, bool bShare, bool bSafe )
+   public static void MemTestN( string lvcFile, int nThr, TestCfg cfg )
    {
       List<MyThread> tdb;
       LVC            lvc;
       int            i;
 
-      lvc = bShare ? new LVC( lvcFile ) : null;
+      lvc = cfg.bShare ? new LVC( lvcFile ) : null;
       Console.Write( "MEM1 = {0} (Kb)", rtEdge.MemSize() );
-      Console.WriteLine( "; Share={0}; Safe={1}", bShare, bSafe );
+      Console.Write( "; Share={0}", cfg.bShare );
+      Console.Write( "; Safe={0}", cfg.bSafe );
+      Console.WriteLine( "; Schema={0}", cfg.bSchema );
       tdb = new List<MyThread> ();
-      for ( i=0; i<nThr; tdb.Add( new MyThread( lvcFile, i, lvc, bSafe ) ), i++ );
+      for ( i=0; i<nThr; i++ )
+         tdb.Add( new MyThread( lvcFile, i, lvc, cfg ) );
       for ( i=0; i<nThr; tdb[i++].Start() );
       Console.WriteLine( "Hit <ENTER> to terminate ..." );
       Console.ReadLine();
       for ( i=0; i<nThr; tdb[i++].Stop() );
-      if ( bShare )
+      if ( cfg.bShare )
          lvc.Destroy();
       Console.WriteLine( "MEM2 = {0} (Kb)", rtEdge.MemSize() );
    }
@@ -449,7 +467,8 @@ class LVCTest
       LVC      lvc;
       String   cmd, svr, svc, tkr, fld, s;
       String[] tkrs, flds;
-      bool     aOK, bSafe, bShr;
+      TestCfg  cfg;
+      bool     aOK;
       int      i, argc, slpMs, nThr;
 
       /////////////////////
@@ -460,16 +479,18 @@ class LVCTest
          Console.WriteLine( rtEdge.Version() );
          return 0;
       }
-      svr   = "./cache.lvc";
-      cmd   = "DUMP";
-      svc   = "*";
-      tkr   = "*";
-      fld   = null;
-      flds  = null;
-      slpMs = 1000;
-      nThr  = 1;
-      bSafe = true;
-      bShr  = false;
+      cfg         = new TestCfg();
+      svr         = "./cache.lvc";
+      cmd         = "DUMP";
+      svc         = "*";
+      tkr         = "*";
+      fld         = null;
+      flds        = null;
+      slpMs       = 1000;
+      nThr        = 1;
+      cfg.bSafe   = true;
+      cfg.bShare  = false;
+      cfg.bSchema = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db      <LVC d/b file> ] \\ \n";
@@ -482,6 +503,7 @@ class LVCTest
          s += "       [ -threads <NumThreads; Implies MEM> ] \\ \n";
          s += "       [ -shared  <1 LVC if -threads> ] \\ \n";
          s += "       [ -safe    <ViewAll_safe() if -threads> ] \\ \n";
+         s += "       [ -schema  <GetSchema before ViewAll> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", svr );
@@ -491,8 +513,9 @@ class LVCTest
          Console.Write( "      -f       : <empty>\n" );
          Console.Write( "      -z       : {0}\n", slpMs );
          Console.Write( "      -threads : {0}\n", nThr );
-         Console.Write( "      -shared  : {0}\n", bShr );
-         Console.Write( "      -safe    : {0}\n", bSafe );
+         Console.Write( "      -shared  : {0}\n", cfg.bShare );
+         Console.Write( "      -safe    : {0}\n", cfg.bSafe );
+         Console.Write( "      -schema  : {0}\n", cfg.bSchema );
          return 0;
       }
 
@@ -518,9 +541,11 @@ class LVCTest
          else if ( args[i] == "-threads" )
             Int32.TryParse( args[++i], out nThr );
          else if ( args[i] == "-shared" )
-            bShr = _IsTrue( args[++i] );
+            cfg.bShare = _IsTrue( args[++i] );
          else if ( args[i] == "-safe" )
-            bSafe = _IsTrue( args[++i] );
+            cfg.bSafe = _IsTrue( args[++i] );
+         else if ( args[i] == "-schema" )
+            cfg.bSchema = _IsTrue( args[++i] );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
@@ -539,9 +564,9 @@ class LVCTest
             PerfTest( (lvc=new LVC( svr )), 2 );
          else if ( cmd == "MEM" ) {
             if ( nThr == 1 )
-               MemTest1( (lvc=new LVC( svr )) );
+               MemTest1( (lvc=new LVC( svr )), cfg );
             else
-               MemTestN( svr, nThr, bShr, bSafe );
+               MemTestN( svr, nThr, cfg );
          }
          else
             Dump( (lvc=new LVC( svr )), svc, tkrs, flds);

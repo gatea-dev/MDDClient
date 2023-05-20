@@ -11,6 +11,7 @@
 *     17 MAY 2022 jcs  Build 54: LVCAdmin.RefreshTickers()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
+*     18 MAY 2023 jcs  Build 63: cpp().GetSchema( false )
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -101,7 +102,12 @@ rtEdgeSchema ^LVC::schema()
 ////////////////////////////////////
 rtEdgeSchema ^LVC::GetSchema()
 {
-   _schema->Set( _lvc->GetSchema() );
+   return GetSchema( false );
+}
+
+rtEdgeSchema ^LVC::GetSchema( bool bQry )
+{
+   _schema->Set( cpp().GetSchema( bQry ) );
    return schema();
 }
 
@@ -113,7 +119,7 @@ LVCData ^LVC::Snap( String ^svc, String ^tkr )
    pSvc = (const char *)_pStr( svc );
    pTkr = (const char *)_pStr( tkr );
    Free();
-   if ( (msg=_lvc->Snap( pSvc, pTkr )) )
+   if ( (msg=cpp().Snap( pSvc, pTkr )) )
       _qry->Set( *msg );
    return _qry;
 }
@@ -126,28 +132,28 @@ LVCData ^LVC::View( String ^svc, String ^tkr )
    pSvc = (const char *)_pStr( svc );
    pTkr = (const char *)_pStr( tkr );
    Free();
-   if ( (msg=_lvc->View( pSvc, pTkr )) )
+   if ( (msg=cpp().View( pSvc, pTkr )) )
       _qry->Set( *msg );
    return _qry;
 }
 
 void LVC::Free()
 {
-   _lvc->Free();
+   cpp().Free();
    _qry->Clear();
 }
 
 LVCDataAll ^LVC::SnapAll()
 {
    FreeAll();
-   _qryAll->Set( _lvc->SnapAll(), true );
+   _qryAll->Set( cpp().SnapAll(), true );
    return _qryAll;
 }
 
 LVCDataAll ^LVC::ViewAll()
 {
    FreeAll();
-   _qryAll->Set( _lvc->ViewAll(), true );
+   _qryAll->Set( cpp().ViewAll(), true );
    return _qryAll;
 }
 
@@ -156,7 +162,7 @@ LVCDataAll ^LVC::SnapAll_safe( LVCDataAll ^dst )
    RTEDGE::LVCAll *all;
 
    all = new RTEDGE::LVCAll( cpp(), cpp().GetSchema( false ) );
-   dst->Set( _lvc->SnapAll_safe( *all ), false );
+   dst->Set( cpp().SnapAll_safe( *all ), false );
    return dst;
 }
 
@@ -165,13 +171,13 @@ LVCDataAll ^LVC::ViewAll_safe( LVCDataAll ^dst )
    RTEDGE::LVCAll *all;
 
    all = new RTEDGE::LVCAll( cpp(), cpp().GetSchema( false ) );
-   dst->Set( _lvc->ViewAll_safe( *all ), false );
+   dst->Set( cpp().ViewAll_safe( *all ), false );
    return dst;
 }
 
 void LVC::FreeAll()
 {
-   _lvc->FreeAll();
+   cpp().FreeAll();
    _qryAll->Clear();
 }
 

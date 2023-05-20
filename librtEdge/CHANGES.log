@@ -18,13 +18,13 @@ Performance
 
 Known Bugs
 ----------
--# LVC.SnapAll( LVCAll *deepCopy=(LVCAll *)0 ) : Thread-safe
 
 
 Features To Add
 ---------------
- * -# Surface.hpp
- * -# rtFld_vector : AddVector( string[] )
+-# TapeHeader.h
+-# Surface.hpp
+-# rtFld_vector : AddVector( string[] )
 */
 
 /**
@@ -43,11 +43,19 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 62 23-03-xx
+ * ### Build 63 23-05-xx
+ *
+ * -# CLI LVC Snap Crash w/ GetSchema() and SnapAll_safe() 
+ *    - librtEdge.LVC.GetSchema() : _lvc->GetSchema( false ) )
+ *    - librtEdge.LVC.GetSchema( bool bQry )
+ *    - cpp/LVCDump.cpp : -schema
+ *
+ *
+ * ### Build 62 23-03-13
  *
  * -# SplineMaker.cpp / SplineMakerCLI.cs : 
- *    = Curve-specific service 
- *    = Curve-specific default FieldID
+ *    - Curve-specific service 
+ *    - Curve-specific default FieldID
  *
  * -# ChartDb : GLchtDbItem._idx
  *
