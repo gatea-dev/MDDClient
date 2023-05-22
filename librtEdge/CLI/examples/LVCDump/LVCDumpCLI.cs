@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  LVCTest.cs
+*  LVCDumpCLI.cs
 *     librtEdge .NET interface test - Last Value Cache(LVC)
 *
 *  REVISION HISTORY:
@@ -166,7 +166,7 @@ class MyThread
 //   c l a s s   L V C T e s t
 //
 /////////////////////////////////////
-class LVCTest 
+class LVCDumpCLI 
 {
    ////////////////////////////////
    // Helpers
@@ -630,4 +630,4 @@ class LVCTest
 
    } // main()
 
-} // class LVCTest
+} // class LVCDumpCLI
