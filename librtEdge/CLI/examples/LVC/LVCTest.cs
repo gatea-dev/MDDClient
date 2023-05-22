@@ -130,16 +130,19 @@ class MyThread
       List<FieldL> lst;
       rtEdgeSchema schema;
       rtEdgeField  fld;
+      FieldL       fl;
 
       if ( _cfg.bSchema ) {
-         schema lvc.GetSchema( _cfg.bQuery );
+         schema = lvc.GetSchema( _cfg.bQuery );
          if ( _cfg.bLiam ) {
             lst = new List<FieldL>();
             for ( schema.reset(); schema.forth(); ) {
-               fld = schema.field();
-               lst.Add( new Field( { Fid  = fld.Fid(),
-                                     Name = fld.Name(),
-                                     Type = fld.Type() } );
+               fld     = schema.field();
+               fl      = new FieldL();
+               fl.Fid  = fld.Fid();
+               fl.Name = fld.Name();
+               fl.Type = fld.Type();
+               lst.Add( fl );
             }
          }
       }
@@ -277,7 +280,8 @@ class LVCTest
       Console.Write( "; Share={0}", cfg.bShare );
       Console.Write( "; Safe={0}", cfg.bSafe );
       Console.Write( "; Schema={0}", cfg.bSchema );
-      Console.WriteLine( "; SchemaQ={0}", cfg.bQuery );
+      Console.Write( "; SchemaQ={0}", cfg.bQuery );
+      Console.WriteLine( "; SchemaL={0}", cfg.bLiam );
       tdb = new List<MyThread> ();
       for ( i=0; i<nThr; i++ )
          tdb.Add( new MyThread( lvcFile, i, lvc, cfg ) );
