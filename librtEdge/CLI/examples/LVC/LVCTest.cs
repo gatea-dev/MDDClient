@@ -22,15 +22,28 @@ using librtEdge;
 
 /////////////////////////////////////
 //
+//    c l a s s   F i e l d L
+//
+/////////////////////////////////////
+public class FieldL
+{
+    public string    Name { get; set; }
+    public int       Fid  { get; set; }
+    public rtFldType Type { get; set; }
+}
+
+/////////////////////////////////////
+//
 //    c l a s s   T e s t C f g
 //
 /////////////////////////////////////
 public class TestCfg
 {
-    public bool bSafe    { get; set; }
-    public bool bShare   { get; set; }
-    public bool bSchema  { get; set; }
-    public bool bSchemaQ { get; set; }
+    public bool bSafe   { get; set; }
+    public bool bShare  { get; set; }
+    public bool bSchema { get; set; }
+    public bool bQuery  { get; set; }
+    public bool bLiam   { get; set; }
 }
 
 
@@ -112,11 +125,24 @@ class MyThread
    ///////////////////////
    private void SnapAll()
    {
-      LVC        lvc = _cfg.bShare ? _lvc : new LVC( _lvcFile );
-      LVCDataAll la;
+      LVC          lvc = _cfg.bShare ? _lvc : new LVC( _lvcFile );
+      LVCDataAll   la;
+      List<FieldL> lst;
+      rtEdgeSchema schema;
+      rtEdgeField  fld;
 
-      if ( _cfg.bSchema || _cfg.bSchemaQ )
-         lvc.GetSchema( _cfg.bSchemaQ );
+      if ( _cfg.bSchema ) {
+         schema lvc.GetSchema( _cfg.bQuery );
+         if ( _cfg.bLiam ) {
+            lst = new List<FieldL>();
+            for ( schema.reset(); schema.forth(); ) {
+               fld = schema.field();
+               lst.Add( new Field( { Fid  = fld.Fid(),
+                                     Name = fld.Name(),
+                                     Type = fld.Type() } );
+            }
+         }
+      }
       if ( _cfg.bSafe ) {
          la = new LVCDataAll();
          lvc.ViewAll_safe( la );
@@ -251,7 +277,7 @@ class LVCTest
       Console.Write( "; Share={0}", cfg.bShare );
       Console.Write( "; Safe={0}", cfg.bSafe );
       Console.Write( "; Schema={0}", cfg.bSchema );
-      Console.WriteLine( "; SchemaQ={0}", cfg.bSchemaQ );
+      Console.WriteLine( "; SchemaQ={0}", cfg.bQuery );
       tdb = new List<MyThread> ();
       for ( i=0; i<nThr; i++ )
          tdb.Add( new MyThread( lvcFile, i, lvc, cfg ) );
@@ -493,7 +519,8 @@ class LVCTest
       cfg.bSafe    = true;
       cfg.bShare   = false;
       cfg.bSchema  = false;
-      cfg.bSchemaQ = false;
+      cfg.bQuery   = false;
+      cfg.bLiam    = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db      <LVC d/b file> ] \\ \n";
@@ -508,6 +535,7 @@ class LVCTest
          s += "       [ -safe    <ViewAll_safe() if -threads> ] \\ \n";
          s += "       [ -schema  <GetSchema reference before ViewAll> ] \\ \n";
          s += "       [ -schemaQ <GetSchema query before ViewAll> ] \\ \n";
+         s += "       [ -schemaL <GetSchema query and List before ViewAll> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", svr );
@@ -520,7 +548,8 @@ class LVCTest
          Console.Write( "      -shared  : {0}\n", cfg.bShare );
          Console.Write( "      -safe    : {0}\n", cfg.bSafe );
          Console.Write( "      -schema  : {0}\n", cfg.bSchema );
-         Console.Write( "      -schemaQ : {0}\n", cfg.bSchemaQ );
+         Console.Write( "      -schemaQ : {0}\n", cfg.bQuery );
+         Console.Write( "      -schemaL : {0}\n", cfg.bLiam );
          return 0;
       }
 
@@ -551,8 +580,15 @@ class LVCTest
             cfg.bSafe = _IsTrue( args[++i] );
          else if ( args[i] == "-schema" )
             cfg.bSchema = _IsTrue( args[++i] );
-         else if ( args[i] == "-schemaQ" )
-            cfg.bSchemaQ = _IsTrue( args[++i] );
+         else if ( args[i] == "-schemaQ" ) {
+            cfg.bQuery   = _IsTrue( args[++i] );
+            cfg.bSchema |= cfg.bQuery;
+         }
+         else if ( args[i] == "-schemaL" ) {
+            cfg.bLiam    = _IsTrue( args[++i] );
+            cfg.bQuery  |= cfg.bLiam;
+            cfg.bSchema |= cfg.bLiam;
+         }
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )
