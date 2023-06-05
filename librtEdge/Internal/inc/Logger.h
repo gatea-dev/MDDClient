@@ -10,8 +10,9 @@
 *     24 JAN 2012 jcs  Build 17: HexLog()
 *     12 NOV 2014 jcs  Build 28: CanLog(); RTEDGE_PRIVATE
 *     21 MAR 2016 jcs  Build 32: EDG_Internal.h; 2 logT()'s
+*      3 JUN 2023 jcs  Build 63: HexDump()
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_LOGGER_H
 #define __EDGLIB_LOGGER_H
@@ -47,6 +48,7 @@ public:
 	void logT( int, char *, ... );
 	void logT( int, const char *, ... );
 	void Write( int, const char *, int );
+	void HexDump( int, const char *, int );
 	void HexLog( int, const char *, int );
 
 	// Class-wide

@@ -43,12 +43,18 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 63 23-05-xx
+ * ### Build 63 23-06-xx
  *
  * -# CLI LVC Snap Crash w/ GetSchema() and SnapAll_safe() 
  *    - librtEdge.LVC.GetSchema() : _lvc->GetSchema( false ) )
  *    - librtEdge.LVC.GetSchema( bool bQry )
  *    - cpp/LVCDump.cpp : -schema
+ *
+ * -# quant/FFT.hpp
+ *
+ * -# Hex logging bug:
+ *    - Logger.Hexlog() : obuf = dLen*8 - DUH!!
+ *    - rtEdge_hexDump()
  *
  *
  * ### Build 62 23-03-13

@@ -26,6 +26,7 @@
 *     29 OCT 2022 jcs  Build 60: DoubleList
 *     26 NOV 2022 jcs  Build 61: DateTimeList; DoubleXY
 *      9 MAR 2023 jcs  Build 62: Dump( DoubleGrid & ); static GetThreadID()
+*      3 JUN 2023 jcs  Build 63: HexDump()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -442,6 +443,27 @@ public:
 
 	/**
 	 * \brief Hex dump a message into an output buffer
+	 *
+	 * \param msg - Message to dump
+	 * \param len - Message length
+	 * \return Hex dump of msg in std::string
+	 */
+	std::string HexDump( char *msg, int len )
+	{
+	   std::string tmp;
+	   char       *obuf;
+	   int         sz;
+
+	   obuf     = new char[len*8];
+	   sz       = ::rtEdge_hexDump( msg, len, obuf );
+	   obuf[sz] = '\0';
+	   tmp      = obuf;
+	   delete[] obuf;
+	   return std::string( tmp );
+	}
+
+	/**
+	 * \brief Dump a message in into an output buffer
 	 *
 	 * \param msg - Message to dump
 	 * \param len - Message length

@@ -33,6 +33,7 @@
 *     22 OCT 2022 jcs  Build 58: hpp/struct
 *      1 NOV 2022 jcs  Build 60: rtFld_vector
 *     14 FEB 2023 jcs  Build 62: quant/LU.hpp
+*      3 JUN 2023 jcs  Build 63: quant/FFT.hpp; rtEdge_hexDump()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -2132,9 +2133,18 @@ int rtEdge_Time2Mark( int h, int m, int s );
  */
 void rtEdge_Sleep( double dSlp );
 
-
 /**
  * \brief Hex dump a message into an output buffer
+ *
+ * \param msg - Message to dump
+ * \param len - Message length
+ * \param outbuf - Output buffer to hold hex dump
+ * \return Length of hex dump in outbuf
+ */
+int rtEdge_hexDump( char *msg, int len, char *outbuf );
+
+/**
+ * \brief Dump a message in hex to output buffer
  *
  * \param msg - Message to dump
  * \param len - Message length
@@ -2239,6 +2249,7 @@ _CPP_END
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
 #include <hpp/quant/CubicSpline.hpp>
+#include <hpp/quant/FFT.hpp>
 #include <hpp/quant/LU.hpp>
 #include <hpp/struct/Vector.hpp>
 #ifdef _SURFACE_NOT_READY

@@ -26,6 +26,7 @@
 *     10 JUN 2022 jcs  Build 55: Remap : Same address
 *     29 OCT 2022 jcs  Build 60: rtFld_vector
 *      8 MAR 2023 jcs  Build 62: _lvcMtx; static rtEdge_ioctl's
+*      3 JUN 2023 jcs  Build 6r: rtEdge_hexDump()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -1472,6 +1473,46 @@ int rtEdge_Time2Mark( int h, int m, int s )
 void rtEdge_Sleep( double dSlp )
 {
    SLEEP( dSlp );
+}
+
+int rtEdge_hexDump( char *ibuf, int len, char *obuf )
+{
+   int     i, n, rem;
+   u_char *pp, *pl, pbuf[16];
+   char   *op;
+
+   // 1) Header + Body
+
+   pl  = pbuf;
+   pp  = (u_char *)ibuf;
+   op  = obuf;
+   op += sprintf( op, "[%04d bytes]\n", len );
+   for ( i=0; i<len; i++,pp++ ) {
+      op += sprintf( op, "%02x ", *pp );
+      *pl = *pp;
+      if ( !(rem = (i+1)%16) ) {
+         op += sprintf( op, "\t" );
+         for( n=0; n<16; n++ )
+            *op++ = IsAscii( pbuf[n] ) ? pbuf[n] : '.';
+         ::memset( pbuf, 0, 16 );
+         pl  = pbuf;
+         op += sprintf( op, "\n" );
+      }
+      else
+         pl++;
+   }
+
+   // 3) Cleanup
+
+   if ( rem ) {
+      for ( i=0; i<16-rem; i++ )
+         op += sprintf( op, "   " );
+      op += sprintf( op, "\t" );
+      for( n=0; n<rem; n++ )
+         *op++ = IsAscii( pbuf[n] ) ? pbuf[n] : '.';
+      op += sprintf( op, "\n" );
+   }
+   return( op-obuf );
 }
 
 int rtEdge_hexMsg( char *msg, int len, char *obuf )

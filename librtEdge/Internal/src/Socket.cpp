@@ -26,8 +26,9 @@
 *     29 MAR 2022 jcs  Build 52: mddWire ioctl's here
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      6 SEP 2022 jcs  Build 56: Buffer.Grow() bug; ioctl_getTxMaxSize
+*      3 JUN 2023 jcs  Build 63: HexDump(), not HexLog()
 *
-*  (c) 1994-2022 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -638,9 +639,8 @@ void Socket::OnRead()
          if ( nb && _log && _log->CanLog( 3 ) ) {
             Locker lck( _log->mtx() );
 
-            _log->logT( 3, "[RAW-RD %06d bytes]\n", nb );
-            _log->logT( 4, "   " );
-            _log->HexLog( 4, _in._cp, nb );
+            _log->logT( 3, "RAW-RD " );
+            _log->HexDump( 3, _in._cp, nb );
          }
          _in._cp += nb;
          nL      -= nb;
@@ -683,9 +683,8 @@ void Socket::OnWrite()
       if ( nb && _log && _log->CanLog( 3 ) ) {
          Locker lck( _log->mtx() );
 
-         _log->logT( 3, "[RAW-WR %06d bytes]\n", nb );
-         _log->logT( 4, "   " );
-         _log->HexLog( 4, cp, nb );
+         _log->logT( 3, "RAW-WR " );
+         _log->HexDump( 3, cp, nb );
       }
       cp += nb;
       tb += nb;

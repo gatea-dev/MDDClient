@@ -559,7 +559,7 @@
               FID_INC  = "6"
               FID_KNOT = "-8101"
               Service  = "splinemaker" 
-              Server   = "gatea.com:9011" >
+              Server   = "localhost:9011" >
       <Spline Name="Swap"      Increment="1.0"      Curve="Swaps" />
       <Spline Name="Swap.D"    Increment="0.032876" Curve="Swaps" />
       <Spline Name="UST"       Increment="1.0"      Curve="UST" />

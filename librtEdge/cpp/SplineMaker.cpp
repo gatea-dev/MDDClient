@@ -742,6 +742,7 @@ int main( int argc, char **argv )
    SplinePublisher pub( *xp );
    KnotSource     *src;
 
+pub.Log( "./mew.log", 4 );
    Spline::_fidX   = xp->getAttrValue( _dtd._attr_fidX,   Spline::_fidX ); 
    Spline::_fidY   = xp->getAttrValue( _dtd._attr_fidY,   Spline::_fidY ); 
    Spline::_fidInc = xp->getAttrValue( _dtd._attr_fidInc, Spline::_fidInc ); 

@@ -13,6 +13,11 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+#if defined(_DEBUG)
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif // defined(_DEBUG)
 
 using namespace RTEDGE;
 
@@ -413,5 +418,9 @@ int main( int argc, char **argv )
    }
    ::fprintf( stdout, "Done!!\n " );
    ::fflush( stdout );
+#if defined(_DEBUG)
+   _CrtSetReportMode( _CRT_WARN, CRTDBG_MODE_DEBUG );
+   _CrtDumpMemoryLeaks();
+#endif // defined(_DEBUG)
    return 1;
 }

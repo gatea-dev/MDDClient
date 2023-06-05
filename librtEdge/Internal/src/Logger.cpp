@@ -13,8 +13,9 @@
 *     24 JAN 2012 jcs  Build 17: HexLog() 
 *     12 NOV 2014 jcs  Build 28: CanLog(); -Wall
 *     21 MAR 2016 jcs  Build 32: Linux compatibility in libmddWire; 2 logT()'s
+*      3 JUN 2023 jcs  Build 63: HexDump()
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -154,6 +155,21 @@ void Logger::Write( int lvl, const char *data, int dLen )
    }
 }
 
+void Logger::HexDump( int lvl, const char *data, int dLen )
+{
+   Locker lck( _mtx );
+   char  *obuf;
+   int    nOut;
+
+   if ( CanLog( lvl ) ) {
+      obuf = new char[dLen*8];
+      nOut = rtEdge_hexDump( (char *)data, dLen, obuf );
+      ::fwrite( obuf, nOut, 1, _log );
+      ::fflush( _log );
+      delete[] obuf;
+   }
+}
+
 void Logger::HexLog( int lvl, const char *data, int dLen )
 {
    Locker lck( _mtx );
@@ -161,7 +177,7 @@ void Logger::HexLog( int lvl, const char *data, int dLen )
    int    nOut;
 
    if ( CanLog( lvl ) ) {
-      obuf = new char[dLen*4];
+      obuf = new char[dLen*8];
       nOut = rtEdge_hexMsg( (char *)data, dLen, obuf );
       ::fwrite( obuf, nOut, 1, _log );
       ::fflush( _log );
