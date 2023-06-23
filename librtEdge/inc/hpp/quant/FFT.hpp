@@ -18,7 +18,8 @@ namespace QUANT
 
 #ifndef DOXYGEN_OMIT
 #define _TINY   1.0e-20
-#define _PI_2   M_PI * 2.0
+#define _PI     3.14159265358979323846
+#define _PI_2   _PI * 2.0
 
 #define _gmin( a,b )          ( ((a)<=(b)) ? (a) : (b) )
 #define _gmax( a,b )          ( ((a)>=(b)) ? (a) : (b) )
