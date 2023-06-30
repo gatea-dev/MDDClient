@@ -12,8 +12,9 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
+*     30 JUN 2023 jcs  Build 63: StringDoor
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -47,7 +48,7 @@ namespace librtEdge
  * For best performance, it is highly recommended that you reuse this
  * object in your application by calling Init() each update.
  */
-public ref class rtEdgePubUpdate
+public ref class rtEdgePubUpdate : public StringDoor
 {
 private:
 	IrtEdgePublisher ^_pub;

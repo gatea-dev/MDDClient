@@ -56,6 +56,10 @@ Features To Add
  *    - Logger.Hexlog() : obuf = dLen*8 - DUH!!
  *    - rtEdge_hexDump()
  *
+ * -# CLI Publish Leak:
+ *    - PublishCLI.cs -reuse
+ *    - StringDoor : _pStr() / _Free_strGC() / Marshal.FreeHGlobal() : DUH!!
+ *
  *
  * ### Build 62 23-03-13
  *

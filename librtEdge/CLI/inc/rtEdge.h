@@ -17,6 +17,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *      9 MAR 2023 jcs  Build 62: GetCurrentThreadID()
+*     30 JUN 2023 jcs  Build 63: StringDoor
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -662,7 +663,61 @@ public:
 	   void   set( int idx, double val ) { _stC->_dVal[idx] = val; }
 	}
 
-
 };  // rtEdgeChanStats
+
+#ifndef DOXYGEN_OMIT
+////////////////////////////////////////////////
+//
+//         c l a s s   S t r i n g D o o r
+//
+////////////////////////////////////////////////
+/**
+ * \class StringDoor
+ * \brief Marshalling strings from unmanaged to managed
+ *
+ * We pass string to unmanaged via Marshal::StringToHGlobalAnsi().  This class
+ * keeps track of what we allocated so we can free via _Free_strGC() to prevent
+ * memory leaks. 
+ */
+public ref class StringDoor
+{
+private:
+	List<IntPtr> ^_strGC;
+
+	//////////////////////////////////
+	// Constructor / Destructor
+	//////////////////////////////////
+protected:
+	StringDoor() :
+	   _strGC( gcnew List<IntPtr>() )
+	{ ; }
+
+	~StringDoor()
+	{
+	   _Free_strGC();
+	}
+
+	//////////////////////////////////
+	// Operations
+	//////////////////////////////////
+protected:
+	const char *_pStr( String ^str )
+	{
+	   IntPtr ptr;
+
+	   ptr = Marshal::StringToHGlobalAnsi( str );
+	   _strGC->Add( ptr );
+	   return (const char *)ptr.ToPointer();
+	}
+
+	void _Free_strGC()
+	{
+	   for ( int i=0; i<_strGC->Count; Marshal::FreeHGlobal( _strGC[i++] ) );
+	   _strGC->Clear();
+	}
+
+}; // StringDoor
+
+#endif // DOXYGEN_OMIT
 
 } // namespace librtEdge

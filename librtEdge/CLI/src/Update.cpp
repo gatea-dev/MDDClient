@@ -10,8 +10,9 @@
 *     23 MAY 2022 jcs  Build 55: AddFieldAsUnixTime()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
+*     30 JUN 2023 jcs  Build 63: StringDoor
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Update.h>
@@ -74,7 +75,7 @@ rtEdgePubUpdate::~rtEdgePubUpdate()
 /////////////////////////////////
 void rtEdgePubUpdate::Init( String ^tkr, IntPtr arg, bool bImg )
 {
-   _upd.Init( rtEdge::_pStr( tkr ), (void *)arg, bImg );
+   _upd.Init( _pStr( tkr ), (void *)arg, bImg );
 }
 
 
@@ -83,26 +84,34 @@ void rtEdgePubUpdate::Init( String ^tkr, IntPtr arg, bool bImg )
 /////////////////////////////////
 int rtEdgePubUpdate::Publish()
 {
+   int rc;
+
    if ( _err != nullptr )
-      return PubError( _err );
-   return _upd.Publish();
+      rc = PubError( _err );
+   else
+      rc = _upd.Publish();
+   _Free_strGC();
+   return rc;
 }
 
 int rtEdgePubUpdate::Publish( cli::array<Byte> ^buf, bool bFieldList )
 {
    ::rtBUF       r;
    ::mddDataType dt;
+   int           rc;
 
    r  = rtEdge::_memcpy( buf );
    dt = bFieldList ? mddDt_FieldList : mddDt_FixedMsg;
-   return _upd.Publish( r, dt );
+   rc = _upd.Publish( r, dt );
+   _Free_strGC();
+   return rc;
 }
 
 int rtEdgePubUpdate::PubError( String ^err )
 {
    int rtn;
 
-   rtn  = _upd.PubError( rtEdge::_pStr( err ) );
+   rtn  = _upd.PubError( _pStr( err ) );
    _err = nullptr;
    return rtn;
 }
@@ -114,7 +123,11 @@ int rtEdgePubUpdate::PubError( String ^err )
 int rtEdgePubUpdate::Publish( ByteStream ^bStr, 
                               int         fidData )
 {
-   return _upd.Publish( bStr->bStr(), fidData );
+   int rc;
+
+   rc = _upd.Publish( bStr->bStr(), fidData );
+   _Free_strGC();
+   return rc;
 }
 
 int rtEdgePubUpdate::Publish( ByteStream ^bStr, 
@@ -123,7 +136,11 @@ int rtEdgePubUpdate::Publish( ByteStream ^bStr,
                               int         maxFld,
                               int         bytesPerSec )
 {
-   return _upd.Publish( bStr->bStr(), fidData, maxFldSiz, maxFld, bytesPerSec );
+   int rc;
+
+   rc = _upd.Publish( bStr->bStr(), fidData, maxFldSiz, maxFld, bytesPerSec );
+   _Free_strGC();
+   return rc;
 }
 
 void rtEdgePubUpdate::Stop( ByteStream ^bStr )
@@ -183,7 +200,7 @@ void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
 
 void rtEdgePubUpdate::AddFieldAsString( int fid, String ^str )
 {
-   _upd.AddField( fid, (char *)rtEdge::_pStr( str ) );
+   _upd.AddField( fid, (char *)_pStr( str ) );
 }
 
 void rtEdgePubUpdate::AddFieldAsInt8( int fid, u_char i8 )
@@ -403,10 +420,10 @@ int rtEdgePubUpdate::PubChainLink( String               ^chainName,
    void       *vArg;
    int         i, nl;
 
-   pChn = rtEdge::_pStr( chainName );
+   pChn = _pStr( chainName );
    nl   = gmin( links->Length, K-1 );
    vArg = (void *)arg;
-   for ( i=0; i<nl; ldb[i]=rtEdge::_pStr( links[i++] ) );
+   for ( i=0; i<nl; ldb[i]=_pStr( links[i++] ) );
    return _upd.PubChainLink( pChn, vArg, linkNum, bFinal, ldb, nl, dpyTpl );
 }
 

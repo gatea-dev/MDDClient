@@ -10,6 +10,7 @@
 *      5 MAY 2022 jcs  Build 53: New constructor; SetMDDirectMon()
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *      3 NOV 2022 jcs  Build 60: Native vector field type
+*     23 JUN 2023 jcs  Build 63: -reuse
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -32,6 +33,7 @@ class PublishCLI : rtEdgePublisher
    ////////////////////////////////
    private int                          _vecSz;
    private int                          _vPrec;
+   private bool                         _bReuse;
    private bool                         _bVecFld;
    private Dictionary<string, IntPtr>   _wl;
    private Dictionary<string, MyVector> _wlV;
@@ -39,6 +41,7 @@ class PublishCLI : rtEdgePublisher
    private TimerCallback                _cbk;
    private int                          _rtl;
    private string[]                     _chn;
+   private rtEdgePubUpdate              _upd;
 
    ////////////////////////////////
    // Constructor
@@ -48,6 +51,7 @@ class PublishCLI : rtEdgePublisher
                       double tTmr, 
                       int    vecSz,
                       int    vPrec,
+                      bool   bReuse,
                       bool   bVecFld ) :
       base( svr, svc, true, false ) // binary, bStart 
    {
@@ -57,11 +61,13 @@ class PublishCLI : rtEdgePublisher
 
       _vecSz   = vecSz;
       _vPrec   = vPrec;
+      _bReuse  = bReuse;
       _bVecFld = bVecFld;
       _wl      = new Dictionary<string, IntPtr>();
       _wlV     = new Dictionary<string, MyVector>();
       _rtl     = 0;
       _chn     = null;
+      _upd     = null;
 
       // Timer Callback
 
@@ -103,7 +109,15 @@ class PublishCLI : rtEdgePublisher
 
       // RTL; Time (int); Time (double); DateTime, String
 
-      u   = new rtEdgePubUpdate( this, tkr, arg, bImg );
+      if ( _bReuse ) {
+         if ( _upd == null )
+            _upd  = new rtEdgePubUpdate( this, tkr, arg, bImg );
+         else
+            _upd.Init( tkr, arg, bImg );
+         u = _upd;
+      }
+      else
+         u   = new rtEdgePubUpdate( this, tkr, arg, bImg );
       fid = 6;
       u.AddFieldAsInt32( fid++, _rtl );
       u.AddFieldAsInt32( fid++, (int)rtEdge.TimeSec() );
@@ -256,7 +270,7 @@ class PublishCLI : rtEdgePublisher
          string     s, svr, svc, ty;
          int        i, argc,  hbeat, vecSz, vPrec;
          double     tPub;
-         bool       aOK, bPack, bFldV;
+         bool       aOK, bPack, bReuse, bFldV;
 
          /////////////////////
          // Quickie checks
@@ -265,15 +279,16 @@ class PublishCLI : rtEdgePublisher
          if ( argc > 0 && ( args[0] == "--version" ) ) {
             Console.WriteLine( rtEdge.Version() );
             return 0;
-         }
-         svr   = "localhost:9995";
-         svc   = "my_publisher";
-         hbeat = 15;
-         tPub  = 1.0;
-         vecSz = 0;
-         vPrec = 2;
-         bFldV = false;
-         bPack = true;
+          }
+         svr    = "localhost:9995";
+         svc    = "my_publisher";
+         hbeat  = 15;
+         tPub   = 1.0;
+         vecSz  = 0;
+         vPrec  = 2;
+         bFldV  = false;
+         bPack  = true;
+         bReuse = false;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -h       <Source : host:port> ] \\ \n";
@@ -283,6 +298,7 @@ class PublishCLI : rtEdgePublisher
             s += "       [ -vecPrec <Vector Precision> ] \\ \n";
             s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
             s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
+            s += "       [ -reuse   <true for reuse update> ] \\ \n";
             s += "       [ -hbeat   <Heartbeat> ] \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
@@ -293,6 +309,7 @@ class PublishCLI : rtEdgePublisher
             Console.Write( "      -vecPrec : {0}\n", vPrec );
             Console.Write( "      -vecFld  : {0}\n", bFldV );
             Console.Write( "      -packed  : {0}\n", bPack );
+            Console.Write( "      -reuse   : {0}\n", bReuse );
             Console.Write( "      -hbeat   : {0}\n", hbeat );
             return 0;
          }
@@ -318,6 +335,8 @@ class PublishCLI : rtEdgePublisher
                bFldV = _IsTrue( args[++i] );
             else if ( args[i] == "-packed" )
                bPack = _IsTrue( args[++i] );
+            else if ( args[i] == "-reuse" )
+               bReuse = _IsTrue( args[++i] );
             else if ( args[i] == "-hbeat" )
                hbeat = Convert.ToInt32( args[++i], 10 );
          }
@@ -325,12 +344,13 @@ class PublishCLI : rtEdgePublisher
          // Rock on
 
          Console.WriteLine( rtEdge.Version() );
-         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bFldV );
+         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bReuse, bFldV );
          pub.PubStart();
          pub.SetUnPacked( !bPack );
          pub.SetHeartbeat( hbeat );
          Console.WriteLine( pub.pConn() );
-         Console.WriteLine( pub.IsUnPacked() ? "UNPACKED" : "PACKED" );
+         Console.WriteLine( pub.IsUnPacked() ? "UNPACKED"  : "PACKED" );
+         Console.WriteLine( bReuse           ? "REUSE UPD" : "NEW UPD" );
          if ( vecSz > 0 ) {
             ty = bFldV ? "FIELD" : "BYTESTREAM";
             Console.WriteLine( "{0} VECTOR as {1}", vecSz, ty );
