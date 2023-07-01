@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 63 23-06-xx
+ * ### Build 63 23-06-30
  *
  * -# CLI LVC Snap Crash w/ GetSchema() and SnapAll_safe() 
  *    - librtEdge.LVC.GetSchema() : _lvc->GetSchema( false ) )
