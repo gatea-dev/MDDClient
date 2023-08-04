@@ -15,7 +15,7 @@
 *     20 MAR 2016 jcs  Build 32: EDG_Internal.h; _SetWindowLong
 *     29 AUG 2016 jcs  Build 33: _Destroy() : if ( s )
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -46,7 +46,9 @@ using namespace RTEDGE_PRIVATE;
 #define NT_EXCEPT_EVENTS  ( FD_CLOSE )
 LRESULT CALLBACK _wndProc( HWND, UINT, WPARAM, LPARAM );
 void    CALLBACK _tmrProc( HWND, UINT, UINT, DWORD );
-static UINT _sockMsg = 0;
+static UINT   _sockMsg = 0;
+static string _sockMsgName( "EventPump" );
+static string _className( "RTEDGE_PRIVATE::EventPump" );
 #endif // WIN32
 
 ////////////////////////////////////////////
@@ -279,6 +281,7 @@ void Pump::_Create()
    // WIN32-specific
 #ifdef WIN32
    WNDCLASS wndClass;
+   char     obuf[K];
 
    // 1) Register (hidden) window class
 
@@ -288,11 +291,14 @@ void Pump::_Create()
    wndClass.lpfnWndProc   = &_wndProc;
    wndClass.cbWndExtra    = sizeof(Pump *);
    if ( !_sockMsg ) {
+      _className            += ::rtEdge_pTimeMs( obuf, ::rtEdge_TimeNs() );
+      _sockMsgName          += obuf;
+      wndClass.lpszClassName = _className.data();
       if ( !::RegisterClass( &wndClass ) ) {
          ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
          return;
       }
-      _sockMsg = ::RegisterWindowMessage( "EventPump" );
+      _sockMsg = ::RegisterWindowMessage( _sockMsgName.data() );
    }
 
    // 3) Create (hidden) window; Start timer

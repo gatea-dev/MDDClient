@@ -19,8 +19,9 @@
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
 *     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
+*     20 JUL 2023 jcs  Build 64: dox : OnData() msg is volatile
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_SubChannel_H
 #define __RTEDGE_SubChannel_H
@@ -960,6 +961,9 @@ protected:
 	 * on this subscription channel from rtEdgeCache3
 	 *
 	 * Override this method in your application to consume market data.
+	 *
+	 * <b> THE DATA IN THE msg ARGUMENT IS VOLATILE AND ONLY GOOD FOR THE
+	 * LIFE OF THIS CALL </b>
 	 *
 	 * \param msg - Market data update in a Message object
 	 */

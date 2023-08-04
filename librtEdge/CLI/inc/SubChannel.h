@@ -17,8 +17,9 @@
 *     23 MAY 2022 jcs  Build 54: OnError()
 *     22 SEP 2022 jcs  Build 56: Rename StartTape() to PumpTape()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*     20 JUL 2023 jcs  Build 64: dox : OnData() msg is volatile
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -709,6 +710,9 @@ public:
 	 * on this subscription channel from rtEdgeCache3
 	 *
 	 * Override this method in your C# application to consume market data.
+	 *
+	 * <b> THE DATA IN THE msg ARGUMENT IS VOLATILE AND ONLY GOOD FOR THE
+	 * LIFE OF THIS CALL </b>
 	 *
 	 * \param msg - Market data update in a rtEdgeData object
 	 */

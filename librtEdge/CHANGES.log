@@ -43,6 +43,17 @@ Features To Add
  * ## Change Log
  *
  *
+ * ### Build 64 23-07-xx
+ *
+ * -# Subscribe : Allow -h <hostname>
+ *    - Default port : 9998
+ *
+ * -# doxygen OnData() : rtEdgeData is volatile : Only good for life of the call
+ *
+ * -# MDDirectDriver64.dll:
+ *    - Pump.cpp : _sockMsgName / _className
+ *
+ *
  * ### Build 63 23-06-30
  *
  * -# CLI LVC Snap Crash w/ GetSchema() and SnapAll_safe() 

@@ -16,8 +16,9 @@
 *      6 OCT 2021 jcs  Build 50: -table
 *     16 AUG 2022 jcs  Build 55: stdout formatting buggies
 *     22 OCT 2022 jcs  Build 58: MyVector
+*     11 JUL 2023 jcs  Build 64: -h <hostOnly>
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
@@ -31,6 +32,8 @@
 #define ANSI_CLEAR   "\033[H\033[m\033[J"
 #define ANSI_HOME    "\033[2;1H\033[K"
 #define ANSI_POS     "\033[%ld;%ldf"   // ( Row, Col )
+
+#define _DFLT_PORT   ":9998"
 
 using namespace RTEDGE;
 using namespace std;
@@ -657,6 +660,7 @@ int main( int argc, char **argv )
    string      s;
    u_int64_t   s0;
    double      slp;
+   string      svrS;
    int         i, nt, tRun, ti, sn;
    ::MDDResult res; 
    ::MDDRecDef rd;
@@ -742,8 +746,11 @@ int main( int argc, char **argv )
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
-      if ( !::strcmp( argv[i], "-h" ) )
-         svr = argv[++i];
+      if ( !::strcmp( argv[i], "-h" ) ) {
+         svrS  = argv[++i];
+         svrS += ::strstr( svrS.data(), ":" ) ? "" : _DFLT_PORT;
+         svr   = svrS.data();
+      }
       else if ( !::strcmp( argv[i], "-u" ) )
          usr = argv[++i];
       else if ( !::strcmp( argv[i], "-s" ) )
