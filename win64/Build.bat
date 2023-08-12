@@ -56,6 +56,7 @@ goto Done
    set MK=%1%
    set M2=%2%
    devenv /build %BLD_TYPE% %MK%64.sln /project %M2%
+   del /f /s /q ..\Release64
    cd ..
    if exist dox\%MK%.dox (
       %DOXYGEN% dox\%MK%.dox
@@ -73,11 +74,13 @@ goto Done
       echo %MK%MD64
       del /f /s /q ..\Release64
       devenv /build %BLD_TYPE% %MK%MD64.sln /project %MK%MD64
+      del /f /s /q ..\Release64
    )
    cd ..
    if exist CLI\%VS% (
       cd CLI\%VS%
       devenv /build %BLD_TYPE% %MK%CLI64.sln /project %MK%CLI64
+      del /f /s /q ..\Release64
       cd ..\..
    )
    if exist py\%VS% (
@@ -85,6 +88,7 @@ goto Done
       FOR %%Y in (27 39) DO (
          if exist ..\..\..\..OpenSource\Python%%Y (
             devenv /build Release MDDirect.sln /project MDDirect%%Y
+            del /f /s /q ..\Release64
          )
       )
       cd ..\..
