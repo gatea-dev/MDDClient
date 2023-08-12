@@ -14,6 +14,7 @@
 *      2 JUL 2015 jcs  Build 31: Socket._log
 *     20 MAR 2016 jcs  Build 32: EDG_Internal.h; _SetWindowLong
 *     29 AUG 2016 jcs  Build 33: _Destroy() : if ( s )
+*      4 AUG 2023 jcs  Build 36: _sockMsgName / _className
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/

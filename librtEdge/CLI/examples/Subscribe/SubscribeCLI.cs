@@ -21,8 +21,9 @@
 *      1 DEC 2020 jcs  Build 47: -ti, -s0, -sn
 *     23 SEP 2022 jcs  Build 56: -csvF; No mo -tf; Always binary
 *     22 OCT 2022 jcs  Build 58: MyVector
+*     12 AUG 2023 jcs  Build 64: -debug / SetDebug()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,7 @@ class SubscribeCLI : rtEdgeSubscriber
    // Members
    ////////////////////////////////
    private int[] _csvFids;
+   private bool  _bCopy;
    
    ////////////////////////////////
    // Constructor
@@ -49,12 +51,18 @@ class SubscribeCLI : rtEdgeSubscriber
       base( pSvr, pUsr, true )
    {
       _csvFids = null;
+      _bCopy   = false;
    }
 
 
    ////////////////////////////////
    // Mutator
    ////////////////////////////////
+   public void SetDebug( string dbg )
+   {
+      _bCopy |= ( dbg == "copy" );
+   }
+
    public void LoadCSVFids( string csvF )
    {
       string[]  fids = csvF.Split(',');
@@ -103,10 +111,14 @@ class SubscribeCLI : rtEdgeSubscriber
 
    public override void OnData( rtEdgeData d )
    {
+      rtEdgeData c;
+
+      c = _bCopy ? new rtEdgeData( d ) : null;
       if ( _csvFids != null )
          OnData_CSV( d );
       else
          OnData_DUMP( d );
+      c = null;
    }
 
    public override void OnRecovering( rtEdgeData d )
@@ -260,9 +272,10 @@ class SubscribeCLI : rtEdgeSubscriber
          string[]     tkrs;
          MDDRecDef[]  dbTkrs;
          MyVector[]   vdb;
-         string       s, svr, usr, svc, tkr, csvF;
+         string       s, svr, usr, svc, tkr, csvF, dbg;
          DateTime     t0, t1;
          long         s0;
+         string       _DFLT_PORT = ":9998";
 
          /////////////////////
          // Quickie checks
@@ -272,7 +285,7 @@ class SubscribeCLI : rtEdgeSubscriber
             Console.WriteLine( rtEdge.Version() );
             return 0;
          }
-         svr   = "localhost:9998";
+         svr   = "localhost" + _DFLT_PORT;
          usr   = "SubscribeCLI";
          svc   = "bloomberg";
          tkr   = null;
@@ -288,6 +301,7 @@ class SubscribeCLI : rtEdgeSubscriber
          bVec  = false;
          bTape = true;
          bQry  = false;
+         dbg   = null;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -h    <Source : host:port or TapeFile> ] \\ \n";
@@ -305,6 +319,7 @@ class SubscribeCLI : rtEdgeSubscriber
             s += "       [ -bds  <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
             s += "       [ -query <true to dump d/b directory> ]  \\ \n";
+            s += "       [ -debug <copy> ]  \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
             Console.Write( "      -h       : {0}\n", svr );
@@ -322,6 +337,7 @@ class SubscribeCLI : rtEdgeSubscriber
             Console.Write( "      -bds     : {0}\n", bds );
             Console.Write( "      -tapeDir : {0}\n", bTape );
             Console.Write( "      -query   : {0}\n", bQry );
+            Console.Write( "      -debug   : <empty>\n" );
             return 0;
          }
 
@@ -333,8 +349,10 @@ class SubscribeCLI : rtEdgeSubscriber
             aOK = ( i+1 < argc );
             if ( !aOK )
                break; // for-i
-            if ( args[i] == "-h" )
-               svr = args[++i];
+            if ( args[i] == "-h" ) {
+               svr  = args[++i];
+               svr += svr.Contains( ":" ) ? "" : _DFLT_PORT;
+            }
             else if ( args[i] == "-u" )
                usr = args[++i];
             else if ( args[i] == "-s" )
@@ -367,11 +385,15 @@ class SubscribeCLI : rtEdgeSubscriber
                bTape = _IsTrue( args[++i] );
             else if ( args[i] == "-query" )
                bQry = _IsTrue( args[++i] );
+            else if ( args[i] == "-debug" )
+               dbg = args[++i];
          }
          Console.WriteLine( rtEdge.Version() );
          sub = new SubscribeCLI( svr, usr );
          if ( csvF != null )
             sub.LoadCSVFids( csvF );
+         if ( dbg != null )
+            sub.SetDebug( dbg );
          sub.SetTapeDirection( bTape );
          Console.WriteLine( "BINARY" );
          Console.WriteLine( sub.Start() );

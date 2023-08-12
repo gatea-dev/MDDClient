@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 64 23-07-xx
+ * ### Build 64 23-08-xx
  *
  * -# Subscribe : Allow -h <hostname>
  *    - Default port : 9998
@@ -52,6 +52,9 @@ Features To Add
  *
  * -# MDDirectDriver64.dll:
  *    - Pump.cpp : _sockMsgName / _className
+ *
+ * -# rtEdgeData Copy Constructor Leak:
+ *    - SubscribeCLI -debug copy
  *
  *
  * ### Build 63 23-06-30
