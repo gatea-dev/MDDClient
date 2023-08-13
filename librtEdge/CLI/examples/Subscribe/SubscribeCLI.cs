@@ -118,7 +118,10 @@ class SubscribeCLI : rtEdgeSubscriber
          OnData_CSV( d );
       else
          OnData_DUMP( d );
-      c = null;
+      if ( c != null ) {
+         c.Dispose();
+         Console.WriteLine( "rtEdge.NumObj = {0}", NumObj() );
+      }
    }
 
    public override void OnRecovering( rtEdgeData d )

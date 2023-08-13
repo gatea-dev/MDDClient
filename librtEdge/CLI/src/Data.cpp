@@ -9,6 +9,7 @@
 *      9 FEB 2020 jcs  Build 42: GetColumnAsXxx()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
+*     12 AUG 2023 jcs  Build 64: Copy constructor : All _fdb on _heap
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -65,11 +66,11 @@ rtEdgeData::rtEdgeData( rtEdgeData ^src ) :
    _heap( nullptr ),
    _cachedFields( nullptr )
 {
-   String               ^deepCopy;
+   String                    ^deepCopy;
    cli::array<rtEdgeField ^> ^sdb;
-   rtEdgeField          ^fld;
-   Hashtable            ^cdb;
-   int                   i, fid, nf;
+   rtEdgeField               ^fld;
+   Hashtable                 ^cdb;
+   int                        i, fid, nf;
 
    // Pre-allocate a 'heap' of 1024 reusable rtEdgeFields
 
@@ -83,11 +84,22 @@ rtEdgeData::rtEdgeData( rtEdgeData ^src ) :
     */
    sdb  = src->_flds;
    nf   = (int)_NumFld;
+/*
+ * 23-08-12 Build 64 : OBSOLETE : All _fdb on _heap so no leak
+ *
    _fdb = gcnew cli::array<rtEdgeField ^>( nf );
    for ( i=0; i<nf; i++ ) {
       fld     = sdb[i];
       _fdb[i] = gcnew rtEdgeField( fld );
    }
+ */
+   _heap = gcnew cli::array<rtEdgeField ^>( nf );
+   for ( i=0; i<nf; _heap[i++] = gcnew rtEdgeField() );
+   _fdb = gcnew cli::array<rtEdgeField ^>( nf );
+   for ( i=0; i<nf; i++ ) {
+      _heap[i]->Copy( sdb[i]->cpp() );
+      _fdb[i] = _heap[i];
+   }    
    /*
     * GetField()
     */

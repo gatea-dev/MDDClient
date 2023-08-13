@@ -55,6 +55,7 @@ Features To Add
  *
  * -# rtEdgeData Copy Constructor Leak:
  *    - SubscribeCLI -debug copy
+ *    - All _fdb on _heap so it is deleted in _FreeHeap() : DUH!!
  *
  *
  * ### Build 63 23-06-30
