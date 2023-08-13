@@ -43,6 +43,7 @@ class SubscribeCLI : rtEdgeSubscriber
    ////////////////////////////////
    private int[] _csvFids;
    private bool  _bCopy;
+   private bool  _bDispose;
    
    ////////////////////////////////
    // Constructor
@@ -50,8 +51,9 @@ class SubscribeCLI : rtEdgeSubscriber
    public SubscribeCLI( string pSvr, string pUsr ) :
       base( pSvr, pUsr, true )
    {
-      _csvFids = null;
-      _bCopy   = false;
+      _csvFids  = null;
+      _bCopy    = false;
+      _bDispose = false;
    }
 
 
@@ -60,7 +62,15 @@ class SubscribeCLI : rtEdgeSubscriber
    ////////////////////////////////
    public void SetDebug( string dbg )
    {
-      _bCopy |= ( dbg == "copy" );
+      string[] ddb = dbg.Split(',');
+      int      i;
+
+      for ( i=0; i<ddb.Length; i++ ) {
+         _bCopy    |= ( ddb[i] == "copy" );
+         _bDispose |= ( ddb[i] == "dispose" );
+      }
+      Console.WriteLine( "_bCopy    = {0}", _bCopy );
+      Console.WriteLine( "_bDispose = {0}", _bDispose );
    }
 
    public void LoadCSVFids( string csvF )
@@ -119,7 +129,8 @@ class SubscribeCLI : rtEdgeSubscriber
       else
          OnData_DUMP( d );
       if ( c != null ) {
-         c.Dispose();
+         if ( _bDispose )
+            c.Dispose();
          Console.WriteLine( "rtEdge.NumObj = {0}", NumObj() );
       }
    }
@@ -322,7 +333,7 @@ class SubscribeCLI : rtEdgeSubscriber
             s += "       [ -bds  <true> ] \\ \n";
             s += "       [ -tapeDir <true to pump in tape (reverse) dir> ] \\ \n";
             s += "       [ -query <true to dump d/b directory> ]  \\ \n";
-            s += "       [ -debug <copy> ]  \\ \n";
+            s += "       [ -debug <copy,dispose,...> ]  \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
             Console.Write( "      -h       : {0}\n", svr );
