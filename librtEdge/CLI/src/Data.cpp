@@ -393,13 +393,13 @@ LVCDataAll::~LVCDataAll()
 ////////////////////////////////////
 // Access - Specific Record
 ////////////////////////////////////
-LVCData ^LVCDataAll::GetRecord( String ^tkr )
+LVCData ^LVCDataAll::GetRecord( String ^svc, String ^tkr )
 {
    LVCData ^rc;
    int      idx;
 
    rc = nullptr;
-   if ( _all && _all->GetRecordIndex( _pStr( tkr ), idx ) )
+   if ( _all && _all->GetRecordIndex( _pStr( svc ), _pStr( tkr ), idx ) )
       rc = GetRecord( idx );
    _Free_strGC();
    return rc;

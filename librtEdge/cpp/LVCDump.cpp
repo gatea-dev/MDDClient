@@ -9,6 +9,7 @@
 *     12 DEC 2022 jcs  Build 61: Show Snap Time
 *      8 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *     19 MAY 2023 jcs  Build 63: -schema
+*     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( svc, tkr )
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -408,9 +409,16 @@ int main( int argc, char **argv )
       }
    }
    else { 
+      LVCAll &all = lvc.ViewAll();
+
       for ( size_t i=0; i<tkrs.size(); i++ ) {
          tkr = tkrs[i].data();
+/*
+ * 23-08-14 jcs : Use LVCDataAll.GetRecord()
+ *
          if ( (msg=lvc.View( svc, tkr )) )
+ */
+         if ( (msg=all.GetRecord( svc, tkr )) )
             _DumpOne( msg, fids );
          else
             ::fprintf( stdout, "(%s,%s) NOT FOUND\n", svc, tkr );

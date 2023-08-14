@@ -662,10 +662,11 @@ public:
 	/**
 	 * \brief Returns specific database record by name
 	 *
-	 * \param tkr - Record Name
+	 * \param svc - Service Name
+	 * \param tkr - Ticker Name
 	 * \return LVCData containing record; nullptr if not found
 	 */
-	LVCData ^GetRecord( String ^tkr );
+	LVCData ^GetRecord( String ^svc, String ^tkr );
 
 	/**
 	 * \brief Returns specific database record by index

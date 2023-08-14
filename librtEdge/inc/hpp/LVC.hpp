@@ -68,9 +68,9 @@ public:
 	// Access / Mutator
 	////////////////////////////////////
 	/** 
-	 *\brief Return LVC sourcing us
+	 * \brief Return LVC sourcing us
 	 *
-	 *\return LVC sourcing us
+	 * \return LVC sourcing us
 	 */
 	LVC &lvc()
 	{
@@ -78,41 +78,36 @@ public:
 	}
 
 	/** 
-	 *\brief Returns LVCData by name
+	 * \brief Returns LVCData by name
 	 *
-	 *\param tkr - Record Name
-	 *\return LVCData by name if found; NULL if not
+	 * \param svc - Service Name
+	 * \param tkr - Ticker Name
+	 * \return Message by name if found; NULL if not
 	 */
-	LVCData *GetRecord( const char *tkr )
+	Message *GetRecord( const char *svc, const char *tkr )
 	{
-	   NameMap           ndb = _nameMap;
-	   NameMap::iterator it;
-	   Message          *msg;
-	   LVCData          *rc;
-	   std::string       s( tkr );
-	   int               ix;
+	   Message *rc;
+	   int      ix;
 
-	   rc = (LVCData *)0;
-	   if ( (it=ndb.find( s )) != ndb.end() ) {
-	      ix  = (*it).second;
-	      msg = _msgs[ix];
-	      rc  = &msg->dataLVC();
-	   }
+	   rc = (Message *)0;
+	   if ( GetRecordIndex( svc, tkr, ix ) ) 
+	      rc  = _msgs[ix];
 	   return rc;
 	}
 
 	/** 
-	 *\brief Returns LVCData index by name
+	 * \brief Returns LVCData index by name
 	 *
-	 *\param tkr - Record Name
-	 *\param idx - Index if found; -1 if not 
-	 *\return true if found and result in idx param; false if not
+	 * \param svc - Service Name
+	 * \param tkr - Ticker Name
+	 * \param idx - Index if found; -1 if not 
+	 * \return true if found and result in idx param; false if not
 	 */
-	bool GetRecordIndex( const char *tkr, int &idx )
+	bool GetRecordIndex( const char *svc, const char *tkr, int &idx )
 	{
 	   NameMap           ndb = _nameMap;
 	   NameMap::iterator it;
-	   std::string       s( tkr );
+	   std::string       s( _Key( svc, tkr ) );
 
 	   idx = -1;
 	   if ( (it=ndb.find( s )) != ndb.end() ) {
@@ -123,9 +118,9 @@ public:
 	}
 
 	/** 
-	 *\brief Returns true if LVC file is binary
+	 * \brief Returns true if LVC file is binary
 	 *
-	 *\return true if LVC file is binary
+	 * \return true if LVC file is binary
 	 */
 	bool IsBinary()
 	{
@@ -133,9 +128,9 @@ public:
 	}
 
 	/** 
-	 *\brief Return array of Message's
+	 * \brief Return array of Message's
 	 *
-	 *\return Array of Message's
+	 * \return Array of Message's
 	 */
 	Messages &msgs()
 	{
@@ -175,9 +170,9 @@ public:
 	}
 
 	/** 
-	 *\brief Set internal guts from LVCDataAll
+	 * \brief Set internal guts from LVCDataAll
 	 *
-	 *\return Array of Message's
+	 * \return Array of Message's
 	 */
 	LVCAll &Set( LVC_Context cxt, LVCDataAll la )
 	{
@@ -197,6 +192,20 @@ public:
 	      _nameMap[s] = i;
 	   }
 	   return *this;
+	}
+
+	////////////////////////
+	// Helpers
+	////////////////////////
+private:
+	std::string _Key( const char *svc, const char *tkr )
+	{
+	   std::string rc;
+
+	   rc  = svc;
+	   rc += "|";
+	   rc += tkr;
+	   return rc;
 	}
 
 
