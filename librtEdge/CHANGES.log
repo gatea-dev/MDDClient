@@ -57,6 +57,10 @@ Features To Add
  *    - SubscribeCLI -debug copy
  *    - All _fdb on _heap so it is deleted in _FreeHeap() : DUH!!
  *
+ * -# LVCDataAll : Get by Name:
+ *    - LVCData *LVCDataAll.GetRecord( const char *tkr )
+ *    - LVCDataAll._nameMap
+ *
  *
  * ### Build 63 23-06-30
  *

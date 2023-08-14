@@ -10,6 +10,7 @@
 *     25 SEP 2017 jcs  Build 35: No mo admin; Use LVCAdmin.hpp instead
 *     14 JAN 2018 jcs  Build 39: _FreeSchema() / _mtx
 *      8 MAR 2023 jcs  Build 62: Re-entrant SnanpAll( LVCAll * )
+*     14 AUG 2023 jcs  Build 65: _nameMap
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -26,7 +27,8 @@ class LVC;
 class Message;
 class Schema;
 
-typedef std::vector<Message *> Messages;
+typedef std::vector<Message *>     Messages;
+typedef hash_map<std::string, int> NameMap;
 
 
 ////////////////////////////////////////////////
@@ -50,7 +52,8 @@ public:
 	LVCAll( LVC &lvc, Schema &schema ) :
 	   _lvc( lvc ),
 	   _schema( schema ),
-	   _msgs()
+	   _msgs(),
+	   _nameMap()
 	{
 	   ::memset( &_all, 0, sizeof( _all ) );
 	}
@@ -72,6 +75,51 @@ public:
 	LVC &lvc()
 	{
 	   return _lvc;
+	}
+
+	/** 
+	 *\brief Returns LVCData by name
+	 *
+	 *\param tkr - Record Name
+	 *\return LVCData by name if found; NULL if not
+	 */
+	LVCData *GetRecord( const char *tkr )
+	{
+	   NameMap           ndb = _nameMap;
+	   NameMap::iterator it;
+	   Message          *msg;
+	   LVCData          *rc;
+	   std::string       s( tkr );
+	   int               ix;
+
+	   rc = (LVCData *)0;
+	   if ( (it=ndb.find( s )) != ndb.end() ) {
+	      ix  = (*it).second;
+	      msg = _msgs[ix];
+	      rc  = &msg->dataLVC();
+	   }
+	   return rc;
+	}
+
+	/** 
+	 *\brief Returns LVCData index by name
+	 *
+	 *\param tkr - Record Name
+	 *\param idx - Index if found; -1 if not 
+	 *\return true if found and result in idx param; false if not
+	 */
+	bool GetRecordIndex( const char *tkr, int &idx )
+	{
+	   NameMap           ndb = _nameMap;
+	   NameMap::iterator it;
+	   std::string       s( tkr );
+
+	   idx = -1;
+	   if ( (it=ndb.find( s )) != ndb.end() ) {
+	      idx = (*it).second;
+	      return true;
+	   }
+	   return false;
 	}
 
 	/** 
@@ -121,6 +169,7 @@ public:
 
 	   for ( i=0; i<Size(); delete _msgs[i++] );
 	   _msgs.clear();
+	   _nameMap.clear();
 	   ::LVC_FreeAll( &_all );
 	   ::memset( &_all, 0, sizeof( _all ) );
 	}
@@ -132,9 +181,10 @@ public:
 	 */
 	LVCAll &Set( LVC_Context cxt, LVCDataAll la )
 	{
-	   Message *msg;
-	   LVCData *ld;
-	   int      i;
+	   Message    *msg;
+	   LVCData    *ld;
+	   std::string s;
+	   int         i;
 
 	   reset();
 	   _all = la;
@@ -143,6 +193,8 @@ public:
 	      ld  = &la._tkrs[i];
 	      msg->Set( ld, _schema.Get() );
 	      _msgs.push_back( msg );
+	      s           = ld->_pTkr;
+	      _nameMap[s] = i;
 	   }
 	   return *this;
 	}
@@ -156,7 +208,7 @@ private:
 	Schema    &_schema;
 	Messages   _msgs;
 	LVCDataAll _all;
-	int        _itr;
+	NameMap    _nameMap;
 
 };  // class LVCAll
 

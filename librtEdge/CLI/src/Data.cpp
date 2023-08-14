@@ -10,8 +10,9 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *     12 AUG 2023 jcs  Build 64: Copy constructor : All _fdb on _heap
+*     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( String ^ ) 
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Data.h>
@@ -392,6 +393,18 @@ LVCDataAll::~LVCDataAll()
 ////////////////////////////////////
 // Access - Specific Record
 ////////////////////////////////////
+LVCData ^LVCDataAll::GetRecord( String ^tkr )
+{
+   LVCData ^rc;
+   int      idx;
+
+   rc = nullptr;
+   if ( _all && _all->GetRecordIndex( _pStr( tkr ), idx ) )
+      rc = GetRecord( idx );
+   _Free_strGC();
+   return rc;
+}
+
 LVCData ^LVCDataAll::GetRecord( int idx )
 {
    if ( ( 0 <= idx ) && ( idx < _nTkr ) )

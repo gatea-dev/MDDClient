@@ -21,6 +21,7 @@
 *      1 SEP 2022 jcs  Build 56: _RTL
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
+*     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( String ^ )
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -612,7 +613,7 @@ private:
  *
  * This class is reused by LVC via LVC::SnapAll() and LVC::ViewAll().
  */
-public ref class LVCDataAll
+public ref class LVCDataAll : public StringDoor
 {
 private:
 	RTEDGE::LVCAll        *_all; 
@@ -659,7 +660,15 @@ public:
 	////////////////////////////////////
 public:
 	/**
-	 * \brief Returns specific database record
+	 * \brief Returns specific database record by name
+	 *
+	 * \param tkr - Record Name
+	 * \return LVCData containing record; nullptr if not found
+	 */
+	LVCData ^GetRecord( String ^tkr );
+
+	/**
+	 * \brief Returns specific database record by index
 	 *
 	 * \param idx - Record index
 	 * \return LVCData containing record; nullptr if out of range
