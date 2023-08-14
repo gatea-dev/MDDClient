@@ -14,8 +14,9 @@
 *     24 OCT 2022 jcs  Build 58: Opaque cpp()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: DateTime in vector
+*     14 AUG 2023 jcs  Build 64: IsEmpty()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Field.h>
@@ -131,6 +132,11 @@ rtEdgeField::~rtEdgeField()
 /////////////////////////////////
 // Access
 /////////////////////////////////
+bool rtEdgeField::IsEmpty()
+{
+   return _fld->IsEmpty();
+}
+
 int rtEdgeField::Fid()
 {
    return _fld->Fid();

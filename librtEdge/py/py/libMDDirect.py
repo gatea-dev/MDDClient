@@ -17,6 +17,7 @@
 #     11 JUL 2022 jcs  rtEdgeData._tDead; LVC.IsDead()
 #     15 JUL 2022 jcs  LVC.IsDead() if !_tUpd
 #     19 JUL 2022 jcs  LVCAdmin
+#     14 AUG 2023 jcs  NONE
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -961,14 +962,16 @@ class rtEdgeField:
       self._val       = ''
       self._type      = MDDirectEnum._MDDPY_STR
       self._name      = _UNDEF
-      self._TypeNames = { MDDirectEnum._MDDPY_INT   : '(int) ',
-                          MDDirectEnum._MDDPY_INT64 : '(i64) ',
-                          MDDirectEnum._MDDPY_DBL   : '(dbl) ',
-                          MDDirectEnum._MDDPY_STR   : '(str) ',
-                          MDDirectEnum._MDDPY_DT    : '(dat) ',
-                          MDDirectEnum._MDDPY_TM    : '(tim) ',
-                          MDDirectEnum._MDDPY_TMSEC : '(tms) ',
-                          MDDirectEnum._MDDPY_UNXTM : '(unx) '
+      self._TypeNames = { MDDirectEnum._MDDPY_INT    : '(int) ',
+                          MDDirectEnum._MDDPY_INT64  : '(i64) ',
+                          MDDirectEnum._MDDPY_DBL    : '(dbl) ',
+                          MDDirectEnum._MDDPY_STR    : '(str) ',
+                          MDDirectEnum._MDDPY_DT     : '(dat) ',
+                          MDDirectEnum._MDDPY_TM     : '(tim) ',
+                          MDDirectEnum._MDDPY_TMSEC  : '(tms) ',
+                          MDDirectEnum._MDDPY_UNXTM  : '(unx) '
+                          MDDirectEnum._MDDPY_NONE   : '(NaN) '
+                          MDDirectEnum._MDDPY_VECTOR : '(vec) '
                         }
 
    #################################
@@ -978,6 +981,14 @@ class rtEdgeField:
    #################################
    def Fid( self ):
       return self._fid
+
+   #################################
+   # Returns True if empty field
+   #
+   # @return True if empty field
+   #################################
+   def IsEmpty( self ):
+      return( self._type == MDDirectEnum._MDDPY_NONE )
 
    #################################
    # Returns Field Name
@@ -1219,12 +1230,14 @@ class MDDirectEnum:
    #
    # Field Types
    #
-   _MDDPY_INT   = 1
-   _MDDPY_DBL   = 2
-   _MDDPY_STR   = 3
-   _MDDPY_DT    = 4    ## i32 = ( y * 10000 ) + ( m * 100 ) + d
-   _MDDPY_TM    = 5    ## r64 = i32 + mikes
-   _MDDPY_TMSEC = 6    ## i32 = ( h * 10000 ) + ( m * 100 ) + s
-   _MDDPY_INT64 = 7
-   _MDDPY_UNXTM = 8
+   _MDDPY_INT    =  1
+   _MDDPY_DBL    =  2
+   _MDDPY_STR    =  3
+   _MDDPY_DT     =  4    ## i32 = ( y * 10000 ) + ( m * 100 ) + d
+   _MDDPY_TM     =  5    ## r64 = i32 + mikes
+   _MDDPY_TMSEC  =  6    ## i32 = ( h * 10000 ) + ( m * 100 ) + s
+   _MDDPY_INT64  =  7
+   _MDDPY_UNXTM  =  8
+   _MDDPY_NONE   =  9
+   _MDDPY_VECTOR = 10
 ## \endcond

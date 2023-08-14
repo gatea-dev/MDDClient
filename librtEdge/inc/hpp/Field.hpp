@@ -20,8 +20,9 @@
 *      1 JUN 2022 jcs  Build 55: Dump() : strip iff !rtFld_string
 *      8 NOV 2022 jcs  Build 60: rtFld_vector
 *     15 DEC 2022 jcs  Build 61: DateTimeList; Dump() buffer overflow w/ vector
+*     14 AUG 2023 jcs  Build 64: IsEmpty()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Field_H
 #define __RTEDGE_Field_H
@@ -310,6 +311,16 @@ public:
 	 *
 	 * \return Field ID
 	 */
+	bool IsEmpty()
+	{
+	   return( _fld._type == rtFld_undef );
+	}
+
+	/**
+	 * \brief Returns field ID
+	 *
+	 * \return Field ID
+	 */
 	int Fid()
 	{
 	   return _fld._fid;
@@ -387,10 +398,6 @@ public:
 	 */
 	rtFldType TypeFromMsg()
 	{
-/*
- * 16-02-06 jcs  Build 32: Binary LVC
-	   return _bLVC ? rtFld_string : _fld._type;
- */
 	   return _fld._type;
 	}
 

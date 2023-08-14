@@ -7,13 +7,16 @@ Features To Add
    - Return list of tickers NOT refreshed / processed
 
 
-Build  9  23-01-xx
+Build 10  23-08-xx
 ------------------
-1) bld.copp
+1) Field.GetValue() : mddFld_undef = _MDDPY_NONE
 
-2) Python3.x on Linux
 
-3) StartTapeXxx() -> PumpTapeXxx() 
+Build  9  23-01-12
+------------------
+1) Field.Value() : mddFld_undef = _MDDPY_NONE
+
+2) _MDDPY_VECTOR : rtFld_vector -> PyList
 
 
 Build  8  22-07-19

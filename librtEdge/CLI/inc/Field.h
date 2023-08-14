@@ -13,8 +13,9 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: DateTime in vector
+*     14 AUG 2023 jcs  Build 64: IsEmpty()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -166,6 +167,13 @@ public:
 #ifndef DOXYGEN_OMIT
 	RTEDGE::Field *cpp() { return _fld; }
 #endif // DOXYGEN_OMIT
+
+	/**
+	 * \brief Returns field ID
+	 *
+	 * \return Field ID
+	 */
+	bool IsEmpty();
 
 	/** 
 	 * \brief Returns field ID

@@ -12,20 +12,22 @@
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     16 MAR 2022 jcs  Build  6: _MDDPY_NONE / _MDDPY_INT64
 *     24 MAY 2022 jcs  Build  7: _MDDPY_UNXTM
+*     14 AUG 2023 jcs  Build 10: Field.Value() : mddFld_undef = _MDDPY_NONE
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
-#define _MDDPY_INT    1
-#define _MDDPY_DBL    2
-#define _MDDPY_STR    3
-#define _MDDPY_DT     4 // i32 = ( y * 10000) + ( m * 100 ) + d
-#define _MDDPY_TM     5 // r64 = i32 + mikes
-#define _MDDPY_TMSEC  6 // i32 = ( h * 10000) + ( m * 100 ) + s
-#define _MDDPY_INT64  7
-#define _MDDPY_UNXTM  8
-#define _MDDPY_NONE   9
+#define _MDDPY_INT     1
+#define _MDDPY_DBL     2
+#define _MDDPY_STR     3
+#define _MDDPY_DT      4 // i32 = ( y * 10000) + ( m * 100 ) + d
+#define _MDDPY_TM      5 // r64 = i32 + mikes
+#define _MDDPY_TMSEC   6 // i32 = ( h * 10000) + ( m * 100 ) + s
+#define _MDDPY_INT64   7
+#define _MDDPY_UNXTM   8
+#define _MDDPY_NONE    9
+#define _MDDPY_VECTOR 10
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -124,6 +126,7 @@ PyObject *Field::GetValue( int &ty )
    ty = _MDDPY_NONE;
    switch( f._type ) {
       case mddFld_undef:
+         break;
       case mddFld_string:
          py = PyString_FromString( data() );
          ty = _MDDPY_STR;
@@ -171,9 +174,21 @@ PyObject *Field::GetValue( int &ty )
          py  = PyInt_FromLong( v._i64 );
          ty  = _MDDPY_UNXTM;
          break;
+      case mddFld_vector:
+      {
+         RTEDGE::Field      ff;
+         RTEDGE::DoubleList &v  = ff.Set( f ).GetAsVector();
+         int                 i, nf;
+
+         ty = _MDDPY_VECTOR;
+         nf = (int)v.size();
+         py = PyList_New( nf );
+         for ( i=0; i<nf; ::PyList_SetItem( py, i, PyFloat_FromDouble( v[i] ) ), i++ );
+         break;
+      }
       default:
          py = PyString_FromString( "Not Supported" );
-         ty = _MDDPY_INT;
+         ty = _MDDPY_STR;
          break;
    }
    return py;
