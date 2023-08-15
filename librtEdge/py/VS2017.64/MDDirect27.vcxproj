@@ -60,6 +60,8 @@
       <AdditionalIncludeDirectories>
          ..\inc;
          ..\..\..\libmddWire\inc;
+         ..\..\..\libmddWire\expat\xmltok;
+         ..\..\..\libmddWire\expat\xmlparse;
          ..\..\..\librtEdge\inc;
          ..\..\..\..\OpenSource\Python27\win64\include;
       </AdditionalIncludeDirectories>
@@ -91,6 +93,8 @@
       <AdditionalIncludeDirectories>
          ..\inc;
          ..\..\..\libmddWire\inc;
+         ..\..\..\libmddWire\expat\xmltok;
+         ..\..\..\libmddWire\expat\xmlparse;
          ..\..\..\librtEdge\inc;
          ..\..\..\..\OpenSource\Python27\win64\include;
       </AdditionalIncludeDirectories>
