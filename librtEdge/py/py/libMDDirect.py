@@ -969,8 +969,8 @@ class rtEdgeField:
                           MDDirectEnum._MDDPY_DT     : '(dat) ',
                           MDDirectEnum._MDDPY_TM     : '(tim) ',
                           MDDirectEnum._MDDPY_TMSEC  : '(tms) ',
-                          MDDirectEnum._MDDPY_UNXTM  : '(unx) '
-                          MDDirectEnum._MDDPY_NONE   : '(NaN) '
+                          MDDirectEnum._MDDPY_UNXTM  : '(unx) ',
+                          MDDirectEnum._MDDPY_NONE   : '(NaN) ',
                           MDDirectEnum._MDDPY_VECTOR : '(vec) '
                         }
 

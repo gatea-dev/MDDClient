@@ -116,6 +116,7 @@ PyObject *Field::GetValue( int &ty )
 {
    mddField &f = _fld;
    mddValue &v = f._val;
+   mddBuf   &b = v._buf;
    PyObject *py;
    double    r64;
    int       ymd;
@@ -176,6 +177,15 @@ PyObject *Field::GetValue( int &ty )
          break;
       case mddFld_vector:
       {
+         /*
+          * Raw buffer is 1-byte precision followed by vector
+          */
+         f._vPrecision = b._data[0];
+         b._data      += 1;
+         b._dLen      -= 1;
+         /* 
+          * Rock on ...
+          */
          RTEDGE::Field      ff;
          RTEDGE::DoubleList &v  = ff.Set( f ).GetAsVector();
          int                 i, nf;
