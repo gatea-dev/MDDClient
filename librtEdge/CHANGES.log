@@ -62,6 +62,7 @@ Features To Add
  *    - LVCDataAll._nameMap
  *
  * -# Field.IsEmpty()
+ *    - libMDDirect.py : MDDirectException 
  *
  *
  * ### Build 63 23-06-30

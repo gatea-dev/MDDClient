@@ -18,6 +18,7 @@
 #     15 JUL 2022 jcs  LVC.IsDead() if !_tUpd
 #     19 JUL 2022 jcs  LVCAdmin
 #     14 AUG 2023 jcs  NONE
+#     18 AUG 2023 jcs  MDDirectException
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -115,6 +116,34 @@ def Version():
 #################################
 def NumPyObjects():
    return len( gc.get_objects() )
+
+## \cond
+######################################
+#                                    #
+# M D D i r e c t E x c e p t i o n  #
+#                                    #
+######################################
+## \endcond
+## @class MDDirectException
+#
+# User-defined exception tossed by MDDirect classes for:
+# -# Empty Field
+# -# Invalid Value e.g., float( "Hello World" )
+#
+class MDDirectException( Exception ):
+   ###########################
+   # Constructor
+   #
+   # @param value - Exception Value
+   ###########################
+   def __init__( self, value ):
+      self.value = value
+
+## \cond
+   def __str__(self):
+      return repr(self.value)
+## \endcond
+
 
 ## \cond
 ######################################
@@ -847,7 +876,8 @@ class rtEdgeData:
       for ( fid, val, ty ) in fdb:
          fld._Set( fid, val, ty, self._FieldName( fid ) )
          pn = fld.Name()
-         pv = fld.GetAsString()
+         try:                         pv = fld.GetAsString()
+         except MDDirectException, x: pv = 'MDDirectException : ' + x.value
          if bFldTy: ty = fld.TypeName()
          else:      ty = ''
          s += [ '   [%04d] %-14s : %s%s' % ( fld.Fid(), pn, ty, pv ) ]
@@ -1036,7 +1066,7 @@ class rtEdgeField:
    # @return Field Value as 64-bit Integer
    #################################
    def GetAsInt64( self ):
-      return long( self.GetAsDouble() )
+      return self.GetAsInt()
 
    #################################
    # Returns Field Value as Integer, regardless of (native) data type
@@ -1052,8 +1082,10 @@ class rtEdgeField:
    # @return Field Value as double
    #################################
    def GetAsDouble( self ):
+      if self.IsEmpty():
+         raise MDDirectException( 'Empty Field' )
       try:    dv = float( self._val )
-      except: dv = 0.0
+      except: raise MDDirectException( 'Invalid value' + str( self._val ))
       return dv
 
    #################################
@@ -1062,6 +1094,8 @@ class rtEdgeField:
    # @return Field Value as string
    #################################
    def GetAsString( self, nDec=0 ):
+      if self.IsEmpty():
+         raise MDDirectException( 'Empty Field' )
       rc = str( self._val )
       if nDec and rc.count( '.' ):
          ix = rc.index( '.' )
