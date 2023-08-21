@@ -34,10 +34,14 @@ try:
    import MDDirect27 as MDDirect
 except:
    try: 
-      import MDDirect39 as MDDirect
+      import MDDirect36 as MDDirect
    except: 
-      Log( 'MDDirect not found; Exitting ...' )
-      sys.exit()
+      try: 
+         import MDDirect39 as MDDirect
+      except: 
+         Log( 'MDDirect not found; Exitting ...' )
+         sys.exit()
+pass
 
 ## \endcond
 
