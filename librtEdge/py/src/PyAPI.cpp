@@ -13,6 +13,7 @@
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
+*     21 AUG 2023 jcs  Build 10: LVCSnapAll
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -492,6 +493,20 @@ static PyObject *LVCSnap( PyObject *self, PyObject *args )
       return Py_None;
    if ( (lvc=_GetLVC( cxt )) )
       return lvc->PySnap( svc, tkr );
+   return Py_None;
+}
+
+static PyObject *LVCSnapAll( PyObject *self, PyObject *args )
+{
+   MDDpyLVC   *lvc;
+   int         cxt;
+
+   // Usage : LVCSnapAll( cxt )
+
+   if ( !PyArg_ParseTuple( args, "i", &cxt ) )
+      return Py_None;
+   if ( (lvc=_GetLVC( cxt )) )
+      return lvc->PySnapAll();
    return Py_None;
 }
 
@@ -1014,6 +1029,7 @@ static PyMethodDef EdgeMethods[] =
     { "LVCSchema",     LVCSchema,  _PY_ARGS, "LVC File Schema" },
     { "LVCGetTickers", LVCGetTkrs, _PY_ARGS, "Get All Tickers from LVC" },
     { "LVCSnap",       LVCSnap,    _PY_ARGS, "Snap from LVC File" },
+    { "LVCSnapAll",    LVCSnapAll, _PY_ARGS, "Snap All Tickers from LVC File" },
     { "LVCClose",      LVCClose,   _PY_ARGS, "Close LVC File" },
     /*
      * LVC Admin Channel

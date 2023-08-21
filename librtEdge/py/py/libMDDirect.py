@@ -18,7 +18,7 @@
 #     15 JUL 2022 jcs  LVC.IsDead() if !_tUpd
 #     19 JUL 2022 jcs  LVCAdmin
 #     14 AUG 2023 jcs  NONE
-#     18 AUG 2023 jcs  MDDirectException
+#     21 AUG 2023 jcs  MDDirectException; SnapAll()
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -117,6 +117,7 @@ def Version():
 def NumPyObjects():
    return len( gc.get_objects() )
 
+
 ## \cond
 ######################################
 #                                    #
@@ -126,9 +127,7 @@ def NumPyObjects():
 ## \endcond
 ## @class MDDirectException
 #
-# User-defined exception tossed by MDDirect classes for:
-# -# Empty Field
-# -# Invalid Value e.g., float( "Hello World" )
+# Abstract base Exception class for all MDDirect Exceptions raised here
 #
 class MDDirectException( Exception ):
    ###########################
@@ -137,12 +136,34 @@ class MDDirectException( Exception ):
    # @param value - Exception Value
    ###########################
    def __init__( self, value ):
+      Exception.__init__( self )
       self.value = value
 
 ## \cond
    def __str__(self):
       return repr(self.value)
 ## \endcond
+
+
+## \cond
+######################################
+#                                    #
+# M D D i r e c t V a l u e E x c . .#
+#                                    #
+######################################
+## \endcond
+## @class MDDirectValueException
+#
+# Bad MDDirect value exception
+#
+class MDDirectValueException( MDDirectException ):
+   ###########################
+   # Constructor
+   #
+   # @param value - Exception Value
+   ###########################
+   def __init__( self, value ):
+      MDDirectException.__init__( self, 'Invalid value %s' % str( value ) )
 
 
 ## \cond
@@ -588,20 +609,24 @@ class LVC:
    # @see rtEdgeData
    ########################
    def Snap( self, svc, tkr ):
-      #
-      # blob = [ tUpd, tDead, Svc, Tkr, fld1, fld2, ... ]
-      #          where fldN = [ fidN, valN, tyN ]
-      #
       blob = MDDirect.LVCSnap( self._cxt, svc, tkr )
-      if not blob:
+      if blob:
+         return self._Build_rtEdgeData( blob )
+      return None
+
+   ########################
+   # Snap ALL LVC data
+   #
+   # @return [ rtEdgeData1, rtEdgeData2, ... ]
+   ########################
+   def SnapAll( self ):
+      #
+      # [ blob1, blob2, ... ]
+      #
+      blobDB = MDDirect.LVCSnapAll( self._cxt )
+      if not blobDB:
          return None
-      msg        = rtEdgeData( self._schema )
-      msg._tUpd  = blob[0]
-      msg._tDead = blob[1]
-      svc        = blob[2]
-      tkr        = blob[3]
-      flds       = blob[4:]
-      return msg._SetData( svc, tkr, flds, True )
+      return [ self._Build_rtEdgeData( blob ) for blob in blobDB ]
 
    ########################
    # Close read-only LVC file
@@ -612,6 +637,27 @@ class LVC:
       if self._cxt:
          MDDirect.LVCClose( self._cxt )
       self._cxt = None
+
+## \cond
+   ########################
+   # Marshall PyList blob from MDDirect pyd into rtEdgeData 
+   #
+   # @param blob : [ tUpd, tDead, Svc, Tkr, fld1, fld2, ... ]
+   # @return rtEdgeData populated with data
+   ########################
+   def _Build_rtEdgeData( self, blob ):
+      #
+      # blob = [ tUpd, tDead, Svc, Tkr, fld1, fld2, ... ]
+      #          where fldN = [ fidN, valN, tyN ]
+      #
+      msg        = rtEdgeData( self._schema )
+      msg._tUpd  = blob[0]
+      msg._tDead = blob[1]
+      svc        = blob[2]
+      tkr        = blob[3]
+      flds       = blob[4:]
+      return msg._SetData( svc, tkr, flds, True )
+## \endcond
 
 
 ## \cond
@@ -876,8 +922,8 @@ class rtEdgeData:
       for ( fid, val, ty ) in fdb:
          fld._Set( fid, val, ty, self._FieldName( fid ) )
          pn = fld.Name()
-         try:                         pv = fld.GetAsString()
-         except MDDirectException, x: pv = 'MDDirectException : ' + x.value
+         try:                           pv = fld.GetAsString()
+         except MDDirectException as x: pv = 'MDDirectException : ' + x.value
          if bFldTy: ty = fld.TypeName()
          else:      ty = ''
          s += [ '   [%04d] %-14s : %s%s' % ( fld.Fid(), pn, ty, pv ) ]
@@ -989,7 +1035,7 @@ class rtEdgeField:
    #################################
    def __init__( self ):
       self._fid       = 0
-      self._val       = ''
+      self._val       = None
       self._type      = MDDirectEnum._MDDPY_STR
       self._name      = _UNDEF
       self._TypeNames = { MDDirectEnum._MDDPY_INT    : '(int) ',
@@ -1082,10 +1128,10 @@ class rtEdgeField:
    # @return Field Value as double
    #################################
    def GetAsDouble( self ):
-      if self.IsEmpty():
-         raise MDDirectException( 'Empty Field' )
-      try:    dv = float( self._val )
-      except: raise MDDirectException( 'Invalid value' + str( self._val ))
+      try:
+         dv = float( self._val )
+      except ( TypeError, ValueError ):
+         raise MDDirectValueException( self._val )
       return dv
 
    #################################
@@ -1095,7 +1141,7 @@ class rtEdgeField:
    #################################
    def GetAsString( self, nDec=0 ):
       if self.IsEmpty():
-         raise MDDirectException( 'Empty Field' )
+         raise MDDirectValueException( 'Empty Field' )
       rc = str( self._val )
       if nDec and rc.count( '.' ):
          ix = rc.index( '.' )
@@ -1119,12 +1165,18 @@ class rtEdgeField:
       #
       # Convert Time to String
       #
+      timeFields = [ MDDirectEnum._MDDPY_DT, 
+                     MDDirectEnum._MDDPY_TM, 
+                     MDDirectEnum._MDDPY_TMSEC ]
+      if not ty in timeFields:
+         return
       r64 = None
       try:    r64 = float( val )
       except: pass
       if r64 == None:
          return
-      i32 = int( r64 )
+      try:                   i32 = int( r64 )
+      except Exception as x: raise MDDirectValueException( '[' + val + '] ' + x.args[0] ) 
       h   = ( i32 / 10000 )
       m   = ( i32 % 10000 ) / 100
       s   = ( i32 % 100 )

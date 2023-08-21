@@ -10,8 +10,9 @@
 *      3 FEB 2022 jcs  Build  5: MDDpyLVC.PySnap() : _tUpd
 *     11 JUL 2022 jcs  Build  7: _tDead
 *     19 JUL 2022 jcs  Build  8: Snap() : None if !_tUpd
+*     21 AUG 2023 jcs  Build 10: PySnapAll()
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -88,40 +89,59 @@ PyObject *MDDpyLVC::PyGetTickers()
 PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
 {
    RTEDGE::Message *msg;
-   MDDPY::Field     fld;
-   mddField        *fdb;
-   PyObject        *rtn, *pyF, *pyV, *pyT;
-   double           tu, td;
-   int              i, nf, ty, xt;
+
+   if ( (msg=Snap( svc, tkr )) )
+      return _rt2py( *msg );
+   return Py_None;
+}
+
+PyObject *MDDpyLVC::PySnapAll()
+{
+   RTEDGE::LVCAll    all( *this, GetSchema( false ) );
+   RTEDGE::LVCAll   &la = SnapAll_safe( all );
+   RTEDGE::Messages &mdb = la.msgs();
+   PyObject         *py;
+   size_t            i, nm;
+
+   if ( !(nm=mdb.size()) )
+      return Py_None;
+   py = ::PyList_New( nm );
+   for ( i=0; i<nm; ::PyList_SetItem( py, i, _rt2py( *mdb[i] ) ), i++ );
+   return py;
+}
+
+
+///////////////////////////////
+// Helpers
+///////////////////////////////
+PyObject *MDDpyLVC::_rt2py( RTEDGE::Message &msg )
+{
+   ::LVCData   &ld = msg.dataLVC();
+   MDDPY::Field fld;
+   mddField    *fdb;
+   PyObject    *rtn, *pyF, *pyV, *pyT;
+   double       tu, td;
+   int          i, nf, ty, xt;
 
    // Pre-condition(s)
 
-   if ( !(msg=Snap( svc, tkr )) )
-      return Py_None;
-   if ( !(nf=msg->NumFields()) )
-      return Py_None;
-
-   // Iterate : [ tUpd, Svc, Tkr, fld1, fld2, ... ]
-
-   ::LVCData &ld = msg->dataLVC();
-
-   // None if no updates
-
    if ( !ld._tUpd )
+      return Py_None;
+   if ( !(nf=msg.NumFields()) )
       return Py_None;
 
    // OK to continue
 
    xt  = 4;
    rtn = ::PyList_New( nf+xt );
-   fdb = (mddField *)msg->Fields();
+   fdb = (mddField *)msg.Fields();
    tu  = (double)ld._tUpdUs / 1000000.0;
    tu += ld._tUpd;
    td  = ld._tDead;
    ::PyList_SetItem( rtn, 0, PyFloat_FromDouble( tu ) );
    ::PyList_SetItem( rtn, 1, PyFloat_FromDouble( td ) );
-   ::PyList_SetItem( rtn, 2, PyString_FromString( svc ) );
-   ::PyList_SetItem( rtn, 3, PyString_FromString( tkr ) );
+   ::PyList_SetItem( rtn, 2, PyString_FromString( msg.Service() ) );
+   ::PyList_SetItem( rtn, 3, PyString_FromString( msg.Ticker() ) );
    for ( i=0; i<nf; i++ ) {
       fld.Update( fdb[i] );
       pyF = PyInt_FromLong( fld.Fid() );

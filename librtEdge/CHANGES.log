@@ -63,6 +63,7 @@ Features To Add
  *
  * -# Field.IsEmpty()
  *    - libMDDirect.py : MDDirectException 
+ *    - libMDDirect.py : LVCSnapAll()
  *
  *
  * ### Build 63 23-06-30

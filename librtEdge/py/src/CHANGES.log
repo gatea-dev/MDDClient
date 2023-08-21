@@ -11,6 +11,8 @@ Build 10  23-08-xx
 ------------------
 1) Field.GetValue() : mddFld_undef = _MDDPY_NONE
 
+2) LVCSnapAll -> MDDpyLVC.PySnapAll()
+
 
 Build  9  23-01-12
 ------------------
