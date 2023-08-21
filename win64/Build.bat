@@ -51,7 +51,7 @@ goto Done
 :: ## Helper Functions
 :: #############################
 :BuildStuff2
-   cd %1/%VS%
+   cd %1\%VS%
    del /f /s /q ..\Release64
    set MK=%1%
    set M2=%2%
