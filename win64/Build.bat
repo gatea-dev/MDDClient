@@ -41,7 +41,7 @@ FOR %%X in (libmddWire librtEdge) DO (
       copy %%X\CLI\lib64\*.dll .\bin64
    )
    if exist %%X\py\bin64 (
-      copy %%X\py\bin64\*.pyd ..\bin64
+      copy %%X\py\bin64\*.pyd .\bin64
    )
 )
 goto Done
