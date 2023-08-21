@@ -9,8 +9,9 @@
 #      3 FEB 2022 jcs  libMDDirect.NumPyObjects()
 #     17 FEB 2022 jcs  fids
 #     23 FEB 2022 jcs  rtData.Dump( bFldTy )
+#     14 AUG 2023 jcs  Python 2 / 3
 #
-#  (c) 1994-2022, Gatea Ltd.
+#  (c) 1994-2023, Gatea Ltd.
 #################################################################
 import sys, time
 import libMDDirect
@@ -24,10 +25,25 @@ Log( libMDDirect.Version() )
 
 ## Hard-Coded Stuff
 
-_ANSI_HOME  = '\033[1;1H\033[K'
-_ANSI_CLEAR = '\033[H\033[m\033[J'
-_CURSOR_ON  = '\033[?25h'
-_CURSOR_OFF = '\033[?25l'
+#######################
+# Dump one rtEdgeData
+#
+# @param rtData : rtEdgeData instance
+# @param fids : CSV list of fieds to dump; None for all
+# @return string-ified dump of 1 ticker 
+#######################
+def Dump( rtData, fids ):
+   dmp = 'None'
+   if rtData:
+      if fids:
+         dmp = '%s,%s,' % ( rtData._svc, rtData._tkr )
+         for fid in fids:
+            try:    val = rtData.GetField( fid ).GetAsString()
+            except: val = '-'
+            dmp += val + ','
+      else:
+         dmp = rtData.Dump( bFldTy=True )
+   return dmp
 
 ############################################
 #
@@ -42,7 +58,7 @@ if __name__ == "__main__":
    if argc < 3:
       help  = sys.argv[0] + ' <LVC_filename> <Service> '
       help += '<Tickers : CSV,file or *> [<tSnap> <FID1,FID2>]]'
-      print help
+      print( help )
       sys.exit()
    try:    file = sys.argv[1]
    except: file = './cache.lvc'
@@ -63,11 +79,9 @@ if __name__ == "__main__":
    #
    # Open LVC
    #
-   lvc = libMDDirect.LVC()
+   bAll = ( tdb[0] == '__ALL__' )
+   lvc  = libMDDirect.LVC()
    lvc.Open( file )
-   if tdb[0] == '*':
-      all = lvc.GetTickers()  ## [ [ svc1, tkr1 ], [ svc2, tkr2 ], ... ]
-      tdb = [ tkr for ( svc, tkr ) in all ]
    #
    # Rock and Roll
    #
@@ -78,29 +92,22 @@ if __name__ == "__main__":
          hdr += '%d,' % fid
 ##         hdr += lvc.GetFieldName( fid ) + ','
       Log( hdr )
-   try:
-      run = True
-      while run:
-         for tkr in tdb:
-            rtData = lvc.Snap( svc, tkr )
-            if rtData:
-               if fids:
-                  dmp = '%s,%s,' % ( svc, tkr )
-                  for fid in fids:
-                     try:    val = rtData.GetField( fid ).GetAsString()
-                     except: val = '-'
-                     dmp += val + ','
-               else:
-                  dmp = rtData.Dump( bFldTy=True )
-               Log( dmp )
-            else:
-               Log( '[%s,%s] : No fields' % ( svc, tkr ) )
-         run = ( tSlp > 0.0 )
-         if run:
-            time.sleep( tSlp )
-            Log( 'PyObj=%d' % libMDDirect.NumPyObjects() )
-         sys.stdout.flush()
-   except KeyboardInterrupt:
-      Log( 'Shutting down ...' )
+   if bAll:
+      rdb = lvc.SnapAll()
+      print len( rdb )
+      [ Log( Dump( rtData, fids ) ) for rtData in rdb ]
+   else:
+      try:
+         run = True
+         while run:
+            for tkr in tdb:
+               Log( Dump( lvc.Snap( svc, tkr ), fids ) )
+            run = ( tSlp > 0.0 )
+            if run:
+               time.sleep( tSlp )
+               Log( 'PyObj=%d' % libMDDirect.NumPyObjects() )
+            sys.stdout.flush()
+      except KeyboardInterrupt:
+         Log( 'Shutting down ...' )
    Log( lvc.Close() )
    Log( 'Done!!' )
