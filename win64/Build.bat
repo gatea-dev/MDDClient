@@ -86,7 +86,7 @@ goto Done
    if exist py\%VS% (
       cd py\%VS%
       FOR %%Y in (27 36) DO (
-         if exist ..\..\..\..OpenSource\Python%%Y (
+         if exist ..\..\..\..\OpenSource\Python%%Y (
             devenv /build Release MDDirect.sln /project MDDirect%%Y
             del /f /s /q ..\Release64
          )
