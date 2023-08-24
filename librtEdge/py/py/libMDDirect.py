@@ -1111,6 +1111,14 @@ class rtEdgeField:
       return self._type
 
    #################################
+   # Returns Raw Field Value
+   #
+   # @return Raw Field Value
+   #################################
+   def GetValue( self ):
+      return self._val
+
+   #################################
    # Returns Field Value as 64-bit Integer, regardless of (native) data type
    #
    # @return Field Value as 64-bit Integer

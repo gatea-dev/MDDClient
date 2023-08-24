@@ -15,8 +15,9 @@
 *     24 OCT 2022 jcs  Build 15: Unpacked mddFld_bytestream 
 *      1 NOV 2022 jcs  Build 16: _GetVector() / _SetVector(); _wireMult()
 *     25 DEC 2022 jcs  Build 17: Signed mddFld_vector
+*     23 AUG 2023 jcs  Build 18: Set( float ) rounding error
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 
@@ -532,16 +533,32 @@ int Binary::Set( u_char *bp, u_int64_t i64 )
    return _u_pack( bp, i64 );
 }
 
+#ifdef _ROUNDING_ERROR
 int Binary::Set( u_char *bp, float f )
 {
    float r32;
-   u_int i32;
+   u_int  i32;
 
    // 4 implied decimal places
 
    r32 = f * _f_mul;
+   r32 = _f_mul;
    i32 = (u_int)r32;
    return _u_pack( bp, i32 );
+}
+#endif // _ROUNDING_ERROR
+
+int Binary::Set( u_char *bp, float f )
+{
+   double    r64;
+   u_int64_t i64;
+
+   // 4 implied decimal places
+
+   r64  = f;
+   r64 *= _f_mul;
+   i64  = (u_int64_t)r64;
+   return _u_pack( bp, i64 );
 }
 
 int Binary::Set( u_char *bp, double d, double mul )

@@ -6,7 +6,7 @@
 *  REVISION HISTORY:
 *     18 OCT 2022 jcs  Created (from original shit)
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 
 /*
@@ -29,6 +29,12 @@ Features To Add
  * to marshall and demarshall MD-Direct real-time data to and from the wire.
  *
  * ## Change Log
+ * 
+ * 
+ * ### Build 18 23-08-23
+ * 
+ * -# timeSec rounding error:
+ *    - Binary.Set( ..., float ) rounding error  : double, not float : DUH!!
  * 
  * 
  * ### Build 17 22-12-25
