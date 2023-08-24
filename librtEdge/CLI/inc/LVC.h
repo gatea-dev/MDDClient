@@ -13,6 +13,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     20 MAY 2023 jcs  Build 63: GetSchema( bool )
+*     22 AUG 2023 jcs  Build 64: Named Schema
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -322,12 +323,21 @@ public:
 	void AddBDS( String ^svc, String ^bds );
 
 	/**
-	 * \brief Add new ( svc,tkr ) record from LVC
+	 * \brief Add new ( svc,tkr ) record to LVC
 	 *
 	 * \param svc - Service name
 	 * \param tkr - Ticker name
 	 */
 	void AddTicker( String ^svc, String ^tkr );
+
+	/**
+	 * \brief Add new ( svc,tkr ) record to specific Schema in LVC
+	 *
+	 * \param svc - Service name
+	 * \param tkr - Ticker name
+	 * \param schema - Schema name
+	 */
+	void AddTickerToSchema( String ^svc, String ^tkr, Schema ^schema );
 
 	/**
 	 * \brief Add list of ( Service, Ticker ) to LVC
@@ -336,6 +346,16 @@ public:
 	 * \param tkrs - Array of tickers to add
 	 */
 	void AddTickers( String ^svc, cli::array<String ^> ^tkrs );
+
+	/**
+	 * \brief Add list of ( Service, Ticker ) to specific Schema in LVC
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 * \param schema - Schema name
+	 */
+	void AddTickersToSchema( String ^svc, cli::array<String ^> ^tkrs, String ^schema );
+
 
 	/**
 	 * \brief Delete existing ( svc,tkr ) record from LVC
