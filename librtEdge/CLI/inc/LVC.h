@@ -337,7 +337,7 @@ public:
 	 * \param tkr - Ticker name
 	 * \param schema - Schema name
 	 */
-	void AddTickerToSchema( String ^svc, String ^tkr, Schema ^schema );
+	void AddTickerToSchema( String ^svc, String ^tkr, String ^schema );
 
 	/**
 	 * \brief Add list of ( Service, Ticker ) to LVC
@@ -355,7 +355,6 @@ public:
 	 * \param schema - Schema name
 	 */
 	void AddTickersToSchema( String ^svc, cli::array<String ^> ^tkrs, String ^schema );
-
 
 	/**
 	 * \brief Delete existing ( svc,tkr ) record from LVC
