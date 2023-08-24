@@ -6,8 +6,9 @@
 *     13 NOV 2014 jcs  Created (from Subscribe.cpp)
 *     . . .
 *     14 JUN 2022 jcs  Build 55: LVCAdmin.cpp
+*     24 AUG 2023 jcs  Build 64: Named Schemas
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -103,7 +104,7 @@ int main( int argc, char **argv )
    bool        aOK, bCfg;
    size_t      n, nt;
    FILE       *fp;
-   const char *cmd, *svr, *svc, *tkr;
+   const char *cmd, *svr, *svc, *tkr, *schema;
 
    /////////////////////
    // Quickie checks
@@ -112,23 +113,26 @@ int main( int argc, char **argv )
       printf( "%s\n", LVCAdminID() );
       return 0;
    }
-   cmd   = "ADD";
-   svr   = "localhost:8775";
-   svc   = "bloomberg"; 
-   tkr   = "";
-   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   cmd    = "ADD";
+   svr    = "localhost:8775";
+   svc    = "bloomberg"; 
+   tkr    = "";
+   schema = "";
+   bCfg   = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -c  <ADD | DEL> ] \\ \n";
       s += "       [ -h  <LVC Admin host:port> ] \\ \n";
       s += "       [ -s  <Service> ] \\ \n";
       s += "       [ -t  <Ticker : CSV or Filename flat ASCII> ] \\ \n";
+      s += "       [ -x  <Schema Name> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -c       : %s\n", cmd );
       printf( "      -h       : %s\n", svr );
       printf( "      -s       : %s\n", svc );
       printf( "      -t       : <empty>\n" );
+      printf( "      -x       : <empty>\n" );
       return 0;
    }
 
@@ -147,6 +151,8 @@ int main( int argc, char **argv )
          svc = argv[++i];
       else if ( !::strcmp( argv[i], "-t" ) )
          tkr = argv[++i];
+      else if ( !::strcmp( argv[i], "-x" ) )
+         schema = argv[++i];
    }
 
    ////////////////
@@ -193,7 +199,7 @@ int main( int argc, char **argv )
    for ( n=0; n<nt; n++ ) {
       tkr = tkrs[n].data();
       if ( bAdd )
-         lvc.AddTicker( svc, tkr );
+         lvc.AddTicker( svc, tkr, schema );
       else
          lvc.DelTicker( svc, tkr );
    }

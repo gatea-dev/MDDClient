@@ -13,7 +13,7 @@
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
-*     21 AUG 2023 jcs  Build 10: LVCSnapAll
+*     24 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -564,22 +564,23 @@ static PyObject *LVCAdmAddBDS( PyObject *self, PyObject *args )
 static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
 {
    MDDpyLVCAdmin *adm;
-   const char    *svc, *tkr;
+   const char    *svc, *tkr, *schema;
    int            cxt;
 
-   // Usage : LVCAddTicker( cxt, svc, tkr )
+   // Usage : LVCAddTicker( cxt, svc, tkr, [, schema ] )
 
-   if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
+   schema = "";
+   if ( !PyArg_ParseTuple( args, "iss|s", &cxt, &svc, &tkr, &schema ) )
       return Py_None;
    if ( (adm=_GetLVCAdmin( cxt )) )
-      adm->PyAddTicker( svc, tkr );
+      adm->PyAddTicker( svc, tkr, schema );
    return Py_None;
 }
 
 static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 {
    MDDpyLVCAdmin   *adm;
-   const char      *svc;
+   const char      *svc, *schema;
    const char     **tkrs;
    PyObject        *lst, *pyK;
    int              cxt, i, nf;
@@ -588,7 +589,8 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 
    // Usage : LVCAddTickers( cxt, svc, tkrs )
 
-   if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, &PyList_Type, &lst ) )
+   schema = "";
+   if ( !PyArg_ParseTuple( args, "isO!|s", &cxt, &svc, &PyList_Type, &lst, &schema ) )
       return Py_None;
    if ( !(nf=::PyList_Size( lst )) )
       return Py_None;
@@ -601,7 +603,7 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
          sdb.push_back( s );
       }
       tkrs[i] = NULL;
-      adm->PyAddTickers( svc, tkrs );
+      adm->PyAddTickers( svc, tkrs, schema );
       delete[] tkrs;
       for ( i=0; i<nf; delete sdb[i++] );
    }

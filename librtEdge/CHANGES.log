@@ -68,6 +68,8 @@ Features To Add
  * -# libmddWire Build 18 : timeSec rounding error:
  *    - Binary.Set( ..., float ) rounding error  : double, not float : DUH!!
  *
+ * -# LVCAdmin : Named Schema
+ *
  *
  * ### Build 63 23-06-30
  *

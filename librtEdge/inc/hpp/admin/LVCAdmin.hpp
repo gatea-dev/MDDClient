@@ -12,6 +12,7 @@
 *     26 APR 2022 jcs  Build 53: _dtdBDS
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *     26 OCT 2022 jcs  Build 58: CockpitMap
+*     24 AUG 2023 jcs  Build 64: Named Schema
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -35,6 +36,7 @@ static const char *_dtdREFRALL = "REFRESH-ALL";
 static const char *_dtdDEL     = "DEL";
 static const char *_dtdACK     = "ACK";
 static const char *_dtdNAK     = "NAK";
+static const char *_attrSchema = "Schema";
 static const char *_tkrALL     = "*";
 
 namespace RTEDGE
@@ -254,11 +256,14 @@ public:
 	 *
 	 * \param svc - Service Name
 	 * \param tkr - Ticker Name
+	 * \param schema - (Optional) Schema Name
 	 */
 	void AddTicker( const char *svc, 
-	                const char *tkr )
+	                const char *tkr,
+	                const char *schema="" )
 	{
 	   char buf[K], *cp;
+	   bool bS;
 
 	   // Pre-condition(s)
 
@@ -269,10 +274,12 @@ public:
 
 	   // Safe to add
 
+	   bS  = ( schema && strlen( schema ) );
 	   cp  = buf;
 	   cp += sprintf( cp, "<%s ", _dtdADD );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
 	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkr );
+	   cp += bS ? sprintf( cp, "%s=\"%s\" ", _attrSchema, schema ) : 0;
 	   cp += sprintf( cp, "/>\n" );
 	   Cockpit::Start( pAdmin() );  // TODO : LVC
 	   ::Cockpit_Send( cxt(), buf );
@@ -285,11 +292,13 @@ public:
 	 *
 	 * \param svc - Service Name
 	 * \param tkrs - NULL-terminated list of tickers
+	 * \param schema - (Optional) Schema Name
 	 */
 	void AddTickers( const char  *svc, 
-	                 const char **tkrs )
+	                 const char **tkrs,
+	                 const char  *schema="" )
 	{
-	   _DoTickers( _dtdADD, svc, tkrs );
+	   _DoTickers( _dtdADD, svc, tkrs, schema );
 	}
 
 	/**
@@ -347,10 +356,12 @@ private:
 #ifndef DOXYGEN_OMIT
 	void _DoTickers( const char  *cmd,
 	                 const char  *svc,
-	                 const char **tkrs )
+	                 const char **tkrs,
+	                 const char  *schema=(const char *)0 )
 	{
 	   std::string s;
 	   char        buf[K], *cp;
+	   bool        bS;
 	   int         i;
 
 	   // Pre-condition(s)
@@ -358,6 +369,7 @@ private:
 	   if ( !svc || !strlen( svc ) )
 	      return;
 
+	   bS  = ( schema && strlen( schema ) );
 	   for ( i=0; tkrs[i]; i++ ) {
 	      if ( !strlen( tkrs[i] ) )
 	         continue; // for-i
@@ -365,6 +377,7 @@ private:
 	      cp += sprintf( cp, "<%s ", cmd );
 	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
 	      cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkrs[i] );
+	      cp += bS ? sprintf( cp, "%s=\"%s\" ", _attrSchema, schema ) : 0;
 	      cp += sprintf( cp, "/>\n" );
 	      s  += buf;
 	   }

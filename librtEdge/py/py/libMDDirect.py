@@ -710,18 +710,20 @@ class LVCAdmin:
    #
    # @param svc : Service Name
    # @param tkr : Ticker name
+   # @param schema : (Optional) Schema Name; Default is None
    ########################
-   def AddTicker( self, svc, tkr ):
-      MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr )
+   def AddTicker( self, svc, tkr, schema=None ):
+      MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr, schema )
 
    ########################
    # Add ticker list to LVC for specific service
    #
    # @param svc : Service Name
    # @param tkrs : [ Ticker1, Ticker2, ... ]
+   # @param schema : (Optional) Schema Name; Default is None
    ########################
-   def AddTickers( self, svc, tkrs ):
-      MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs )
+   def AddTickers( self, svc, tkrs, schema=None ):
+      MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs, schema )
 
    ########################
    # Refresh single ticker to LVC

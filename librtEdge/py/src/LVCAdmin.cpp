@@ -5,8 +5,9 @@
 *
 *  REVISION HISTORY:
 *     19 JUL 2022 jcs  Created.
+*     24 AUG 2023 jcs  Build 10: Named Schema
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -34,14 +35,18 @@ void MDDpyLVCAdmin::PyAddBDS( const char *svc, const char *bds )
    AddBDS( svc, bds );
 }
 
-void MDDpyLVCAdmin::PyAddTicker( const char *svc, const char *tkr )
+void MDDpyLVCAdmin::PyAddTicker( const char *svc, 
+                                 const char *tkr,
+                                 const char *schema )
 {
-   AddTicker( svc, tkr );
+   AddTicker( svc, tkr, schema );
 }
 
-void MDDpyLVCAdmin::PyAddTickers( const char *svc, const char **tkrs )
+void MDDpyLVCAdmin::PyAddTickers( const char  *svc, 
+                                  const char **tkrs,
+                                  const char  *schema )
 {
-   AddTickers( svc, tkrs );
+   AddTickers( svc, tkrs, schema );
 }
 
 void MDDpyLVCAdmin::PyRefreshTickers( const char *svc, const char **tkrs )
