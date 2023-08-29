@@ -19,6 +19,7 @@
 #     19 JUL 2022 jcs  LVCAdmin
 #     14 AUG 2023 jcs  NONE
 #     21 AUG 2023 jcs  MDDirectException; SnapAll()
+#     29 AUG 2023 jcs  EVT_BDS
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -359,6 +360,34 @@ class rtEdgeSubscriber( threading.Thread ):
       return MDDirect.Close( self._cxt, svc, tkr )
 
    ########################
+   # Open a subscription stream to a Broadcast Data Stream (BDS) from a service.
+   #
+   # Market data updates are returned in the OnSymbol() asynchronous call.
+   #
+   # @param svc - Service Name (e.g., factset)
+   # @param bds - BDS Name (e.g., NYSE)
+   # @param uid - Optional unique user ID
+   # @return Unique non-zero stream ID on success
+   # 
+   # @see CloseBDS()
+   # @see OnSymbol()
+   ########################
+   def OpenBDS( self, svc, bds, uid ):
+      return MDDirect.OpenBDS( self._cxt, svc, bds, uid )
+
+   ########################
+   # Closes a BDS stream that we opened via OpenBDS().  Market data 
+   # updates are stopped.
+   #
+   # @param svc - Service Name (e.g., factset)
+   # @param bds - BDS Name (e.g., NYSE)
+   #
+   # @see OpenBDS()
+   ########################
+   def CloseBDS( self, svc, bds ):
+      return MDDirect.CloseBDS( self._cxt, svc, bds )
+
+   ########################
    # Called asynchronously when we connect or disconnect from rtEdgeCache3.
    #
    # Override this method to take action when you connect or disconnect 
@@ -441,6 +470,18 @@ class rtEdgeSubscriber( threading.Thread ):
       pass
 
    ########################
+   # Called asynchronously when the data stream from the tape is complete
+   #
+   # Override this method in your application to process when the data pumped 
+   # from tape is complete.
+   #
+   # @param tkr - Ticker Name
+   # @see OpenBDS()
+   ########################
+   def OnSymbol( self, tkr ):
+      pass
+
+   ########################
    # Called asynchronously when the data dictionary for this subscription 
    # channel arrives from rtEdgeCache3
    #
@@ -520,6 +561,9 @@ class rtEdgeSubscriber( threading.Thread ):
             tkr  = blob[3]
             sts  = blob[4]
             self.OnStreamDone( sts )
+         elif mt == MDDirectEnum.EVT_BDS:
+            tkr  = blob
+            self.OnSymbol( tkr )
          elif mt == MDDirectEnum.EVT_SVC:
             kv = blob.split('|')
             self.OnService( kv[1], kv[0].strip() )
@@ -1324,6 +1368,7 @@ class MDDirectEnum:
    EVT_BYSTR  = 0x0400
    EVT_RECOV  = 0x0800
    EVT_DONE   = 0x1000
+   EVT_BDS    = 0x2000
    EVT_CHAN   = ( EVT_CONN | EVT_SVC )
    EVT_ALL    = 0xffff
    IOCTL_RTD  = 0x0001

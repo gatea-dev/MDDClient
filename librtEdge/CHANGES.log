@@ -62,8 +62,11 @@ Features To Add
  *    - LVCDataAll._nameMap
  *
  * -# Field.IsEmpty()
- *    - libMDDirect.py : MDDirectException 
- *    - libMDDirect.py : LVCSnapAll()
+ *
+ * -# libMDDirect.py:
+ *    - MDDirectException 
+ *    - LVCSnapAll()
+ *    - OpenBDS()
  *
  * -# libmddWire Build 18 : timeSec rounding error:
  *    - Binary.Set( ..., float ) rounding error  : double, not float : DUH!!

@@ -10,8 +10,9 @@
 *     20 NOV 2020 jcs  Build  2: Tape; OnStreamDone()
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *      3 FEB 2022 jcs  Build  5: De-lint
+*     29 AUG 2023 jcs  Build 10: BDS
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #ifndef __MDDPY_SUBCHAN_H
 #define __MDDPY_SUBCHAN_H
@@ -79,6 +80,7 @@ protected:
 	virtual void OnRecovering( RTEDGE::Message & );
 	virtual void OnDead( RTEDGE::Message &, const char * );
 	virtual void OnStreamDone( RTEDGE::Message & );
+	virtual void OnSymbol( RTEDGE::Message &, const char * );
 	virtual void OnSchema( RTEDGE::Schema & );
 
 	// PyByteStream Notifications

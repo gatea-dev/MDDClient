@@ -13,6 +13,7 @@
 *     16 MAR 2022 jcs  Build  6: error C2760
 *     19 JUL 2022 jcs  Build  8: LVCAdmin
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
+*     29 AUG 2023 jcs  Build 10: EVT_BDS
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -114,6 +115,7 @@ extern "C"
 #define EVT_BYSTR  0x0400
 #define EVT_RECOV  0x0800
 #define EVT_DONE   0x1000
+#define EVT_BDS    0x2000
 #define EVT_CHAN   ( EVT_CONN | EVT_SVC )
 #define EVT_ALL    0xffff
 

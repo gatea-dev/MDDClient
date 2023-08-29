@@ -8,6 +8,7 @@ nohup.*
 Debug
 Release/*
 lib
+swig
 bin
 bin64
 build

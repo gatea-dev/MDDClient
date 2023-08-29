@@ -13,7 +13,7 @@
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
-*     24 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema
+*     29 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema; OpenBDS()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -322,6 +322,23 @@ static PyObject *Open( PyObject *self, PyObject *args )
    return _PyReturn( Py_None );
 }
 
+static PyObject *OpenBDS( PyObject *self, PyObject *args )
+{
+   MDDpySubChan *ch;
+   const char *svc, *tkr;    
+   int         rtn, cxt, uid, sid;
+
+   // Usage : OpenBDS( cxt, 'factset', 'NYSE', UserReqID )
+
+   if ( !(rtn=PyArg_ParseTuple( args, "issi", &cxt, &svc, &tkr, &uid )) )
+      return _PyReturn( Py_False );
+   if ( (ch=_GetSub( cxt )) ) {
+      sid = ch->OpenBDS( svc, tkr, (VOID_PTR)uid );
+      return _PyReturn( PyInt_FromLong( sid ) );
+   }
+   return _PyReturn( Py_None );
+}
+
 static PyObject *OpenByStr( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
@@ -382,6 +399,23 @@ static PyObject *Close( PyObject *self, PyObject *args )
       return _PyReturn( Py_False );
    if ( (ch=_GetSub( cxt )) ) {
       sid = ch->Close( svc, tkr );
+      return _PyReturn( PyInt_FromLong( sid ) );
+   }
+   return _PyReturn( Py_None );
+}
+
+static PyObject *CloseBDS( PyObject *self, PyObject *args )
+{
+   MDDpySubChan *ch;
+   int         cxt, sid;
+   const char *svc, *tkr;
+
+   // Usage : CloseBDS( cxt, 'factset', 'NYSE' )
+
+   if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
+      return _PyReturn( Py_False );
+   if ( (ch=_GetSub( cxt )) ) {
+      sid = ch->CloseBDS( svc, tkr );
       return _PyReturn( PyInt_FromLong( sid ) );
    }
    return _PyReturn( Py_None );
@@ -1010,10 +1044,12 @@ static PyMethodDef EdgeMethods[] =
     { "SnapTape",      SnapTape,  _PY_ARGS, "Snap MDD Tape - ( svc, tkr, fids )" },
     { "QueryTape",     QueryTape, _PY_ARGS, "Query MDD Tape" },
     { "Open",          Open,      _PY_ARGS, "Open MDD ( svc,tkr ) stream." },
+    { "OpenBDS",       OpenBDS,   _PY_ARGS, "Open MDD BDS ( svc,tkr ) stream." },
     { "OpenByteStr",   OpenByStr, _PY_ARGS, "Open MDD ( svc,tkr ) byte-stream." },
     { "Read",          Read,      _PY_ARGS, "Read MDD update - Subscribe." },
     { "ReadFilter",    ReadFltr,  _PY_ARGS, "Read() Event filter." },
     { "Close",         Close,     _PY_ARGS, "Close MDD ( svc,tkr ) stream." },
+    { "CloseBDS",      CloseBDS,  _PY_ARGS, "Close MDD BDS ( svc,tkr ) stream." },
     { "Stop",          Stop,      _PY_ARGS, "MDD Disconnect - Subscribe" },
     { "Ioctl",         Ioctl,     _PY_ARGS, "MDD Control - Conflate, etc." },
     { "Protocol",      Protocol,  _PY_ARGS, "Channel Protocol" },

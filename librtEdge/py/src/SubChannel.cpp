@@ -11,6 +11,7 @@
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     11 JAN 2023 jcs  Build  9: PumpTapeXxx()
+*     29 AUG 2023 jcs  Build 10: BDS
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -468,6 +469,18 @@ void MDDpySubChan::OnStreamDone( RTEDGE::Message &msg )
    _pmp.Notify();
 }
 
+void MDDpySubChan::OnSymbol( RTEDGE::Message &msg, const char *tkr )
+{
+   RTEDGE::Locker l( _mtx );
+   int            oid = (INT_PTR)msg.arg();
+   Update         u   = _INIT_MDDPY_UPD;
+
+   u      = _ToUpdate( oid, tkr );
+   u._mt  = EVT_BDS;
+   _pmp.Add( u );
+   _pmp.Notify();
+}
+
 void MDDpySubChan::OnDead( RTEDGE::Message &msg, const char *pErr )
 {
    RTEDGE::Locker l( _mtx );
@@ -743,6 +756,10 @@ PyObject *MDDpySubChan::_Get1stUpd()
          pyd  = ::PyList_New( n );
          for ( i=0; i<n; i++ )
             ::PyList_SetItem( pyd, i, v[i] );
+         break;
+      case EVT_BDS:
+         s   = upd._msg;
+         pyd = PyString_FromString( s->data() );
          break;
       default:
          pyd = PyString_FromString( "Unknown msg type" );
