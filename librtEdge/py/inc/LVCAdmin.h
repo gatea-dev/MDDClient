@@ -5,7 +5,7 @@
 *
 *  REVISION HISTORY:
 *     19 JUL 2022 jcs  Created.
-*     24 AUG 2023 jcs  Build 10: Named Schema
+*      4 SEP 2023 jcs  Build 10: Named Schema; DelTicker()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -27,6 +27,8 @@ public:
 	void PyAddBDS( const char *, const char * );
 	void PyAddTicker( const char *, const char *, const char * );
 	void PyAddTickers( const char *, const char **, const char * );
+	void PyDelTicker( const char *, const char *, const char * );
+	void PyDelTickers( const char *, const char **, const char * );
 	void PyRefreshTickers( const char *, const char ** );
 	void PyRefreshAll();
 

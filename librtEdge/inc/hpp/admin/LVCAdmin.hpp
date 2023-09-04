@@ -12,7 +12,7 @@
 *     26 APR 2022 jcs  Build 53: _dtdBDS
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *     26 OCT 2022 jcs  Build 58: CockpitMap
-*     24 AUG 2023 jcs  Build 64: Named Schema
+*      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -229,24 +229,9 @@ public:
 	 */
 	void AddBDS( const char *svc, const char *bds )
 	{
-	   char buf[K], *cp;
+	   const char *tkrs[] = { bds, (const char *)0 };
 
-	   // Pre-condition(s)
-
-	   if ( !svc || !bds )
-	      return;
-	   if ( !strlen( svc ) || !strlen( bds ) )
-	      return;
-
-	   // Safe to add
-
-	   cp  = buf;
-	   cp += sprintf( cp, "<%s ", _dtdBDS );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, bds );
-	   cp += sprintf( cp, "/>\n" );
-	   Cockpit::Start( pAdmin() );  // TODO : LVC
-	   ::Cockpit_Send( cxt(), buf );
+	   _DoTickers( _dtdBDS, svc, tkrs );
 	}
 
 	/**
@@ -262,27 +247,9 @@ public:
 	                const char *tkr,
 	                const char *schema="" )
 	{
-	   char buf[K], *cp;
-	   bool bS;
+	   const char *tkrs[] = { tkr, (const char *)0 };
 
-	   // Pre-condition(s)
-
-	   if ( !svc || !tkr )
-	      return;
-	   if ( !strlen( svc ) || !strlen( tkr ) )
-	      return;
-
-	   // Safe to add
-
-	   bS  = ( schema && strlen( schema ) );
-	   cp  = buf;
-	   cp += sprintf( cp, "<%s ", _dtdADD );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkr );
-	   cp += bS ? sprintf( cp, "%s=\"%s\" ", _attrSchema, schema ) : 0;
-	   cp += sprintf( cp, "/>\n" );
-	   Cockpit::Start( pAdmin() );  // TODO : LVC
-	   ::Cockpit_Send( cxt(), buf );
+	   AddTickers( svc, tkrs, schema );
 	}
 
 	/**
@@ -308,19 +275,31 @@ public:
 	 *
 	 * \param svc - Service Name
 	 * \param tkr - Ticker Name
+	 * \param schema - (Optional) Schema Name
 	 */
 	void DelTicker( const char *svc, 
-	                const char *tkr )
+	                const char *tkr,
+	                const char *schema="" )
 	{
-	   char buf[K], *cp;
+	   const char *tkrs[] = { tkr, (const char *)0 };
 
-	   cp  = buf;
-	   cp += sprintf( cp, "<%s ", _dtdDEL );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrSvc, svc );
-	   cp += sprintf( cp, "%s=\"%s\" ", _mdd_pAttrName, tkr );
-	   cp += sprintf( cp, "/>\n" );
-	   Cockpit::Start( pAdmin() );  // TODO : LVC
-	   ::Cockpit_Send( cxt(), buf );
+	   DelTickers( svc, tkrs, schema );
+	}
+
+	/**
+	 * \brief Del list of ( Service, Ticker ) to LVC
+	 *
+	 * This method automatically calls Start() to connect
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - NULL-terminated list of tickers
+	 * \param schema - (Optional) Schema Name
+	 */
+	void DelTickers( const char  *svc, 
+	                 const char **tkrs,
+	                 const char  *schema="" )
+	{
+	   _DoTickers( _dtdDEL, svc, tkrs, schema );
 	}
 
 	/**
@@ -367,6 +346,8 @@ private:
 	   // Pre-condition(s)
 
 	   if ( !svc || !strlen( svc ) )
+	      return;
+	   if ( !tkrs || !tkrs[0] || !strlen( tkrs[0] ) )
 	      return;
 
 	   bS  = ( schema && strlen( schema ) );

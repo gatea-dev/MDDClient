@@ -7,7 +7,7 @@
 #  REVISION HISTORY:
 #     20 JUL 2022 jcs  Created
 #     14 AUG 2023 jcs  Python 2 / 3
-#     24 AUG 2023 jcs  Named Schema; args like LVCAdmin.cpp
+#      4 SEP 2023 jcs  Named Schema; args like LVCAdmin.cpp; DelTickers()
 #
 #  (c) 1994-2023, Gatea Ltd.
 #################################################################
@@ -37,7 +37,7 @@ if __name__ == "__main__":
    schema = ""
    if argc < 2:
       s  = [ 'Usage: %s \\' % sys.argv[0],
-             '       [ -c  <ADD | DEL> ] \\',
+             '       [ -c  <ADD | DEL | REFRESH> ] \\',
              '       [ -h  <LVC Admin host:port> ] \\',
              '       [ -s  <Service> ] \\',
              '       [ -t  <Ticker : CSV or Filename flat ASCII> ] \\',
@@ -77,6 +77,8 @@ if __name__ == "__main__":
    Log( 'LVCAdmin to %s' % adm )
    if cmd == 'REFRESH':
       lvc.RefreshTickers( svc, tkrs )
+   elif cmd == 'DEL':
+      lvc.DelTickers( svc, tkrs, schema )
    elif cmd == 'ADD':
       lvc.AddTickers( svc, tkrs, schema )
    else:

@@ -5,7 +5,7 @@
 *
 *  REVISION HISTORY:
 *     19 JUL 2022 jcs  Created.
-*     24 AUG 2023 jcs  Build 10: Named Schema
+*      4 SEP 2023 jcs  Build 10: Named Schema; DelTicker()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -48,6 +48,21 @@ void MDDpyLVCAdmin::PyAddTickers( const char  *svc,
 {
    AddTickers( svc, tkrs, schema );
 }
+
+void MDDpyLVCAdmin::PyDelTicker( const char *svc, 
+                                 const char *tkr,
+                                 const char *schema )
+{
+   DelTicker( svc, tkr, schema );
+}
+
+void MDDpyLVCAdmin::PyDelTickers( const char  *svc, 
+                                  const char **tkrs,
+                                  const char  *schema )
+{
+   DelTickers( svc, tkrs, schema );
+}
+
 
 void MDDpyLVCAdmin::PyRefreshTickers( const char *svc, const char **tkrs )
 {

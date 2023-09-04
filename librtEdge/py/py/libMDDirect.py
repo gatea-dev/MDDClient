@@ -19,7 +19,7 @@
 #     19 JUL 2022 jcs  LVCAdmin
 #     14 AUG 2023 jcs  NONE
 #     21 AUG 2023 jcs  MDDirectException; SnapAll()
-#     29 AUG 2023 jcs  EVT_BDS
+#      4 SEP 2023 jcs  EVT_BDS; DelTickers()
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -768,6 +768,26 @@ class LVCAdmin:
    ########################
    def AddTickers( self, svc, tkrs, schema=None ):
       MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs, schema )
+
+   ########################
+   # Delete single ticker to LVC
+   #
+   # @param svc : Service Name
+   # @param tkr : Ticker name
+   # @param schema : (Optional) Schema Name; Default is None
+   ########################
+   def DelTicker( self, svc, tkr, schema=None ):
+      MDDirect.LVCAdminDelTicker( self._cxt, svc, tkr, schema )
+
+   ########################
+   # Delete ticker list to LVC for specific service
+   #
+   # @param svc : Service Name
+   # @param tkrs : [ Ticker1, Ticker2, ... ]
+   # @param schema : (Optional) Schema Name; Default is None
+   ########################
+   def DelTickers( self, svc, tkrs, schema=None ):
+      MDDirect.LVCAdminDelTickers( self._cxt, svc, tkrs, schema )
 
    ########################
    # Refresh single ticker to LVC

@@ -52,12 +52,12 @@ def Dump( rtData, fids ):
 ############################################
 if __name__ == "__main__":
    #
-   # Args : <LVC_filename> <Service> <Tickers : CSV,file or *> [<tSnap> <FID1,FID2>]]
+   # Args : <LVC_filename> <Service> <Tickers : CSV,file or __ALL__> [<tSnap> <FID1,FID2>]]
    #
    argc = len( sys.argv )
    if argc < 3:
       help  = sys.argv[0] + ' <LVC_filename> <Service> '
-      help += '<Tickers : CSV,file or *> [<tSnap> <FID1,FID2>]]'
+      help += '<Tickers : CSV,file or __ALL_> [<tSnap> <FID1,FID2>]]'
       print( help )
       sys.exit()
    try:    file = sys.argv[1]

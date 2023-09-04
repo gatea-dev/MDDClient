@@ -611,6 +611,55 @@ static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
    return Py_None;
 }
 
+static PyObject *LVCAdmDelTkr( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin *adm;
+   const char    *svc, *tkr, *schema;
+   int            cxt;
+
+   // Usage : LVCDelTicker( cxt, svc, tkr, [, schema ] )
+
+   schema = "";
+   if ( !PyArg_ParseTuple( args, "iss|s", &cxt, &svc, &tkr, &schema ) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) )
+      adm->PyDelTicker( svc, tkr, schema );
+   return Py_None;
+}
+
+static PyObject *LVCAdmDelTkrs( PyObject *self, PyObject *args )
+{
+   MDDpyLVCAdmin   *adm;
+   const char      *svc, *schema;
+   const char     **tkrs;
+   PyObject        *lst, *pyK;
+   int              cxt, i, nf;
+   string          *s;
+   vector<string *> sdb;
+
+   // Usage : LVCDelTickers( cxt, svc, tkrs )
+
+   schema = "";
+   if ( !PyArg_ParseTuple( args, "isO!|s", &cxt, &svc, &PyList_Type, &lst, &schema ) )
+      return Py_None;
+   if ( !(nf=::PyList_Size( lst )) )
+      return Py_None;
+   if ( (adm=_GetLVCAdmin( cxt )) ) {
+      tkrs = new const char *[nf+4];
+      for ( i=0; i<nf; i++ ) {
+         s       = new string();
+         pyK     = PyList_GetItem( lst, i );
+         tkrs[i] = _Py_GetString( pyK, *s );
+         sdb.push_back( s );
+      }
+      tkrs[i] = NULL;
+      adm->PyDelTickers( svc, tkrs, schema );
+      delete[] tkrs;
+      for ( i=0; i<nf; delete sdb[i++] );
+   }
+   return Py_None;
+}
+
 static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 {
    MDDpyLVCAdmin   *adm;
@@ -1076,6 +1125,8 @@ static PyMethodDef EdgeMethods[] =
     { "LVCAdminAddBDS",         LVCAdmAddBDS,    _PY_ARGS, "Add BDS to LVC" },
     { "LVCAdminAddTicker",      LVCAdmAddTkr,    _PY_ARGS, "Add Ticker to LVC" },
     { "LVCAdminAddTickers",     LVCAdmAddTkrs,   _PY_ARGS, "Add Ticker List to LVC" },
+    { "LVCAdminDelTicker",      LVCAdmDelTkr,    _PY_ARGS, "Delete Ticker from LVC" },
+    { "LVCAdminDelTickers",     LVCAdmDelTkrs,   _PY_ARGS, "Delete Ticker List to LVC" },
     { "LVCAdminRefreshTicker",  LVCAdmRfrshTkr,  _PY_ARGS, "Refresh Ticker to LVC" },
     { "LVCAdminRefreshTickers", LVCAdmRfrshTkrs, _PY_ARGS, "Refresh Ticker List to LVC" },
     { "LVCAdminClose",          LVCAdmClose,     _PY_ARGS, "Close LVCAdmin Channel" },
@@ -1099,13 +1150,13 @@ static PyMethodDef EdgeMethods[] =
 
 #if PY_MAJOR_VERSION >= 3
 static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
-                                  "MDDirect39",
+                                  "MDDirect36",
                                   "MD-Direct for Python 3.x",
                                   -1,
                                   EdgeMethods
                                 };
 
-PyMODINIT_FUNC PyInit_MDDirect39( void )
+PyMODINIT_FUNC PyInit_MDDirect36( void )
 {
    return ::PyModule_Create( &_mddModule );
 } 

@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 64 23-08-xx
+ * ### Build 64 23-09-xx
  *
  * -# Subscribe : Allow -h <hostname>
  *    - Default port : 9998
@@ -67,6 +67,8 @@ Features To Add
  *    - MDDirectException 
  *    - LVCSnapAll()
  *    - OpenBDS()
+ *    - MDDirect36 always : DUH!! 
+ *    - LVCDelTicker()
  *
  * -# libmddWire Build 18 : timeSec rounding error:
  *    - Binary.Set( ..., float ) rounding error  : double, not float : DUH!!

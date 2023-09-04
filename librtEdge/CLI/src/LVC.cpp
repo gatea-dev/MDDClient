@@ -12,7 +12,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     18 MAY 2023 jcs  Build 63: cpp().GetSchema( false )
-*     22 AUG 2023 jcs  Build 64: Named Schema
+*      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -317,11 +317,50 @@ void LVCAdmin::AddTickersToSchema( String               ^svc,
 
 void LVCAdmin::DelTicker( String ^svc, String ^tkr )
 {
-   const char *pSvc, *pTkr;
+   DelTickerFromSchema( svc, tkr, "" );
+}
+
+void LVCAdmin::DelTickerFromSchema( String ^svc, String ^tkr, String ^schema )
+{
+   const char *pSvc, *pTkr, *pSch;
 
    pSvc = (const char *)_pStr( svc );
    pTkr = (const char *)_pStr( tkr );
-   _lvc->DelTicker( pSvc, pTkr );
+   pSch = (const char *)_pStr( schema );
+   _lvc->DelTicker( pSvc, pTkr, pSch );
+}
+
+void LVCAdmin::DelTickers( String ^svc, cli::array<String ^> ^tkrs )
+{
+   DelTickersFromSchema( svc, tkrs, "" );
+}
+
+void LVCAdmin::DelTickersFromSchema( String               ^svc, 
+                                     cli::array<String ^> ^tkrs,
+                                     String               ^schema )
+{
+   const char  *pSvc, *pSch;
+   const char **pTkrs;
+   char        *bp;
+   size_t       sz;
+   int          i, nl;
+
+   // Pre-condition
+
+   if ( !(nl=tkrs->Length) )
+      return;
+
+   // Safe to continue
+
+   pSvc  = (const char *)_pStr( svc );
+   pSch  = (const char *)_pStr( schema );
+   sz    = ( nl+4 ) * sizeof( const char * );
+   bp    = new char[sz];
+   pTkrs = (const char **)bp;
+   for ( i=0; i<nl; pTkrs[i] = (const char *)_pStr( tkrs[i] ), i++ );
+   pTkrs[i] = (const char *)0; 
+   _lvc->DelTickers( pSvc, pTkrs, pSch );
+   delete[] bp;
 }
 
 void LVCAdmin::RefreshTickers( String ^svc, cli::array<String ^> ^tkrs )

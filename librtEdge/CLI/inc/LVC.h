@@ -13,7 +13,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     20 MAY 2023 jcs  Build 63: GetSchema( bool )
-*     22 AUG 2023 jcs  Build 64: Named Schema
+*      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -328,7 +328,10 @@ public:
 	 * \param svc - Service name
 	 * \param tkr - Ticker name
 	 */
-	void AddTicker( String ^svc, String ^tkr );
+	void AddTicker( String ^svc, String ^tkr )
+	{
+	   AAddTickerToSchema( svc, tkr, "" );
+	}
 
 	/**
 	 * \brief Add new ( svc,tkr ) record to specific Schema in LVC
@@ -345,7 +348,10 @@ public:
 	 * \param svc - Service Name
 	 * \param tkrs - Array of tickers to add
 	 */
-	void AddTickers( String ^svc, cli::array<String ^> ^tkrs );
+	void AddTickers( String ^svc, cli::array<String ^> ^tkrs )
+	{
+	   AddTickersToSchema( svc, tkrs, "" );
+	}
 
 	/**
 	 * \brief Add list of ( Service, Ticker ) to specific Schema in LVC
@@ -362,7 +368,39 @@ public:
 	 * \param svc - Service name
 	 * \param tkr - Ticker name; Comma-separated for multiple tickers
 	 */
-	void DelTicker( String ^svc, String ^tkr );
+	void DelTicker( String ^svc, String ^tkr )
+	{
+	   DelTickerFromSchema( svc, tkr, "" );
+	}
+
+	/**
+	 * \brief Delete existing ( svc,tkr ) record from specific Schema in LVC
+	 *
+	 * \param svc - Service name
+	 * \param tkr - Ticker name
+	 * \param schema - Schema name
+	 */
+	void DelTickerFromSchema( String ^svc, String ^tkr, String ^schema );
+
+	/**
+	 * \brief Delete list of ( Service, Ticker ) from LVC
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 */
+	void DelTickers( String ^svc, cli::array<String ^> ^tkrs )
+	{
+	   DelTickersFromSchema( svc, tkrs, "" );
+	}
+
+	/**
+	 * \brief Delete list of ( Service, Ticker ) from specific Schema in LVC
+	 *
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 * \param schema - Schema name
+	 */
+	void DelTickersFromSchema( String ^svc, cli::array<String ^> ^tkrs, String ^schema );
 
 	/**
 	 * \brief Refresh list of ( Service, Ticker ) to LVC

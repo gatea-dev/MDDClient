@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 ## Makefile-ish
 
 PY3 = ( sys.version_info.major >= 3 ) 
-if PY3: PYLIB = 'MDDirect39'
+if PY3: PYLIB = 'MDDirect36'
 else:   PYLIB = 'MDDirect27'
 
 INC_DIR  = [ './inc' ]
