@@ -7,11 +7,13 @@ Features To Add
    - Return list of tickers NOT refreshed / processed
 
 
-Build 10  23-08-xx
+Build 10  23-09-xx
 ------------------
 1) Field.GetValue() : mddFld_undef = _MDDPY_NONE
 
 2) LVCSnapAll -> MDDpyLVC.PySnapAll()
+
+2) LVCAdminDelTicker -> MDDpyLVCAdmin.PyDelTicker()
 
 
 Build  9  23-01-12

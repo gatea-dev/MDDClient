@@ -1149,6 +1149,19 @@ static PyMethodDef EdgeMethods[] =
 };
 
 #if PY_MAJOR_VERSION >= 3
+#if PY_MINOR_VERSION >= 9
+static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
+                                  "MDDirect39",
+                                  "MD-Direct for Python 3.x",
+                                  -1,
+                                  EdgeMethods
+                                };
+
+PyMODINIT_FUNC PyInit_MDDirect39( void )
+{
+   return ::PyModule_Create( &_mddModule );
+} 
+#else
 static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
                                   "MDDirect36",
                                   "MD-Direct for Python 3.x",
@@ -1160,6 +1173,7 @@ PyMODINIT_FUNC PyInit_MDDirect36( void )
 {
    return ::PyModule_Create( &_mddModule );
 } 
+#endif // PY_MINOR_VERSION >= 9
 #else
 PyMODINIT_FUNC initMDDirect27( void )
 {

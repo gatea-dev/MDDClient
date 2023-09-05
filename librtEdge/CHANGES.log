@@ -64,11 +64,13 @@ Features To Add
  * -# Field.IsEmpty()
  *
  * -# libMDDirect.py:
+ *    - 2.7, 3.6 or 3.9
  *    - MDDirectException 
  *    - LVCSnapAll()
  *    - OpenBDS()
  *    - MDDirect36 always : DUH!! 
  *    - LVCDelTicker()
+ *    - MDDirect39.vcxproj
  *
  * -# libmddWire Build 18 : timeSec rounding error:
  *    - Binary.Set( ..., float ) rounding error  : double, not float : DUH!!
