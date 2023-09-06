@@ -330,7 +330,7 @@ public:
 	 */
 	void AddTicker( String ^svc, String ^tkr )
 	{
-	   AAddTickerToSchema( svc, tkr, "" );
+	   AddTickerToSchema( svc, tkr, "" );
 	}
 
 	/**

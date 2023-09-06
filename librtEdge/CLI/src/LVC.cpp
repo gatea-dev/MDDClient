@@ -267,11 +267,6 @@ void LVCAdmin::AddBDS( String ^svc, String ^bds )
    _lvc->AddBDS( pSvc, pBDS );
 }
 
-void LVCAdmin::AddTicker( String ^svc, String ^tkr )
-{
-   AddTickerToSchema( svc, tkr, "" );
-}
-
 void LVCAdmin::AddTickerToSchema( String ^svc, String ^tkr, String ^schema )
 {
    const char *pSvc, *pTkr, *pSch;
@@ -280,11 +275,6 @@ void LVCAdmin::AddTickerToSchema( String ^svc, String ^tkr, String ^schema )
    pTkr = (const char *)_pStr( tkr );
    pSch = (const char *)_pStr( schema );
    _lvc->AddTicker( pSvc, pTkr, pSch );
-}
-
-void LVCAdmin::AddTickers( String ^svc, cli::array<String ^> ^tkrs )
-{
-   AddTickersToSchema( svc, tkrs, "" );
 }
 
 void LVCAdmin::AddTickersToSchema( String               ^svc, 
@@ -315,11 +305,6 @@ void LVCAdmin::AddTickersToSchema( String               ^svc,
    delete[] bp;
 }
 
-void LVCAdmin::DelTicker( String ^svc, String ^tkr )
-{
-   DelTickerFromSchema( svc, tkr, "" );
-}
-
 void LVCAdmin::DelTickerFromSchema( String ^svc, String ^tkr, String ^schema )
 {
    const char *pSvc, *pTkr, *pSch;
@@ -328,11 +313,6 @@ void LVCAdmin::DelTickerFromSchema( String ^svc, String ^tkr, String ^schema )
    pTkr = (const char *)_pStr( tkr );
    pSch = (const char *)_pStr( schema );
    _lvc->DelTicker( pSvc, pTkr, pSch );
-}
-
-void LVCAdmin::DelTickers( String ^svc, cli::array<String ^> ^tkrs )
-{
-   DelTickersFromSchema( svc, tkrs, "" );
 }
 
 void LVCAdmin::DelTickersFromSchema( String               ^svc, 
