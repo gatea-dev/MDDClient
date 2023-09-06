@@ -55,6 +55,8 @@ if __name__ == "__main__":
    # Args : <LVC_filename> <Service> <Tickers : CSV,file or __ALL__> [<tSnap> <FID1,FID2>]]
    #
    argc = len( sys.argv )
+   mem0 = libMDDirect.MemSizeKb()
+   py0  = libMDDirect.NumPyObjects()
    if argc < 3:
       help  = sys.argv[0] + ' <LVC_filename> <Service> '
       help += '<Tickers : CSV,file or __ALL_> [<tSnap> <FID1,FID2>]]'
@@ -110,4 +112,8 @@ if __name__ == "__main__":
       except KeyboardInterrupt:
          Log( 'Shutting down ...' )
    Log( lvc.Close() )
+   mem1 = libMDDirect.MemSizeKb()
+   py1  = libMDDirect.NumPyObjects()
+   Log( 'MEM   : %6d vs %6d Kb  : Leak %6d Kb' % ( mem0, mem1, mem1-mem0 ) )
+   Log( 'PyObj : %6d vs %6d obj : Leak %6d obj' % ( py0, py1, py1-py0 ) )
    Log( 'Done!!' )
