@@ -10,7 +10,7 @@
 *      3 FEB 2022 jcs  Build  5: MDDpyLVC.PySnap() : _tUpd
 *     11 JUL 2022 jcs  Build  7: _tDead
 *     19 JUL 2022 jcs  Build  8: Snap() : None if !_tUpd
-*     21 AUG 2023 jcs  Build 10: PySnapAll()
+*      5 SEP 2023 jcs  Build 10: PySchema() leak
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -37,10 +37,10 @@ MDDpyLVC::MDDpyLVC( const char *file ) :
 ///////////////////////////////
 PyObject *MDDpyLVC::PySchema()
 {
-   RTEDGE::Schema &sch = GetSchema();
+   RTEDGE::Schema &sch = GetSchema( false );
    RTEDGE::Field  *fld;
    PyObjects       vdb;
-   PyObject       *rtn, *pyF, *pyN;
+   PyObject       *rtn, *pyF;
    int             i, nf;
 
    // Pre-condition(s)
@@ -52,9 +52,16 @@ PyObject *MDDpyLVC::PySchema()
 
    for ( sch.reset(); (sch)(); ) {
       fld = sch.field();
+#ifdef MR_LEAKY
       pyF = PyInt_FromLong( fld->Fid() );
       pyN = PyString_FromString( fld->Name() );
       vdb.push_back( ::PyTuple_Pack( 2, pyF, pyN ) );
+#else
+      pyF = ::PyList_New( 2 );
+      ::PyList_SetItem( pyF, 0, PyInt_FromLong( fld->Fid() ) );
+      ::PyList_SetItem( pyF, 1, PyString_FromString( fld->Name() ) );
+      vdb.push_back( pyF );
+#endif // MR_LEAKY
    }
    nf  = (int)vdb.size();
    rtn = ::PyList_New( nf );

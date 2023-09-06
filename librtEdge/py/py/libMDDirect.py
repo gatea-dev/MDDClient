@@ -111,6 +111,14 @@ pass
 def Version():
    return MDDirect.Version()
 
+#################################
+# Returns process memory size in KB
+#
+# @return process memory size in KB
+#################################
+def MemSizeKb():
+   return MDDirect.MemSize()
+
 
 #################################
 # Returns number of Python objects
