@@ -8,8 +8,9 @@
 *      5 OCT 2009 jcs  Build  5: TimerTable
 *     26 SEP 2010 jcs  Build  8: Class-wide _sockMsg
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
+*     11 SEP 2023 jcs  Build 32: _className
 *
-*  (c) 1994-2015 Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_PUMP_H
 #define __EDGLIB_PUMP_H
@@ -61,6 +62,7 @@ protected:
 public:
 	HWND      _hWnd;
 	UINT      _tmrID;
+	string    _className;
 #endif // WIN32
 protected:
 	bool      _bRun;

@@ -77,6 +77,10 @@ Features To Add
  *
  * -# LVCAdmin : Named Schema
  *
+ * -# WIN64 : No Pump._hWnd on 2nd+ instance
+ *    - Pump._Create() : wndClass.lpszClassName ALWAYS _className.data() : DUH!!
+ *    - Pump._className
+ *
  *
  * ### Build 63 23-06-30
  *

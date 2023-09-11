@@ -14,7 +14,7 @@
 *      2 JUL 2015 jcs  Build 31: Socket._log
 *     20 MAR 2016 jcs  Build 32: EDG_Internal.h; _SetWindowLong
 *     29 AUG 2016 jcs  Build 33: _Destroy() : if ( s )
-*      4 AUG 2023 jcs  Build 36: _sockMsgName / _className
+*     11 SEP 2023 jcs  Build 64: _sockMsgName / _className
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -49,7 +49,7 @@ LRESULT CALLBACK _wndProc( HWND, UINT, WPARAM, LPARAM );
 void    CALLBACK _tmrProc( HWND, UINT, UINT, DWORD );
 static UINT   _sockMsg = 0;
 static string _sockMsgName( "EventPump" );
-static string _className( "RTEDGE_PRIVATE::EventPump" );
+static string _dfltClassName( "RTEDGE_PRIVATE::EventPump" );
 #endif // WIN32
 
 ////////////////////////////////////////////
@@ -65,6 +65,7 @@ Pump::Pump() :
 #ifdef WIN32
    _hWnd( 0 ),
    _tmrID( 0 ),
+   _className( _dfltClassName ),
 #endif // WIN32
    _bRun( true ),
    _t0( dNow() )
@@ -287,19 +288,18 @@ void Pump::_Create()
    // 1) Register (hidden) window class
 
    ::memset( (void *)&wndClass, 0, sizeof( wndClass ) );
-   wndClass.lpszClassName = "RTEDGE_PRIVATE::EventPump";
+   _className            += ::rtEdge_pTimeMs( obuf, ::rtEdge_TimeNs() );
+   wndClass.lpszClassName = _className.data();
    wndClass.hInstance     = GetWindowInstance( NULL );
    wndClass.lpfnWndProc   = &_wndProc;
    wndClass.cbWndExtra    = sizeof(Pump *);
+   if ( !::RegisterClass( &wndClass ) ) {
+      ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
+      return;
+   }
    if ( !_sockMsg ) {
-      _className            += ::rtEdge_pTimeMs( obuf, ::rtEdge_TimeNs() );
-      _sockMsgName          += obuf;
-      wndClass.lpszClassName = _className.data();
-      if ( !::RegisterClass( &wndClass ) ) {
-         ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
-         return;
-      }
-      _sockMsg = ::RegisterWindowMessage( _sockMsgName.data() );
+      _sockMsgName += obuf;
+      _sockMsg      = ::RegisterWindowMessage( _sockMsgName.data() );
    }
 
    // 3) Create (hidden) window; Start timer
