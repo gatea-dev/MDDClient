@@ -1,0 +1,73 @@
+#######################################################
+#
+#  Makefile for:
+#     GreekServer
+#
+#  REVISION HISTORY:
+#     13 SEP 2023 jcs  Created.
+#
+# (c) 1994-2023, Gatea Ltd.
+#######################################################
+
+## Warnings
+
+WARN       = -Wall
+WARN      += -Wno-write-strings
+WARN      += -Wno-unused-but-set-variable
+
+## Linux
+
+SOFLAGS   = -fPIC -rdynamic $(WARN)
+BITS      =64
+ARCH      = -m$(BITS)
+BIN_DIR   = bin$(BITS)
+CCC       = g++ $(ARCH)
+
+################################
+# MD-Direct Libraries
+################################
+
+MDD_ROOT     = ../../..
+MDWLIB       = libmddWire
+EDGLIB       = librtEdge
+MDW_ROOT     = $(MDD_ROOT)/$(MDWLIB)
+EDG_ROOT     = $(MDD_ROOT)/$(EDGLIB)
+
+MDDS_INC     = -I$(MDW_ROOT)/inc -I$(EDG_ROOT)/inc
+MDDS_INC    += -I$(MDW_ROOT)/expat/xmlparse
+MDDS_LIBS    = $(MDW_ROOT)/lib/$(MDWLIB)$(BITS).a
+MDDS_LIBS   += $(EDG_ROOT)/lib/$(EDGLIB)$(BITS).a
+MDDS_LIBS   += $(MDW_ROOT)/expat/lib/libexpat.a
+
+## Compiler, Linker, etc.
+
+CPP       = $(CCC)
+CPPFLAGS  = $(SOFLAGS) -g -c $(MDDS_INC)
+EXE_LIBS  = -lpthread -lrt -ldl $(MDDS_LIBS)
+
+## Us
+
+all:	GreekServer
+
+#############
+# ./cpp
+#############
+GreekServer: clear mkdir GreekServer.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+mkdir:
+	mkdir -p ./obj ./$(BIN_DIR)
+
+move_objs:
+	mv *.o ./obj
+
+clear:
+	clear
+
+clean:
+	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./core
+
+%.o:  cpp/%.cpp
+	$(CPP) $(CPPFLAGS) $<

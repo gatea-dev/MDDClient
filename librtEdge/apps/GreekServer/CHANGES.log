@@ -1,0 +1,33 @@
+/******************************************************************************
+*
+*  CHANGES.log
+*     doxygen-enabled CHANGES.log
+*
+*  REVISION HISTORY:
+*     13 SEP 2023 jcs  Created
+*
+*  (c) 1994-2022, Gatea Ltd.
+******************************************************************************/
+
+/*
+Known Bugs
+----------
+
+
+Features To Add
+---------------
+*/
+
+/**
+ * \mainpage GreekServer Change Log
+ *
+ * GreekServer is snaps Options Prices from LVC and ...
+ *
+ * ## Change Log
+ *
+ *
+ * ### Build 1 23-09-xx
+ *
+ * -# Created
+ *
+ */
