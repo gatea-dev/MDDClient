@@ -59,8 +59,9 @@ goto Done
    del /f /s /q ..\Release64
    cd ..
    if exist dox\%MK%.dox (
-      %DOXYGEN% dox\%MK%.dox
-      move doc\* ..\..\doc
+      echo doxygen disabled
+::      %DOXYGEN% dox\%MK%.dox
+::      move doc\* ..\..\doc
    )
    cd ..
    EXIT /B 0
