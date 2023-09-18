@@ -40,7 +40,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\bin64\OptionsSnap\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\bin64\SnapOptions\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\Release64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\bin64\</OutDir>
@@ -65,7 +65,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\..\Release64\OptionsSnap.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\..\Release64\SnapOptions.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Release64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Release64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Release64\</ProgramDataBaseFileName>
@@ -78,14 +78,14 @@
          ..\..\..\..\libmddWire\lib64\libmddWire64.lib;
          pdh.lib;wsock32.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
-      <OutputFile>.\..\bin64\OptionsSnap/OptionsSnap.exe</OutputFile>
+      <OutputFile>.\..\bin64\SnapOptions/SnapOptions.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ProgramDatabaseFile>.\..\bin64\OptionsSnap/OptionsSnap.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\..\bin64\SnapOptions/SnapOptions.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <TypeLibraryName>.\..\bin64\OptionsSnap/OptionsSnap.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\SnapOptions/SnapOptions.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -110,7 +110,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\..\Debug64\OptionsSnap.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\..\Debug64\SnapOptions.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Debug64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Debug64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Debug64\</ProgramDataBaseFileName>
@@ -124,15 +124,15 @@
          ..\..\..\..\libmddWire\Debug64\libmddWire64.lib;
          pdh.lib;wsock32.lib;%(AdditionalDependencies)
       </AdditionalDependencies>
-      <OutputFile>.\..\bin64\OptionsSnap.exe</OutputFile>
+      <OutputFile>.\..\bin64\SnapOptions.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\..\bin64\OptionsSnap.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\..\bin64\SnapOptions.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <TypeLibraryName>.\..\bin64\OptionsSnap.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\SnapOptions.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -142,7 +142,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\cpp\OptionsSnap.cpp" />
+    <ClCompile Include="..\cpp\SnapOptions.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

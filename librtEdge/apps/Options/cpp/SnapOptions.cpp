@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  OptionsSnap.cpp
+*  SnapOptions.cpp
 *
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
@@ -12,7 +12,7 @@
 /////////////////////////////////////
 // Version
 /////////////////////////////////////
-const char *OptionsSnapID()
+const char *SnapOptionsID()
 {
    static string s;
    const char   *sccsid;
@@ -23,7 +23,7 @@ const char *OptionsSnapID()
       char bp[K], *cp;
 
       cp  = bp;
-      cp += sprintf( cp, "@(#)OptionsSnap Build %s ", _MDD_LIB_BLD );
+      cp += sprintf( cp, "@(#)SnapOptions Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
       cp += sprintf( cp, rtEdge::Version() );
       s   = bp;
@@ -34,20 +34,20 @@ const char *OptionsSnapID()
 
 ////////////////////////////////////////////////
 //
-//      c l a s s   G r e e k S e r v e r
+//     c l a s s   O p t i o n s S n a p
 //
 ////////////////////////////////////////////////
-class OptionsSnap : public OptionsBase
+class SnapOptions : public OptionsBase
 {
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   OptionsSnap( const char *svr ) :
+   SnapOptions( const char *svr ) :
       OptionsBase( svr )
    { ; }
 
-}; // class OptionsSnap
+}; // class SnapOptions
 
 //////////////////////////
 // main()
@@ -68,7 +68,7 @@ int main( int argc, char **argv )
    // Quickie checks
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
-      printf( "%s\n", OptionsSnapID() );
+      printf( "%s\n", SnapOptionsID() );
       return 0;
    }
 
@@ -129,7 +129,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   OptionsSnap lvc( svr );
+   SnapOptions lvc( svr );
    Message    *msg;
    FieldDef   *fd;
    double      d0, age;

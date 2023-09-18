@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-*  GreekServer.cpp
+*  OptionsCurve.cpp
 *
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
@@ -12,7 +12,7 @@
 /////////////////////////////////////
 // Version
 /////////////////////////////////////
-const char *GreekServerID()
+const char *OptionsCurveID()
 {
    static string s;
    const char   *sccsid;
@@ -23,7 +23,7 @@ const char *GreekServerID()
       char bp[K], *cp;
 
       cp  = bp;
-      cp += sprintf( cp, "@(#)GreekServer Build %s ", _MDD_LIB_BLD );
+      cp += sprintf( cp, "@(#)OptionsCurve Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
       cp += sprintf( cp, rtEdge::Version() );
       s   = bp;
@@ -34,20 +34,20 @@ const char *GreekServerID()
 
 ////////////////////////////////////////////////
 //
-//      c l a s s   G r e e k S e r v e r
+//    c l a s s   O p t i o n s C u r v e
 //
 ////////////////////////////////////////////////
-class GreekServer : public OptionsBase
+class OptionsCurve : public OptionsBase
 {
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   GreekServer( const char *svr ) :
+   OptionsCurve( const char *svr ) :
       OptionsBase( svr )
    { ; }
 
-}; // class GreekServer
+}; // class OptionsCurve
 
 //////////////////////////
 // main()
@@ -68,7 +68,7 @@ int main( int argc, char **argv )
    // Quickie checks
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
-      printf( "%s\n", GreekServerID() );
+      printf( "%s\n", OptionsCurveID() );
       return 0;
    }
 
@@ -129,7 +129,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   GreekServer lvc( svr );
+   OptionsCurve lvc( svr );
    Message    *msg;
    FieldDef   *fd;
    double      d0, age;

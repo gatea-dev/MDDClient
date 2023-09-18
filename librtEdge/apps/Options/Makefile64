@@ -1,7 +1,7 @@
 #######################################################
 #
 #  Makefile for:
-#     Options
+#     Options Apps
 #
 #  REVISION HISTORY:
 #     13 SEP 2023 jcs  Created.
@@ -47,17 +47,17 @@ EXE_LIBS  = -lpthread -lrt -ldl $(MDDS_LIBS)
 
 ## Us
 
-all:	OptionsSnap GreekServer
+all:	OptionsCurve SnapOptions
 
 #############
 # ./cpp
 #############
-OptionsSnap: clear mkdir OptionsSnap.o
+OptionsCurve: clear mkdir OptionsCurve.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
 
-GreekServer: clear mkdir GreekServer.o
+SnapOptions: clear mkdir SnapOptions.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
