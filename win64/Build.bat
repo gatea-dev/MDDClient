@@ -37,7 +37,7 @@ FOR %%X in (libmddWire librtEdge) DO (
          )
       )
    )
-   FOR %%Y in (GreekServer OptionsSnap) DO (
+   FOR %%Y in (OptionsCurve SnapOptions) DO (
       if exist %%X\apps\Options\cpp\%%Y.cpp (
          echo Building %%X\apps\Options\cpp\%%Y.cpp 
          cd %%X\apps\Options\%VS%
