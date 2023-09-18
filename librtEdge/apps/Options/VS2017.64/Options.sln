@@ -2,6 +2,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GreekServer", "GreekServer.vcxproj", "{8E816AC9-1EFB-599A-ECAB-843E7BBD4196}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OptionsSnap", "OptionsSnap.vcxproj", "{8E816AC9-1EFB-599A-ECAB-843E7BBD4197}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -10,6 +12,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8E816AC9-1EFB-599A-ECAB-843E7BBD4196}.Debug|x64.ActiveCfg = Debug|x64
 		{8E816AC9-1EFB-599A-ECAB-843E7BBD4196}.Release|x64.ActiveCfg = Release|x64
+		{8E816AC9-1EFB-599A-ECAB-843E7BBD4197}.Debug|x64.ActiveCfg = Debug|x64
+		{8E816AC9-1EFB-599A-ECAB-843E7BBD4197}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

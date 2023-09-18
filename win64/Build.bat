@@ -37,6 +37,17 @@ FOR %%X in (libmddWire librtEdge) DO (
          )
       )
    )
+   FOR %%Y in (GreekServer OptionsSnap) DO (
+      if exist %%X\apps\Options\cpp\%%Y.cpp (
+         echo Building %%X\apps\Options\cpp\%%Y.cpp 
+         cd %%X\apps\Options\%VS%
+         pwd
+         echo devenv /build %BLD_TYPE% Options.sln /project %%Y
+         devenv /build %BLD_TYPE% Options.sln /project %%Y
+         cd ..\..\..\..\..
+         copy %%X\apps\Options\bin64\%%Y\%%Y.exe .\bin64
+      )
+   )
    if exist %%X\CLI\lib64 (
       copy %%X\CLI\lib64\*.dll .\bin64
    )

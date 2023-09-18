@@ -1,7 +1,7 @@
 #######################################################
 #
 #  Makefile for:
-#     GreekServer
+#     Options
 #
 #  REVISION HISTORY:
 #     13 SEP 2023 jcs  Created.
@@ -42,16 +42,21 @@ MDDS_LIBS   += $(MDW_ROOT)/expat/lib/libexpat.a
 ## Compiler, Linker, etc.
 
 CPP       = $(CCC)
-CPPFLAGS  = $(SOFLAGS) -g -c $(MDDS_INC)
+CPPFLAGS  = $(SOFLAGS) -g -c $(MDDS_INC) -I./inc
 EXE_LIBS  = -lpthread -lrt -ldl $(MDDS_LIBS)
 
 ## Us
 
-all:	GreekServer
+all:	OptionsSnap GreekServer
 
 #############
 # ./cpp
 #############
+OptionsSnap: clear mkdir OptionsSnap.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
 GreekServer: clear mkdir GreekServer.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)

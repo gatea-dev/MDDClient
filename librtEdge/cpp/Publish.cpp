@@ -13,6 +13,7 @@
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *      3 NOV 2022 jcs  Build 60: AddVector()
 *     26 JAN 2023 jcs  Build 62: PubTkr_SIMPLE()
+*     14 SEP 2023 jcs  Build 64: -dead
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -178,7 +179,7 @@ public:
 
 ////////////////////////
 //
-//     M y P u b
+//  M y C h a n n e l
 //
 ////////////////////////
 
@@ -194,6 +195,7 @@ private:
    int          _vecSz;
    int          _vecPrec;
    bool         _bVecFld;
+   string       _dead;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
@@ -204,11 +206,16 @@ private:
    // Constructor
    ////////////////////////////////
 public:
-   MyChannel( const char *svc, int vecSz, int vecPrec, bool bVecFld ) :
+   MyChannel( const char *svc, 
+              int         vecSz, 
+              int         vecPrec, 
+              bool        bVecFld, 
+              const char *dead ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
       _bVecFld( bVecFld ),
+      _dead( dead ),
       _wl(),
       _wlV(),
       _mtx(),
@@ -393,19 +400,28 @@ public:
 
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
-      Locker    lck( _mtx );
-      string    tmp( tkr );
-      Watch    *w;
-      MyVector *v;
-      char     *pfx, *ric;
-      bool      bChn;
-      int       StreamID = (int)(size_t)arg;
+      Locker      lck( _mtx );
+      Update     &u = upd();
+      string      tmp( tkr );
+      Watch      *w;
+      MyVector   *v;
+      const char *err;
+      char       *pfx, *ric;
+      bool        bChn;
+      int         StreamID = (int)(size_t)arg;
 
       pfx  = ::strtok( (char *)tmp.data(), "#" );
       ric  = ::strtok( NULL, "#" );
       bChn = _chn && ric;
+      err  = _dead.data();
       ::fprintf( stdout, "OPEN [%6d] %s\n", StreamID, tkr ); ::fflush( stdout );
-      if ( bChn )
+      if ( _dead.length() ) {
+         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
+         ::fflush( stdout );
+         u.Init( tkr, StreamID );
+         u.PubError( err );
+      }
+      else if ( bChn )
          PubChainLink( atoi( pfx ), ric, arg );
       else if ( _vecSz && !_bVecFld ) {
          v = AddVector( tkr, StreamID );
@@ -492,7 +508,7 @@ static bool _IsTrue( const char *p )
 
 int main( int argc, char **argv )
 {
-   const char *svr, *svc, *pChn, *ty;
+   const char *svr, *svc, *pChn, *ty, *dead;
    const char *lnks[_MAX_CHAIN];
    char       *cp;
    double      tPub, tRun, d0, dn;
@@ -519,6 +535,7 @@ int main( int argc, char **argv )
    vPrec = 2;
    bFldV = false;
    bPack = true;
+   dead  = "";
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -531,6 +548,7 @@ int main( int argc, char **argv )
       s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
       s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
       s += "       [ -hbeat   <Heartbeat> ] \\ \n";
+      s += "       [ -x       <Error to publish as DEAD; Empty for data> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -542,6 +560,7 @@ int main( int argc, char **argv )
       printf( "      -vecFld  : %s\n", bFldV ? "YES" : "NO" );
       printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
       printf( "      -hbeat   : %d\n", hBeat );
+      printf( "      -x       : %s\n", dead );
       return 0;
    }
 
@@ -570,9 +589,11 @@ int main( int argc, char **argv )
          bPack = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-packed" ) )
          hBeat = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-x" ) )
+         dead = argv[++i];
    }
 
-   MyChannel pub( svc, vecSz, vPrec, bFldV );
+   MyChannel pub( svc, vecSz, vPrec, bFldV, dead );
 
    ::srand48( pub.TimeSec() ); 
    s = "";

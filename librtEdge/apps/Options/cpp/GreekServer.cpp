@@ -7,17 +7,7 @@
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
-#include <librtEdge.h>
-
-using namespace RTEDGE;
-using namespace std;
-
-typedef vector<int>                           Ints;
-typedef map<u_int64_t, int, less<u_int64_t> > SortedInt64Map;
-
-#define _STRIKE_PRC   66
-#define _EXPIR_DATE   67
-#define _UN_SYMBOL  4200
+#include <OptionsBase.cpp>
 
 /////////////////////////////////////
 // Version
@@ -42,40 +32,22 @@ const char *GreekServerID()
    return sccsid+4;
 }
 
-static void _DumpOne( Message &msg, Ints &fids )
+////////////////////////////////////////////////
+//
+//      c l a s s   G r e e k S e r v e r
+//
+////////////////////////////////////////////////
+class GreekServer : public OptionsBase
 {
-   LVCData    &ld  = msg.dataLVC();
-   const char *act = ld._bActive ? "ACTIVE" : "DEAD";
-   const char *tkr = msg.Ticker();
-   const char *pt;
-   Field      *fld;
-   string tm, sm;
-   char        hdr[4*K], *cp;
-   size_t      i;
+   /////////////////////////
+   // Constructor
+   /////////////////////////
+public:
+   GreekServer( const char *svr ) :
+      OptionsBase( svr )
+   { ; }
 
-   /*
-    * 1) Header
-    */
-   pt  = msg.pTimeMs( tm, msg.MsgTime() );
-   cp  = hdr;
-   cp += sprintf( cp, "%s,%s,%s,", pt, tkr, act );
-   cp += sprintf( cp, "%.2f,%d,", ld._dAge, ld._nUpd );
-   sm  = hdr;
-   /*
-    * 2) Fields
-    */
-   for ( i=0; i<fids.size(); i++ ) {
-      fld = msg.GetField( fids[i] );
-      sm += fld ? fld->GetAsString() : "-";
-      sm += ",";
-   }
-   /*
-    * 3) Dump
-    */
-   sm += "\n";
-   ::fwrite( sm.data(), sm.size(), 1, stdout );
-   ::fflush( stdout );
-}
+}; // class GreekServer
 
 //////////////////////////
 // main()
@@ -83,10 +55,10 @@ static void _DumpOne( Message &msg, Ints &fids )
 int main( int argc, char **argv )
 {
    Strings     tkrs;
-   Ints        fids, idxs;
-   string s;
+   Ints        fids;
+   string      s;
    char        sTkr[4*K], *cp, *rp;
-   bool        aOK, bCfg;
+   bool        aOK, bCfg, bHdr, bPut, bCall;
    size_t      nt;
    int         i, fid, ix;
    double      rate;
@@ -102,23 +74,32 @@ int main( int argc, char **argv )
 
    // cmd-line args
 
-   svr  = "./cache.lvc";
-   und  = "AAPL";
-   flds = "3,6,22,25,32,66,67";
-   rate = 1.0;
-   bCfg = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   svr   = "./cache.lvc";
+   und   = "AAPL";
+   flds  = "3,6,22,25,32,66,67";
+   rate  = 1.0;
+   bHdr  = true;
+   bPut  = true;
+   bCall = true;
+   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -db      <LVC d/b filename> ] \\ \n";
       s += "       [ -u       <Underlyer> \\ \n";
       s += "       [ -r       <DumpRate> ] \\ \n";
       s += "       [ -f       <CSV Fids> ] \\ \n";
+      s += "       [ -h       <Full Header> ] \\ \n";
+      s += "       [ -put     <Dump PUT> ] \\ \n";
+      s += "       [ -call     <Dump PUT> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -db      : %s\n", svr );
       printf( "      -u       : %s\n", und );
       printf( "      -r       : %.2f\n", rate );
-      printf( "      -f       : <empty>\n" );
+      printf( "      -f       : %s\n", flds );
+      printf( "      -h       : %s\n", _pBool( bHdr ) );
+      printf( "      -put     : %s\n", _pBool( bPut ) );
+      printf( "      -call    : %s\n", _pBool( bCall ) );
       return 0;
    }
 
@@ -137,16 +118,23 @@ int main( int argc, char **argv )
          flds = argv[++i];
       else if ( !::strcmp( argv[i], "-r" ) )
          rate = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-h" ) )
+         bHdr = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-put" ) )
+         bPut = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-call" ) )
+         bCall = _IsTrue( argv[++i] );
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   LVC       lvc( svr );
-   Message  *msg;
-   Field    *fld;
-   FieldDef *fd;
-   Schema   &sch = lvc.GetSchema();
+   GreekServer lvc( svr );
+   Message    *msg;
+   FieldDef   *fd;
+   double      d0, age;
+   Ints        puts, calls, both;
+   Schema     &sch = lvc.GetSchema();
 
    /*
     * CSV : Field Name or FID
@@ -161,7 +149,8 @@ int main( int argc, char **argv )
    }
    if ( (nt=fids.size()) ) {
       cp  = sTkr;
-      cp += sprintf( cp, "Index,Time,Ticker,Active,Age,NumUpd," );
+      val = bHdr ?  "Index,Time,Ticker,Active,Age,NumUpd," : "Ticker,";
+      cp += sprintf( cp, val );
       for ( size_t i=0; i<nt; i++ ) {
          if ( (fd=sch.GetDef( fids[i] )) )
             cp += sprintf( cp, "%s,", fd->pName() );
@@ -175,38 +164,14 @@ int main( int argc, char **argv )
    /*
     * First kiss : Walk all; build sorted list of indices by ( Expire, Strike )
     */
-   double                   d0, age;
-   SortedInt64Map           srt;
-   SortedInt64Map::iterator st;
-   rtVALUE                  v;
-   u_int64_t                exp;
-
-   d0 = lvc.TimeNs();
-   {
-      LVCAll   &all  = lvc.ViewAll();
-      Messages &msgs = all.msgs();
-
-      for ( size_t i=0; i<msgs.size(); i++ ) {
-         msg = msgs[i];
-         if ( !(fld=msg->GetField( _UN_SYMBOL )) )
-            continue; // for-i
-         val = fld->GetAsString();
-         if ( ::strcmp( val, und ) )
-            continue; // for-i
-         /*
-          * Sorted by ( Expire, Strike )
-          */
-         exp = 0;
-         if ( (fld=msg->GetField( _EXPIR_DATE )) ) {
-            v   = fld->field()._val;
-            exp = (u_int64_t)v._r64;
-         }
-         exp     += (fld=msg->GetField( _STRIKE_PRC )) ? fld->GetAsInt32() : 0;
-         srt[exp] = i;
-      }
-   }
-   for ( st=srt.begin(); st!=srt.end(); idxs.push_back( (*st).second ), st++ );
-   age = lvc.TimeNs() - d0;
+   d0    = lvc.TimeNs();
+   if ( bPut )
+      puts = lvc.GetUnderlyer( und, true ); 
+   if ( bCall )
+      calls = lvc.GetUnderlyer( und, false ); 
+   both  = puts;
+   both.insert( both.end(), calls.begin(), calls.end() );
+   age   = lvc.TimeNs() - d0;
    /*
     * Rock on
     */
@@ -214,11 +179,13 @@ int main( int argc, char **argv )
       LVCAll   &all  = lvc.ViewAll();
       Messages &msgs = all.msgs();
 
-      for ( size_t i=0; i<idxs.size(); i++ ) {
-         ix  = idxs[i];
+      for ( size_t i=0; i<both.size(); i++ ) {
+         ix  = both[i];
          msg = msgs[ix];
+         s   = lvc.DumpOne( *msg, fids, bHdr ); 
          ::fprintf( stdout, "%d,", ix );
-         _DumpOne( *msg, fids ); 
+         ::fwrite( s.data(), s.size(), 1, stdout );
+         ::fflush( stdout );
       }
       ::fprintf( stdout, "ViewAll() in %.2fs\n", all.dSnap() );
       ::fprintf( stdout, "Build List in %.2fs\n", age );
