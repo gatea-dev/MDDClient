@@ -44,7 +44,7 @@ FOR %%X in (libmddWire librtEdge) DO (
          pwd
          echo devenv /build %BLD_TYPE% Options.sln /project %%Y
          devenv /build %BLD_TYPE% Options.sln /project %%Y
-         cd ..\..\..\..\..
+         cd ..\..\..\..
          copy %%X\apps\Options\bin64\%%Y\%%Y.exe .\bin64
       )
    )
