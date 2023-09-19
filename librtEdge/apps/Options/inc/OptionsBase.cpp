@@ -9,12 +9,14 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+#include <set>
 
 using namespace RTEDGE;
 using namespace std;
 
 typedef vector<int>                           Ints;
 typedef map<u_int64_t, int, less<u_int64_t> > SortedInt64Map;
+typedef set<u_int64_t, less<u_int64_t> >      SortedInt64Set;
 
 #define _DSPLY_NAME    3
 #define _TRDPRC_1      6
@@ -102,18 +104,38 @@ public:
    }
 
    /**
-    * \brief Return Expiration as JulNum
+    * \brief Return Strike Price
     *
     * \param msg - Message snapped from LVC
+    * \return Strike Price
+    */
+   double StrikePrice( Message &msg )
+   {
+      return _GetAsDouble( msg, _STRIKE_PRC );
+   }
+
+   /**
+    * \brief Return Expiration as JulNum or YYYYMMDD
+    *
+    * \param msg - Message snapped from LVC
+    * \param bJulNu - true for julNum; false for YYYYMMDD
     * \return Expiration as JulNum
     */
-   u_int64_t Expiration( Message &msg )
+   u_int64_t Expiration( Message &msg, bool bJulNum=true )
    {
-      Field *fld;
+      Field    *fld;
+      u_int64_t rc;
 
-      if ( (fld=msg.GetField( _EXPIR_DATE )) )
-         return julNum( fld->GetAsDate() );
-      return 0;
+      rc = 0;
+      if ( (fld=msg.GetField( _EXPIR_DATE )) ) {
+         if ( bJulNum )
+            rc = julNum( fld->GetAsDate() );
+         else {
+            rc  = (u_int64_t)fld->field()._val._r64;
+            rc /= 1000000;
+         }
+      }
+      return rc;
    }
 
 
@@ -122,17 +144,19 @@ public:
    // Expiration Time Stuff
    ////////////////////////////////////
    /**
-    * \brief Convert string-ified date into number of days since Jan 1, 1970 
+    * \brief Convert string-ified date YYYYMMDD or into number of days since Epoch
     *
     * \param ymd : String-ified date as YYYYMMDD or YYYY-MM-DD
+    * \param bJulNum : true for num days since Epoch; false for YYYYMMDD
     * \return  Number of days since Jan 1, 1970; 0 if error
     */
-   u_int64_t julNum( const char *ymd )
+   u_int64_t ParseDate( const char *ymd, bool bJulNum )
    {
       string    s( ymd );
       struct tm lt;
       size_t    sz;
       time_t    unx;
+      u_int64_t rc;
 
       unx = 0;
       lt  = _lt;
@@ -161,25 +185,15 @@ public:
             unx         = ::mktime( &lt );
             break;
       }
-      return unx / 86400;
-   }
-
-#if defined(strptime_NOT_DEFINED_IN_WIN32)
-   u_int64_t julNum( const char *ymd )
-   {
-      struct tm   lt;
-      time_t      unx;
-      int         i;
-      const char *fmt[] = { "%Y%m%d", "%Y-%m-%d", NULL };
-
-      unx = 0;
-      for ( i=0; !unx && fmt[i]; i++ ) {
-         if ( strptime( ymd, fmt[i], &lt ) )
-            unx = ::mktime( &lt );
+      if ( bJulNum )
+         rc = unx / 86400;
+      else {
+         rc  = 10000 * ( lt.tm_year + 1900 );
+         rc +=   100 * ( lt.tm_mon + 1 );
+         rc += lt.tm_mday;
       }
-      return unx / 86400;
+      return rc;
    }
-#endif // defined(strptime_NOT_DEFINED_IN_WIN32)
 
    /**
     * \brief Convert rtDate to number of days since Jan 1, 1970 
@@ -260,13 +274,13 @@ public:
     *
     * The list is sorted by Expiration, then Strike Price
     *
+    * \param all - LVCAll w/ snapped values from LVC
     * \param und - Underlyer
     * \param bPut - true for put; false for call
     * \return Sort LVC index list containing ( Underlyer, PutOrCall )
     */
-   Ints GetUnderlyer( const char *und, bool bPut )
+   Ints GetUnderlyer( LVCAll &all, const char *und, bool bPut )
    {
-      LVCAll        &all  = ViewAll();
       Messages      &msgs = all.msgs();
       SortedInt64Map pdb, cdb;
       const char    *val;

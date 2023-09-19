@@ -58,7 +58,7 @@ int main( int argc, char **argv )
    Ints        fids;
    string      s;
    char        sTkr[4*K], *cp, *rp, *exp;
-   bool        aOK, bCfg, bHdr, bPut, bCall;
+   bool        aOK, bCfg, bHdr, bPut, bCall, bDmpExp;
    size_t      nt;
    int         i, fid, ix;
    double      rate;
@@ -74,15 +74,16 @@ int main( int argc, char **argv )
 
    // cmd-line args
 
-   svr   = "./cache.lvc";
-   und   = "AAPL";
-   flds  = "3,6,22,25,32,66,67";
-   rate  = 1.0;
-   bHdr  = true;
-   bPut  = true;
-   bCall = true;
-   exp   = NULL;
-   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
+   svr     = "./cache.lvc";
+   und     = "AAPL";
+   flds    = "3,6,22,25,32,66,67";
+   rate    = 1.0;
+   bHdr    = true;
+   bPut    = true;
+   bCall   = true;
+   bDmpExp = false;
+   exp     = NULL;
+   bCfg    = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -db      <LVC d/b filename> ] \\ \n";
@@ -93,6 +94,7 @@ int main( int argc, char **argv )
       s += "       [ -put     <Dump PUT> ] \\ \n";
       s += "       [ -call    <Dump PUT> ] \\ \n";
       s += "       [ -exp     <Expiration Date> ] \\ \n";
+      s += "       [ -dumpExp <true to dump ExpDate> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -db      : %s\n", svr );
@@ -103,6 +105,7 @@ int main( int argc, char **argv )
       printf( "      -put     : %s\n", _pBool( bPut ) );
       printf( "      -call    : %s\n", _pBool( bCall ) );
       printf( "      -exp     : <empty>\n" );
+      printf( "      -dumpExp : %s\n", _pBool( bDmpExp ) );
       return 0;
    }
 
@@ -129,6 +132,8 @@ int main( int argc, char **argv )
          bCall = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-exp" ) )
          exp = argv[++i];
+      else if ( !::strcmp( argv[i], "-dumpExp" ) )
+         bDmpExp = _IsTrue( argv[++i] );
    }
 
    /////////////////////
@@ -140,7 +145,7 @@ int main( int argc, char **argv )
    double      d0, age;
    Ints        puts, calls, both;
    Schema     &sch  = lvc.GetSchema();
-   u_int64_t   tExp = exp ? lvc.julNum( exp ) : 0; 
+   u_int64_t   tExp = exp ? lvc.ParseDate( exp, true ) : 0; 
 
    /*
     * CSV : Field Name or FID
@@ -153,7 +158,7 @@ int main( int argc, char **argv )
       else if ( (fd=sch.GetDef( val )) )
          fids.push_back( fd->Fid() );
    }
-   if ( (nt=fids.size()) ) {
+   if ( !bDmpExp && (nt=fids.size()) ) {
       cp  = sTkr;
       val = bHdr ?  "Index,Time,Ticker,Active,Age,NumUpd," : "Ticker,";
       cp += sprintf( cp, val );
@@ -170,11 +175,15 @@ int main( int argc, char **argv )
    /*
     * First kiss : Walk all; build sorted list of indices by ( Expire, Strike )
     */
+   LVCAll &all  = lvc.ViewAll();
+
    d0    = lvc.TimeNs();
+   bPut  |= bDmpExp;
+   bCall |= bDmpExp;
    if ( bPut )
-      puts = lvc.GetUnderlyer( und, true ); 
+      puts = lvc.GetUnderlyer( all, und, true ); 
    if ( bCall )
-      calls = lvc.GetUnderlyer( und, false ); 
+      calls = lvc.GetUnderlyer( all, und, false ); 
    both  = puts;
    both.insert( both.end(), calls.begin(), calls.end() );
    age   = lvc.TimeNs() - d0;
@@ -182,14 +191,18 @@ int main( int argc, char **argv )
     * Rock on
     */
    {
-      LVCAll   &all  = lvc.ViewAll();
-      Messages &msgs = all.msgs();
-      u_int64_t jExp, jNow;
+      Messages      &msgs = all.msgs();
+      SortedInt64Set exps;
+      u_int64_t      jExp, jNow;
 
       jNow = lvc.TimeSec() / 86400;
       for ( size_t i=0; i<both.size(); i++ ) {
          ix   = both[i];
          msg  = msgs[ix];
+         if ( bDmpExp ) {
+            exps.insert( lvc.Expiration( *msg, false ) );
+            continue; // for-i
+         }
          jExp = lvc.Expiration( *msg );
          if ( tExp && ( jExp != tExp ) )
             continue; // for-i
@@ -199,6 +212,10 @@ int main( int argc, char **argv )
          ::fwrite( s.data(), s.size(), 1, stdout );
          ::fflush( stdout );
       }
+      SortedInt64Set::iterator et;
+
+      for ( et=exps.begin(); et!=exps.end(); et++ )
+         ::fprintf( stdout, "Expire : %ld\n", (*et) );
       ::fprintf( stdout, "ViewAll() in %.2fs\n", all.dSnap() );
       ::fprintf( stdout, "Build List in %.2fs\n", age );
    }

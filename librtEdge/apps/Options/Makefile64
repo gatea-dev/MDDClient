@@ -72,7 +72,7 @@ clear:
 	clear
 
 clean:
-	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./core
+	/bin/rm -fv ./*.o ./obj/*.o ./$(BIN_DIR)/* ./core.*
 
 %.o:  cpp/%.cpp
 	$(CPP) $(CPPFLAGS) $<
