@@ -21,6 +21,11 @@ static int l_fidXTy    =     7; // X-axis type : xTy_DATE = Date; Else Numeric
 static int l_fidX0     =     8; // If Numeric, first X value
 static int l_fidUNCV   = -8002;
 
+// Forwards / Collections
+
+class OptionsSpline;
+
+typedef hash_map<string, OptionsSpline *> SplineMap;
 
 /////////////////////////////////////
 // Version
@@ -196,6 +201,13 @@ public:
    DoubleList &Y()    { return _Y; }
 
    /////////////////////////
+   // WatchList
+   /////////////////////////
+public:
+   bool IsWatched()              { return( _StreamID != 0 ); }
+   void SetWatch( int StreamID ) { _StreamID = StreamID; }
+
+   /////////////////////////
    // Operations
    /////////////////////////
 public:
@@ -238,7 +250,7 @@ public:
    {
       // Pre-condition
 
-      if ( !_StreamID )
+      if ( !IsWatched() )
          return;
 
       // Initialize / Publish
@@ -282,6 +294,128 @@ private:
 }; // class OptionsSpline
 
 
+////////////////////////////////////////
+//
+//    S p l i n e P u b l i s h e r
+//
+////////////////////////////////////////
+class SplinePublisher : public RTEDGE::PubChannel
+{
+private:
+   string    _svr;
+   string    _bds;
+   SplineMap _splines;
+
+   /////////////////////
+   // Constructor
+   /////////////////////
+public:
+   SplinePublisher( const char *svr, 
+                    const char *svc, 
+                    const char *bds ) :
+      PubChannel( svc ),
+      _svr( svr ),
+      _bds( bds ),
+      _splines()
+   {
+      SetBinary( true );
+   }
+
+   /////////////////////
+   // Operations
+   /////////////////////
+public:
+   const char *PubStart()
+   {
+      return Start( _svr.data() );
+   }
+
+   /////////////////////
+   // RTEDGE::PubChannel Interface
+   /////////////////////
+protected:
+   virtual void OnConnect( const char *msg, bool bUp )
+   {
+      const char *ty = bUp ? "UP" : "DOWN";
+      string      tm;
+
+      LOG( "[%s] PUB-CONN %s : %s", pDateTimeMs( tm ), msg, ty );
+   }
+
+   virtual void OnPubOpen( const char *tkr, void *arg )
+   {
+      SplineMap          &sdb = _splines;
+      Update             &u   = upd();
+      SplineMap::iterator it;
+      string              tm, s( tkr );
+      OptionsSpline      *spl;
+
+      LOG( "[%s] OPEN  %s", pDateTimeMs( tm ), tkr );
+      if ( (it=sdb.find( s )) != sdb.end() ) {
+         spl = (*it).second;
+         spl->SetWatch( (size_t)arg );
+         spl->Publish( u );
+      }
+      else {
+         u.Init( tkr, arg );
+         u.PubError( "non-existent ticker" );
+      }
+   }
+
+   virtual void OnPubClose( const char *tkr )
+   {
+      SplineMap          &sdb = _splines;
+      SplineMap::iterator it;
+      string              tm, s( tkr );
+      OptionsSpline      *spl;
+
+      LOG( "[%s] CLOSE %s", pDateTimeMs( tm ), tkr );
+      if ( (it=sdb.find( s )) != sdb.end() ) {
+         spl = (*it).second;
+         spl->SetWatch( 0 );
+      }
+   }
+
+   virtual void OnOpenBDS( const char *bds, void *tag )
+   {
+      SplineMap                &sdb = _splines;
+      SplineMap::iterator       it;
+      SortedStringSet           srt;
+      SortedStringSet::iterator st;
+      string                    tm, k;
+      char                     *tkr;
+      vector<char *>            tkrs;
+
+      // We're a whore
+
+      LOG( "[%s] OPEN.BDS %s", pDateTimeMs( tm ), bds );
+      for ( it=sdb.begin(); it!=sdb.end(); srt.insert( (*it).first ), it++ );
+      for ( st=srt.begin(); st!=srt.end(); st++ ) {
+         k   = (*st);
+         if ( (it=sdb.find( k )) != sdb.end() ) {
+            tkr = (char *)(*it).second->name();
+            tkrs.push_back( tkr );
+         }
+      }
+      tkrs.push_back( (char *)0 );
+      PublishBDS( bds, (size_t)tag, tkrs.data() );
+   }
+
+   virtual void OnCloseBDS( const char *bds )
+   {
+      string tm;
+
+      LOG( "[%s] CLOSE.BDS %s", pDateTimeMs( tm ), bds );
+   }
+
+   virtual Update *CreateUpdate()
+   {
+      return new Update( *this );
+   }
+
+}; // SplinePublisher
+
+
 //////////////////////////
 // main()
 //////////////////////////
@@ -298,7 +432,7 @@ int main( int argc, char **argv )
    // Quickie checks
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
-      printf( "%s\n", OptionsCurveID() );
+      LOG( "%s", OptionsCurveID() );
       return 0;
    }
 
@@ -319,14 +453,14 @@ int main( int argc, char **argv )
       s += "       [ -put     <Dump PUT> ] \\ \n";
       s += "       [ -exp     <Expiration Date> ] \\ \n";
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
-      printf( s.data(), argv[0] );
-      printf( "   Defaults:\n" );
-      printf( "      -db      : %s\n", svr );
-      printf( "      -u       : %s\n", tkr );
-      printf( "      -r       : %.2f\n", rate );
-      printf( "      -put     : %s\n", _pBool( bPut ) );
-      printf( "      -exp     : <empty>\n" );
-      printf( "      -xInc    : %.2f\n", xInc );
+      LOG( (char *)s.data(), argv[0] );
+      LOG( "   Defaults:" );
+      LOG( "      -db      : %s", svr );
+      LOG( "      -u       : %s", tkr );
+      LOG( "      -r       : %.2f", rate );
+      LOG( "      -put     : %s", _pBool( bPut ) );
+      LOG( "      -exp     : <empty>" );
+      LOG( "      -xInc    : %.2f", xInc );
       return 0;
    }
 
@@ -349,7 +483,7 @@ int main( int argc, char **argv )
          exp = argv[++i];
    }
    if ( !exp ) {
-      printf( "Must specify -exp; Exitting ...\n" );
+      LOG( "Must specify -exp; Exitting ..." );
       return 0;
    }
 
@@ -369,7 +503,7 @@ int main( int argc, char **argv )
    d0     = lvc.TimeNs();
    und.Init( all );
    age   = 1000.0 * ( lvc.TimeNs() - d0 );
-   ::fprintf( stdout, "Underlyer.Init() in %dms\n", (int)age );
+   LOG( "Underlyer.Init() in %dms", (int)age );
    /*
     * Rock on
     */
@@ -379,15 +513,14 @@ int main( int argc, char **argv )
       DoubleList   &X   = spline.X();
       DoubleList   &Y   = spline.Y();
 
-      ::fprintf( stdout, "ViewAll() in %.2fms\n", all.dSnap()*1000.0 );
-      ::fprintf( stdout, "Strike,Price,\n" );
+      LOG( "ViewAll() in %.2fms", all.dSnap()*1000.0 );
+      LOG( "Strike,Price," );
       for ( size_t i=0; i<X.size(); i++ )
-         ::fprintf( stdout, "%.2f,%.2f,\n", X[i], Y[i] );
-      ::fprintf( stdout, "CubicSpline() in %dmS\n", ms );
+         LOG( "%.2f,%.2f,", X[i], Y[i] );
+      LOG( "CubicSpline() in %dmS", ms );
    }
    else
-      ::fprintf( stdout, "ERROR : Invalid Expire Date %s for %s\n", exp, tkr );
-   ::fprintf( stdout, "Done!!\n " );
-   ::fflush( stdout );
+      LOG( "ERROR : Invalid Expire Date %s for %s", exp, tkr );
+   LOG( "Done!!" );
    return 1;
 }

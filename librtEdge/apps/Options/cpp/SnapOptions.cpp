@@ -168,9 +168,7 @@ int main( int argc, char **argv )
          else
             cp += sprintf( cp, "%d,", fids[i] );
       }
-      cp += sprintf( cp, "\n" );
-      ::fprintf( stdout, sTkr );
-      ::fflush( stdout );
+      LOG( cp );
    }
    /*
     * First kiss : Walk all; build sorted list of indices by ( Expire, Strike )
@@ -215,11 +213,10 @@ int main( int argc, char **argv )
       SortedInt64Set::iterator et;
 
       for ( et=exps.begin(); et!=exps.end(); et++ )
-         ::fprintf( stdout, "Expire : %ld\n", (*et) );
-      ::fprintf( stdout, "ViewAll() in %.2fs\n", all.dSnap() );
-      ::fprintf( stdout, "Build List in %.2fs\n", age );
+         LOG( "Expire : %ld", (*et) );
+      LOG( "ViewAll() in %.2fs", all.dSnap() );
+      LOG( "Build List in %.2fs", age );
    }
-   ::fprintf( stdout, "Done!!\n " );
-   ::fflush( stdout );
+   LOG( "Done!!" );
    return 1;
 }

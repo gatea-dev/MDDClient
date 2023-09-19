@@ -9,6 +9,7 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+#include <stdarg.h>
 #include <set>
 
 using namespace RTEDGE;
@@ -17,6 +18,7 @@ using namespace std;
 typedef vector<int>                           Ints;
 typedef map<u_int64_t, int, less<u_int64_t> > SortedInt64Map;
 typedef set<u_int64_t, less<u_int64_t> >      SortedInt64Set;
+typedef set<string, less<string> >            SortedStringSet;
 
 #define _DSPLY_NAME    3
 #define _TRDPRC_1      6
@@ -39,6 +41,23 @@ static const char *_pBool( bool b )
 static bool _IsTrue( const char *p )
 {
    return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
+}
+
+/////////////////////////////////////
+// Handy-dandy Logger
+/////////////////////////////////////
+static void LOG( char *fmt, ... )
+{
+   va_list ap;
+   char    bp[8*K], *cp;
+
+   va_start( ap,fmt );
+   cp  = bp;
+   cp += vsprintf( cp, fmt, ap );
+   cp += sprintf( cp, "\n" );
+   va_end( ap );
+   ::fwrite( bp, 1, cp-bp, stdout );
+   ::fflush( stdout );
 }
 
 
