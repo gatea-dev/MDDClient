@@ -21,6 +21,7 @@
 *      8 NOV 2022 jcs  Build 60: rtFld_vector
 *     15 DEC 2022 jcs  Build 61: DateTimeList; Dump() buffer overflow w/ vector
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
+*     18 SEP 2023 jcs  Build 65: GetAsDate() : Month -= 1
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -1081,11 +1082,12 @@ private:
 
 	   // YYYYMMDD * f_MIL;
 
-	   r64     /= f_MIL;
-	   i32      = (int)r64;
-	   d._year  = i32 / 10000;
-	   d._month = ( i32 / 100 ) % 100;
-	   d._mday  = i32 % 100;
+	   r64      /= f_MIL;
+	   i32       = (int)r64;
+	   d._year   = i32 / 10000;
+	   d._month  = ( i32 / 100 ) % 100;
+	   d._month -= 1; // Build 65
+	   d._mday   = i32 % 100;
 	   return d;
 	}
 

@@ -107,7 +107,7 @@ public:
     * \param msg - Message snapped from LVC
     * \return Expiration as JulNum
     */
-   u_int64_t DaysToExp( Message &msg )
+   u_int64_t Expiration( Message &msg )
    {
       Field *fld;
 
@@ -127,7 +127,44 @@ public:
     * \param ymd : String-ified date as YYYYMMDD or YYYY-MM-DD
     * \return  Number of days since Jan 1, 1970; 0 if error
     */
-#if !defined(WIN32) // No strptime() on WIN32
+#if !defined(WIN32)
+   u_int64_t julNum( const char *ymd )
+   {
+      string    s( ymd );
+      struct tm lt;
+      size_t    sz;
+      time_t    unx;
+
+      unx = 0;
+      lt  = _lt;
+      sz  = s.length();
+      switch( sz ) {
+         case  8: // YYYYMMDD
+            lt.tm_year  = atoi( s.substr( 0,4 ).data() );
+            lt.tm_mon   = atoi( s.substr( 4,2 ).data() );
+            lt.tm_mday  = atoi( s.substr( 6,2 ).data() );
+            lt.tm_year -= 1900;
+            lt.tm_mon  -= 1;
+            lt.tm_hour  = 0;
+            lt.tm_min   = 0;
+            lt.tm_sec   = 0;
+            unx         = ::mktime( &lt );
+            break;
+         case 10: // YYYY-MM-DD
+            lt.tm_year  = atoi( s.substr( 0,4 ).data() );
+            lt.tm_mon   = atoi( s.substr( 5,2 ).data() );
+            lt.tm_mday  = atoi( s.substr( 8,2 ).data() );
+            lt.tm_year -= 1900;
+            lt.tm_mon  -= 1;
+            lt.tm_hour  = 0;
+            lt.tm_min   = 0;
+            lt.tm_sec   = 0;
+            unx         = ::mktime( &lt );
+            break;
+      }
+      return unx / 86400;
+   }
+#else
    u_int64_t julNum( const char *ymd )
    {
       struct tm   lt;
@@ -135,13 +172,14 @@ public:
       int         i;
       const char *fmt[] = { "%Y%m%d", "%Y-%m-%d", NULL };
 
-      for ( i=0,unx=0; !unx && fmt[i]; i++ ) {
-         if ( ::strptime( ymd, fmt[i], &lt ) )
+      unx = 0;
+      for ( i=0; !unx && fmt[i]; i++ ) {
+         if ( strptime( ymd, fmt[i], &lt ) )
             unx = ::mktime( &lt );
       }
       return unx / 86400;
    }
-#endif // !defined(WIN32)
+#endif // defined(WIN32)
 
    /**
     * \brief Convert rtDate to number of days since Jan 1, 1970 

@@ -19,9 +19,15 @@ Features To Add
 */
 
 /**
- * \mainpage GreekServer Change Log
+ * \mainpage Options App Change Log
  *
- * GreekServer is snaps Options Prices from LVC and ...
+ * Options App are MDDirect Options Applications driven by LVC:
+ *
+ * App | Description
+ * --- | ---
+ * SnapOptions | Snap Options via ( Underlyer, Put Or Call, Exp Date )
+ * OptionsCurve | Calc and Publish Options Curve for ( Underlyer, Exp Date ) 
+ *
  *
  * ## Change Log
  *

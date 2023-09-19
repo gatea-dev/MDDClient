@@ -34,7 +34,7 @@ const char *SnapOptionsID()
 
 ////////////////////////////////////////////////
 //
-//     c l a s s   O p t i o n s S n a p
+//     c l a s s   S n a p O p t i o n s
 //
 ////////////////////////////////////////////////
 class SnapOptions : public OptionsBase
@@ -57,7 +57,7 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   char        sTkr[4*K], *cp, *rp;
+   char        sTkr[4*K], *cp, *rp, *exp;
    bool        aOK, bCfg, bHdr, bPut, bCall;
    size_t      nt;
    int         i, fid, ix;
@@ -81,6 +81,7 @@ int main( int argc, char **argv )
    bHdr  = true;
    bPut  = true;
    bCall = true;
+   exp   = NULL;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -90,7 +91,8 @@ int main( int argc, char **argv )
       s += "       [ -f       <CSV Fids> ] \\ \n";
       s += "       [ -h       <Full Header> ] \\ \n";
       s += "       [ -put     <Dump PUT> ] \\ \n";
-      s += "       [ -call     <Dump PUT> ] \\ \n";
+      s += "       [ -call    <Dump PUT> ] \\ \n";
+      s += "       [ -exp     <Expiration Date> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -db      : %s\n", svr );
@@ -100,6 +102,7 @@ int main( int argc, char **argv )
       printf( "      -h       : %s\n", _pBool( bHdr ) );
       printf( "      -put     : %s\n", _pBool( bPut ) );
       printf( "      -call    : %s\n", _pBool( bCall ) );
+      printf( "      -exp     : <empty>\n" );
       return 0;
    }
 
@@ -124,6 +127,8 @@ int main( int argc, char **argv )
          bPut = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-call" ) )
          bCall = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-exp" ) )
+         exp = argv[++i];
    }
 
    /////////////////////
@@ -134,7 +139,8 @@ int main( int argc, char **argv )
    FieldDef   *fd;
    double      d0, age;
    Ints        puts, calls, both;
-   Schema     &sch = lvc.GetSchema();
+   Schema     &sch  = lvc.GetSchema();
+   u_int64_t   tExp = exp ? lvc.julNum( exp ) : 0; 
 
    /*
     * CSV : Field Name or FID
@@ -178,13 +184,18 @@ int main( int argc, char **argv )
    {
       LVCAll   &all  = lvc.ViewAll();
       Messages &msgs = all.msgs();
+      u_int64_t jExp, jNow;
 
+      jNow = lvc.TimeSec() / 86400;
       for ( size_t i=0; i<both.size(); i++ ) {
-         ix  = both[i];
-         msg = msgs[ix];
-         s   = lvc.DumpOne( *msg, fids, bHdr ); 
+         ix   = both[i];
+         msg  = msgs[ix];
+         jExp = lvc.Expiration( *msg );
+         if ( tExp && ( jExp != tExp ) )
+            continue; // for-i
+         s    = lvc.DumpOne( *msg, fids, bHdr ); 
          ::fprintf( stdout, "%d,", ix );
-         ::fprintf( stdout, ">>> %ld <<<,", lvc.DaysToExp( *msg ) );
+         ::fprintf( stdout, ">>> %ld <<<,", jExp-jNow );
          ::fwrite( s.data(), s.size(), 1, stdout );
          ::fflush( stdout );
       }
