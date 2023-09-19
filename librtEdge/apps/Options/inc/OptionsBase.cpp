@@ -127,7 +127,6 @@ public:
     * \param ymd : String-ified date as YYYYMMDD or YYYY-MM-DD
     * \return  Number of days since Jan 1, 1970; 0 if error
     */
-#if !defined(WIN32)
    u_int64_t julNum( const char *ymd )
    {
       string    s( ymd );
@@ -164,7 +163,8 @@ public:
       }
       return unx / 86400;
    }
-#else
+
+#if defined(strptime_NOT_DEFINED_IN_WIN32)
    u_int64_t julNum( const char *ymd )
    {
       struct tm   lt;
@@ -179,7 +179,7 @@ public:
       }
       return unx / 86400;
    }
-#endif // defined(WIN32)
+#endif // defined(strptime_NOT_DEFINED_IN_WIN32)
 
    /**
     * \brief Convert rtDate to number of days since Jan 1, 1970 
