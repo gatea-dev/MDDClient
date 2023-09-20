@@ -859,8 +859,11 @@ class BBDailyStats:
    # @param statFile : host:port of LVC Admin Channel
    ########################
    def __init__( self, statFile ):
-      lst         = MDDirect.GetBBDailyStats( statFile )
-      self._stats = {}
+      lst = MDDirect.GetBBDailyStats( statFile )
+      sdb = {}
+      for ( k,v ) in lst:
+         sdb[k] = v
+      self._stats  = sdb
 
    ########################
    # Return string-ified list of stats
