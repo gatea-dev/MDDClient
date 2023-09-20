@@ -217,18 +217,26 @@ public:
     * \brief Build Spline from current LVC Snap
     *
     * \param all - Current LVC Snap
-    * \return Millis to calc and build spline
+    * \param bForce - true to calc if not watched
+    * \return true if Calc'ed; false if not
     */ 
-   int Calc( LVCAll &all )
+   bool Calc( LVCAll &all, bool bForce=false )
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
       Message      *msg;
       int           ix;
-      double        d0, age;
       DoubleList    X, Y;
 
-      d0 = lvc.TimeNs();
+      // Pre-condition(s)
+
+      if ( !bForce && !IsWatched() )
+         return false;
+      if ( !_kdb.size() )
+         return false;
+
+      // OK to continue
+
       _X.clear();
       _Y.clear();
       for ( size_t i=0; i<_kdb.size(); i++ ) {
@@ -237,8 +245,6 @@ public:
          X.push_back( lvc.StrikePrice( *msg ) );
          Y.push_back( lvc.MidQuote( *msg ) ); 
       }
-      if ( !_kdb.size() )
-         return 0;
 
       double             x0 = X[0];
       double             x1 = X[X.size()-1];
@@ -246,8 +252,7 @@ public:
 
       for ( double x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
       for ( size_t i=0; i<_X.size(); _Y.push_back( cs.Spline( _X[i] ) ), i++ );
-      age = ( lvc.TimeNs() - d0 ) * 1000.0;
-      return (int)age;
+      return true;
    }
 
    void Publish( Update &u )
@@ -308,8 +313,10 @@ class SplinePublisher : public RTEDGE::PubChannel
 private:
    OptionsCurve &_lvc;
    string        _svr;
+   double        _pubRate;
    Underlyers    _underlyers;
    SplineMap     _splines;
+   double        _tPub;
 
    /////////////////////
    // Constructor
@@ -317,31 +324,37 @@ private:
 public:
    SplinePublisher( OptionsCurve &lvc,
                     const char   *svr, 
-                    const char   *svc ) :
+                    const char   *svc,
+                    double        pubRate ) :
       PubChannel( svc ),
       _lvc( lvc ),
       _svr( svr ),
+      _pubRate( pubRate ),
       _underlyers(),
-      _splines()
+      _splines(),
+      _tPub( 0.0 )
    {
       SetBinary( true );
+      SetIdleCallback( true );
    }
 
    /////////////////////
    // Operations
    /////////////////////
 public:
-   void Calc()
+   int Calc( bool bForce=false )
    {
       LVCAll             &all = _lvc.ViewAll();
       SplineMap          &sdb = _splines;
       SplineMap::iterator it;
       OptionsSpline      *spl;
+      int                 rc;
 
-      for ( it=sdb.begin(); it!=sdb.end(); it++ ) {
+      for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          spl = (*it).second;
-         spl->Calc( all );
+         rc += spl->Calc( all, bForce ) ? 1 : 0;
       }
+      return rc;
    }
 
    size_t LoadSplines( double xInc )
@@ -407,6 +420,7 @@ protected:
 
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
+      LVCAll             &all = _lvc.ViewAll();
       SplineMap          &sdb = _splines;
       Update             &u   = upd();
       SplineMap::iterator it;
@@ -417,6 +431,7 @@ protected:
       if ( (it=sdb.find( s )) != sdb.end() ) {
          spl = (*it).second;
          spl->SetWatch( (size_t)arg );
+         spl->Calc( all );
          spl->Publish( u );
       }
       else {
@@ -474,6 +489,24 @@ protected:
    virtual Update *CreateUpdate()
    {
       return new Update( *this );
+   }
+
+   virtual void OnIdle()
+   {
+      double now = TimeNs();
+      double age = now - _tPub;
+      int    n;
+
+      // Pre-condition
+
+      if ( age < _pubRate )
+         return;
+
+      // Rock on
+
+      _tPub = now;
+      if ( (n=Calc()) )
+         LOG( "OnIdle() : %d calc'ed", n );
    }
 
 }; // SplinePublisher
@@ -550,7 +583,7 @@ int main( int argc, char **argv )
    // Do it
    /////////////////////
    OptionsCurve    lvc( db );
-   SplinePublisher pub( lvc, svr, svc );
+   SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, age;
    size_t          ns;
 
@@ -562,7 +595,7 @@ int main( int argc, char **argv )
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines loaded in %dms", ns, (int)age );
    d0  = lvc.TimeNs();
-   pub.Calc();
+   pub.Calc( true );
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines calculated in %dms", ns, (int)age );
    /*
