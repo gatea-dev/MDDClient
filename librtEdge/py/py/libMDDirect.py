@@ -20,6 +20,7 @@
 #     14 AUG 2023 jcs  NONE
 #     21 AUG 2023 jcs  MDDirectException; SnapAll()
 #      4 SEP 2023 jcs  EVT_BDS; DelTickers()
+#     20 SEP 2023 jcs  BBDailyStats
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -823,6 +824,67 @@ class LVCAdmin:
    def Close( self ):
       MDDirect.LVCAdminClose( self._cxt )
       self._cxt = None
+
+
+## \cond
+######################################
+#                                    #
+#      B B D a i l y S t a t s       #
+#                                    #
+######################################
+## \endcond
+## @class BBDailyStats
+#
+# Sampled BB Daily Stats from run-time stats file
+#
+# The following are supported:
+# -# BBSubscribe
+# -# BBUnSubscribe
+# -# BBSubscribeElem
+# -# BBRequest
+# -# BBRequestElem
+# -# BBRealTime
+# -# BBRealTimeElem
+# -# BBRefResponse
+# -# BBRefResponseElem
+#
+# Member | Description
+# --- | ---
+# _stats | { 'BBStat1' : val1, 'BBStat2' : val2, ... }
+#
+class BBDailyStats:
+   ########################
+   # Constructor : Read BBDailyStats from run-time stats file
+   #
+   # @param statFile : host:port of LVC Admin Channel
+   ########################
+   def __init__( self, statFile ):
+      lst         = MDDirect.GetBBDailyStats( statFile )
+      self._stats = {}
+
+   ########################
+   # Return string-ified list of stats
+   #
+   # @return String-ified list of stats
+   ########################
+   def Dump( self ):
+      sdb = self._stats
+      kdb = sdb.keys()
+      rc  = [ '%-20s = %d' % ( k, sdb[k] ) for k in kdb ]
+      return '\n'.join( rc )
+
+   ########################
+   # Return string-ified list of stats
+   #
+   # @param statName : Name of stat
+   # @return Value if found; None if not
+   ########################
+   def GetStat( self, statName ):
+      sdb = self._stats
+      val = None
+      if statName in sdb:
+         val = sdb[statName]
+      return val
 
 
 ## \cond

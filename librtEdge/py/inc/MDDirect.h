@@ -14,6 +14,7 @@
 *     19 JUL 2022 jcs  Build  8: LVCAdmin
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
 *     29 AUG 2023 jcs  Build 10: EVT_BDS
+*     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -167,13 +168,17 @@ typedef LocklessFifo<Update>     UpdateFifo;
 #include <Book.h>
 #include <LVC.h>
 #include <LVCAdmin.h>
+#include <Stats.h>
 #include <SubChannel.h>
 
 // version.cpp
 
-extern void  m_breakpoint();
-extern int   strncpyz( char *, char *, int );
-extern int   atoin( char *, int );
-extern char *MDDirectID();
+extern void      m_breakpoint();
+extern int       strncpyz( char *, char *, int );
+extern int       atoin( char *, int );
+extern char     *MDDirectID();
+extern PyObject *mdd_PyList_Pack2( PyObject *, PyObject * );
+extern PyObject *mdd_PyList_Pack3( PyObject *, PyObject *, PyObject * );
+extern PyObject *_PyReturn( PyObject * );
 
 #endif // _MDDPY_PYTHON_H

@@ -11,6 +11,7 @@
 *     11 JUL 2022 jcs  Build  7: _tDead
 *     19 JUL 2022 jcs  Build  8: Snap() : None if !_tUpd
 *      5 SEP 2023 jcs  Build 10: PySchema() leak
+*     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -40,7 +41,7 @@ PyObject *MDDpyLVC::PySchema()
    RTEDGE::Schema &sch = GetSchema( false );
    RTEDGE::Field  *fld;
    PyObjects       vdb;
-   PyObject       *rtn, *pyF;
+   PyObject       *rtn;
    int             i, nf;
 
    // Pre-condition(s)
@@ -52,16 +53,8 @@ PyObject *MDDpyLVC::PySchema()
 
    for ( sch.reset(); (sch)(); ) {
       fld = sch.field();
-#ifdef MR_LEAKY
-      pyF = PyInt_FromLong( fld->Fid() );
-      pyN = PyString_FromString( fld->Name() );
-      vdb.push_back( ::PyTuple_Pack( 2, pyF, pyN ) );
-#else
-      pyF = ::PyList_New( 2 );
-      ::PyList_SetItem( pyF, 0, PyInt_FromLong( fld->Fid() ) );
-      ::PyList_SetItem( pyF, 1, PyString_FromString( fld->Name() ) );
-      vdb.push_back( pyF );
-#endif // MR_LEAKY
+      vdb.push_back( ::mdd_PyList_Pack2( PyInt_FromLong( fld->Fid() ),
+                                         PyString_FromString( fld->Name() ) ) );
    }
    nf  = (int)vdb.size();
    rtn = ::PyList_New( nf );
@@ -86,7 +79,7 @@ PyObject *MDDpyLVC::PyGetTickers()
    for ( i=0; i<nm; i++ ) {
       pyS = PyString_FromString( mdb[i]->Service() );
       pyT = PyString_FromString( mdb[i]->Ticker() );
-      vdb.push_back( ::PyTuple_Pack( 2, pyS, pyT ) );
+      vdb.push_back( ::mdd_PyList_Pack2( pyS, pyT ) );
    }
    rtn = ::PyList_New( nm );
    for ( i=0; i<nm; ::PyList_SetItem( rtn, i, vdb[i] ), i++ );
@@ -154,7 +147,7 @@ PyObject *MDDpyLVC::_rt2py( RTEDGE::Message &msg )
       pyF = PyInt_FromLong( fld.Fid() );
       pyV = fld.GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      ::PyList_SetItem( rtn, i+xt, ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
+      ::PyList_SetItem( rtn, i+xt, ::mdd_PyList_Pack3( pyF, pyV, pyT ) );
    }
    return rtn;
 }

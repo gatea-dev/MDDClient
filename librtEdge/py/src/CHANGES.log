@@ -1,70 +1,115 @@
-rtInC Python Plug-in Library
-----------------------------
+/******************************************************************************
+*
+*  CHANGES.log
+*     doxygen-enabled CHANGES.log
+*
+*  REVISION HISTORY:
+*     20 SEP 2023 jcs  Created (from original shit)
+*
+*  (c) 1994-2022, Gatea Ltd.
+******************************************************************************/
+
+/* 
 
 Features To Add
 ---------------
-1) PyList LVCAdmin.XxxTicker(s)( svc, tkr, double dWait=0.0 )
+-# PyList LVCAdmin.XxxTicker(s)( svc, tkr, double dWait=0.0 )
    - Return list of tickers NOT refreshed / processed
+ */
 
+/**
+ * \mainpage MDDirect Python API Reference Manual
+ *
+ * librtEdge allows you to consume and publish real-time and historical data
+ * from the MD-Direct platform via the C/C++ librtEdge library.
+ *
+ * The MDDirect Python API wraps the C/C++ library in Python, allowing you to 
+ * access the features of librtEdge in Python.
+ *
+ *
+ * ## Change Log
+ *
+ *
+ * ### Build 12  23-09-xx
+ * 
+ * -# More tuple-based leaks : mdd_PyList_PackX()
+ *    - MDDpyLVC.PyGetTickers()
+ *    - MDDpyLVC._rt2py()
+ *    - Record.GetUpds()
+ *    - Schema.GetUpds()
+ *    - MDDpySubChan._Get1stUpd()
+ *    - GetFields()
+ *
+ * -# Stats.cpp:
+ *    - BBDailyStats
+ *
+ *
+ * ### Build 10  23-09-06
+ * 
+ * -# Field.GetValue() : mddFld_undef = _MDDPY_NONE
+ * 
+ * -# LVCSnapAll -> MDDpyLVC.PySnapAll()
+ * 
+ * -# LVCAdminDelTicker -> MDDpyLVCAdmin.PyDelTicker()
+ *
+ * -# Leak in MDDpyLVC.PySchema() : Lists, not tuples : DUH!!
+ * 
+ * 
+ * ### Build  9  23-01-12
+ * 
+ * -# Field.Value() : mddFld_undef = _MDDPY_NONE
+ * 
+ * -# _MDDPY_VECTOR : rtFld_vector -> PyList
+ * 
+ * 
+ * ### Build  8  22-07-19
+ * 
+ * -# LVCAdmin
+ * 
+ * -# DDpyLVC::PySnap() : Return None if !ld._tUpd 
+ * 
+ * 
+ * ### Build  7  22-07-11
+ * 
+ * -# rtEdgeData._tDead
+ * 
+ * 
+ * ### Build  6  22-03-18
+ * 
+ * -# 64-bit _MDDPY_INT64
+ * 
+ * 
+ * ### Build  5  22-02-03
+ * 
+ * -# LVCSnap() : Return _tUpd
+ * 
+ * 
+ * ### Build  4  22-01-25
+ * 
+ * -# Py_GetVersion()
+ * 
+ * -# MDDirect27 / MDDirect39
+ * 
+ * 
+ * ### Build  3  20-12-11
+ * 
+ * -# SnapTape()
+ * 
+ * -# SnapTapeSample()
+ * 
+ * 
+ * ### Build  2  20-11-18
+ * 
+ * -# LVCGetTickers 
+ * 
+ * -# QueryTape()
+ * 
+ */
 
-Build 10  23-09-xx
-------------------
-1) Field.GetValue() : mddFld_undef = _MDDPY_NONE
-
-2) LVCSnapAll -> MDDpyLVC.PySnapAll()
-
-2) LVCAdminDelTicker -> MDDpyLVCAdmin.PyDelTicker()
-
-
-Build  9  23-01-12
-------------------
-1) Field.Value() : mddFld_undef = _MDDPY_NONE
-
-2) _MDDPY_VECTOR : rtFld_vector -> PyList
-
-
-Build  8  22-07-19
-------------------
-1) LVCAdmin
-
-2) DDpyLVC::PySnap() : Return None if !ld._tUpd 
-
-
-Build  7  22-07-11
-------------------
-1) rtEdgeData._tDead
-
-
-Build  6  22-03-18
-------------------
-1) 64-bit _MDDPY_INT64
-
-
-Build  5  22-02-03
-------------------
-1) LVCSnap() : Return _tUpd
-
-
-Build  4  22-01-25
-------------------
-1) Py_GetVersion()
-
-2) MDDirect27 / MDDirect39
-
-
-Build  3  20-12-11
-------------------
-1) SnapTape()
-
-2) SnapTapeSample()
-
-
-Build  2  20-11-18
-------------------
-1) LVCGetTickers 
-
-2) QueryTape()
-
+#ifndef DOXYGEN_OMIT
+/*
+ * rtInC below
+ */
 
 Build 23  19-04-03 (Really Build 1 for MDDirect)
 ------------------------------------------------
@@ -73,7 +118,6 @@ Build 23  19-04-03 (Really Build 1 for MDDirect)
    - No mo TS1, PermSvr, RMDS
    - No mo Library.cpp / Library.h
 
-======================================================
 
 Build 22  16-03-16
 ------------------
@@ -210,3 +254,5 @@ Build  2  11-04-11
 Build  1  11-04-07
 ------------------
 1) Created
+
+#endif // DOXYGEN_OMIT

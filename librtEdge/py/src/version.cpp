@@ -63,3 +63,31 @@ int atoin( char *str, int sz )
    return atoi( buf );
 }
 
+
+PyObject *mdd_PyList_Pack2( PyObject *py1, PyObject *py2 )
+{
+   PyObject *rc;
+
+   rc = ::PyList_New( 2 );
+   ::PyList_SetItem( rc, 0, py1 );
+   ::PyList_SetItem( rc, 1, py2 );
+   return rc;
+}
+
+PyObject *mdd_PyList_Pack3( PyObject *py1, PyObject *py2, PyObject *py3 )
+{
+   PyObject *rc;
+
+   rc = ::PyList_New( 3 );
+   ::PyList_SetItem( rc, 0, py1 );
+   ::PyList_SetItem( rc, 1, py2 );
+   ::PyList_SetItem( rc, 2, py3 );
+   return rc;
+}
+
+PyObject *_PyReturn( PyObject *obj )
+{
+   Py_INCREF( obj );
+   return obj;
+}
+

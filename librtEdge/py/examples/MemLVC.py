@@ -40,22 +40,13 @@ if __name__ == "__main__":
    except: file = './cache.lvc'
    try:    num  = int( sys.argv[2] )
    except: num  = 10
-   try:    leak = int( sys.argv[3] )
-   except: leak = 1
-   bAdm = ( argc > 4 )
-   Log( 'LEAK  = %d' % leak )
-   Log( 'ADMIN = %s' % bAdm )
    #
    # Open LVC
    #
    for i in range( num ):
-      if bAdm:
-         adm = libMDDirect.LVCAdmin( file )
-         adm.Close()
-      else:
-         lvc  = libMDDirect.LVC()
-         lvc.Open( file, leak )
-         lvc.Close()
+      lvc  = libMDDirect.LVC()
+      lvc.Open( file )
+      lvc.Close()
       mem1 = libMDDirect.MemSizeKb()
       py1  = libMDDirect.NumPyObjects()
       Log( '[%02d] MEM   : %6d vs %6d Kb  : Leak %6d Kb' % ( i, mem0, mem1, mem1-mem0 ) )

@@ -13,6 +13,7 @@
 *     16 MAR 2022 jcs  Build  6: _MDDPY_NONE / _MDDPY_INT64
 *     24 MAY 2022 jcs  Build  7: _MDDPY_UNXTM
 *     14 AUG 2023 jcs  Build 10: Field.Value() : mddFld_undef = _MDDPY_NONE
+*     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -354,9 +355,7 @@ int Record::GetUpds( PyObjects &u )
       pyF = PyInt_FromLong( fld->Fid() );
       pyV = fld->GetValue( ty );
       pyT = PyInt_FromLong( ty );
-      u.push_back( ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
-      Py_DECREF( pyF );
-      Py_DECREF( pyV );
+      u.push_back( ::mdd_PyList_Pack3( pyF, pyV, pyT ) );
       fld->ClearUpd();
    }
    _upds.clear();
@@ -438,10 +437,7 @@ int Schema::GetUpds( PyObjects &u )
       pyF = PyInt_FromLong( fid );
       pyV = PyString_FromString( pc );
       pyT = PyInt_FromLong( ty );
-      u.push_back( ::PyTuple_Pack( 3, pyF, pyV, pyT ) );
-      Py_DECREF( pyF );
-      Py_DECREF( pyV );
-      Py_DECREF( pyT );
+      u.push_back( ::mdd_PyList_Pack3( pyF, pyV, pyT ) );
    }
    return u.size();
 

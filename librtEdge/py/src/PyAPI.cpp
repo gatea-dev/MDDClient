@@ -14,6 +14,7 @@
 *     19 JUL 2022 jcs  Build  8: MDDpyLVCAdmin; XxxMap
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
 *     29 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema; OpenBDS()
+*     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -29,12 +30,6 @@ PyMethodDef *_pMethods = (PyMethodDef *)0;
 /////////////////////
 // Helpers
 /////////////////////
-static PyObject *_PyReturn( PyObject *obj )
-{
-   Py_INCREF( obj );
-   return obj;
-}
-
 static const char *_Py_GetString( PyObject *pyo, string &rc )
 {
 #if PY_MAJOR_VERSION >= 3
@@ -913,8 +908,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    ch = aRtn ? _GetSub( cxt ) : (MDDpySubChan *)0;
    if ( !ch ) {
       pyd = PyFloat_FromDouble( 0.0 );
-      rtn = ::PyTuple_Pack( 2,pyd, Py_None );
-      Py_DECREF( pyd );
+      rtn = ::mdd_PyList_Pack2( pyd, _PyReturn( Py_None ) );
       return rtn;
    }
 
@@ -929,10 +923,7 @@ static PyObject *GetFields( PyObject *self, PyObject *args )
    data     = ch->GetData( svc, tkr, fids );
    dd       = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
    pyd      = PyFloat_FromDouble( dd );
-   rtn      = ::PyTuple_Pack( 2, pyd, data );
-   Py_DECREF( pyd );
-   if ( data )
-      Py_DECREF( data );
+   rtn      = ::mdd_PyList_Pack2( pyd, data );
    return rtn;
 }
 
@@ -1050,6 +1041,26 @@ i = 0;
 }
 
 
+////////////////////////////
+// Stats.cpp
+////////////////////////////
+static PyObject *GetBBDailyStats( PyObject *self, PyObject *args )
+{
+   const char *pFile;
+   PyObject   *rc;
+
+   /*
+    * Usage : GetBBDailyStats( 'feed.bloomberg.01.stats' )
+    */
+   rc = _PyReturn( Py_None );
+   if ( PyArg_ParseTuple( args, "s", &pFile ) ) {
+      MDDpyStats st( pFile );
+
+      rc = st.PyBBDailyStats();
+   }
+   return rc;
+}
+
 
 ////////////////////////////
 // Utilities
@@ -1141,6 +1152,10 @@ static PyMethodDef EdgeMethods[] =
      * Book
      */
     { "GetCleanBook",   GetCleanBook, _PY_ARGS, "Book.GetCleanBook" },
+    /* 
+     * Stats
+     */
+    { "GetBBDailyStats",GetBBDailyStats, _PY_ARGS, "Stats.BBDailyStats" },
     /* 
      * Utility
      */

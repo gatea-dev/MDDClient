@@ -7,7 +7,7 @@ PY3 = ( sys.version_info.major >= 3 )
 if PY3: PYLIB = 'MDDirect36'
 else:   PYLIB = 'MDDirect27'
 
-INC_DIR  = [ './inc' ]
+INC_DIR  = [ './inc', './inc/stats' ]
 LIB_DIR  = [ '/usr/lib64' ]
 LIBS     = [ 'expat' ]
 for pLib in [ 'mddWire', 'rtEdge' ]:
@@ -22,6 +22,7 @@ SRCS        = [ './src/PyAPI.cpp',
                 './src/LVC.cpp',
                 './src/LVCAdmin.cpp',
                 './src/RecCache.cpp',
+                './src/Stats.cpp',
                 './src/SubChannel.cpp',
                 './src/version.cpp' ]
  

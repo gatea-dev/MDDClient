@@ -12,6 +12,7 @@
 *      3 FEB 2022 jcs  Build  5: PyList, not PyTuple
 *     11 JAN 2023 jcs  Build  9: PumpTapeXxx()
 *     29 AUG 2023 jcs  Build 10: BDS
+*     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -251,7 +252,7 @@ PyObject *MDDpySubChan::GetData( const char *pSvc,
 
    for ( nf=0; fids[nf]; nf++ );
    bk  = FindBook( pSvc, pTkr );
-   rtn = bk ? ::PyList_New( nf ) : Py_None;
+   rtn = bk ? ::PyList_New( nf ) : _PyReturn( Py_None );
    for ( i=0; bk && i<nf; i++ ) {
       fld = bk->GetField( fids[i] );
       pc  = fld ? fld->data() : (char *)"";
@@ -766,7 +767,7 @@ PyObject *MDDpySubChan::_Get1stUpd()
          break;
    }
    pym = PyInt_FromLong( upd._mt );
-   rtn = ::PyTuple_Pack( 2, pym, pyd );
+   rtn = ::mdd_PyList_Pack2( pym, pyd );
    return rtn;
 }
 
