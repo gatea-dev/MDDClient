@@ -9,6 +9,7 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
+#include <list>
 
 // Configurable Precision
 
@@ -60,12 +61,16 @@ const char *OptionsCurveID()
 ////////////////////////////////////////////////
 class OptionsCurve : public OptionsBase
 {
+public:
+   bool _oblong;
+
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   OptionsCurve( const char *svr ) :
-      OptionsBase( svr )
+   OptionsCurve( const char *svr, bool oblong ) :
+      OptionsBase( svr ),
+      _oblong( oblong )
    { ; }
 
 }; // class OptionsCurve
@@ -84,6 +89,7 @@ private:
    Ints           _calls;
    Ints           _both;
    SortedInt64Set _exps;
+   DoubleList     _strikes;
 
    /////////////////////////
    // Constructor
@@ -95,19 +101,21 @@ public:
       _puts(),
       _calls(),
       _both(),
-      _exps()
+      _exps(),
+      _strikes()
    { ; }
 
    /////////////////////////
    // Access
    /////////////////////////
 public:
-   OptionsCurve   &lvc()   { return _lvc; }
-   const char     *name()  { return data(); }
-   Ints           &puts()  { return _puts; }
-   Ints           &calls() { return _calls; }
-   Ints           &both()  { return _both; }
-   SortedInt64Set &exps()  { return _exps; }
+   OptionsCurve   &lvc()     { return _lvc; }
+   const char     *name()    { return data(); }
+   Ints           &puts()    { return _puts; }
+   Ints           &calls()   { return _calls; }
+   Ints           &both()    { return _both; }
+   SortedInt64Set &exps()    { return _exps; }
+   DoubleList     &strikes() { return _strikes; }
 
    /**
     * \brief Return true if valid expiration date
@@ -149,6 +157,19 @@ public:
          msg  = msgs[ix];
          _exps.insert( _lvc.Expiration( *msg, false ) );
       }
+      /*
+       * 3) Strikes too
+       */
+      SortedInt64Set           strikes;
+      SortedInt64Set::iterator it;
+
+      for ( size_t i=0; i<both.size(); i++ ) {
+         ix   = both[i];
+         msg  = msgs[ix];
+         strikes.insert( (u_int64_t)( _lvc.StrikePrice( *msg ) * 1000.0 ) );
+      }
+      for ( it=strikes.begin(); it!=strikes.end(); it++ )
+         _strikes.push_back( 0.001 * (*it) );
    }
 
 }; // class Underlyer
@@ -229,34 +250,61 @@ public:
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
+      DoubleList   &xdb  = _und.strikes();
+      double        x0   = xdb[0];
+      double        x1   = xdb[xdb.size()-1];
       Message      *msg;
       int           ix;
-      DoubleList    X, Y;
+      size_t        i, nk;
+      double        x, y, m, dy;
+      DoubleList    lX, lY, X, Y;
 
       // Pre-condition(s)
 
       if ( !bForce && !IsWatched() )
          return false;
-      if ( !_kdb.size() )
+      if ( !(nk=_kdb.size()) )
          return false;
 
       // OK to continue
 
       _X.clear();
       _Y.clear();
-      for ( size_t i=0; i<_kdb.size(); i++ ) {
-         ix   = _kdb[i];
-         msg  = msgs[ix];
-         X.push_back( lvc.StrikePrice( *msg ) );
-         Y.push_back( lvc.MidQuote( *msg ) ); 
+      for ( i=0; i<nk; i++ ) {
+         ix  = _kdb[i];
+         msg = msgs[ix];
+         x   = lvc.StrikePrice( *msg );
+         y   = lvc.MidQuote( *msg );
+         lX.push_back( x );
+         lY.push_back( y );
+      }
+      /*
+       * 2a) Straight-line beginning to min Strike
+       */
+      if ( lvc._oblong && ( nk >= 2 ) && ( x0 < lX[0] ) ) {
+         m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
+         dy = m * ( x0 - lX[0] );
+         y  = lY[0] + dy;
+         X.push_back( x0 );
+         Y.push_back( y );
+      }
+      for ( i=0; i<nk; X.push_back( lX[i] ), i++ );
+      for ( i=0; i<nk; Y.push_back( lY[i] ), i++ );
+      /*
+       * 2b) Straight-line end to max Strike
+       */
+      if ( lvc._oblong && ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
+         m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
+         dy = m * ( x1 - lX[nk-1] );
+         y  = lY[nk-1] + dy;
+         X.push_back( x1 );
+         Y.push_back( y );
       }
 
-      double             x0 = X[0];
-      double             x1 = X[X.size()-1];
       QUANT::CubicSpline cs( X, Y );
 
-      for ( double x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
-      for ( size_t i=0; i<_X.size(); _Y.push_back( cs.Spline( _X[i] ) ), i++ );
+      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
+      for ( i=0; i<_X.size(); _Y.push_back( cs.Spline( _X[i] ) ), i++ );
       return true;
    }
 
@@ -536,7 +584,7 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, bds;
+   bool        aOK, bCfg, obl;
    double      rate, xInc;
    const char *db, *svr, *svc;
 
@@ -555,24 +603,24 @@ int main( int argc, char **argv )
    svc  = "options.curve";
    rate = 1.0;
    xInc = 1.0; // 1 dollareeny
-   bds  = true;
+   obl  = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -db      <LVC d/b filename> ] \\ \n";
       s += "       [ -svr     <MDD Edge3 host:port> ] \\ \n";
       s += "       [ -svc     <MDD Publisher Service> ] \\ \n";
-      s += "       [ -r       <SnapRate> ] \\ \n";
+      s += "       [ -rate    <SnapRate> ] \\ \n";
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
-      s += "       [ -bds     <true for BDS> ] \\ \n";
+      s += "       [ -oblong  <false to 'square up'> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
       LOG( "      -db      : %s", db );
       LOG( "      -svr     : %s", svr );
       LOG( "      -svc     : %s", svc );
-      LOG( "      -r       : %.2f", rate );
+      LOG( "      -rate    : %.2f", rate );
       LOG( "      -xInc    : %.2f", xInc );
-      LOG( "      -bds     : %s", _pBool( bds ) );
+      LOG( "      -oblong  : %s", _pBool( obl ) );
       return 0;
    }
 
@@ -589,16 +637,18 @@ int main( int argc, char **argv )
          svr = argv[++i];
       else if ( !::strcmp( argv[i], "-svc" ) )
          svc = argv[++i];
-      else if ( !::strcmp( argv[i], "-r" ) )
+      else if ( !::strcmp( argv[i], "-xInc" ) )
+         xInc = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-rate" ) )
          rate = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-bds" ) )
-         bds = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-oblong" ) )
+         obl = _IsTrue( argv[++i] );
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db );
+   OptionsCurve    lvc( db, obl );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, age;
    size_t          ns;
