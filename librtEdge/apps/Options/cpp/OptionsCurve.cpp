@@ -24,8 +24,10 @@ static int l_fidUNCV   = -8002;
 // Forwards / Collections
 
 class OptionsSpline;
+class Underlyer;
 
 typedef hash_map<string, OptionsSpline *> SplineMap;
+typedef vector<Underlyer *>               Underlyers;
 
 /////////////////////////////////////
 // Version
@@ -187,7 +189,7 @@ public:
       const char ty = bPut ? 'P' : 'C';
       char       buf[K];
 
-      sprintf( buf, "%s %ld %c", und.name(), tExp, ty );
+      sprintf( buf, "%s.%ld.%c", und.name(), tExp, ty );
       string::assign( buf );
       _Init( all );
    }
@@ -235,6 +237,8 @@ public:
          X.push_back( lvc.StrikePrice( *msg ) );
          Y.push_back( lvc.MidQuote( *msg ) ); 
       }
+      if ( !_kdb.size() )
+         return 0;
 
       double             x0 = X[0];
       double             x1 = X[X.size()-1];
@@ -302,20 +306,22 @@ private:
 class SplinePublisher : public RTEDGE::PubChannel
 {
 private:
-   string    _svr;
-   string    _bds;
-   SplineMap _splines;
+   OptionsCurve &_lvc;
+   string        _svr;
+   Underlyers    _underlyers;
+   SplineMap     _splines;
 
    /////////////////////
    // Constructor
    /////////////////////
 public:
-   SplinePublisher( const char *svr, 
-                    const char *svc, 
-                    const char *bds ) :
+   SplinePublisher( OptionsCurve &lvc,
+                    const char   *svr, 
+                    const char   *svc ) :
       PubChannel( svc ),
+      _lvc( lvc ),
       _svr( svr ),
-      _bds( bds ),
+      _underlyers(),
       _splines()
    {
       SetBinary( true );
@@ -325,6 +331,63 @@ public:
    // Operations
    /////////////////////
 public:
+   void Calc()
+   {
+      LVCAll             &all = _lvc.ViewAll();
+      SplineMap          &sdb = _splines;
+      SplineMap::iterator it;
+      OptionsSpline      *spl;
+
+      for ( it=sdb.begin(); it!=sdb.end(); it++ ) {
+         spl = (*it).second;
+         spl->Calc( all );
+      }
+   }
+
+   size_t LoadSplines( double xInc )
+   {
+      LVCAll                   &all = _lvc.ViewAll();
+      Underlyers               &udb = _underlyers;
+      SplineMap                &sdb = _splines;
+      SortedStringSet           ndb = _lvc.Underlyers( all );
+      SortedStringSet::iterator nt;
+      Underlyer                *und;
+      OptionsSpline            *spl;
+      const char               *tkr;
+      u_int64_t                 tExp;
+      string                    s;
+      bool                      bPut;
+
+      /*
+       * 1) Underlyers
+       */
+      for ( nt=ndb.begin(); nt!=ndb.end(); nt++ ) {
+         tkr = (*nt).data();
+         und = new Underlyer( _lvc, tkr );
+         und->Init( all );
+         udb.push_back( und );
+      }
+      /*
+       * 2) Splines, from each Underlyer
+       */
+      for ( size_t i=0; i<udb.size(); i++ ) {
+         SortedInt64Set          &edb = udb[i]->exps();
+         SortedInt64Set::iterator et;
+
+         und = udb[i];
+         for ( et=edb.begin(); et!=edb.end(); et++ ) {
+            tExp = (*et);
+            for ( int o=0; o<2; o++ ) {
+               bPut = ( o == 0 );
+               spl    = new OptionsSpline( *und, tExp, bPut, xInc, all );
+               s      = spl->name();
+               sdb[s] = spl;
+            }
+         }
+      }
+      return sdb.size();
+   }
+
    const char *PubStart()
    {
       return Start( _svr.data() );
@@ -424,9 +487,9 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, bPut;
+   bool        aOK, bCfg, bds;
    double      rate, xInc;
-   const char *svr, *tkr, *exp;
+   const char *db, *svr, *svc;
 
    /////////////////////
    // Quickie checks
@@ -438,29 +501,29 @@ int main( int argc, char **argv )
 
    // cmd-line args
 
-   svr  = "./cache.lvc";
-   tkr  = "AAPL";
+   db   = "./cache.lvc";
+   svr  = "localhost:9015";
+   svc  = "options.curve";
    rate = 1.0;
-   bPut = true;
-   exp  = NULL;
    xInc = 1.0; // 1 dollareeny
+   bds  = true;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -db      <LVC d/b filename> ] \\ \n";
-      s += "       [ -u       <Underlyer> \\ \n";
-      s += "       [ -r       <DumpRate> ] \\ \n";
-      s += "       [ -put     <Dump PUT> ] \\ \n";
-      s += "       [ -exp     <Expiration Date> ] \\ \n";
+      s += "       [ -svr     <MDD Edge3 host:port> ] \\ \n";
+      s += "       [ -svc     <MDD Publisher Service> ] \\ \n";
+      s += "       [ -r       <SnapRate> ] \\ \n";
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
+      s += "       [ -bds     <true for BDS> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
-      LOG( "      -db      : %s", svr );
-      LOG( "      -u       : %s", tkr );
+      LOG( "      -db      : %s", db );
+      LOG( "      -svr     : %s", svr );
+      LOG( "      -svc     : %s", svc );
       LOG( "      -r       : %.2f", rate );
-      LOG( "      -put     : %s", _pBool( bPut ) );
-      LOG( "      -exp     : <empty>" );
       LOG( "      -xInc    : %.2f", xInc );
+      LOG( "      -bds     : %s", _pBool( bds ) );
       return 0;
    }
 
@@ -472,55 +535,44 @@ int main( int argc, char **argv )
       if ( !aOK )
          break; // for-i
       if ( !::strcmp( argv[i], "-db" ) )
+         db = argv[++i];
+      else if ( !::strcmp( argv[i], "-svr" ) )
          svr = argv[++i];
-      else if ( !::strcmp( argv[i], "-u" ) )
-         tkr = argv[++i];
+      else if ( !::strcmp( argv[i], "-svc" ) )
+         svc = argv[++i];
       else if ( !::strcmp( argv[i], "-r" ) )
          rate = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-put" ) )
-         bPut = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-exp" ) )
-         exp = argv[++i];
-   }
-   if ( !exp ) {
-      LOG( "Must specify -exp; Exitting ..." );
-      return 0;
+      else if ( !::strcmp( argv[i], "-bds" ) )
+         bds = _IsTrue( argv[++i] );
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve lvc( svr );
-   LVCAll      &all = lvc.ViewAll();
-   u_int64_t    tExp = lvc.ParseDate( exp, false );
-   u_int64_t    jExp = lvc.ParseDate( exp, true );
-   Underlyer    und( lvc, tkr );
-   double       d0, age;
+   OptionsCurve    lvc( db );
+   SplinePublisher pub( lvc, svr, svc );
+   double          d0, age;
+   size_t          ns;
 
    /*
-    * First kiss : Walk all; build sorted list of indices by ( Expire, Strike )
+    * Load Splines
     */
-   d0     = lvc.TimeNs();
-   und.Init( all );
-   age   = 1000.0 * ( lvc.TimeNs() - d0 );
-   LOG( "Underlyer.Init() in %dms", (int)age );
+   d0  = lvc.TimeNs();
+   ns    = pub.LoadSplines( xInc );
+   age = 1000.0 * ( lvc.TimeNs() - d0 );
+   LOG( "%ld splines loaded in %dms", ns, (int)age );
+   d0  = lvc.TimeNs();
+   pub.Calc();
+   age = 1000.0 * ( lvc.TimeNs() - d0 );
+   LOG( "%ld splines calculated in %dms", ns, (int)age );
    /*
     * Rock on
     */
-   if ( und.IsValidExp( tExp ) ) {
-      OptionsSpline spline( und, jExp, bPut, xInc, all );
-      int          ms   = spline.Calc( all );
-      DoubleList   &X   = spline.X();
-      DoubleList   &Y   = spline.Y();
-
-      LOG( "ViewAll() in %.2fms", all.dSnap()*1000.0 );
-      LOG( "Strike,Price," );
-      for ( size_t i=0; i<X.size(); i++ )
-         LOG( "%.2f,%.2f,", X[i], Y[i] );
-      LOG( "CubicSpline() in %dmS", ms );
-   }
-   else
-      LOG( "ERROR : Invalid Expire Date %s for %s", exp, tkr );
+   LOG( "%s", pub.PubStart() );
+   LOG( "Hit <ENTER> to quit..." );
+   getchar();
+   LOG( "Shutting down ..." );
+   pub.Stop();
    LOG( "Done!!" );
    return 1;
 }

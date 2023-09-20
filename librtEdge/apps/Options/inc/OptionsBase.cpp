@@ -90,7 +90,34 @@ public:
 
 
    ////////////////////////////////////
-   // Access
+   // Access - D/B
+   ////////////////////////////////////
+   /**
+    * \brief Return sorted list of all underlyers
+    *
+    * \param all - LVCAll w/ snapped values from LVC
+    * \return Sorted list of all underlyers
+    */
+   SortedStringSet Underlyers( LVCAll &all ) 
+   {
+      Messages       &msgs = all.msgs();
+      Field          *fld;
+      string          val;
+      SortedStringSet rc;
+
+      for ( size_t i=0; i<msgs.size(); i++ ) {
+         if ( !(fld=msgs[i]->GetField( _UN_SYMBOL )) )
+            continue; // for-i
+         val = fld->GetAsString();
+         if ( rc.find( val ) == rc.end() )
+            rc.insert( val );
+      }
+      return SortedStringSet( rc );
+   }
+
+
+   ////////////////////////////////////
+   // Access - Per Message
    ////////////////////////////////////
    /**
     * \brief Return Bid-Ask Mid Point
