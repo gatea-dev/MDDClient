@@ -179,9 +179,9 @@ int main( int argc, char **argv )
    bPut  |= bDmpExp;
    bCall |= bDmpExp;
    if ( bPut )
-      puts = lvc.GetUnderlyer( all, und, true ); 
+      puts = lvc.GetUnderlyer( all, und, spline_put ); 
    if ( bCall )
-      calls = lvc.GetUnderlyer( all, und, false ); 
+      calls = lvc.GetUnderlyer( all, und, spline_call ); 
    both  = puts;
    both.insert( both.end(), calls.begin(), calls.end() );
    age   = lvc.TimeNs() - d0;

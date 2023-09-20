@@ -15,10 +15,14 @@
 using namespace RTEDGE;
 using namespace std;
 
+// Templatized Collections
+
 typedef vector<int>                           Ints;
 typedef map<u_int64_t, int, less<u_int64_t> > SortedInt64Map;
 typedef set<u_int64_t, less<u_int64_t> >      SortedInt64Set;
 typedef set<string, less<string> >            SortedStringSet;
+
+// Inbound Record Template
 
 #define _DSPLY_NAME    3
 #define _TRDPRC_1      6
@@ -27,6 +31,14 @@ typedef set<string, less<string> >            SortedStringSet;
 #define _STRIKE_PRC   66
 #define _EXPIR_DATE   67
 #define _UN_SYMBOL  4200
+
+// Enum
+
+typedef enum {
+   spline_put  = 0,
+   spline_call = 1,
+   spline_both = 2,
+} SplineType;
 
 ////////////////////////////////////////////////
 //
@@ -322,20 +334,21 @@ public:
     *
     * \param all - LVCAll w/ snapped values from LVC
     * \param und - Underlyer
-    * \param bPut - true for put; false for call
+    * \param splineType - Put, Call or Both
     * \return Sort LVC index list containing ( Underlyer, PutOrCall )
     */
-   Ints GetUnderlyer( LVCAll &all, const char *und, bool bPut )
+   Ints GetUnderlyer( LVCAll &all, const char *und, SplineType splineType )
    {
-      Messages      &msgs = all.msgs();
-      SortedInt64Map pdb, cdb;
-      const char    *val;
-      Message       *msg;
-      Field         *fld;
-      rtVALUE        v;
-      Ints           idxs;
-      u_int64_t      exp;
-      bool           put;
+      Messages                &msgs = all.msgs();
+      SortedInt64Map           idb;
+      SortedInt64Map::iterator it;
+      const char              *val;
+      Message                 *msg;
+      Field                   *fld;
+      rtVALUE                  v;
+      Ints                     idxs;
+      u_int64_t                exp;
+      bool                     put, bAdd;
 
       for ( size_t i=0; i<msgs.size(); i++ ) {
          msg = msgs[i];
@@ -361,15 +374,32 @@ public:
             exp = (u_int64_t)v._r64;
          }
          exp += (fld=msg->GetField( _STRIKE_PRC )) ? fld->GetAsInt32() : 0;
-         if ( put )
-            pdb[exp] = i;
-         else
-            cdb[exp] = i;
-      }
-      SortedInt64Map          &rdb  = bPut ? pdb : cdb;
-      SortedInt64Map::iterator st;
+         switch( splineType ) {
+            case spline_put:  bAdd =  put; break;
+            case spline_call: bAdd = !put; break;
+            case spline_both:
+            {
+               /*
+                * Take the Contract w/ the Highest MidQuote()
+                */
+               bAdd = ( (it=idb.find( exp )) == idb.end() );
+               if ( !bAdd ) {
+                  size_t j  = (*it).second;
+                  double v1 = MidQuote( *msg );
+                  double v2 = MidQuote( *msgs[j] );
 
-      for ( st=rdb.begin(); st!=rdb.end(); idxs.push_back( (*st).second ), st++ );
+                  bAdd = ( v1 > v2 );
+               }
+               break;
+            }
+         }
+         if ( bAdd )
+             idb[exp] = i;
+      }
+      /*
+       * Stuff 'em in
+       */
+      for ( it=idb.begin(); it!=idb.end(); idxs.push_back( (*it).second ), it++ );
       return Ints( idxs );
    }
 

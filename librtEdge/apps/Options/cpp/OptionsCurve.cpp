@@ -4,6 +4,7 @@
 *
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
+*     20 SEP 2023 jcs  FullSpline
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -81,6 +82,7 @@ private:
    OptionsCurve  &_lvc;
    Ints           _puts;
    Ints           _calls;
+   Ints           _both;
    SortedInt64Set _exps;
 
    /////////////////////////
@@ -92,6 +94,7 @@ public:
       _lvc( lvc ),
       _puts(),
       _calls(),
+      _both(),
       _exps()
    { ; }
 
@@ -103,6 +106,7 @@ public:
    const char     *name()  { return data(); }
    Ints           &puts()  { return _puts; }
    Ints           &calls() { return _calls; }
+   Ints           &both()  { return _both; }
    SortedInt64Set &exps()  { return _exps; }
 
    /**
@@ -131,8 +135,9 @@ public:
       /*
        * 1) d/b Indices of all Puts and Calls
        */
-      _puts  = _lvc.GetUnderlyer( all, name(), true );
-      _calls = _lvc.GetUnderlyer( all, name(), false );
+      _puts  = _lvc.GetUnderlyer( all, name(), spline_put );
+      _calls = _lvc.GetUnderlyer( all, name(), spline_call );
+      _both  = _lvc.GetUnderlyer( all, name(), spline_both );
       both   = _puts;
       /*
        * 2) All Expiration Dates in sorted order
@@ -160,7 +165,7 @@ class OptionsSpline : public string
 private:
    Underlyer &_und;
    u_int64_t  _tExp;
-   bool       _bPut;
+   SplineType _type;
    double     _xInc;
    Ints       _kdb;
    DoubleList _X;
@@ -173,23 +178,23 @@ private:
 public:
    OptionsSpline( Underlyer &und, 
                   u_int64_t  tExp, 
-                  bool       bPut, 
+                  SplineType splineType,
                   double     xInc,
                   LVCAll    &all ) :
       string(),
       _und( und ),
       _tExp( tExp ),
-      _bPut( bPut ),
+      _type( splineType ),
       _xInc( xInc ),
       _kdb(),
       _X(),
       _Y(),
       _StreamID( 0 )
    {
-      const char ty = bPut ? 'P' : 'C';
-      char       buf[K];
+      const char *ty[] = { ".P", ".C", "" };
+      char        buf[K];
 
-      sprintf( buf, "%s.%ld.%c", und.name(), tExp, ty );
+      sprintf( buf, "%s.%ld%s", und.name(), tExp, ty[splineType] );
       string::assign( buf );
       _Init( all );
    }
@@ -284,11 +289,22 @@ private:
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
-      Ints         &udb  = _bPut ? _und.puts() : _und.calls();
+      Ints          udb;
       Message      *msg;
       u_int64_t    jExp;
       int          ix;
 
+      /*
+       * 1) Put / Call / Both??
+       */
+      switch( _type ) {
+         case spline_put:  udb = _und.puts();  break; 
+         case spline_call: udb = _und.calls(); break; 
+         case spline_both: udb = _und.both();  break; 
+      }
+      /*
+       * 2) Clear shit out; Jam away ...
+       */
       _X.clear();
       _Y.clear();
       for ( size_t i=0; i<udb.size(); i++ ) {
@@ -369,7 +385,7 @@ public:
       const char               *tkr;
       u_int64_t                 tExp;
       string                    s;
-      bool                      bPut;
+      SplineType                sTy;
 
       /*
        * 1) Underlyers
@@ -390,9 +406,9 @@ public:
          und = udb[i];
          for ( et=edb.begin(); et!=edb.end(); et++ ) {
             tExp = (*et);
-            for ( int o=0; o<2; o++ ) {
-               bPut = ( o == 0 );
-               spl    = new OptionsSpline( *und, tExp, bPut, xInc, all );
+            for ( int o=0; o<=(int)spline_both; o++ ) {
+               sTy    = (SplineType)o;
+               spl    = new OptionsSpline( *und, tExp, sTy, xInc, all );
                s      = spl->name();
                sdb[s] = spl;
             }
