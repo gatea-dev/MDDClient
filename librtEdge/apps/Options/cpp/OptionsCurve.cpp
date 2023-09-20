@@ -132,7 +132,7 @@ public:
        * 1) d/b Indices of all Puts and Calls
        */
       _puts  = _lvc.GetUnderlyer( all, name(), true );
-      _calls = _lvc.GetUnderlyer( all, name(), true );
+      _calls = _lvc.GetUnderlyer( all, name(), false );
       both   = _puts;
       /*
        * 2) All Expiration Dates in sorted order
@@ -289,7 +289,7 @@ private:
       for ( size_t i=0; i<udb.size(); i++ ) {
          ix   = udb[i];
          msg  = msgs[ix];
-         jExp = lvc.Expiration( *msg );
+         jExp = lvc.Expiration( *msg, false );
          if ( jExp == _tExp )
             _kdb.push_back( ix );
       }
