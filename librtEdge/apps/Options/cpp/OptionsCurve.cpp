@@ -281,7 +281,7 @@ public:
       /*
        * 2a) Straight-line beginning to min Strike
        */
-      if ( lvc._oblong && ( nk >= 2 ) && ( x0 < lX[0] ) ) {
+      if ( !lvc._oblong && ( nk >= 2 ) && ( x0 < lX[0] ) ) {
          m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
          dy = m * ( x0 - lX[0] );
          y  = lY[0] + dy;
@@ -293,7 +293,7 @@ public:
       /*
        * 2b) Straight-line end to max Strike
        */
-      if ( lvc._oblong && ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
+      if ( !lvc._oblong && ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
          m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
          dy = m * ( x1 - lX[nk-1] );
          y  = lY[nk-1] + dy;
