@@ -50,6 +50,10 @@ Features To Add
  * -# libMDDirect.py : BBDailyStats
  *    - librtEdge/py/inc/stats
  *
+ * -# Spline : More intuitive:
+ *    - double     CubicSpline.ValueAt()
+ *    - DoubleList CubicSpline.Spline()
+ *
  *
  *
  * ### Build 64 23-09-13

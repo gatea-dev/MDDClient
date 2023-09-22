@@ -7,6 +7,7 @@
 *     21 OCT 2022 jcs  Created.
 *     31 OCT 2022 jcs  Surface.
 *     26 NOV 2022 jcs  RTEDGE::DoubleXY / RTEDGE::DoubleXYZ
+*     22 SEP 2023 jcs  DoubleList Spline(); double ValueAt()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -38,7 +39,7 @@ namespace QUANT
  *
  * You pass in the sampled values into the Constructor, which calculates and 
  * stores the 2nd order derivitive at each sampled point.  Then you iterate 
- * over the X-axis at your discretion and call Spline( double ) to get the value
+ * over the X-axis at your discretion and call ValueAt( double ) to get the value
  * at each iteration point
  */
 class CubicSpline
@@ -139,6 +140,39 @@ public:
 	}
 
 	/**
+	 * \brief Calculate and return spline between( x0, x1 ) every xInc
+	 *
+	 * \param x0 - Min x value
+	 * \param x1 - Max x value
+	 * \param xInc - x Increment
+	 * \return Calculated Spline as DoubleList
+	 */
+	RTEDGE::DoubleList Spline( double x0, double x1, double xInc )
+	{
+	   RTEDGE::DoubleList X;
+
+	   for ( double x=x0; x<=x1; X.push_back( x ), x+=xInc );
+	   return Spline( X );
+	}
+
+	/**
+	 * \brief Calculate and return spline for list of x data points
+	 *
+	 * \param X - x value array
+	 * \return Calculated Spline as DoubleList
+	 */
+	RTEDGE::DoubleList Spline( RTEDGE::DoubleList &X )
+	{
+	   RTEDGE::DoubleList Y;
+	   size_t             i, nx;
+
+	   nx = X.size();
+	   for ( i=0; i<X.size(); Y.push_back( ValueAt( X[i] ) ), i++ );
+	   return RTEDGE::DoubleList( Y );
+	}
+
+
+	/**
 	 * \brief Calculate and return interpolated value at x
 	 *
 	 * From splint.c : From Numerical Recipes in C, (c) 1986-1992
@@ -146,7 +180,7 @@ public:
 	 * \param x - Independent variable
 	 * \return Interpolated value at x
 	 */
-	double Spline( double x )
+	double ValueAt( double x )
 	{
 	   size_t klo, khi, k;
 	   double h, b, a, y;
@@ -173,6 +207,7 @@ public:
 	   y   = y1 + y2 * y3;
 	   return y;
 	}
+
 
 #ifndef DOXYGEN_OMIT
 	////////////////////////////////////
@@ -285,7 +320,8 @@ private:
  * You pass in the sampled values into the Constructor, which calculates and 
  * stores the 2nd order derivitive at each sampled point.  Then you iterate 
  * over the X-axis at your discretion and call 
- * Spline( RTEDGE::DoubleList, RTEDGE::DoubleList ) to get the value at each iteration point
+ * ValueAt( RTEDGE::DoubleList, RTEDGE::DoubleList ) to get the value at 
+ * each iteration point
  */
 class CubicSurface
 {
@@ -356,12 +392,12 @@ public:
 	   for ( size_t m=0; m<_M; m++ ) {
 	      CubicSpline cs2( _Y, _Z[m] );
 
-	      y2.push_back( cs2.Spline( y ) );
+	      y2.push_back( cs2.ValueAt( y ) );
 	   }
 
 	   CubicSpline cs1( _X, y2 );
 
-	   z = cs1.Spline( x );
+	   z = cs1.ValueAt( x );
 	   return z;
 	}
 

@@ -361,7 +361,7 @@ public:
       QUANT::CubicSpline cs( X, Y );
 
       for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
-      for ( i=0; i<_X.size(); _Y.push_back( cs.Spline( _X[i] ) ), i++ );
+      _Y = cs.Spline( _X );
       return true;
    }
 

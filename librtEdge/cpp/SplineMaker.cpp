@@ -6,6 +6,7 @@
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     22 DEC 2022 jcs  Build 61: SubChannel or LVC
 *      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
+*     22 SEP 2023 jcs  Build 65: DoubleList Spline()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -294,10 +295,8 @@ void Spline::Calc( DoubleList &X, DoubleList &Y, double xn )
    nx = (int)( xn / _dInc );
    _X.clear();
    _Z.clear();
-   for ( i=0,x=0.0; i<nx && x<xn; i++, x+=_dInc ) {
-      _X.push_back( x );
-      _Z.push_back( cs.Spline( x ) );
-   }
+   for ( i=0,x=0.0; i<nx && x<xn; _X.push_back( x ), i++, x+=_dInc );
+   _Z = cs.Spline( _X );
    dd = 1000.0 * ( _pub.TimeNs() - d0 );
    LOG( "Spline %s Cal'ed in %.2fmS", tkr(), dd );
    Publish();
