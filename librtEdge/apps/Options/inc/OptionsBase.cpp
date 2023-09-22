@@ -32,6 +32,9 @@ typedef set<string, less<string> >            SortedStringSet;
 #define _EXPIR_DATE   67
 #define _UN_SYMBOL  4200
 
+#define _MIL     1000000
+#define _SECPERDAY 86400
+
 // Enum
 
 typedef enum {
@@ -71,6 +74,38 @@ static void LOG( char *fmt, ... )
    ::fwrite( bp, 1, cp-bp, stdout );
    ::fflush( stdout );
 }
+
+
+
+////////////////////////////////////////////////
+//
+//      c l a s s   I n d e x C a c h e
+//
+////////////////////////////////////////////////
+
+/**
+ * \class IndexCache
+ * \brief A store of indices for specific underlyer
+ */
+class IndexCache
+{
+public:
+   Ints _puts;
+   Ints _calls;
+   Ints _both;
+
+   ////////////////////////////////////
+   // Constructor / Destructor
+   ////////////////////////////////////
+public:
+   IndexCache() :
+      _puts(),
+      _calls(),
+      _both()
+   { ; }
+   
+}; // IndexCache
+
 
 
 ////////////////////////////////////////////////
@@ -190,7 +225,7 @@ public:
             rc = julNum( fld->GetAsDate() );
          else {
             rc  = (u_int64_t)fld->field()._val._r64;
-            rc /= 1000000;
+            rc /= _MIL;
          }
       }
       return rc;
@@ -269,6 +304,24 @@ public:
       return( unx / 86400 );
    }
 
+   /**
+    * \brief Convert list of julNum's to Unix Time
+    *
+    * \param jul - IN] List of julNums
+    * \param unx - [OUT] List of Unix Times
+    * \return unx 
+    */
+   DoubleList &julNum2Unix( DoubleList &jul, DoubleList &unx )
+   {
+      size_t i, n;
+
+      unx.clear();
+      n = jul.size(); 
+      for ( i=0; i<n; unx.push_back( jul[i] * _SECPERDAY ), i++ );
+      return unx;
+   }
+
+
 
    ////////////////////////////////////
    // Operations
@@ -334,9 +387,13 @@ public:
     * \param all - LVCAll w/ snapped values from LVC
     * \param und - Underlyer
     * \param splineType - Put, Call or Both
+    * \param bByExp - true to sort by ( Expiration, Strike ); false for reverse
     * \return Sort LVC index list containing ( Underlyer, PutOrCall )
     */
-   Ints GetUnderlyer( LVCAll &all, const char *und, SplineType splineType )
+   Ints GetUnderlyer( LVCAll     &all, 
+                      const char *und, 
+                      SplineType  splineType,
+                      bool        bByExp=true )
    {
       Messages                &msgs = all.msgs();
       SortedInt64Map           idb;
@@ -344,7 +401,6 @@ public:
       const char              *val;
       Message                 *msg;
       Field                   *fld;
-      rtVALUE                  v;
       Ints                     idxs;
       u_int64_t                exp;
       bool                     put, bAdd;
@@ -368,11 +424,22 @@ public:
             ch  = s.length() ? s.data()[s.length()-1] : '?';
             put = ( ch == 'P' );
          }
-         if ( (fld=msg->GetField( _EXPIR_DATE )) ) {
-            v   = fld->field()._val;
-            exp = (u_int64_t)v._r64;
+         /*
+          * How do we sort?
+          */
+         if ( bByExp ) {
+            exp  = Expiration( *msg, false );
+            exp *= _MIL;
+            exp += (u_int64_t)StrikePrice( *msg );
          }
-         exp += (fld=msg->GetField( _STRIKE_PRC )) ? fld->GetAsInt32() : 0;
+         else {
+            exp  = (u_int64_t)StrikePrice( *msg );
+            exp *= _MIL;
+            exp += Expiration( *msg, false );
+         }
+         /*
+          * Put / Call / Both??
+          */
          switch( splineType ) {
             case spline_put:  bAdd =  put; break;
             case spline_call: bAdd = !put; break;
@@ -393,7 +460,7 @@ public:
             }
          }
          if ( bAdd )
-             idb[exp] = i;
+            idb[exp] = i;
       }
       /*
        * Stuff 'em in

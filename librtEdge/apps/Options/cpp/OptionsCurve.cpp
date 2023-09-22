@@ -1,6 +1,9 @@
 /******************************************************************************
 *
 *  OptionsCurve.cpp
+*     TODO :
+*     2) Spline.Calc_ByStrike()
+*     3) Surface
 *
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
@@ -13,15 +16,18 @@
 
 // Configurable Precision
 
-static int l_Precision =     2;
+static int     l_Precision =     2;
+static double  l_StrikeMul =   100;
 
 // Record Templates
 
+static int xTy_DATE    =     0;
 static int xTy_NUM     =     1;
 static int l_fidInc    =     6; // X-axis Increment
 static int l_fidXTy    =     7; // X-axis type : xTy_DATE = Date; Else Numeric
 static int l_fidX0     =     8; // If Numeric, first X value
-static int l_fidUNCV   = -8002;
+static int l_fidFidX   = -8001;
+static int l_fidFidY   = -8002;
 
 // Forwards / Collections
 
@@ -62,15 +68,22 @@ const char *OptionsCurveID()
 class OptionsCurve : public OptionsBase
 {
 public:
-   bool _oblong;
+   bool   _square;
+   double _xInc;
+   int    _maxX;
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   OptionsCurve( const char *svr, bool oblong ) :
+   OptionsCurve( const char *svr, 
+                 bool        square,
+                 double      xInc,
+                 int         maxX ) :
       OptionsBase( svr ),
-      _oblong( oblong )
+      _square( square ),
+      _xInc( xInc ),
+      _maxX( maxX )
    { ; }
 
 }; // class OptionsCurve
@@ -85,9 +98,8 @@ class Underlyer : public string
 {
 private:
    OptionsCurve  &_lvc;
-   Ints           _puts;
-   Ints           _calls;
-   Ints           _both;
+   IndexCache     _byExp; // Expiration
+   IndexCache     _byStr; // Strike Price
    SortedInt64Set _exps;
    DoubleList     _strikes;
 
@@ -98,9 +110,8 @@ public:
    Underlyer( OptionsCurve &lvc, const char *und ) :
       string( und ),
       _lvc( lvc ),
-      _puts(),
-      _calls(),
-      _both(),
+      _byExp(),
+      _byStr(),
       _exps(),
       _strikes()
    { ; }
@@ -111,9 +122,8 @@ public:
 public:
    OptionsCurve   &lvc()     { return _lvc; }
    const char     *name()    { return data(); }
-   Ints           &puts()    { return _puts; }
-   Ints           &calls()   { return _calls; }
-   Ints           &both()    { return _both; }
+   IndexCache     &byExp()   { return _byExp; }
+   IndexCache     &byStr()   { return _byStr; }
    SortedInt64Set &exps()    { return _exps; }
    DoubleList     &strikes() { return _strikes; }
 
@@ -136,22 +146,22 @@ public:
    void Init( LVCAll &all )
    {
       Messages &msgs = all.msgs();
+      Ints     &both = _byExp._both;
       Message  *msg;
-      Ints      both;
       int       ix;
 
       /*
        * 1) d/b Indices of all Puts and Calls
        */
-      _puts  = _lvc.GetUnderlyer( all, name(), spline_put );
-      _calls = _lvc.GetUnderlyer( all, name(), spline_call );
-      _both  = _lvc.GetUnderlyer( all, name(), spline_both );
-      both   = _puts;
+      _byExp._puts     = _lvc.GetUnderlyer( all, name(), spline_put,  true  );
+      _byExp._calls = _lvc.GetUnderlyer( all, name(), spline_call, true  );
+      _byExp._both  = _lvc.GetUnderlyer( all, name(), spline_both, true  );
+      _byStr._puts  = _lvc.GetUnderlyer( all, name(), spline_put,  false );
+      _byStr._calls = _lvc.GetUnderlyer( all, name(), spline_call, false );
+      _byStr._both  = _lvc.GetUnderlyer( all, name(), spline_both, false );
       /*
        * 2) All Expiration Dates in sorted order
        */
-      both  = _puts;
-      both.insert( both.end(), _calls.begin(), _calls.end() );
       for ( size_t i=0; i<both.size(); i++ ) {
          ix   = both[i];
          msg  = msgs[ix];
@@ -166,10 +176,10 @@ public:
       for ( size_t i=0; i<both.size(); i++ ) {
          ix   = both[i];
          msg  = msgs[ix];
-         strikes.insert( (u_int64_t)( _lvc.StrikePrice( *msg ) * 1000.0 ) );
+         strikes.insert( (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul ) );
       }
       for ( it=strikes.begin(); it!=strikes.end(); it++ )
-         _strikes.push_back( 0.001 * (*it) );
+         _strikes.push_back( (*it) / l_StrikeMul );
    }
 
 }; // class Underlyer
@@ -184,38 +194,70 @@ public:
 class OptionsSpline : public string
 {
 private:
-   Underlyer &_und;
-   u_int64_t  _tExp;
-   SplineType _type;
-   double     _xInc;
-   Ints       _kdb;
-   DoubleList _X;
-   DoubleList _Y;
-   int        _StreamID;
+   Underlyer    &_und;
+   OptionsCurve &_lvc;
+   IndexCache   &_idx;
+   u_int64_t     _tExp;
+   u_int64_t     _dStr;
+   SplineType    _type;
+   Ints          _kdb;
+   DoubleList    _X;
+   DoubleList    _Y;
+   double        _xInc;
+   int           _StreamID;
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
+   /** \brief By Expiration */
    OptionsSpline( Underlyer &und, 
                   u_int64_t  tExp, 
                   SplineType splineType,
-                  double     xInc,
                   LVCAll    &all ) :
       string(),
       _und( und ),
+      _lvc( und.lvc() ),
+      _idx( und.byExp() ),
       _tExp( tExp ),
+      _dStr( 0 ),
       _type( splineType ),
-      _xInc( xInc ),
       _kdb(),
       _X(),
       _Y(),
+      _xInc( und.lvc()._xInc ),
       _StreamID( 0 )
    {
       const char *ty[] = { ".P", ".C", "" };
       char        buf[K];
 
-      sprintf( buf, "%s.%ld%s", und.name(), tExp, ty[splineType] );
+      sprintf( buf, "%s %ld.E%s", und.name(), tExp, ty[splineType] );
+      string::assign( buf );
+      _Init( all );
+   }
+
+   /** \brief By Strike  Price */
+   OptionsSpline( Underlyer &und, 
+                  double     dStr, 
+                  SplineType splineType,
+                  LVCAll    &all ) :
+      string(),
+      _und( und ),
+      _lvc( und.lvc() ),
+      _idx( und.byStr() ),
+      _tExp( 0 ),
+      _dStr( (u_int64_t)( dStr * l_StrikeMul ) ),
+      _type( splineType ),
+      _kdb(),
+      _X(),
+      _Y(),
+      _xInc( und.lvc()._xInc ),
+      _StreamID( 0 )
+   {
+      const char *ty[] = { ".P", ".C", "" };
+      char        buf[K];
+
+      sprintf( buf, "%s %.2f.X%s", und.name(), dStr, ty[splineType] );
       string::assign( buf );
       _Init( all );
    }
@@ -224,9 +266,10 @@ public:
    // Access
    /////////////////////////
 public:
-   const char *name() { return data(); }
-   DoubleList &X()    { return _X; }
-   DoubleList &Y()    { return _Y; }
+   const char *name()  { return data(); }
+   DoubleList &X()     { return _X; }
+   DoubleList &Y()     { return _Y; }
+   bool        byExp() { return( _tExp != 0 ); }
 
    /////////////////////////
    // WatchList
@@ -254,9 +297,10 @@ public:
       double        x0   = xdb[0];
       double        x1   = xdb[xdb.size()-1];
       Message      *msg;
-      int           ix;
+      int           ix, np;
       size_t        i, nk;
-      double        x, y, m, dy;
+      double        x, y, m, dy, xi;
+      double        dExp, dStr;
       DoubleList    lX, lY, X, Y;
 
       // Pre-condition(s)
@@ -266,22 +310,29 @@ public:
       if ( !(nk=_kdb.size()) )
          return false;
 
-      // OK to continue
-
+      /*
+       * 1) Pull out real-time Knot values from LVC
+       */
       _X.clear();
       _Y.clear();
       for ( i=0; i<nk; i++ ) {
-         ix  = _kdb[i];
-         msg = msgs[ix];
-         x   = lvc.StrikePrice( *msg );
-         y   = lvc.MidQuote( *msg );
+         ix   = _kdb[i];
+         msg  = msgs[ix];
+         dStr = lvc.StrikePrice( *msg );
+         dExp = lvc.Expiration( *msg, true );
+         x    = byExp() ? dStr : dExp;
+         y    = lvc.MidQuote( *msg );
          lX.push_back( x );
          lY.push_back( y );
       }
       /*
-       * 2a) Straight-line beginning to min Strike
+       * 2a) Straight-line beginning to min Strike (or Expiration)
        */
-      if ( !lvc._oblong && ( nk >= 2 ) && ( x0 < lX[0] ) ) {
+      if ( !lvc._square ) {
+         x0 = lX[0];
+         x1 = lX[nk-1];
+      }
+      if ( ( nk >= 2 ) && ( x0 < lX[0] ) ) {
          m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
          dy = m * ( x0 - lX[0] );
          y  = lY[0] + dy;
@@ -291,15 +342,21 @@ public:
       for ( i=0; i<nk; X.push_back( lX[i] ), i++ );
       for ( i=0; i<nk; Y.push_back( lY[i] ), i++ );
       /*
-       * 2b) Straight-line end to max Strike
+       * 2b) Straight-line end to max Strike (or Expiration)
        */
-      if ( !lvc._oblong && ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
+      if ( ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
          m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
          dy = m * ( x1 - lX[nk-1] );
          y  = lY[nk-1] + dy;
          X.push_back( x1 );
          Y.push_back( y );
       }
+      /*
+       * 3) Max Number of Data Points 
+       */
+      np = ( x1-x0 ) / _xInc;
+      xi = _xInc;
+      for ( ; np > lvc._maxX; _xInc+=xi, np = ( x1-x0 ) / _xInc );
 
       QUANT::CubicSpline cs( X, Y );
 
@@ -310,6 +367,9 @@ public:
 
    void Publish( Update &u )
    {
+      double     x0, xInc;
+      int        xTy;
+
       // Pre-condition
 
       if ( !IsWatched() )
@@ -319,10 +379,23 @@ public:
 
       u.Init( name(), _StreamID, true );
       if ( _X.size() ) {
-         u.AddField( l_fidInc, _xInc );
-         u.AddField( l_fidXTy, xTy_NUM );
-         u.AddField( l_fidX0,  _X[0] );
-         u.AddVector( l_fidUNCV, _Y, l_Precision );
+         DoubleList unx;
+         DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
+
+         x0   = X[0];
+         xInc = _xInc;
+         xTy  = byExp() ? xTy_NUM : xTy_DATE;
+         if ( !byExp() )
+            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 ); // xInc in Months ...
+         u.AddField( l_fidInc, xInc );
+         u.AddField( l_fidXTy, xTy );
+         u.AddField( l_fidX0,  x0 );
+         /*
+          * X-axis values if Strike Spline (X-axis == Date)
+          */
+         if ( xTy == xTy_DATE )
+            u.AddVector( l_fidFidX, X, 0 );
+         u.AddVector( l_fidFidY, _Y, l_Precision );
          u.Publish();
       }
       else
@@ -335,20 +408,20 @@ public:
 private:
    void _Init( LVCAll &all )
    {
-      OptionsCurve &lvc  = _und.lvc();
-      Messages     &msgs = all.msgs();
+      Messages     &msgs  = all.msgs();
       Ints          udb;
       Message      *msg;
-      u_int64_t    jExp;
+      u_int64_t    jExp, jStr;
+      double       dStr;
       int          ix;
 
       /*
        * 1) Put / Call / Both??
        */
       switch( _type ) {
-         case spline_put:  udb = _und.puts();  break; 
-         case spline_call: udb = _und.calls(); break; 
-         case spline_both: udb = _und.both();  break; 
+         case spline_put:  udb = _idx._puts;  break;
+         case spline_call: udb = _idx._calls; break;
+         case spline_both: udb = _idx._both;  break;
       }
       /*
        * 2) Clear shit out; Jam away ...
@@ -358,9 +431,17 @@ private:
       for ( size_t i=0; i<udb.size(); i++ ) {
          ix   = udb[i];
          msg  = msgs[ix];
-         jExp = lvc.Expiration( *msg, false );
-         if ( jExp == _tExp )
-            _kdb.push_back( ix );
+         if ( byExp() ) {
+            jExp = _lvc.Expiration( *msg, false );
+            if ( jExp == _tExp )
+               _kdb.push_back( ix );
+         }
+         else {
+            dStr = _lvc.StrikePrice( *msg );
+            jStr = (u_int64_t)( dStr * l_StrikeMul );
+            if ( jStr == _dStr )
+               _kdb.push_back( ix );
+         }
       }
    }
 
@@ -421,7 +502,7 @@ public:
       return rc;
    }
 
-   size_t LoadSplines( double xInc )
+   size_t LoadSplines()
    {
       LVCAll                   &all = _lvc.ViewAll();
       Underlyers               &udb = _underlyers;
@@ -432,6 +513,7 @@ public:
       OptionsSpline            *spl;
       const char               *tkr;
       u_int64_t                 tExp;
+      double                    dX;
       string                    s;
       SplineType                sTy;
 
@@ -449,14 +531,25 @@ public:
        */
       for ( size_t i=0; i<udb.size(); i++ ) {
          SortedInt64Set          &edb = udb[i]->exps();
+         DoubleList              &xdb = udb[i]->strikes();
          SortedInt64Set::iterator et;
+         DoubleList::iterator     xt;
 
          und = udb[i];
          for ( et=edb.begin(); et!=edb.end(); et++ ) {
             tExp = (*et);
             for ( int o=0; o<=(int)spline_both; o++ ) {
                sTy    = (SplineType)o;
-               spl    = new OptionsSpline( *und, tExp, sTy, xInc, all );
+               spl    = new OptionsSpline( *und, tExp, sTy, all );
+               s      = spl->name();
+               sdb[s] = spl;
+            }
+         }
+         for ( xt=xdb.begin(); xt!=xdb.end(); xt++ ) {
+            dX = (*xt);
+            for ( int o=0; o<=(int)spline_call; o++ ) {
+               sTy    = (SplineType)o;
+               spl    = new OptionsSpline( *und, dX, sTy, all );
                s      = spl->name();
                sdb[s] = spl;
             }
@@ -569,8 +662,11 @@ protected:
       // Rock on
 
       _tPub = now;
-      if ( (n=Calc()) )
+      n     = Calc();
+#ifdef DEBUG
+      if ( n )
          LOG( "OnIdle() : %d calc'ed", n );
+#endif // DEBUG
    }
 
 }; // SplinePublisher
@@ -584,8 +680,9 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, obl;
+   bool        aOK, bCfg, sqr;
    double      rate, xInc;
+   int         maxX;
    const char *db, *svr, *svc;
 
    /////////////////////
@@ -603,7 +700,8 @@ int main( int argc, char **argv )
    svc  = "options.curve";
    rate = 1.0;
    xInc = 1.0; // 1 dollareeny
-   obl  = true;
+   maxX = 1000;
+   sqr  = false;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -612,7 +710,8 @@ int main( int argc, char **argv )
       s += "       [ -svc     <MDD Publisher Service> ] \\ \n";
       s += "       [ -rate    <SnapRate> ] \\ \n";
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
-      s += "       [ -oblong  <false to 'square up'> ] \\ \n";
+      s += "       [ -maxX    <Max Spline Values> ] \\ \n";
+      s += "       [ -square  <true to 'square up'> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
       LOG( "      -db      : %s", db );
@@ -620,7 +719,8 @@ int main( int argc, char **argv )
       LOG( "      -svc     : %s", svc );
       LOG( "      -rate    : %.2f", rate );
       LOG( "      -xInc    : %.2f", xInc );
-      LOG( "      -oblong  : %s", _pBool( obl ) );
+      LOG( "      -maxX    : %d", maxX );
+      LOG( "      -square  : %s", _pBool( sqr ) );
       return 0;
    }
 
@@ -639,16 +739,18 @@ int main( int argc, char **argv )
          svc = argv[++i];
       else if ( !::strcmp( argv[i], "-xInc" ) )
          xInc = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-maxX" ) )
+         maxX = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-rate" ) )
          rate = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-oblong" ) )
-         obl = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-square" ) )
+         sqr = _IsTrue( argv[++i] );
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, obl );
+   OptionsCurve    lvc( db, sqr, xInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, age;
    size_t          ns;
@@ -656,14 +758,13 @@ int main( int argc, char **argv )
    /*
     * Load Splines
     */
+   LOG( "Config._square = %s", _pBool( lvc._square ) );
+   LOG( "Config._xInc   = %.2f", lvc._xInc );
+   LOG( "Config._maxX   = %d", lvc._maxX );
    d0  = lvc.TimeNs();
-   ns    = pub.LoadSplines( xInc );
+   ns    = pub.LoadSplines();
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines loaded in %dms", ns, (int)age );
-   d0  = lvc.TimeNs();
-   pub.Calc( true );
-   age = 1000.0 * ( lvc.TimeNs() - d0 );
-   LOG( "%ld splines calculated in %dms", ns, (int)age );
    /*
     * Rock on
     */

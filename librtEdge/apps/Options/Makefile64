@@ -47,7 +47,7 @@ EXE_LIBS  = -lpthread -lrt -ldl $(MDDS_LIBS)
 
 ## Us
 
-all:	OptionsCurve SnapOptions
+all:	OptionsCurve ## SnapOptions
 
 #############
 # ./cpp
