@@ -26,8 +26,8 @@ static int xTy_NUM     =     1;
 static int l_fidInc    =     6; // X-axis Increment
 static int l_fidXTy    =     7; // X-axis type : xTy_DATE = Date; Else Numeric
 static int l_fidX0     =     8; // If Numeric, first X value
-static int l_fidFidX   = -8001;
-static int l_fidFidY   = -8002;
+static int l_fidVecX   = -8001;
+static int l_fidVecY   = -8002;
 
 // Forwards / Collections
 
@@ -69,7 +69,7 @@ const char *OptionsCurveID()
 class KnotDef
 {
 public:
-   OptionsSpline *_spline; // Non-zero implies create each time 
+   OptionsSpline *_spline; // Non-zero implies calc each time 
    u_int64_t      _strike;
    u_int64_t      _exp;
    int            _idx; // Non-zero implies real-time
@@ -121,6 +121,7 @@ private:
    IndexCache     _byStr; // Strike Price
    SortedInt64Set _exps;
    DoubleList     _strikes;
+   SplineMap      _splines;
 
    /////////////////////////
    // Constructor
@@ -132,7 +133,8 @@ public:
       _byExp(),
       _byStr(),
       _exps(),
-      _strikes()
+      _strikes(),
+      _splines()
    { ; }
 
    /////////////////////////
@@ -201,6 +203,81 @@ public:
          _strikes.push_back( (*it) / l_StrikeMul );
    }
 
+
+   /////////////////////
+   // Spline Lookup
+   /////////////////////
+public:
+   OptionsSpline *GetSpline( double strike, SplineType splTy )
+   {
+      SplineMap          &sdb = _splines;
+      SplineMap::iterator it;
+      OptionsSpline      *spl;
+      string              s( SplineName( strike, splTy ) );
+
+      spl = (OptionsSpline *)0;
+      if ( (it=sdb.find( s )) != sdb.end() )
+         spl = (*it).second;
+      return spl;
+   }
+
+   OptionsSpline *GetSpline( u_int64_t tExp, SplineType splTy )
+   {
+      SplineMap          &sdb = _splines;
+      SplineMap::iterator it;
+      OptionsSpline      *spl;
+      string              s( SplineName( tExp, splTy ) );
+
+      spl = (OptionsSpline *)0;
+      if ( (it=sdb.find( s )) != sdb.end() )
+         spl = (*it).second;
+      return spl;
+   }
+
+
+   void Register( OptionsSpline *spl, string &splineName )
+   {
+      string s( splineName );
+
+      _splines[s] = spl;
+   }
+
+   /////////////////////////
+   // Spline Namespace
+   /////////////////////////
+public:
+   /**
+    * \brief Return Spline Name by expiration
+    *
+    * \param tExp : Expiration
+    * \param splineType : Put, Call, Both
+    * \return Spline Name by expiration
+    */
+   string SplineName( u_int64_t tExp, SplineType splineType )
+   {
+      const char *ty[] = { ".P", ".C", "" };
+      char        buf[K];
+
+      sprintf( buf, "%s %ld.E%s", name(), tExp, ty[splineType] );
+      return string( buf );
+   }
+
+   /**
+    * \brief Return Spline Name by Strike
+    *
+    * \param dStr : Strike Price
+    * \param splineType : Put, Call, Both
+    * \return Spline Name by Strike
+    */
+   string SplineName( double dStr, SplineType splineType )
+   {
+      const char *ty[] = { ".P", ".C", "" };
+      char        buf[K];
+
+      sprintf( buf, "%s %.2f.X%s", name(), dStr, ty[splineType] );
+      return string( buf );
+   }
+
 }; // class Underlyer
 
 
@@ -213,18 +290,19 @@ public:
 class OptionsSpline : public string
 {
 private:
-   Underlyer    &_und;
-   OptionsCurve &_lvc;
-   IndexCache   &_idx;
-   u_int64_t     _tExp;
-   u_int64_t     _dStr;
-   SplineType    _type;
-   KnotDefs      _kdb;
-   DoubleList    _X;
-   DoubleList    _Y;
-   double        _xInc;
-   int           _StreamID;
-   time_t        _tCalc;
+   Underlyer         &_und;
+   OptionsCurve      &_lvc;
+   IndexCache        &_idx;
+   u_int64_t          _tExp;
+   u_int64_t          _dStr;
+   SplineType         _type;
+   KnotDefs           _kdb;
+   DoubleList         _X;
+   DoubleList         _Y;
+   QUANT::CubicSpline _CS; // Last Calc
+   double             _xInc;
+   int                _StreamID;
+   time_t             _tCalc;
 
    /////////////////////////
    // Constructor
@@ -235,7 +313,7 @@ public:
                   u_int64_t  tExp, 
                   SplineType splineType,
                   LVCAll    &all ) :
-      string(),
+      string( und.SplineName( tExp, splineType ) ),
       _und( und ),
       _lvc( und.lvc() ),
       _idx( und.byExp() ),
@@ -245,15 +323,11 @@ public:
       _kdb(),
       _X(),
       _Y(),
+      _CS(),
       _xInc( und.lvc()._xInc ),
       _StreamID( 0 ),
       _tCalc( 0 )
    {
-      const char *ty[] = { ".P", ".C", "" };
-      char        buf[K];
-
-      sprintf( buf, "%s %ld.E%s", und.name(), tExp, ty[splineType] );
-      string::assign( buf );
       _Init( all );
    }
 
@@ -262,7 +336,7 @@ public:
                   double     dStr, 
                   SplineType splineType,
                   LVCAll    &all ) :
-      string(),
+      string( und.SplineName( dStr, splineType ) ),
       _und( und ),
       _lvc( und.lvc() ),
       _idx( und.byStr() ),
@@ -272,15 +346,11 @@ public:
       _kdb(),
       _X(),
       _Y(),
+      _CS(),
       _xInc( und.lvc()._xInc ),
       _StreamID( 0 ),
       _tCalc( 0 )
    {
-      const char *ty[] = { ".P", ".C", "" };
-      char        buf[K];
-
-      sprintf( buf, "%s %.2f.X%s", und.name(), dStr, ty[splineType] );
-      string::assign( buf );
       _Init( all );
    }
 
@@ -292,6 +362,12 @@ public:
    DoubleList &X()     { return _X; }
    DoubleList &Y()     { return _Y; }
    bool        byExp() { return( _tExp != 0 ); }
+
+   QUANT::CubicSpline &CS( LVCAll &all, time_t now )
+   {
+      SnapKnots( all, now );
+      return _CS;
+   }
 
    /////////////////////////
    // WatchList
@@ -312,7 +388,7 @@ public:
     * \param bForce - true to calc if not watched
     * \return true if Calc'ed; false if not
     */ 
-   bool Calc( LVCAll &all, time_t now, bool bForce=false )
+   bool SnapKnots( LVCAll &all, time_t now )
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
@@ -323,14 +399,13 @@ public:
       int           ix, np;
       size_t        i, nk;
       double        x, y, m, dy, xi;
-      double        dExp, dStr;
+      double        dExp, dStr, dUpd;
       DoubleList    lX, lY, X, Y;
+      bool          bUpd;
 
       // Pre-condition(s)
 
       if ( _tCalc == now )
-         return false;
-      if ( !bForce && !IsWatched() )
          return false;
       if ( !(nk=_kdb.size()) )
          return false;
@@ -341,13 +416,15 @@ public:
       _tCalc = now;
       _X.clear();
       _Y.clear();
-      for ( i=0; i<nk; i++ ) {
-         ix   = _kdb[i]._idx;
-         msg  = msgs[ix];
-         dStr = lvc.StrikePrice( *msg );
-         dExp = lvc.Expiration( *msg, true );
-         x    = byExp() ? dStr : dExp;
-         y    = lvc.MidQuote( *msg );
+      for ( i=0,bUpd=false; i<nk; i++ ) {
+         ix    = _kdb[i]._idx;
+         msg   = msgs[ix];
+         dUpd  = msg->MsgTime();
+         bUpd |= ( (time_t)dUpd > _tCalc );
+         dStr  = lvc.StrikePrice( *msg );
+         dExp  = lvc.Expiration( *msg, true );
+         x     = byExp() ? dStr : dExp;
+         y     = lvc.MidQuote( *msg );
          lX.push_back( x );
          lY.push_back( y );
       }
@@ -386,12 +463,46 @@ public:
 
       QUANT::CubicSpline cs( X, Y );
 
+      _CS = cs;
+      return bUpd;
+   }
+
+   /**
+    * \brief Build Spline from current LVC Snap
+    *
+    * \param all - Current LVC Snap
+    * \param now - Current Unix Time
+    * \param bForce - true to calc if not watched
+    * \return true if Calc'ed; false if not
+    */ 
+   bool Calc( LVCAll &all, time_t now, bool bForce=false )
+   {
+      RTEDGE::DoubleXYList &XY = _CS.XY();
+      size_t                nk, nx;
+      double                x, x0, x1;
+
+      // Pre-condition(s)
+
+      if ( _tCalc == now )
+         return false;
+      if ( !bForce && !IsWatched() )
+         return false;
+      if ( !(nk=_kdb.size()) )
+         return false;
+      if ( !SnapKnots( all, now ) && !bForce )
+         return false;
+
+      // Rock on
+
+      nx = XY.size();
+      x0 = XY[1]._x;
+      x1 = XY[nx-1]._x;
       for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
-      _Y = cs.Spline( _X );
+      _Y  = _CS.Spline( _X );
       return true;
    }
 
-   void Publish( Update &u )
+   void Publish( Update &u, bool bImg=false )
    {
       double     x0, xInc;
       int        xTy;
@@ -403,7 +514,7 @@ public:
 
       // Initialize / Publish
 
-      u.Init( name(), _StreamID, true );
+      u.Init( name(), _StreamID, bImg );
       if ( _X.size() ) {
          DoubleList unx;
          DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
@@ -411,8 +522,11 @@ public:
          x0   = X[0];
          xInc = _xInc;
          xTy  = byExp() ? xTy_NUM : xTy_DATE;
+         /*
+          * VectorView.js expects xInc to be in months
+          */
          if ( !byExp() )
-            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 ); // xInc in Months ...
+            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 );
          u.AddField( l_fidInc, xInc );
          u.AddField( l_fidXTy, xTy );
          u.AddField( l_fidX0,  x0 );
@@ -420,8 +534,8 @@ public:
           * X-axis values if Strike Spline (X-axis == Date)
           */
          if ( xTy == xTy_DATE )
-            u.AddVector( l_fidFidX, X, 0 );
-         u.AddVector( l_fidFidY, _Y, l_Precision );
+            u.AddVector( l_fidVecX, X, 0 );
+         u.AddVector( l_fidVecY, _Y, l_Precision );
          u.Publish();
       }
       else
@@ -512,22 +626,27 @@ public:
       SetIdleCallback( true );
    }
 
+
    /////////////////////
    // Operations
    /////////////////////
 public:
-   int Calc( bool bForce=false )
+   int Calc()
    {
       LVCAll             &all = _lvc.ViewAll();
       SplineMap          &sdb = _splines;
+      Update             &u   = upd();
       time_t              now = TimeSec();
       SplineMap::iterator it;
       OptionsSpline      *spl;
       int                 rc;
-
+bool bImg = true; // VectorView.js needs fidVecX
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          spl = (*it).second;
-         rc += spl->Calc( all, now, bForce ) ? 1 : 0;
+         if ( spl->Calc( all, now ) ) {
+            spl->Publish( u, bImg );
+            rc += 1;
+         }
       }
       return rc;
    }
@@ -573,6 +692,7 @@ public:
                spl    = new OptionsSpline( *und, tExp, sTy, all );
                s      = spl->name();
                sdb[s] = spl;
+               und->Register( spl, s );
             }
          }
          for ( xt=xdb.begin(); xt!=xdb.end(); xt++ ) {
@@ -582,6 +702,7 @@ public:
                spl    = new OptionsSpline( *und, dX, sTy, all );
                s      = spl->name();
                sdb[s] = spl;
+               und->Register( spl, s );
             }
          }
       }
@@ -619,8 +740,8 @@ protected:
       if ( (it=sdb.find( s )) != sdb.end() ) {
          spl = (*it).second;
          spl->SetWatch( (size_t)arg );
-         spl->Calc( all, now );
-         spl->Publish( u );
+         spl->Calc( all, now, true );
+         spl->Publish( u, true );
       }
       else {
          u.Init( tkr, arg );

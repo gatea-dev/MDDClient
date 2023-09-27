@@ -7,7 +7,7 @@
 *     21 OCT 2022 jcs  Created.
 *     31 OCT 2022 jcs  Surface.
 *     26 NOV 2022 jcs  RTEDGE::DoubleXY / RTEDGE::DoubleXYZ
-*     22 SEP 2023 jcs  DoubleList Spline(); double ValueAt()
+*     29 SEP 2023 jcs  DoubleList Spline(); double ValueAt(); operator=()
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -48,6 +48,15 @@ class CubicSpline
 	// Constructor / Destructor
 	////////////////////////////////////
 public:
+	/** \brief Constructor */
+	CubicSpline() : 
+	   _XY(),
+	   _Y2(),
+	   _Size( 0 ),
+	   _yp1( _HUGE ),
+	   _ypn( _HUGE )
+	{ ; }
+
 	/**
 	 * \brief Constructor : Natural spline
 	 *
@@ -126,9 +135,40 @@ public:
 
 
 	////////////////////////////////////
+	// Assignment Operator
+	////////////////////////////////////
+public:
+	/** 
+	 * \brief Assignment operator
+	 *
+	 * \param s - Source instance
+	 * \return Reference to this instance 
+	 */
+	CubicSpline &operator=( const CubicSpline &s )
+	{
+	   _XY   = s._XY;
+	   _Y2   = s._Y2;
+	   _Size = s._Size;
+	   _yp1  = s._yp1;
+	   _ypn  = s._ypn;
+	   return *this;
+	}
+
+
+	////////////////////////////////////
 	// Access / Operations
 	////////////////////////////////////
 public:
+	/**
+	 * \brief Return sampled ( x,y ) values
+	 *
+	 * \return Sampled ( x,y ) values
+	 */
+	RTEDGE::DoubleXYList &XY()
+	{
+	   return _XY;
+	}
+
 	/**
 	 * \brief Return calculated 2nd order derivitive array
 	 *

@@ -432,7 +432,9 @@ void KnotSource::OpenAll()
 Edge3Source::Edge3Source( SplinePublisher &pub, XmlElem &xe ) :
    KnotSource( pub, xe ),
    SubChannel()
-{ ; }
+{
+   SetBinary( true );
+}
 
 
 ////////////////////////////////
