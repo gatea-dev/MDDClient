@@ -8,11 +8,11 @@
 #     20 JAN 2022 jcs  Created
 #      3 FEB 2022 jcs  libMDDirect.NumPyObjects()
 #     14 AUG 2023 jcs  Python 2 / 3
-#     29 AUG 2023 jcs  Python 2 / 3
+#     29 SEP 2023 jcs  Tape
 #
 #  (c) 1994-2023, Gatea Ltd.
 #################################################################
-import sys, time
+import os, sys, time
 import libMDDirect
 
 def Log( msg ):
@@ -21,9 +21,17 @@ def Log( msg ):
    return
 
 class Sub( libMDDirect.rtEdgeSubscriber ):
-   def __init__( self ):
+   #################################
+   ## Constructor
+   #################################
+   def __init__( self, tdb ):
       libMDDirect.rtEdgeSubscriber.__init__( self )
+      self._nSub  = len( tdb )
+      self._nDone = 0
 
+   #################################
+   ## @overrides
+   #################################
    def OnConnect( self, msg, bUP ):
       Log( 'CONN.{%s} : %s' % ( bUP, msg ) )
 
@@ -39,6 +47,16 @@ class Sub( libMDDirect.rtEdgeSubscriber ):
 
    def OnDead( self, mddMsg, err ):
       Log( 'DEAD : ' + err )
+
+   def OnStreamDone( self, sts ):
+      self._nDone += 1
+      Log( 'STR-DONE [%d of %d]: %s' % ( self._nDone, self._nSub, sts ) )
+
+   #################################
+   ## Access
+   #################################
+   def IsDone( self ):
+      return( self._nDone == self._nSub )
 
 ############################################
 #
@@ -68,7 +86,7 @@ if __name__ == "__main__":
       elif cmd == '-s':   svc  = val
       elif cmd == '-t':   tkrs = val
       elif cmd == '-bds': bds  = ( low == 'true' ) or ( low == 'yes' )
-   if not svr.count( ':' ): svr += ':9998'
+   if not os.path.isfile( svr ) and svr.count( ':' ): svr += ':9998'
    try:
       fp  = open( tkrs, 'rb' )
       tdb = [ tkr.strip('\n').strip('\r') for tkr in fp.readlines() ]
@@ -81,7 +99,7 @@ if __name__ == "__main__":
    # Subscribe
    #
    Log( libMDDirect.Version() )
-   sub = Sub()
+   sub = Sub( tdb )
    sub.Start( svr, sys.argv[0], True )
    if bds:
       [ sub.OpenBDS( svc, tkr, 0 ) for tkr in tdb ]
@@ -92,12 +110,13 @@ if __name__ == "__main__":
    #
    # Rock and Roll
    #
-   bPy3 = ( sys.version_info.major >= 3 )
-   if bPy3: input( 'Hit <ENTER> to quit ...' )
-   else:    raw_input( 'Hit <ENTER> to quit ...' )
-   run = False
+   if sub.IsTape():
+      Log( 'Pumping tape %s ...' % svr )
+      sub.PumpTape()
+   if not sub.IsTape():
+      Log( 'Hit <CTRL-C> to quit ...' )
    try:
-      while run:
+      while not sub.IsDone():
          time.sleep( tSlp )
          sys.stdout.flush()
    except KeyboardInterrupt:

@@ -10,6 +10,7 @@
 *      8 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *     19 MAY 2023 jcs  Build 63: -schema
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( svc, tkr )
+*     26 SEP 2023 jcs  Build 65: NumUpd,NumFld header - DUH!!
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -342,7 +343,7 @@ int main( int argc, char **argv )
    }
    if ( (nt=fids.size()) ) {
       cp  = sTkr;
-      cp += sprintf( cp, "Time,Service,Ticker,Active,Age,NumFld,NumUpd," );
+      cp += sprintf( cp, "Time,Service,Ticker,Active,Age,NumUpd,NumFld," );
       for ( size_t i=0; i<nt; i++ ) {
          if ( (fd=sch.GetDef( fids[i] )) )
             cp += sprintf( cp, "%s,", fd->pName() );

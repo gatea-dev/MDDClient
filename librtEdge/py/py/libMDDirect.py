@@ -21,6 +21,7 @@
 #     21 AUG 2023 jcs  MDDirectException; SnapAll()
 #      4 SEP 2023 jcs  EVT_BDS; DelTickers()
 #     20 SEP 2023 jcs  BBDailyStats
+#     27 SEP 2023 jcs  Tape debug
 #
 #  (c) 1994-2022, Gatea Ltd.
 #################################################################
@@ -222,6 +223,7 @@ class rtEdgeSubscriber( threading.Thread ):
    def __init__( self ):
       threading.Thread.__init__( self )
       self._run    = True
+      self._tid    = None
       self._cxt    = None
       self._schema = None
       self._msg    = rtEdgeData()
@@ -253,7 +255,9 @@ class rtEdgeSubscriber( threading.Thread ):
    ########################
    def Stop( self ):
       self._run = False
-      self.join()
+      if self._tid:
+         self.join()
+      self._tid = None
       if self._cxt:
          MDDirect.Stop( self._cxt )
       self._cxt = None
@@ -338,6 +342,8 @@ class rtEdgeSubscriber( threading.Thread ):
    # @param t1 - Tape Slice End; None (default) for end of tape
    ########################
    def PumpTape( self, t0=None, t1=None ):
+      if type( t0 ) != type( 'abc' ): t0 = '00:00:00'
+      if type( t1 ) != type( 'abc' ): t1 = '23:59:59'
       return MDDirect.PumpTape( self._cxt, t0, t1 )
 
    ########################
@@ -521,6 +527,7 @@ class rtEdgeSubscriber( threading.Thread ):
    #                    where fldN = [ fidN, valN, tyN ]
    #################################
    def run( self ):
+      self._tid = threading.currentThread().ident
       self._ready.set()
       #
       # Drain until stopped

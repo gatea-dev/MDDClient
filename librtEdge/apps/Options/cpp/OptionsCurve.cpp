@@ -60,6 +60,25 @@ const char *OptionsCurveID()
    return sccsid+4;
 }
 
+
+////////////////////////////////////////////////
+//
+//       c l a s s    K n o t D e f
+//
+////////////////////////////////////////////////
+class KnotDef
+{
+public:
+   OptionsSpline *_spline; // Non-zero implies create each time 
+   u_int64_t      _strike;
+   u_int64_t      _exp;
+   int            _idx; // Non-zero implies real-time
+
+}; // KnotDef
+
+typedef vector<KnotDef> KnotDefs;
+
+
 ////////////////////////////////////////////////
 //
 //     c l a s s   O p t i o n s C u r v e
@@ -200,11 +219,12 @@ private:
    u_int64_t     _tExp;
    u_int64_t     _dStr;
    SplineType    _type;
-   Ints          _kdb;
+   KnotDefs      _kdb;
    DoubleList    _X;
    DoubleList    _Y;
    double        _xInc;
    int           _StreamID;
+   time_t        _tCalc;
 
    /////////////////////////
    // Constructor
@@ -226,7 +246,8 @@ public:
       _X(),
       _Y(),
       _xInc( und.lvc()._xInc ),
-      _StreamID( 0 )
+      _StreamID( 0 ),
+      _tCalc( 0 )
    {
       const char *ty[] = { ".P", ".C", "" };
       char        buf[K];
@@ -252,7 +273,8 @@ public:
       _X(),
       _Y(),
       _xInc( und.lvc()._xInc ),
-      _StreamID( 0 )
+      _StreamID( 0 ),
+      _tCalc( 0 )
    {
       const char *ty[] = { ".P", ".C", "" };
       char        buf[K];
@@ -286,10 +308,11 @@ public:
     * \brief Build Spline from current LVC Snap
     *
     * \param all - Current LVC Snap
+    * \param now - Current Unix Time
     * \param bForce - true to calc if not watched
     * \return true if Calc'ed; false if not
     */ 
-   bool Calc( LVCAll &all, bool bForce=false )
+   bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
@@ -305,6 +328,8 @@ public:
 
       // Pre-condition(s)
 
+      if ( _tCalc == now )
+         return false;
       if ( !bForce && !IsWatched() )
          return false;
       if ( !(nk=_kdb.size()) )
@@ -313,10 +338,11 @@ public:
       /*
        * 1) Pull out real-time Knot values from LVC
        */
+      _tCalc = now;
       _X.clear();
       _Y.clear();
       for ( i=0; i<nk; i++ ) {
-         ix   = _kdb[i];
+         ix   = _kdb[i]._idx;
          msg  = msgs[ix];
          dStr = lvc.StrikePrice( *msg );
          dExp = lvc.Expiration( *msg, true );
@@ -408,12 +434,11 @@ public:
 private:
    void _Init( LVCAll &all )
    {
-      Messages     &msgs  = all.msgs();
-      Ints          udb;
-      Message      *msg;
-      u_int64_t    jExp, jStr;
-      double       dStr;
-      int          ix;
+      Messages &msgs  = all.msgs();
+      Ints      udb;
+      Message  *msg;
+      KnotDef   k;
+      int       ix;
 
       /*
        * 1) Put / Call / Both??
@@ -428,19 +453,23 @@ private:
        */
       _X.clear();
       _Y.clear();
+      k._spline = (OptionsSpline *)0;
       for ( size_t i=0; i<udb.size(); i++ ) {
-         ix   = udb[i];
-         msg  = msgs[ix];
+         ix        = udb[i];
+         msg       = msgs[ix];
+         k._exp    = _lvc.Expiration( *msg, false );
+         k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
          if ( byExp() ) {
-            jExp = _lvc.Expiration( *msg, false );
-            if ( jExp == _tExp )
-               _kdb.push_back( ix );
+            if ( k._exp == _tExp ) {
+               k._idx = ix;
+               _kdb.push_back( k );
+            }
          }
          else {
-            dStr = _lvc.StrikePrice( *msg );
-            jStr = (u_int64_t)( dStr * l_StrikeMul );
-            if ( jStr == _dStr )
-               _kdb.push_back( ix );
+            if ( k._strike == _dStr ) {
+               k._idx = ix;
+               _kdb.push_back( k );
+            }
          }
       }
    }
@@ -491,13 +520,14 @@ public:
    {
       LVCAll             &all = _lvc.ViewAll();
       SplineMap          &sdb = _splines;
+      time_t              now = TimeSec();
       SplineMap::iterator it;
       OptionsSpline      *spl;
       int                 rc;
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          spl = (*it).second;
-         rc += spl->Calc( all, bForce ) ? 1 : 0;
+         rc += spl->Calc( all, now, bForce ) ? 1 : 0;
       }
       return rc;
    }
@@ -580,6 +610,7 @@ protected:
       LVCAll             &all = _lvc.ViewAll();
       SplineMap          &sdb = _splines;
       Update             &u   = upd();
+      time_t              now = TimeSec();
       SplineMap::iterator it;
       string              tm, s( tkr );
       OptionsSpline      *spl;
@@ -588,7 +619,7 @@ protected:
       if ( (it=sdb.find( s )) != sdb.end() ) {
          spl = (*it).second;
          spl->SetWatch( (size_t)arg );
-         spl->Calc( all );
+         spl->Calc( all, now );
          spl->Publish( u );
       }
       else {
