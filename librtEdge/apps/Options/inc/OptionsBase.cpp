@@ -26,6 +26,7 @@ typedef set<string, less<string> >            SortedStringSet;
 
 #define _DSPLY_NAME    3
 #define _TRDPRC_1      6
+#define _HST_CLOSE    21
 #define _BID          22
 #define _ASK          25
 #define _STRIKE_PRC   66
@@ -174,15 +175,28 @@ public:
     */
    double MidQuote( Message &msg )
    {
-      double bid, ask;
+      double bid, ask, last, cls, rc;
 
-      // Lame (but effective) attempt to handle one-sided quotes
-
-      bid = _GetAsDouble( msg, _BID );
-      ask = _GetAsDouble( msg, _ASK );
-      bid = ( bid == 0.0 ) ? ask : bid;
-      ask = ( ask == 0.0 ) ? bid : ask;
-      return( 0.5 * ( bid+ask ) );
+      /*
+       * First of the following that is non-zero:
+       *    1) Bid-Ask Mid
+       *    2) Last
+       *    3) Close
+       *    4) max( bid, ask )
+       */
+      last = _GetAsDouble( msg, _TRDPRC_1 );
+      cls  = _GetAsDouble( msg, _HST_CLOSE );
+      bid  = _GetAsDouble( msg, _BID );
+      ask  = _GetAsDouble( msg, _ASK );
+      if ( bid && ask )
+         rc = 0.5 * ( bid+ask );
+      else if ( last )
+         rc = last;
+      else if ( cls )
+         rc = cls;
+      else
+         rc = gmax( bid,  ask );
+      return rc;
    }
 
    /**

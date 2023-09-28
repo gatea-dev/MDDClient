@@ -1,9 +1,6 @@
 /******************************************************************************
 *
 *  OptionsCurve.cpp
-*     TODO :
-*     2) Spline.Calc_ByStrike()
-*     3) Surface
 *
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
@@ -12,6 +9,7 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
+#include <assert.h>
 #include <list>
 
 // Configurable Precision
@@ -76,7 +74,8 @@ public:
 
 }; // KnotDef
 
-typedef vector<KnotDef> KnotDefs;
+typedef vector<KnotDef>  KnotList;
+typedef vector<KnotList> KnotGrid;
 
 
 ////////////////////////////////////////////////
@@ -89,6 +88,7 @@ class OptionsCurve : public OptionsBase
 public:
    bool   _square;
    double _xInc;
+   double _yInc;
    int    _maxX;
 
    /////////////////////////
@@ -98,10 +98,12 @@ public:
    OptionsCurve( const char *svr, 
                  bool        square,
                  double      xInc,
+                 double      yInc,
                  int         maxX ) :
       OptionsBase( svr ),
       _square( square ),
       _xInc( xInc ),
+      _yInc( yInc ),
       _maxX( maxX )
    { ; }
 
@@ -296,7 +298,7 @@ private:
    u_int64_t          _tExp;
    u_int64_t          _dStr;
    SplineType         _type;
-   KnotDefs           _kdb;
+   KnotList           _kdb;
    DoubleList         _X;
    DoubleList         _Y;
    QUANT::CubicSpline _CS; // Last Calc
@@ -358,10 +360,11 @@ public:
    // Access
    /////////////////////////
 public:
-   const char *name()  { return data(); }
-   DoubleList &X()     { return _X; }
-   DoubleList &Y()     { return _Y; }
-   bool        byExp() { return( _tExp != 0 ); }
+   const char *name()     { return data(); }
+   DoubleList &X()        { return _X; }
+   DoubleList &Y()        { return _Y; }
+   bool        byExp()    { return( _tExp != 0 ); }
+   size_t      NumKnots() { return _kdb.size(); }
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
    {
@@ -398,16 +401,17 @@ public:
       Message      *msg;
       int           ix, np;
       size_t        i, nk;
-      double        x, y, m, dy, xi;
+      double        m, dy, xi;
       double        dExp, dStr, dUpd;
-      DoubleList    lX, lY, X, Y;
+      DoubleXYList  lXY, XY;
+      DoubleXY      pt;
       bool          bUpd;
 
       // Pre-condition(s)
 
       if ( _tCalc == now )
          return false;
-      if ( !(nk=_kdb.size()) )
+      if ( !(nk=NumKnots()) )
          return false;
 
       /*
@@ -423,36 +427,36 @@ public:
          bUpd |= ( (time_t)dUpd > _tCalc );
          dStr  = lvc.StrikePrice( *msg );
          dExp  = lvc.Expiration( *msg, true );
-         x     = byExp() ? dStr : dExp;
-         y     = lvc.MidQuote( *msg );
-         lX.push_back( x );
-         lY.push_back( y );
+         pt._x = byExp() ? dStr : dExp;
+         pt._y = lvc.MidQuote( *msg );
+         lXY.push_back( pt );
       }
       /*
        * 2a) Straight-line beginning to min Strike (or Expiration)
        */
       if ( !lvc._square ) {
-         x0 = lX[0];
-         x1 = lX[nk-1];
+         x0 = lXY[0]._x;
+         x1 = lXY[nk-1]._x;
       }
-      if ( ( nk >= 2 ) && ( x0 < lX[0] ) ) {
-         m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
-         dy = m * ( x0 - lX[0] );
-         y  = lY[0] + dy;
-         X.push_back( x0 );
-         Y.push_back( y );
+      if ( ( nk >= 2 ) && ( x0 < lXY[0]._x ) ) {
+         m     = ( lXY[0]._y - lXY[1]._y );
+         m    /= ( lXY[0]._x - lXY[1]._x );
+         dy    = m * ( x0 - lXY[0]._x );
+         pt._x = x0;
+         pt._y = lXY[0]._y + dy;
+         XY.push_back( pt );
       }
-      for ( i=0; i<nk; X.push_back( lX[i] ), i++ );
-      for ( i=0; i<nk; Y.push_back( lY[i] ), i++ );
+      for ( i=0; i<nk; XY.push_back( lXY[i] ), i++ );
       /*
        * 2b) Straight-line end to max Strike (or Expiration)
        */
-      if ( ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
-         m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
-         dy = m * ( x1 - lX[nk-1] );
-         y  = lY[nk-1] + dy;
-         X.push_back( x1 );
-         Y.push_back( y );
+      if ( ( nk >= 2 ) && ( lXY[nk-1]._x < x1 ) ) {
+         m     = ( lXY[nk-2]._y - lXY[nk-1]._y );
+         m    /= ( lXY[nk-2]._x - lXY[nk-1]._x );
+         dy    = m * ( x1 - lXY[nk-1]._x );
+         pt._x = x1;
+         pt._y = lXY[nk-1]._y + dy;
+         XY.push_back( pt );
       }
       /*
        * 3) Max Number of Data Points 
@@ -461,7 +465,7 @@ public:
       xi = _xInc;
       for ( ; np > lvc._maxX; _xInc+=xi, np = ( x1-x0 ) / _xInc );
 
-      QUANT::CubicSpline cs( X, Y );
+      QUANT::CubicSpline cs( XY );
 
       _CS = cs;
       return bUpd;
@@ -487,7 +491,7 @@ public:
          return false;
       if ( !bForce && !IsWatched() )
          return false;
-      if ( !(nk=_kdb.size()) )
+      if ( !(nk=NumKnots()) )
          return false;
       if ( !SnapKnots( all, now ) && !bForce )
          return false;
@@ -589,6 +593,308 @@ private:
    }
 
 }; // class OptionsSpline
+
+
+
+////////////////////////////////////////////////
+//
+//    c l a s s   O p t i o n s S u r f a c e
+//
+////////////////////////////////////////////////
+/**
+ * \brief An options surface : PUT or CALL
+ *
+ * The surface is built from a M x N sampled grid of ( x,y,z ) Knots as follows:
+ * Axis | Size | Elements
+ * --- | --- | ---
+ * X | M | Expiration
+ * Y | N | Strike Price
+ * Z | M x N | Option Value at ( Expiration, Strike )
+ *
+ * This instance 'fills in' the Knot Grid if it is missing Knots or oherwise 
+ * sparesely populated.  If a Knot is not available from the LVC, it is 
+ * interpolated from the existing Options Spline.
+ *
+ * An OptionsSpline is chosen from the Underlyer to 'fill in' the Knot at 
+ * the ( Expiration, Strike ) Knot point as follows:
+ * -# Pull OptionsSpline for Expiration at the Knot point
+ * -# Pull OptionsSpline for Strike at the Knot point
+ * -# At least one will exist
+ * -# If only one exists, use that one
+ * -# If both exist, use the one with the most Knots since it is most accurate 
+ *
+ * \see OptionsSpline
+ * \see Underlyer
+ */
+class OptionsSurface : public string
+{
+private:
+   Underlyer    &_und;
+   OptionsCurve &_lvc;
+   bool          _bPut;
+   KnotGrid      _kdb;
+   DoubleList    _X;
+   DoubleList    _Y;
+   DoubleGrid    _Z;
+   double        _xInc;
+   double        _yInc;
+   int           _StreamID;
+
+   /////////////////////////
+   // Constructor
+   /////////////////////////
+public:
+   /** 
+    * \brief Constructor
+    *
+    * \param und - Underlyer
+    * \param bPut - true for surface of puts; false for calls
+    * \param all - Current LVC Snapshot
+    */
+   OptionsSurface( Underlyer &und, bool bPut, LVCAll &all ) :
+      string( und ),
+      _und( und ),
+      _lvc( und.lvc() ),
+      _bPut( bPut ),
+      _kdb(),
+      _X(),
+      _Y(),
+      _Z(),
+      _xInc( und.lvc()._xInc ),
+      _yInc( und.lvc()._yInc ),
+      _StreamID( 0 )
+   {
+      _Init( all );
+   }
+
+   /////////////////////////
+   // Access
+   /////////////////////////
+public:
+   const char *name() { return data(); }
+   DoubleList &X()    { return _X; }
+   DoubleList &Y()    { return _Y; }
+   DoubleGrid &Z()    { return _Z; }
+
+   /////////////////////////
+   // WatchList
+   /////////////////////////
+public:
+   bool IsWatched()              { return( _StreamID != 0 ); }
+   void SetWatch( int StreamID ) { _StreamID = StreamID; }
+
+   /////////////////////////
+   // Operations
+   /////////////////////////
+#ifdef TODO_SURFACE
+public:
+   /**
+    * \brief Build Spline from current LVC Snap
+    *
+    * \param all - Current LVC Snap
+    * \param bForce - true to calc if not watched
+    * \return true if Calc'ed; false if not
+    */ 
+   bool Calc( LVCAll &all, bool bForce=false )
+   {
+      OptionsCurve &lvc  = _und.lvc();
+      Messages     &msgs = all.msgs();
+      DoubleList   &xdb  = _und.strikes();
+      double        x0   = xdb[0];
+      double        x1   = xdb[xdb.size()-1];
+      Message      *msg;
+      int           ix, np;
+      size_t        i, nk;
+      double        x, y, m, dy, xi;
+      double        dExp, dStr;
+      DoubleList    lX, lY, X, Y;
+
+      // Pre-condition(s)
+
+      if ( !bForce && !IsWatched() )
+         return false;
+      if ( !(nk=_kdb.size()) )
+         return false;
+
+      /*
+       * 1) Pull out real-time Knot values from LVC
+       */
+      _X.clear();
+      _Y.clear();
+      for ( i=0; i<nk; i++ ) {
+         ix   = _kdb[i]._idx;
+         msg  = msgs[ix];
+         dStr = lvc.StrikePrice( *msg );
+         dExp = lvc.Expiration( *msg, true );
+         x    = byExp() ? dStr : dExp;
+         y    = lvc.MidQuote( *msg );
+         lX.push_back( x );
+         lY.push_back( y );
+      }
+      /*
+       * 2a) Straight-line beginning to min Strike (or Expiration)
+       */
+      if ( !lvc._square ) {
+         x0 = lX[0];
+         x1 = lX[nk-1];
+      }
+      if ( ( nk >= 2 ) && ( x0 < lX[0] ) ) {
+         m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
+         dy = m * ( x0 - lX[0] );
+         y  = lY[0] + dy;
+         X.push_back( x0 );
+         Y.push_back( y );
+      }
+      for ( i=0; i<nk; X.push_back( lX[i] ), i++ );
+      for ( i=0; i<nk; Y.push_back( lY[i] ), i++ );
+      /*
+       * 2b) Straight-line end to max Strike (or Expiration)
+       */
+      if ( ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
+         m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
+         dy = m * ( x1 - lX[nk-1] );
+         y  = lY[nk-1] + dy;
+         X.push_back( x1 );
+         Y.push_back( y );
+      }
+      /*
+       * 3) Max Number of Data Points 
+       */
+      np = ( x1-x0 ) / _xInc;
+      xi = _xInc;
+      for ( ; np > lvc._maxX; _xInc+=xi, np = ( x1-x0 ) / _xInc );
+
+      QUANT::CubicSpline cs( X, Y );
+
+      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
+      _Y = cs.Spline( _X );
+      return true;
+   }
+
+   void Publish( Update &u )
+   {
+      double     x0, xInc;
+      int        xTy;
+
+      // Pre-condition
+
+      if ( !IsWatched() )
+         return;
+
+      // Initialize / Publish
+
+      u.Init( name(), _StreamID, true );
+      if ( _X.size() ) {
+         DoubleList unx;
+         DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
+
+         x0   = X[0];
+         xInc = _xInc;
+         xTy  = byExp() ? xTy_NUM : xTy_DATE;
+         if ( !byExp() )
+            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 ); // xInc in Months ...
+         u.AddField( l_fidInc, xInc );
+         u.AddField( l_fidXTy, xTy );
+         u.AddField( l_fidX0,  x0 );
+         /*
+          * X-axis values if Strike Spline (X-axis == Date)
+          */
+         if ( xTy == xTy_DATE )
+            u.AddVector( l_fidFidX, X, 0 );
+         u.AddVector( l_fidFidY, _Y, l_Precision );
+         u.Publish();
+      }
+      else
+         u.PubError( "Empty Spline" );
+   }
+#endif // TODO_SURFACE
+
+   /////////////////////////
+   // (private) Helpers
+   /////////////////////////
+private:
+   void _Init( LVCAll &all )
+   {
+      Messages      &msgs  = all.msgs();
+      IndexCache    &byExp = _und.byExp();
+      IndexCache    &byStr = _und.byStr();
+      Ints           udb, xdb;
+      Message       *msg;
+      KnotDef        k, kz;
+      KnotList       kAll, kdb;
+      u_int64_t      jExp, jStr;
+      size_t         i, j, l, nk, M, N;
+      SortedInt64Set edb, sdb;
+
+      /*
+       * 1) Put / Call
+       */
+      udb = _bPut ? byExp._puts : byExp._calls;
+      xdb = _bPut ? byStr._puts : byStr._calls;
+      /*
+       * 2) Clear shit out; Jam away ...
+       */
+      k._spline = (OptionsSpline *)0;
+      for ( i=0; i<udb.size(); i++ ) {
+         k._idx    = udb[i];
+         msg       = msgs[k._idx];
+         k._exp    = _lvc.Expiration( *msg, false );
+         k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
+         kAll.push_back( k );
+         /*
+          * Build ( Expiration, Strike ) matrix
+          */
+         edb.insert( k._exp );
+         sdb.insert( k._strike );
+      }
+      nk = kAll.size();
+      for ( i=0; i<nk; i++ ) {
+         k = kAll[i];
+//         LOG( "%s,%ld,%ld,", data(), k._exp, k._strike );
+      }
+      /*
+       * 2) Square Up by Expiration
+       */
+      SortedInt64Set::iterator et, st;
+
+      for ( i=0,l=0,et=edb.begin(); et!=edb.end() && l<nk; i++,et++ ) {
+         jExp = (*et);
+         k    = kAll[l];
+assert( k._exp == jExp );
+         for ( j=0,st=sdb.begin(); st!=sdb.end() && l<nk; j++,st++ ) {
+            jStr = (*st);
+// assert( k._strike <= jStr );
+            if ( k._strike == jStr ) {
+               kdb.push_back( k );
+               l += 1;
+            }
+            else {
+               kz._spline = (OptionsSpline *)0; // TODO
+               kz._exp    = jExp;
+               kz._strike = jStr;
+               kz._idx    = 0;
+               kdb.push_back( kz );
+            }
+         }
+         for ( ; l<nk; ) {
+            k = kAll[l];
+            if ( k._exp > jExp )
+               break;
+            l += 1;
+         }
+         _kdb.push_back( KnotList( kdb ) );
+         kdb.clear();
+      }
+      /*
+       * 3) Check M x N
+       */
+      N = _kdb[0].size();
+      M = _kdb.size();
+      for ( i=1; i<M; assert( _kdb[i].size() == N ), i++ );
+      LOG( "%-4s : %3ld x %3ld", data(), M, N );
+   }
+
+}; // class OptionsSurface
 
 
 ////////////////////////////////////////
@@ -706,6 +1012,8 @@ bool bImg = true; // VectorView.js needs fidVecX
             }
          }
       }
+for ( size_t i=0; i<udb.size(); i++ )
+   OptionsSurface und( *udb[i], true, all );
       return sdb.size();
    }
 
@@ -815,10 +1123,6 @@ protected:
 
       _tPub = now;
       n     = Calc();
-#ifdef DEBUG
-      if ( n )
-         LOG( "OnIdle() : %d calc'ed", n );
-#endif // DEBUG
    }
 
 }; // SplinePublisher
@@ -833,7 +1137,7 @@ int main( int argc, char **argv )
    Ints        fids;
    string      s;
    bool        aOK, bCfg, sqr;
-   double      rate, xInc;
+   double      rate, xInc, yInc;
    int         maxX;
    const char *db, *svr, *svc;
 
@@ -852,6 +1156,7 @@ int main( int argc, char **argv )
    svc  = "options.curve";
    rate = 1.0;
    xInc = 1.0; // 1 dollareeny
+   yInc = 1.0; // 1 dollareeny
    maxX = 1000;
    sqr  = false;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
@@ -862,6 +1167,7 @@ int main( int argc, char **argv )
       s += "       [ -svc     <MDD Publisher Service> ] \\ \n";
       s += "       [ -rate    <SnapRate> ] \\ \n";
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
+      s += "       [ -yInc    <Surface Increment> ] \\ \n";
       s += "       [ -maxX    <Max Spline Values> ] \\ \n";
       s += "       [ -square  <true to 'square up'> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
@@ -871,6 +1177,7 @@ int main( int argc, char **argv )
       LOG( "      -svc     : %s", svc );
       LOG( "      -rate    : %.2f", rate );
       LOG( "      -xInc    : %.2f", xInc );
+      LOG( "      -yInc    : %.2f", yInc );
       LOG( "      -maxX    : %d", maxX );
       LOG( "      -square  : %s", _pBool( sqr ) );
       return 0;
@@ -891,6 +1198,8 @@ int main( int argc, char **argv )
          svc = argv[++i];
       else if ( !::strcmp( argv[i], "-xInc" ) )
          xInc = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-yInc" ) )
+         yInc = atof( argv[++i] );
       else if ( !::strcmp( argv[i], "-maxX" ) )
          maxX = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-rate" ) )
@@ -902,7 +1211,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, xInc, maxX );
+   OptionsCurve    lvc( db, sqr, xInc, yInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, age;
    size_t          ns;
@@ -912,6 +1221,7 @@ int main( int argc, char **argv )
     */
    LOG( "Config._square = %s", _pBool( lvc._square ) );
    LOG( "Config._xInc   = %.2f", lvc._xInc );
+   LOG( "Config._yInc   = %.2f", lvc._yInc );
    LOG( "Config._maxX   = %d", lvc._maxX );
    d0  = lvc.TimeNs();
    ns    = pub.LoadSplines();
