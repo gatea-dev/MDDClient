@@ -14,6 +14,7 @@
 *     12 NOV 2014 jcs  Build 28: CanLog(); -Wall
 *     21 MAR 2016 jcs  Build 32: Linux compatibility in libmddWire; 2 logT()'s
 *      3 JUN 2023 jcs  Build 63: HexDump()
+*      5 OCT 2023 jcs  Build 65: dbl2ttime()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -243,13 +244,24 @@ double Logger::dblNow()
    return dRtn;
 }
 
-double Logger::Time2dbl( struct timeval t0 )
-{
-   double rtn;
-   static double _num = 1.0 / ZMIL;
+static double _uSnum = 1000000.0;
+static double _uSden = 1.0 / _uSnum;
 
-   rtn = t0.tv_sec + ( t0.tv_usec *_num );
-   return rtn;
+double Logger::Time2dbl( struct timeval tv )
+{
+   double dr;
+
+   dr = ( _uSden * tv.tv_usec ) + tv.tv_sec;
+   return dr;
+}
+
+struct timeval Logger::dbl2time( double dv )
+{
+   struct timeval tv;
+
+   tv.tv_sec  = (int)dv;
+   tv.tv_usec = (int)( ( dv - tv.tv_sec ) * _uSnum );
+   return tv;
 }
 
 const char *Logger::GetTime( string &s )

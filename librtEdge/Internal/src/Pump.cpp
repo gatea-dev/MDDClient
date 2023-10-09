@@ -2,19 +2,15 @@
 *
 *  Pump.cpp
 *     Platform-indepdnent event pump
-
+*
 *  REVISION HISTORY:
 *     21 JUL 2009 jcs  Created.
 *     17 AUG 2009 jcs  Build  2: IdleFcns
-*      5 OCT 2009 jcs  Build  4: TimerTable
+*      5 OCT 2009 jcs  Build  5: TimerTable
 *     26 SEP 2010 jcs  Build  8: Class-wide _sockMsg
-*     19 SEP 2012 jcs  Build 20: Check for !sox in buildFDs()
-*     12 NOV 2014 jcs  Build 28: -Wall
-*      5 FEB 2015 jcs  Build 30: Dispatch : Non-zero Socket from _sox
-*      2 JUL 2015 jcs  Build 31: Socket._log
-*     20 MAR 2016 jcs  Build 32: EDG_Internal.h; _SetWindowLong
-*     29 AUG 2016 jcs  Build 33: _Destroy() : if ( s )
-*     11 SEP 2023 jcs  Build 64: _sockMsgName / _className
+*     12 OCT 2015 jcs  Build 32: EDG_Internal.h
+*     11 SEP 2023 jcs  Build 32: _className
+*      5 OCT 2023 jcs  Build 65: poll() only
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -45,11 +41,9 @@ using namespace RTEDGE_PRIVATE;
 #define NT_READ_EVENTS    ( FD_READ  | FD_ACCEPT | FD_OOB )
 #define NT_WRITE_EVENTS   ( FD_WRITE | FD_CONNECT )
 #define NT_EXCEPT_EVENTS  ( FD_CLOSE )
-LRESULT CALLBACK _wndProc( HWND, UINT, WPARAM, LPARAM );
-void    CALLBACK _tmrProc( HWND, UINT, UINT, DWORD );
-static UINT   _sockMsg = 0;
-static string _sockMsgName( "EventPump" );
-static string _dfltClassName( "RTEDGE_PRIVATE::EventPump" );
+LRESULT CALLBACK u_wndProc( HWND, UINT, WPARAM, LPARAM );
+void    CALLBACK u_tmrProc( HWND, UINT, UINT, DWORD );
+static UINT _sockMsg = 0;
 #endif // WIN32
 
 ////////////////////////////////////////////
@@ -61,18 +55,16 @@ Pump::Pump() :
    _dels(),
    _idle(),
    _mtx(),
+   _pollMap( (PollMap *)0 ),
    _maxFd( 0 ),
 #ifdef WIN32
    _hWnd( 0 ),
    _tmrID( 0 ),
-   _className( _dfltClassName ),
 #endif // WIN32
    _bRun( true ),
    _t0( dNow() )
 {
-   FD_ZERO( &_rds );
-   FD_ZERO( &_wrs );
-   FD_ZERO( &_exs );
+   _pollMap = new PollMap( *this );
 }
 
 Pump::~Pump()
@@ -80,9 +72,9 @@ Pump::~Pump()
    Locker            lck( _mtx );
    Sockets::iterator it;
 
-   for ( it=_sox.begin(); it!=_sox.end(); it++ )
-      delete (*it).second;
+   for ( it=_sox.begin(); it!=_sox.end(); delete (*it).second, it++ );
    _sox.clear();
+   delete _pollMap;
 }
 
  
@@ -139,9 +131,10 @@ void Pump::RemoveTimer( TimerEvent &t )
 
 void Pump::_OnTimer()
 {
-   EdgIdleCbk cbk;
-   size_t     i, n;
-   double     d1;
+   TimerTable::iterator it;
+   EdgIdleCbk          cbk;
+   size_t               i;
+   double               d1;
 
    // Registered Idle functions
 
@@ -159,10 +152,8 @@ void Pump::_OnTimer()
 
    // TimerEvent.On1SecTimer()
 
-   TimerTable tmp( _tmrs );
-
-   n = tmp.size();
-   for ( i=0; i<n; tmp[i++]->On1SecTimer() );
+   for ( it=_tmrs.begin(); it!=_tmrs.end(); it++ )
+      (*it)->On1SecTimer();
 }
 
 
@@ -177,39 +168,36 @@ void Pump::Start()
 
 void Pump::Run( double dPoll )
 {
-   Logger *lf;
-
 #ifdef WIN32
    MSG msg;
    int tTmr;
 
    tTmr   = (int)( dPoll * 1000.0 );
-   _tmrID = ::SetTimer( _hWnd, NT_TIMER_ID, tTmr, (TIMERPROC)&_tmrProc );
+   _tmrID = ::SetTimer( _hWnd, NT_TIMER_ID, tTmr, (TIMERPROC)&u_tmrProc );
    while( _bRun && ::GetMessage( &msg, _hWnd, 0, 0 ) ) {
       ::TranslateMessage( &msg );
       ::DispatchMessage( &msg );
       buildFDs();
 #else
-   int            i, res, maxFd, err;
-   int            iSec, uSec;
-   fd_set         rds, wrs, exs;
-   struct timeval tv, tPoll;
-Socket *sock;
+   int            maxFd, err, i, fd, rc, tmMs;
+   Socket        *sock;
+   struct timeval tv, *tm, tt;
+   double         dt, age, tExp;
+   PollMap       &pm = *_pollMap;
+   struct pollfd *pl = pm.pollList();
 
    // Polling Interval
 
-   iSec          = (int)dPoll;
-   uSec          = (int)( ( dPoll - iSec ) * 1000000.0 );
-   tPoll.tv_sec  = iSec;
-   tPoll.tv_usec = uSec;
-   for ( ; _bRun; ) {
+   for ( dt=dNow(); _bRun; ) {
       maxFd = buildFDs();
-      tv    = tPoll;
-      rds   = _rds;
-      wrs   = _wrs;
-      exs   = _exs;
-      res   = ::select( maxFd, &rds, &wrs, &exs, &tv );
-      switch( res ) {
+      age   = dNow() - dt;
+      tExp  = gmax( 0.0, dPoll - age );
+      tv    = Logger::dbl2time( tExp );
+      tt    = tv;
+      tm    = ( tv.tv_sec || tv.tv_usec ) ? &tv : NULL;
+      tmMs  = tv.tv_sec*1000 + tv.tv_usec/1000;
+      rc    = ::poll( pl, pm.nPoll(), tmMs );
+      switch( rc ) {
          case -1:      // Error
          {
             err = errno;
@@ -220,26 +208,33 @@ Socket *sock;
             break;
          }
          case 0:      // Timeout
+            dt = dNow();
             _OnTimer();
             break;
          default:
          {
-            Locker  lck( _mtx );
+            Locker lck( _mtx );
 
-            for ( i=2; i<maxFd; i++ ) {  // Skip stdin, stdout, stderr
-               if ( FD_ISSET( i, &rds ) && (sock=_sox[i]) )
+            for ( i=0; i<rc; i++ ) {
+               fd = pl[i].fd;
+               if ( !(sock=_sox[fd]) )
+                  continue; // for-i
+               if ( pl[i].revents & pm._rdEvts )
                   sock->OnRead();
-               if ( FD_ISSET( i, &wrs ) && (sock=_sox[i]) )
+               if ( pl[i].revents & pm._wrEvts )
                   sock->OnWrite();
-               if ( FD_ISSET( i, &exs ) && (sock=_sox[i]) )
+               if ( pl[i].revents & pm._exEvts )
                   sock->OnException();
+            }
+            age = dNow() - dt;
+            if ( age > dPoll ) {
+               dt = dNow();
+               _OnTimer();
             }
             break;
          }
       }
 #endif // WIN32
-      if ( (lf=Socket::_log) )
-         lf->log( 5, (char *)"." );
    }
    _Destroy();
 }
@@ -275,6 +270,7 @@ void Pump::RemoveIdle( EdgIdleFcn fcn )
 }
 
 
+
 ////////////////////////////////////////////
 // Helpers
 ////////////////////////////////////////////
@@ -283,23 +279,20 @@ void Pump::_Create()
    // WIN32-specific
 #ifdef WIN32
    WNDCLASS wndClass;
-   char     obuf[K];
 
    // 1) Register (hidden) window class
 
    ::memset( (void *)&wndClass, 0, sizeof( wndClass ) );
-   _className            += ::rtEdge_pTimeMs( obuf, ::rtEdge_TimeNs() );
-   wndClass.lpszClassName = _className.data();
+   wndClass.lpszClassName = "EventPump Window";
    wndClass.hInstance     = GetWindowInstance( NULL );
-   wndClass.lpfnWndProc   = &_wndProc;
+   wndClass.lpfnWndProc   = &u_wndProc;
    wndClass.cbWndExtra    = sizeof(Pump *);
-   if ( !::RegisterClass( &wndClass ) ) {
-      ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
-      return;
-   }
    if ( !_sockMsg ) {
-      _sockMsgName += obuf;
-      _sockMsg      = ::RegisterWindowMessage( _sockMsgName.data() );
+      if ( !::RegisterClass( &wndClass ) ) {
+         ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
+         return;
+      }
+      _sockMsg = ::RegisterWindowMessage( "EventPump" );
    }
 
    // 3) Create (hidden) window; Start timer
@@ -321,8 +314,8 @@ void Pump::_Create()
 
 void Pump::_Destroy()
 {
+   Socket           *sock;
    Sockets           tmp;
-   Socket           *s;
    Sockets::iterator it;
 
    // Disconnect all
@@ -332,9 +325,8 @@ void Pump::_Destroy()
       tmp = _sox;
    }
    for ( it=tmp.begin(); it!=tmp.end(); it++ ) {
-      s = (*it).second;
-      if ( s )
-         s->Disconnect( "Pump.Destroy()" );
+      if ( (sock=(*it).second) )
+         sock->Disconnect( "Pump.Destroy()" );
    }
 
    // WIN32-specific
@@ -348,14 +340,12 @@ int Pump::buildFDs()
 {
    Locker            lck( _mtx );
    Sockets::iterator it;
-   Socket           *sox;
-   int               fd, rtn;
+   int               rtn;
 
    /*
     * WIN32 : _dels; Then walk all _sox
     * Linux : Re-build always
     */
-
    rtn = 0;
 #ifdef WIN32
    int  i;
@@ -372,19 +362,7 @@ int Pump::buildFDs()
       ::WSAAsyncSelect( (SOCKET)fd, _hWnd, _sockMsg, evts );
    }
 #else
-   FD_ZERO( &_rds );
-   FD_ZERO( &_wrs );
-   FD_ZERO( &_exs );
-   for ( it=_sox.begin(); it!=_sox.end(); it++ ) {
-      if ( !(sox=(*it).second) )
-         continue; // for-it
-      fd  = sox->fd();
-      FD_SET( fd, &_rds );
-      if ( sox->IsWritable() )
-         FD_SET( fd, &_wrs );
-      FD_SET( fd, &_exs );
-      rtn = gmax( rtn, fd+1 );
-   }
+   _pollMap->buildFDs( _sox );
 #endif // WIN32
 
    // Clear 'em out ...
@@ -426,7 +404,7 @@ void Pump::tmrProc( DWORD dwTime )
 ////////////////////////////////////////////
 // C-callbacks from NT library
 ////////////////////////////////////////////
-LRESULT CALLBACK _wndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK u_wndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
    Pump *p;
 
@@ -441,7 +419,7 @@ LRESULT CALLBACK _wndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
    return p->wndProc( wParam, lParam );
 }
 
-void CALLBACK _tmrProc( HWND hWnd, UINT msg, UINT idEvt, DWORD dwTime )
+void CALLBACK u_tmrProc( HWND hWnd, UINT msg, UINT idEvt, DWORD dwTime )
 {
    Pump *p;
 
@@ -450,3 +428,92 @@ void CALLBACK _tmrProc( HWND hWnd, UINT msg, UINT idEvt, DWORD dwTime )
 }
 
 #endif // WIN32
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//                  c l a s s      G L p o l l M a p
+//
+////////////////////////////////////////////////////////////////////////////////
+
+short PollMap::_rdEvts = POLLIN  | POLLPRI | POLLRDNORM | POLLRDBAND;
+short PollMap::_wrEvts = POLLOUT | POLLWRBAND;
+short PollMap::_exEvts = POLLERR | POLLHUP |POLLNVAL;
+
+////////////////////////////////////////////
+// Constructor / Destructor
+////////////////////////////////////////////
+PollMap::PollMap( Pump &pmp ) :
+   _pmp( pmp ),
+   _maxx( _MAX_POLLFD ),
+   _nPoll( 0 )
+{
+   u_char *bp;
+   int     sz;
+
+   // Object ID
+
+   sz        = _maxx * sizeof( struct pollfd );
+   bp        = new u_char[sz];
+   _pollList = (struct pollfd *)bp;
+}
+
+PollMap::~PollMap()
+{
+   u_char *bp;
+   
+   bp = (u_char *)_pollList;
+   delete[] bp;
+}  
+
+
+////////////////////////////////////////////
+// Access
+////////////////////////////////////////////
+struct pollfd *PollMap::pollList()
+{
+   return _pollList;
+}
+
+int PollMap::nPoll()
+{
+   return _nPoll;
+}
+
+
+////////////////////////////////////////////
+// Operations
+////////////////////////////////////////////
+static struct pollfd _zp = { 0, 0, 0 };
+
+void PollMap::buildFDs( Sockets &sdb )
+{
+   Sockets::iterator it;
+   Socket           *sox;
+   short             evts;
+   int               fd, maxfd;
+
+   maxfd  = 0;
+   _nPoll = 0;
+   for ( it=sdb.begin(); it!=sdb.end(); it++ ) {
+      if ( !(sox=(*it).second) )
+         continue; // for-it
+      fd    = sox->fd();
+      evts  = _rdEvts;
+      evts |= sox->IsWritable() ? _wrEvts : 0;
+      evts |= _exEvts;
+      _pollList[_nPoll].fd     = fd;
+      _pollList[_nPoll].events = evts;
+      _nPoll++;
+      maxfd = gmax( maxfd, fd );
+   }
+   _pollList[_nPoll] = _zp;
+}
+
+void PollMap::Reset()
+{
+   int i;
+
+   for ( i=0; i<_nPoll; i++ )
+      _pollList[i].revents = 0;
+}

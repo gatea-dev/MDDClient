@@ -54,6 +54,9 @@ Features To Add
  *    - double     CubicSpline.ValueAt()
  *    - DoubleList CubicSpline.Spline()
  *
+ * -# Update.AddSurface()
+ *
+ * -# Pump.cpp : poll()-driven exclusively
  *
  *
  * ### Build 64 23-09-13

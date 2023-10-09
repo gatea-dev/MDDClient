@@ -18,8 +18,9 @@
 *     22 OCT 2022 jcs  Build 58: ByteStream.Ticker()
 *      1 NOV 2022 jcs  Build 60: AddVector( precision )
 *     27 DEC 2022 jcs  Build 61: AddFieldList() : Handle vector
+*     30 SEP 2023 jcs  Build 65: AddSurface( DoubleGrid & )
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Update_H
 #define __RTEDGE_Update_H
@@ -571,6 +572,28 @@ public:
 	   f._vPrecision = precision;
 	   f._val._buf   = _StoreVector( src );
 	   _Add( f );
+	}
+
+	/**
+	 * \brief Add Surface field of doubles to update
+	 * 
+	 * TODO : M x N is lost here; Must be 'inferred' from other fields 
+	 * 
+	 * \param fid - Field ID
+	 * \param src - Surface array of doubles to add
+	 * \param precision - Vector Precision 0 to 20
+	 * \see Publish()
+	 */
+	void AddSurface( int fid, DoubleGrid &src, int precision=10 )
+	{
+	   DoubleList v;
+
+	   for ( size_t i=0; i<src.size(); i++ ) {
+	      DoubleList s = src[i];
+
+	      v.insert( v.end(), s.begin(), s.end() );
+	   }
+	   AddVector( fid, v, precision );
 	}
 
 	/**

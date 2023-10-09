@@ -11,6 +11,7 @@
 *     12 NOV 2014 jcs  Build 28: CanLog(); RTEDGE_PRIVATE
 *     21 MAR 2016 jcs  Build 32: EDG_Internal.h; 2 logT()'s
 *      3 JUN 2023 jcs  Build 63: HexDump()
+*      5 OCT 2023 jcs  Build 65: dbl2ttime()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -57,8 +58,10 @@ public:
 	static time_t         tmNow();
 	static double         dblNow();
 	static double         Time2dbl( struct timeval );
+	static struct timeval dbl2time( double );
 	static const char    *GetTime( string & );
-};
+
+}; // class Logger
 
 } // namespace RTEDGE_PRIVATE
 

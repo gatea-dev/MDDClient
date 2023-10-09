@@ -26,6 +26,7 @@ static int l_fidXTy    =     7; // X-axis type : xTy_DATE = Date; Else Numeric
 static int l_fidX0     =     8; // If Numeric, first X value
 static int l_fidVecX   = -8001;
 static int l_fidVecY   = -8002;
+static int l_fidVecZ   = -8003;
 
 // Forwards / Collections
 
@@ -70,12 +71,13 @@ public:
    OptionsSpline *_spline; // Non-zero implies calc each time 
    u_int64_t      _strike;
    u_int64_t      _exp;
-   int            _idx; // Non-zero implies real-time
+   size_t         _idx; // Non-zero implies real-time
 
 }; // KnotDef
 
-typedef vector<KnotDef>  KnotList;
-typedef vector<KnotList> KnotGrid;
+typedef vector<KnotDef>              KnotList;
+typedef vector<KnotList>             KnotGrid;
+typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 
 
 ////////////////////////////////////////////////
@@ -686,7 +688,6 @@ public:
    /////////////////////////
    // Operations
    /////////////////////////
-#ifdef TODO_SURFACE
 public:
    /**
     * \brief Build Spline from current LVC Snap
@@ -699,82 +700,65 @@ public:
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
-      DoubleList   &xdb  = _und.strikes();
-      double        x0   = xdb[0];
-      double        x1   = xdb[xdb.size()-1];
+      KnotGrid     &kdb  = _kdb;
+      KnotDef       k;
       Message      *msg;
-      int           ix, np;
-      size_t        i, nk;
-      double        x, y, m, dy, xi;
-      double        dExp, dStr;
-      DoubleList    lX, lY, X, Y;
+      size_t        r, c, nr, nc, ix;
+      double        z;
+      DoubleGrid    Z;
 
       // Pre-condition(s)
 
       if ( !bForce && !IsWatched() )
          return false;
-      if ( !(nk=_kdb.size()) )
+      if ( !(nr=_kdb.size()) )
          return false;
 
       /*
        * 1) Pull out real-time Knot values from LVC
        */
-      _X.clear();
-      _Y.clear();
-      for ( i=0; i<nk; i++ ) {
-         ix   = _kdb[i]._idx;
-         msg  = msgs[ix];
-         dStr = lvc.StrikePrice( *msg );
-         dExp = lvc.Expiration( *msg, true );
-         x    = byExp() ? dStr : dExp;
-         y    = lvc.MidQuote( *msg );
-         lX.push_back( x );
-         lY.push_back( y );
-      }
-      /*
-       * 2a) Straight-line beginning to min Strike (or Expiration)
-       */
-      if ( !lvc._square ) {
-         x0 = lX[0];
-         x1 = lX[nk-1];
-      }
-      if ( ( nk >= 2 ) && ( x0 < lX[0] ) ) {
-         m  = ( lY[0] - lY[1] ) / ( lX[0] - lX[1] );
-         dy = m * ( x0 - lX[0] );
-         y  = lY[0] + dy;
-         X.push_back( x0 );
-         Y.push_back( y );
-      }
-      for ( i=0; i<nk; X.push_back( lX[i] ), i++ );
-      for ( i=0; i<nk; Y.push_back( lY[i] ), i++ );
-      /*
-       * 2b) Straight-line end to max Strike (or Expiration)
-       */
-      if ( ( nk >= 2 ) && ( lX[nk-1] < x1 ) ) {
-         m  = ( lY[nk-2] - lY[nk-1] ) / ( lX[nk-2] - lX[nk-1] );
-         dy = m * ( x1 - lX[nk-1] );
-         y  = lY[nk-1] + dy;
-         X.push_back( x1 );
-         Y.push_back( y );
-      }
-      /*
-       * 3) Max Number of Data Points 
-       */
-      np = ( x1-x0 ) / _xInc;
-      xi = _xInc;
-      for ( ; np > lvc._maxX; _xInc+=xi, np = ( x1-x0 ) / _xInc );
+      for ( r=0; r<nr; r++ ) {
+         DoubleList zRow;
 
-      QUANT::CubicSpline cs( X, Y );
+         nc = kdb[r].size();
+         for ( c=0; c<nc; c++ ) {
+            z = 0.0;
+            k = kdb[r][c];
+            if ( (ix=k._idx) ) {
+               msg = msgs[ix];
+               z   = lvc.MidQuote( *msg );
+            }
+            zRow.push_back( z );
+         }
+         Z.push_back( zRow );
+      }
+      /*
+       * 2) Fill in empty knot w/ Splines
+       */
+      for ( r=0; r<nr; r++ ) {
+         nc = kdb[r].size();
+         for ( c=0; c<nc; c++ ) {
+            z = -1.0;
+            k = kdb[r][c];
+            if ( (ix=k._idx) ) {
+            }
+            Z[r][c] = z;
+         }
+      }
 
+      QUANT::CubicSurface cs( _X, _Y, Z );
+
+#ifdef TODO_SURFACE
       for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
       _Y = cs.Spline( _X );
+#endif // TODO_SURFACE
       return true;
    }
 
    void Publish( Update &u )
    {
-      double     x0, xInc;
-      int        xTy;
+      double x0, xInc;
+      int    xTy;
 
       // Pre-condition
 
@@ -784,30 +768,32 @@ public:
       // Initialize / Publish
 
       u.Init( name(), _StreamID, true );
-      if ( _X.size() ) {
-         DoubleList unx;
-         DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
-
-         x0   = X[0];
-         xInc = _xInc;
-         xTy  = byExp() ? xTy_NUM : xTy_DATE;
-         if ( !byExp() )
-            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 ); // xInc in Months ...
-         u.AddField( l_fidInc, xInc );
-         u.AddField( l_fidXTy, xTy );
-         u.AddField( l_fidX0,  x0 );
-         /*
-          * X-axis values if Strike Spline (X-axis == Date)
-          */
-         if ( xTy == xTy_DATE )
-            u.AddVector( l_fidFidX, X, 0 );
-         u.AddVector( l_fidFidY, _Y, l_Precision );
-         u.Publish();
+      if ( !_X.size() ) {
+         u.PubError( "Empty Surface" );
+         return;
       }
-      else
-         u.PubError( "Empty Spline" );
+
+      // Rock on
+
+      DoubleList X;
+
+      _lvc.julNum2Unix( _X, X );
+      x0   = X[0];
+      xTy  = xTy_DATE;
+      xInc = ( 12.0 / 365.0 );
+      u.AddField( l_fidInc, xInc );
+      u.AddField( l_fidXTy, xTy );
+      u.AddField( l_fidX0,  x0 );
+      /*
+       * X-axis : Expiration
+       * Y-axis : Stike
+       * Z-axis : Surface
+       */
+      u.AddVector( l_fidVecX, X, 0 );             // Expiration 
+      u.AddVector( l_fidVecY, _Y, 2 );            // Strike
+      u.AddSurface( l_fidVecZ, _Z, l_Precision ); // Surface
+      u.Publish();
    }
-#endif // TODO_SURFACE
 
    /////////////////////////
    // (private) Helpers
@@ -821,10 +807,11 @@ private:
       Ints           udb, xdb;
       Message       *msg;
       KnotDef        k, kz;
-      KnotList       kAll, kdb;
-      u_int64_t      jExp, jStr;
-      size_t         i, j, l, nk, M, N;
+      KnotList       kdb;
+      u_int64_t      jExp, jStr, key;
+      size_t         i;
       SortedInt64Set edb, sdb;
+      KnotDefMap     kMap;
 
       /*
        * 1) Put / Call
@@ -840,33 +827,33 @@ private:
          msg       = msgs[k._idx];
          k._exp    = _lvc.Expiration( *msg, false );
          k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
-         kAll.push_back( k );
+         key       = ( k._exp << 32 );
+         key      += k._strike;
+         kMap[key] = k;
          /*
           * Build ( Expiration, Strike ) matrix
           */
          edb.insert( k._exp );
          sdb.insert( k._strike );
       }
-      nk = kAll.size();
-      for ( i=0; i<nk; i++ ) {
-         k = kAll[i];
-//         LOG( "%s,%ld,%ld,", data(), k._exp, k._strike );
-      }
       /*
        * 2) Square Up by Expiration
        */
       SortedInt64Set::iterator et, st;
+      KnotDefMap::iterator     kt;
 
-      for ( i=0,l=0,et=edb.begin(); et!=edb.end() && l<nk; i++,et++ ) {
+      for ( i=0,et=edb.begin(); et!=edb.end(); i++,et++ ) {
          jExp = (*et);
-         k    = kAll[l];
-assert( k._exp == jExp );
-         for ( j=0,st=sdb.begin(); st!=sdb.end() && l<nk; j++,st++ ) {
+         _X.push_back( jExp );
+         for ( st=sdb.begin(); st!=sdb.end(); st++ ) {
             jStr = (*st);
-// assert( k._strike <= jStr );
-            if ( k._strike == jStr ) {
+            if ( !i )
+               _Y.push_back( jStr );
+            key  = ( jExp << 32 );
+            key += jStr;
+            if ( (kt=kMap.find( key )) != kMap.end() ) {
+               k = (*kt).second;
                kdb.push_back( k );
-               l += 1;
             }
             else {
                kz._spline = (OptionsSpline *)0; // TODO
@@ -876,22 +863,82 @@ assert( k._exp == jExp );
                kdb.push_back( kz );
             }
          }
-         for ( ; l<nk; ) {
-            k = kAll[l];
-            if ( k._exp > jExp )
-               break;
-            l += 1;
-         }
          _kdb.push_back( KnotList( kdb ) );
          kdb.clear();
       }
       /*
-       * 3) Check M x N
+       * 3) Validate; Trim; Log
        */
-      N = _kdb[0].size();
-      M = _kdb.size();
-      for ( i=1; i<M; assert( _kdb[i].size() == N ), i++ );
-      LOG( "%-4s : %3ld x %3ld", data(), M, N );
+      size_t M0, N0, M1, N1;
+      char   bp[K], *cp;
+
+      M0 = _kdb.size();
+      N0 = _kdb[0].size();
+      for ( i=1; i<M0; assert( _kdb[i].size() == N0 ), i++ );
+      _Trim( KnotGrid( _kdb ), M0, N0 );
+      M1 = _kdb.size();
+      N1 = _kdb[0].size();
+      for ( i=1; i<M1; assert( _kdb[i].size() == N1 ), i++ );
+      cp  = bp;
+      cp += sprintf( cp, "%-4s :", data() );
+      cp += sprintf( cp, " ( %3ld x %3ld )", M0, N0 );
+      cp += sprintf( cp, " -> ( %3ld x %3ld )", M1, N1 );
+      LOG( bp );
+   }
+
+   void _Trim( KnotGrid kdb, size_t M, size_t N )
+   {
+      KnotList  row, rowK;
+      KnotDef   k0, k1;
+      size_t    x0, x1, r, c;
+
+      /*
+       * 1) Only leave 1 empty on left side
+       */
+      x0 = 0;
+      x1 = N;
+      for ( r=0; r<M; r++ ) {
+         row = kdb[r];
+         for ( c=0; c<N-1; c++ ) {
+            k0 = row[c];
+            k1 = row[c+1];
+            if ( k0._idx || k1._idx ) {
+               x0 = gmax( x0, c );
+               break; // for-c
+            }
+         }
+// LOG( "%s.%02ld {%ld} : x0=%ld", data(), r, row[0]._exp, x0 );
+      }
+      /*
+       * 2) Only leave 1 empty on right side
+       */
+      for ( r=0; r<M; r++ ) {
+         row = kdb[r];
+      
+u_int64_t exp = row[0]._exp;
+if ( exp == 20231103 )
+_lvc.breakpoint();
+         for ( c=N-1; c && c>x0; c-- ) {
+            k0 = row[c];
+            k1 = row[c-1];
+            if ( k0._idx || k1._idx ) {
+               x1 = gmin( x1, c );
+               break; // for-c
+            }
+         }
+// LOG( "%s.%02ld {%ld} : x1=%ld", data(), r, row[0]._exp, x1 );
+      }
+      /*
+       * 3) Rebuild Trimmed be-nop
+       */
+LOG( "%s : x0=%ld; x1=%ld", data(), x0, x1 );
+      _kdb.clear();
+      for ( r=0; r<M; r++ ) {
+         row = kdb[r];
+         rowK.clear();
+         for ( c=x0; c<x1; rowK.push_back( row[c] ), c++ );
+         _kdb.push_back( rowK );
+      }
    }
 
 }; // class OptionsSurface
