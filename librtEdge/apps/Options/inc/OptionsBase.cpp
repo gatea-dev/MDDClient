@@ -62,7 +62,7 @@ static bool _IsTrue( const char *p )
 /////////////////////////////////////
 // Handy-dandy Logger
 /////////////////////////////////////
-static void LOG( char *fmt, ... )
+static void LOG( const char *fmt, ... )
 {
    va_list ap;
    char    bp[8*K], *cp;

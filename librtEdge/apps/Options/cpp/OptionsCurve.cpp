@@ -5,6 +5,7 @@
 *  REVISION HISTORY:
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
 *     20 SEP 2023 jcs  FullSpline
+*     13 OCT 2023 jcs  OptionsSurface
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -15,7 +16,7 @@
 // Configurable Precision
 
 static int     l_Precision =     2;
-static double  l_StrikeMul =   100;
+static double  l_StrikeMul =   100.0;
 
 // Record Templates
 
@@ -31,10 +32,12 @@ static int l_fidVecZ   = -8003;
 // Forwards / Collections
 
 class OptionsSpline;
+class OptionsSurface;
 class Underlyer;
 
-typedef hash_map<string, OptionsSpline *> SplineMap;
-typedef vector<Underlyer *>               Underlyers;
+typedef hash_map<string, OptionsSpline *>  SplineMap;
+typedef hash_map<string, OptionsSurface *> SurfaceMap;
+typedef vector<Underlyer *>                Underlyers;
 
 /////////////////////////////////////
 // Version
@@ -68,7 +71,8 @@ const char *OptionsCurveID()
 class KnotDef
 {
 public:
-   OptionsSpline *_spline; // Non-zero implies calc each time 
+   OptionsSpline *_splineX; // Non-zero implies calc each time 
+   OptionsSpline *_splineE; // Non-zero implies calc each time 
    u_int64_t      _strike;
    u_int64_t      _exp;
    size_t         _idx; // Non-zero implies real-time
@@ -89,6 +93,7 @@ class OptionsCurve : public OptionsBase
 {
 public:
    bool   _square;
+   bool   _trim;
    double _xInc;
    double _yInc;
    int    _maxX;
@@ -99,11 +104,13 @@ public:
 public:
    OptionsCurve( const char *svr, 
                  bool        square,
+                 bool        trim,
                  double      xInc,
                  double      yInc,
                  int         maxX ) :
       OptionsBase( svr ),
       _square( square ),
+      _trim( trim ),
       _xInc( xInc ),
       _yInc( yInc ),
       _maxX( maxX )
@@ -212,32 +219,45 @@ public:
    // Spline Lookup
    /////////////////////
 public:
-   OptionsSpline *GetSpline( double strike, SplineType splTy )
+   /**
+    * \brief Get best spline by Strike
+    *
+    * \param strike - Strike Price
+    * \param bPut - true for put; false for call
+    */
+   OptionsSpline *GetSpline( double strike, bool bPut )
    {
-      SplineMap          &sdb = _splines;
+      SplineMap          &sdb   = _splines;
+      SplineType          splTy = bPut ? spline_put : spline_call; 
+      string              sx( SplineName( strike, splTy ) );
       SplineMap::iterator it;
       OptionsSpline      *spl;
-      string              s( SplineName( strike, splTy ) );
 
       spl = (OptionsSpline *)0;
-      if ( (it=sdb.find( s )) != sdb.end() )
+      if ( (it=sdb.find( sx )) != sdb.end() )
          spl = (*it).second;
       return spl;
    }
 
-   OptionsSpline *GetSpline( u_int64_t tExp, SplineType splTy )
+   /**
+    * \brief Get best spline by Expiration
+    *
+    * \param tExp - Expiration Date
+    * \param bPut - true for put; false for call
+    */
+   OptionsSpline *GetSpline( u_int64_t tExp, bool bPut )
    {
-      SplineMap          &sdb = _splines;
+      SplineMap          &sdb   = _splines;
+      SplineType          splTy = bPut ? spline_put : spline_call; 
+      string              se( SplineName( tExp, splTy ) );
       SplineMap::iterator it;
       OptionsSpline      *spl;
-      string              s( SplineName( tExp, splTy ) );
 
       spl = (OptionsSpline *)0;
-      if ( (it=sdb.find( s )) != sdb.end() )
+      if ( (it=sdb.find( se )) != sdb.end() )
          spl = (*it).second;
       return spl;
    }
-
 
    void Register( OptionsSpline *spl, string &splineName )
    {
@@ -573,7 +593,8 @@ private:
        */
       _X.clear();
       _Y.clear();
-      k._spline = (OptionsSpline *)0;
+      k._splineX = (OptionsSpline *)0;
+      k._splineE = (OptionsSpline *)0;
       for ( size_t i=0; i<udb.size(); i++ ) {
          ix        = udb[i];
          msg       = msgs[ix];
@@ -693,22 +714,27 @@ public:
     * \brief Build Spline from current LVC Snap
     *
     * \param all - Current LVC Snap
+    * \param now - Current Unix Time
     * \param bForce - true to calc if not watched
     * \return true if Calc'ed; false if not
     */ 
-   bool Calc( LVCAll &all, bool bForce=false )
+   bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
-      OptionsCurve &lvc  = _und.lvc();
-      Messages     &msgs = all.msgs();
-      KnotGrid     &kdb  = _kdb;
-      KnotDef       k;
-      Message      *msg;
-      size_t        r, c, nr, nc, ix;
-      double        z;
-      DoubleGrid    Z;
+      OptionsCurve  &lvc  = _und.lvc();
+      Messages      &msgs = all.msgs();
+      KnotGrid      &kdb  = _kdb;
+      KnotDef        k;
+      Message       *msg;
+      OptionsSpline *spl;
+      size_t         r, c, nr, nc, ix;
+      double         z, dX;
+      DoubleGrid     Z;
 
       // Pre-condition(s)
-
+#ifdef TODO
+      if ( _tCalc == now )
+         return false;
+#endif // TODO
       if ( !bForce && !IsWatched() )
          return false;
       if ( !(nr=_kdb.size()) )
@@ -728,6 +754,13 @@ public:
                msg = msgs[ix];
                z   = lvc.MidQuote( *msg );
             }
+            else if ( (spl=k._splineX) ) {
+               dX  = 1.0 / l_StrikeMul;
+               dX *= k._strike;
+               z   = spl->CS( all, now ).ValueAt( dX );
+            }
+            else if ( (spl=k._splineE) )
+               z = spl->CS( all, now ).ValueAt( k._exp );
             zRow.push_back( z );
          }
          Z.push_back( zRow );
@@ -810,6 +843,7 @@ private:
       KnotList       kdb;
       u_int64_t      jExp, jStr, key;
       size_t         i;
+      double         ds;
       SortedInt64Set edb, sdb;
       KnotDefMap     kMap;
 
@@ -821,7 +855,8 @@ private:
       /*
        * 2) Clear shit out; Jam away ...
        */
-      k._spline = (OptionsSpline *)0;
+      k._splineX = (OptionsSpline *)0;
+      k._splineE = (OptionsSpline *)0;
       for ( i=0; i<udb.size(); i++ ) {
          k._idx    = udb[i];
          msg       = msgs[k._idx];
@@ -856,10 +891,14 @@ private:
                kdb.push_back( k );
             }
             else {
-               kz._spline = (OptionsSpline *)0; // TODO
-               kz._exp    = jExp;
-               kz._strike = jStr;
-               kz._idx    = 0;
+               ds          = 1.0 / l_StrikeMul;
+               ds         *= k._strike;
+               kz._splineX = _und.GetSpline( ds, _bPut );
+               kz._splineE = _und.GetSpline( jExp, _bPut );
+assert( kz._splineX || kz._splineE );
+               kz._exp     = jExp;
+               kz._strike  = jStr;
+               kz._idx     = -1;
                kdb.push_back( kz );
             }
          }
@@ -875,7 +914,8 @@ private:
       M0 = _kdb.size();
       N0 = _kdb[0].size();
       for ( i=1; i<M0; assert( _kdb[i].size() == N0 ), i++ );
-      _Trim( KnotGrid( _kdb ), M0, N0 );
+      if ( _lvc._trim )
+         _Trim( KnotGrid( _kdb ), M0, N0 );
       M1 = _kdb.size();
       N1 = _kdb[0].size();
       for ( i=1; i<M1; assert( _kdb[i].size() == N1 ), i++ );
@@ -907,17 +947,12 @@ private:
                break; // for-c
             }
          }
-// LOG( "%s.%02ld {%ld} : x0=%ld", data(), r, row[0]._exp, x0 );
       }
       /*
        * 2) Only leave 1 empty on right side
        */
       for ( r=0; r<M; r++ ) {
          row = kdb[r];
-      
-u_int64_t exp = row[0]._exp;
-if ( exp == 20231103 )
-_lvc.breakpoint();
          for ( c=N-1; c && c>x0; c-- ) {
             k0 = row[c];
             k1 = row[c-1];
@@ -926,12 +961,10 @@ _lvc.breakpoint();
                break; // for-c
             }
          }
-// LOG( "%s.%02ld {%ld} : x1=%ld", data(), r, row[0]._exp, x1 );
       }
       /*
        * 3) Rebuild Trimmed be-nop
        */
-LOG( "%s : x0=%ld; x1=%ld", data(), x0, x1 );
       _kdb.clear();
       for ( r=0; r<M; r++ ) {
          row = kdb[r];
@@ -957,6 +990,7 @@ private:
    double        _pubRate;
    Underlyers    _underlyers;
    SplineMap     _splines;
+   SurfaceMap    _surfaces;
    double        _tPub;
 
    /////////////////////
@@ -973,12 +1007,12 @@ public:
       _pubRate( pubRate ),
       _underlyers(),
       _splines(),
+      _surfaces(),
       _tPub( 0.0 )
    {
       SetBinary( true );
       SetIdleCallback( true );
    }
-
 
    /////////////////////
    // Operations
@@ -986,21 +1020,13 @@ public:
 public:
    int Calc()
    {
-      LVCAll             &all = _lvc.ViewAll();
-      SplineMap          &sdb = _splines;
-      Update             &u   = upd();
-      time_t              now = TimeSec();
-      SplineMap::iterator it;
-      OptionsSpline      *spl;
-      int                 rc;
-bool bImg = true; // VectorView.js needs fidVecX
-      for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
-         spl = (*it).second;
-         if ( spl->Calc( all, now ) ) {
-            spl->Publish( u, bImg );
-            rc += 1;
-         }
-      }
+      LVCAll &all = _lvc.ViewAll();
+      Update &u   = upd();
+      time_t  now = TimeSec();
+      int     rc;
+
+      rc  = _CalcSplines( all, now, u );
+      rc += _CalcSurfaces( all, now, u );
       return rc;
    }
 
@@ -1059,8 +1085,22 @@ bool bImg = true; // VectorView.js needs fidVecX
             }
          }
       }
-for ( size_t i=0; i<udb.size(); i++ )
-   OptionsSurface und( *udb[i], true, all );
+      return sdb.size();
+   }
+
+   size_t LoadSurfaces()
+   {
+      SurfaceMap &sdb = _surfaces;
+      LVCAll     &all = _lvc.ViewAll();
+      Underlyers &udb = _underlyers;
+      Underlyer  *und;
+      string      s;
+
+      for ( size_t i=0; i<udb.size(); i++ ) {
+         und    = udb[i];
+         s      = und->data();
+         sdb[s] = new OptionsSurface( *und, true, all );
+      }
       return sdb.size();
    }
 
@@ -1172,6 +1212,47 @@ protected:
       n     = Calc();
    }
 
+   /////////////////////
+   // (private) Helpers
+   /////////////////////
+private:
+   int _CalcSplines( LVCAll &all, time_t now, Update &u )
+   {
+      SplineMap          &sdb = _splines;
+      SplineMap::iterator it;
+      OptionsSpline      *spl;
+      int                 rc;
+bool bImg = true; // VectorView.js needs fidVecX
+
+      for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
+         spl = (*it).second;
+         if ( spl->Calc( all, now ) ) {
+            spl->Publish( u, bImg );
+            rc += 1;
+         }
+      }
+      return rc;
+   }
+
+   int _CalcSurfaces( LVCAll &all, time_t now, Update &u )
+   {
+      SurfaceMap          &sdb = _surfaces;
+      SurfaceMap::iterator it;
+      OptionsSurface      *srf;
+      int                  rc;
+
+      for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
+         srf = (*it).second;
+         if ( srf->Calc( all, now ) ) {
+#ifdef TODO_SURFACE_PUBLISH
+            spl->Publish( u, bImg );
+#endif // TODO_SURFACE_PUBLISH
+            rc += 1;
+         }
+      }
+      return rc;
+   }
+
 }; // SplinePublisher
 
 
@@ -1183,7 +1264,7 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, sqr;
+   bool        aOK, bCfg, sqr, trim;
    double      rate, xInc, yInc;
    int         maxX;
    const char *db, *svr, *svc;
@@ -1206,6 +1287,7 @@ int main( int argc, char **argv )
    yInc = 1.0; // 1 dollareeny
    maxX = 1000;
    sqr  = false;
+   trim = false;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -1216,7 +1298,8 @@ int main( int argc, char **argv )
       s += "       [ -xInc    <Spline Increment> ] \\ \n";
       s += "       [ -yInc    <Surface Increment> ] \\ \n";
       s += "       [ -maxX    <Max Spline Values> ] \\ \n";
-      s += "       [ -square  <true to 'square up'> ] \\ \n";
+      s += "       [ -square  <true to 'square up' splines> ] \\ \n";
+      s += "       [ -trim    <true to 'trim' surfaces> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
       LOG( "      -db      : %s", db );
@@ -1227,6 +1310,7 @@ int main( int argc, char **argv )
       LOG( "      -yInc    : %.2f", yInc );
       LOG( "      -maxX    : %d", maxX );
       LOG( "      -square  : %s", _pBool( sqr ) );
+      LOG( "      -trim    : %s", _pBool( trim ) );
       return 0;
    }
 
@@ -1253,12 +1337,14 @@ int main( int argc, char **argv )
          rate = atof( argv[++i] );
       else if ( !::strcmp( argv[i], "-square" ) )
          sqr = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-trim" ) )
+         trim = _IsTrue( argv[++i] );
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, xInc, yInc, maxX );
+   OptionsCurve    lvc( db, sqr, trim, xInc, yInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, age;
    size_t          ns;
@@ -1266,14 +1352,22 @@ int main( int argc, char **argv )
    /*
     * Load Splines
     */
+   LOG( OptionsCurveID() );
    LOG( "Config._square = %s", _pBool( lvc._square ) );
+   LOG( "Config._trim   = %s", _pBool( lvc._trim ) );
    LOG( "Config._xInc   = %.2f", lvc._xInc );
    LOG( "Config._yInc   = %.2f", lvc._yInc );
    LOG( "Config._maxX   = %d", lvc._maxX );
+   LOG( "Loading splines ..." );
    d0  = lvc.TimeNs();
    ns    = pub.LoadSplines();
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines loaded in %dms", ns, (int)age );
+   LOG( "Loading surfaces ..." );
+   d0  = lvc.TimeNs();
+   ns    = pub.LoadSurfaces();
+   age = 1000.0 * ( lvc.TimeNs() - d0 );
+   LOG( "%ld surfaces loaded in %dms", ns, (int)age );
    /*
     * Rock on
     */
