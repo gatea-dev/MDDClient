@@ -17,6 +17,7 @@
 
 static int     l_Precision =     2;
 static double  l_StrikeMul =   100.0;
+static size_t  l_NoIndex   =    -1;
 
 // Record Templates
 
@@ -410,7 +411,6 @@ public:
     *
     * \param all - Current LVC Snap
     * \param now - Current Unix Time
-    * \param bForce - true to calc if not watched
     * \return true if Calc'ed; false if not
     */ 
    bool SnapKnots( LVCAll &all, time_t now )
@@ -725,9 +725,9 @@ public:
       KnotGrid      &kdb  = _kdb;
       KnotDef        k;
       Message       *msg;
-      OptionsSpline *spl;
+      OptionsSpline *splX, *splE;
       size_t         r, c, nr, nc, ix;
-      double         z, dX;
+      double         z, zX, zE, dX;
       DoubleGrid     Z;
 
       // Pre-condition(s)
@@ -750,17 +750,29 @@ public:
          for ( c=0; c<nc; c++ ) {
             z = 0.0;
             k = kdb[r][c];
-            if ( (ix=k._idx) ) {
+            if ( (ix=k._idx) != l_NoIndex ) {
                msg = msgs[ix];
                z   = lvc.MidQuote( *msg );
             }
-            else if ( (spl=k._splineX) ) {
-               dX  = 1.0 / l_StrikeMul;
-               dX *= k._strike;
-               z   = spl->CS( all, now ).ValueAt( dX );
+            else {
+               /*
+                * Take mid-point if both splines available; 
+                * Else, the only available spline
+                */
+               if ( (splX=k._splineX) ) {
+                  dX  = 1.0 / l_StrikeMul;
+                  dX *= k._strike;
+                  zX  = splX->CS( all, now ).ValueAt( dX );
+               }
+               if ( (splE=k._splineE) )
+                  zE = splE->CS( all, now ).ValueAt( k._exp );
+               if ( splX && splE )
+                  z = ( zX + zE ) / 2.0;
+               else if ( splX )
+                  z = zX;
+               else if ( splE )
+                  z = zE;
             }
-            else if ( (spl=k._splineE) )
-               z = spl->CS( all, now ).ValueAt( k._exp );
             zRow.push_back( z );
          }
          Z.push_back( zRow );
@@ -898,7 +910,7 @@ private:
 assert( kz._splineX || kz._splineE );
                kz._exp     = jExp;
                kz._strike  = jStr;
-               kz._idx     = -1;
+               kz._idx     = l_NoIndex;
                kdb.push_back( kz );
             }
          }
@@ -1018,15 +1030,15 @@ public:
    // Operations
    /////////////////////
 public:
-   int Calc()
+   int Calc( bool bForce=false )
    {
       LVCAll &all = _lvc.ViewAll();
       Update &u   = upd();
       time_t  now = TimeSec();
       int     rc;
 
-      rc  = _CalcSplines( all, now, u );
-      rc += _CalcSurfaces( all, now, u );
+      rc  = _CalcSplines( all, now, bForce, u );
+      rc += _CalcSurfaces( all, now, bForce, u );
       return rc;
    }
 
@@ -1216,7 +1228,7 @@ protected:
    // (private) Helpers
    /////////////////////
 private:
-   int _CalcSplines( LVCAll &all, time_t now, Update &u )
+   int _CalcSplines( LVCAll &all, time_t now, bool bForce, Update &u )
    {
       SplineMap          &sdb = _splines;
       SplineMap::iterator it;
@@ -1226,7 +1238,7 @@ bool bImg = true; // VectorView.js needs fidVecX
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          spl = (*it).second;
-         if ( spl->Calc( all, now ) ) {
+         if ( spl->Calc( all, now, bForce ) ) {
             spl->Publish( u, bImg );
             rc += 1;
          }
@@ -1234,7 +1246,7 @@ bool bImg = true; // VectorView.js needs fidVecX
       return rc;
    }
 
-   int _CalcSurfaces( LVCAll &all, time_t now, Update &u )
+   int _CalcSurfaces( LVCAll &all, time_t now, bool bForce, Update &u )
    {
       SurfaceMap          &sdb = _surfaces;
       SurfaceMap::iterator it;
@@ -1243,7 +1255,7 @@ bool bImg = true; // VectorView.js needs fidVecX
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          srf = (*it).second;
-         if ( srf->Calc( all, now ) ) {
+         if ( srf->Calc( all, now, bForce ) ) {
 #ifdef TODO_SURFACE_PUBLISH
             spl->Publish( u, bImg );
 #endif // TODO_SURFACE_PUBLISH
@@ -1350,7 +1362,7 @@ int main( int argc, char **argv )
    size_t          ns;
 
    /*
-    * Load Splines
+    * Dump Config
     */
    LOG( OptionsCurveID() );
    LOG( "Config._square = %s", _pBool( lvc._square ) );
@@ -1358,16 +1370,30 @@ int main( int argc, char **argv )
    LOG( "Config._xInc   = %.2f", lvc._xInc );
    LOG( "Config._yInc   = %.2f", lvc._yInc );
    LOG( "Config._maxX   = %d", lvc._maxX );
+   /*
+    * Load Splines
+    */
    LOG( "Loading splines ..." );
    d0  = lvc.TimeNs();
    ns    = pub.LoadSplines();
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines loaded in %dms", ns, (int)age );
+   /*
+    * Load Surfaces
+    */
    LOG( "Loading surfaces ..." );
    d0  = lvc.TimeNs();
    ns    = pub.LoadSurfaces();
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld surfaces loaded in %dms", ns, (int)age );
+   /*
+    * Calc Splines / Surfaces
+    */
+   LOG( "Initial Calcs ..." );
+   d0  = lvc.TimeNs();
+   ns  = pub.Calc( true );
+   age = 1000.0 * ( lvc.TimeNs() - d0 );
+   LOG( "%d surfaces / splines cal'ed in %dms", ns, (int)age );
    /*
     * Rock on
     */
