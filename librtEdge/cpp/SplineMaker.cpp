@@ -6,7 +6,7 @@
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     22 DEC 2022 jcs  Build 61: SubChannel or LVC
 *      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
-*     22 SEP 2023 jcs  Build 65: DoubleList Spline()
+*     13 OCT 2023 jcs  Build 65: DoubleList Spline(); _maxX
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -169,7 +169,7 @@ Curve::Curve( KnotSource &src, XmlElem &xe ) :
    _svc( xe.getAttrValue( _dtd._attr_svc, src.svc() ) ),
    _name( xe.getAttrValue( _dtd._attr_name, "" ) ),
    _fid( xe.getAttrValue( _dtd._attr_fid, 0 ) ),
-   _Xmax( 1.0 ),
+   _Xmax( xe.getAttrValue( _dtd._attr_maxX, 1.0 ) ),
    _X(),
    _Y(),
    _kdb(),

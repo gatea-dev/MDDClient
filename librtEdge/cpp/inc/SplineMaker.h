@@ -6,6 +6,7 @@
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)
 *     25 DEC 2022 jcs  XON
 *      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
+*     13 OCT 2023 jcs  Build 65: MaxX
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -78,6 +79,7 @@ public:
 	const char *_attr_name;
 	const char *_attr_inc;
 	const char *_attr_curve;
+	const char *_attr_maxX;
 
 	// Constructor
 public:
@@ -104,7 +106,8 @@ public:
 	   _attr_intvl( "Interval" ),
 	   _attr_name( "Name" ),
 	   _attr_inc( "Increment" ),
-	   _attr_curve( "Curve" )
+	   _attr_curve( "Curve" ),
+	   _attr_maxX( "MaxX" )
 	{ ; }
 
 }; // DTD
@@ -147,6 +150,7 @@ private:
 	int           _fid;
 	KnotWatchList _wl;
 	double        _Y;
+	double        _maxX;
 	int           _StreamID;
 
 	// Constructor

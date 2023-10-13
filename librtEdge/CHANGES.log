@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 65 23-09-xx
+ * ### Build 65 23-10-xx
  *
  * -# Field.GetAsDate() month : { 0 ... 11 }, not { 1 ... 12 }
  *
@@ -53,6 +53,8 @@ Features To Add
  * -# Spline : More intuitive:
  *    - double     CubicSpline.ValueAt()
  *    - DoubleList CubicSpline.Spline()
+ *
+ * -# SplineMaker : Configurable MaxX (60-year UST)
  *
  * -# Update.AddSurface()
  *

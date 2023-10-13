@@ -17,7 +17,7 @@
          <Knot Ticker="RATES.SWAP.USD.PAR.30Y" Interval="360" />
       </Curve>
 
-      <Curve Name="UST" FieldID="6" >
+      <Curve Name="UST" FieldID="6" MaxX="360" Descr="Set MaxX to 720 for 60 year" >
          <Knot Ticker="RATES.TSY.OTR.1M.YIELD"  Interval="1" />
          <Knot Ticker="RATES.TSY.OTR.3M.YIELD"  Interval="3" />
          <Knot Ticker="RATES.TSY.OTR.6M.YIELD"  Interval="6" />
