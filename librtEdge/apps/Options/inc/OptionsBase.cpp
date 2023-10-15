@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *     17 SEP 2023 jcs  Created (from GreekServer.cpp)
+*     15 OCT 2023 jcs  Build 65: ymd2julNum()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -122,14 +123,16 @@ public:
 class OptionsBase : public LVC
 {
 private:
-   struct tm _lt;
+   struct tm      _lt;
+   SortedInt64Map _julNumMap;
 
    ////////////////////////////////////
    // Constructor / Destructor
    ////////////////////////////////////
 public:
    OptionsBase( const char *svr ) :
-      LVC( svr )
+      LVC( svr ),
+      _julNumMap()
    {
       time_t now = TimeSec();
 
@@ -230,17 +233,25 @@ public:
     */
    u_int64_t Expiration( Message &msg, bool bJulNum=true )
    {
-      Field    *fld;
-      u_int64_t rc;
+      SortedInt64Map &jdb = _julNumMap;
+      Field          *fld;
+      u_int64_t       rc, ymd;
 
       rc = 0;
       if ( (fld=msg.GetField( _EXPIR_DATE )) ) {
-         if ( bJulNum )
-            rc = julNum( fld->GetAsDate() );
-         else {
-            rc  = (u_int64_t)fld->field()._val._r64;
-            rc /= _MIL;
+         ymd  = (u_int64_t)fld->field()._val._r64;
+         ymd /= _MIL;
+         if ( bJulNum ) {
+            /*
+             * Query; Add if not there
+             */
+            if ( !(rc=ymd2julNum( ymd )) ) {
+               rc       = julNum( fld->GetAsDate() );
+               jdb[ymd] = rc;
+            }
          }
+         else
+            rc = ymd;
       }
       return rc;
    }
@@ -334,7 +345,6 @@ public:
       for ( i=0; i<n; unx.push_back( jul[i] * _SECPERDAY ), i++ );
       return unx;
    }
-
 
 
    ////////////////////////////////////
@@ -500,5 +510,24 @@ private:
 
       return( (fld=msg.GetField( fid )) ? fld->GetAsDouble() : 0.0 );
    }
+
+   /**
+    * \brief Convert YYYYMMDD to julNum
+    *
+    * \param ymd : YYYYMMDD
+    * \return  Number of days since Jan 1, 1970; 0 if error
+    */
+   u_int64_t ymd2julNum( u_int64_t ymd )
+   {
+      SortedInt64Map          &jdb = _julNumMap;
+      SortedInt64Map::iterator it;
+      u_int64_t                rc;
+
+      rc = 0;
+      if ( (it=jdb.find( ymd )) != jdb.end() )
+         rc = (*it).second;
+      return rc;
+   }
+
 
 }; // class OptionsBase

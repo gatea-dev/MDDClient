@@ -211,7 +211,6 @@ public:
 	   return RTEDGE::DoubleList( Y );
 	}
 
-
 	/**
 	 * \brief Calculate and return interpolated value at x
 	 *
@@ -416,6 +415,26 @@ public:
 	}
 
 	/**
+	 * \brief Calculate and return surface for list of ( x,y ) data points
+	 *
+	 * \param X - x value array
+	 * \param Y - y value array
+	 * \return Calculated Spline as DoubleList
+	 */
+	RTEDGE::DoubleGrid Surface( RTEDGE::DoubleList &X, 
+	                            RTEDGE::DoubleList &Y )
+	{
+	   RTEDGE::DoubleGrid Z;
+#ifdef TODO_SURFACE
+	   size_t             i, nx;
+
+	   nx = X.size();
+	   for ( i=0; i<X.size(); Y.push_back( ValueAt( X[i] ) ), i++ );
+#endif // TODO_SURFACE
+	   return RTEDGE::DoubleGrid( Z );
+	}
+
+	/**
 	 * \brief Calculate and return interpolated value at ( x,y )
 	 *
 	 * splin2.c : From Numerical Recipes in C, (c) 1986-1992
@@ -424,10 +443,10 @@ public:
 	 * \param y - Independent variable at Y
 	 * \return Interpolated value at ( x, y )
 	 */
-	double Surface( double x, double y )
+	double ValueAt( double x, double y )
 	{
 	   RTEDGE::DoubleList y2;
-	   double     z;
+	   double             z;
 
 	   for ( size_t m=0; m<_M; m++ ) {
 	      CubicSpline cs2( _Y, _Z[m] );

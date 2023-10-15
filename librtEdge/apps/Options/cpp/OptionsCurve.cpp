@@ -17,6 +17,7 @@
 
 static int     l_Precision =     2;
 static double  l_StrikeMul =   100.0;
+static double  l_StrikeDiv =   1.0 / l_StrikeMul;
 static size_t  l_NoIndex   =    -1;
 
 // Record Templates
@@ -76,7 +77,8 @@ public:
    OptionsSpline *_splineE; // Non-zero implies calc each time 
    u_int64_t      _strike;
    u_int64_t      _exp;
-   size_t         _idx; // Non-zero implies real-time
+   u_int64_t      _jExp;    // julNum( exp )
+   size_t         _idx;     // Non-zero implies real-time
 
 }; // KnotDef
 
@@ -212,7 +214,7 @@ public:
          strikes.insert( (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul ) );
       }
       for ( it=strikes.begin(); it!=strikes.end(); it++ )
-         _strikes.push_back( (*it) / l_StrikeMul );
+         _strikes.push_back( l_StrikeDiv * (*it)  );
    }
 
 
@@ -599,6 +601,7 @@ private:
          ix        = udb[i];
          msg       = msgs[ix];
          k._exp    = _lvc.Expiration( *msg, false );
+         k._jExp   = _lvc.Expiration( *msg, true );
          k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
          if ( byExp() ) {
             if ( k._exp == _tExp ) {
@@ -662,6 +665,7 @@ private:
    double        _xInc;
    double        _yInc;
    int           _StreamID;
+   time_t        _tCalc;
 
    /////////////////////////
    // Constructor
@@ -685,7 +689,8 @@ public:
       _Z(),
       _xInc( und.lvc()._xInc ),
       _yInc( und.lvc()._yInc ),
-      _StreamID( 0 )
+      _StreamID( 0 ),
+      _tCalc( 0 )
    {
       _Init( all );
    }
@@ -695,6 +700,8 @@ public:
    /////////////////////////
 public:
    const char *name() { return data(); }
+   size_t      M()    { return _X.size(); }
+   size_t      N()    { return _Y.size(); }
    DoubleList &X()    { return _X; }
    DoubleList &Y()    { return _Y; }
    DoubleGrid &Z()    { return _Z; }
@@ -722,52 +729,69 @@ public:
    {
       OptionsCurve  &lvc  = _und.lvc();
       Messages      &msgs = all.msgs();
-      KnotGrid      &kdb  = _kdb;
-      KnotDef        k;
+      KnotDef        k, k0, k1;
       Message       *msg;
       OptionsSpline *splX, *splE;
-      size_t         r, c, nr, nc, ix;
+      size_t         r, c, nr, nc, ix, m,  n;
       double         z, zX, zE, dX;
+      double         x0, x1, y0, y1;
       DoubleGrid     Z;
 
       // Pre-condition(s)
-#ifdef TODO
+
       if ( _tCalc == now )
          return false;
-#endif // TODO
       if ( !bForce && !IsWatched() )
          return false;
       if ( !(nr=_kdb.size()) )
          return false;
 
       /*
-       * 1) Pull out real-time Knot values from LVC
+       * 1) Build / Calc Z from Knots:
+       *    a) Pull out real-time Knot values from LVC
+       *    b) Else, calculate empty knots from Splines
        */
+      _tCalc = now;
+      nc     = 0;
+      m      = M();
+      n      = N();
       for ( r=0; r<nr; r++ ) {
-         DoubleList zRow;
+         DoubleList zRow, zSnap;
 
-         nc = kdb[r].size();
+         /*
+          * 1a) Snap real-time Knot values from LVC
+          */
+         nc = _kdb[r].size();
          for ( c=0; c<nc; c++ ) {
             z = 0.0;
-            k = kdb[r][c];
+            k = _kdb[r][c];
             if ( (ix=k._idx) != l_NoIndex ) {
                msg = msgs[ix];
                z   = lvc.MidQuote( *msg );
             }
+            zSnap.push_back( z );
+         }
+         /*
+          * 1b) Build row from snapped and interpolated values
+          */
+         for ( c=0; c<nc; c++ ) {
+            z = 0.0;
+            k = _kdb[r][c];
+            if ( (ix=k._idx) != l_NoIndex )
+               zRow.push_back( zSnap[c] );
             else {
                /*
                 * Take mid-point if both splines available; 
                 * Else, the only available spline
                 */
-               if ( (splX=k._splineX) ) {
-                  dX  = 1.0 / l_StrikeMul;
-                  dX *= k._strike;
-                  zX  = splX->CS( all, now ).ValueAt( dX );
+               if ( (splX=k._splineX) )
+                  zX = splX->CS( all, now ).ValueAt( k._jExp );
+               if ( (splE=k._splineE) ) {
+                  dX = l_StrikeDiv * k._strike;
+                  zE = splE->CS( all, now ).ValueAt( dX );
                }
-               if ( (splE=k._splineE) )
-                  zE = splE->CS( all, now ).ValueAt( k._exp );
                if ( splX && splE )
-                  z = ( zX + zE ) / 2.0;
+                  z = _BestZ( zSnap, c, zX, zE );
                else if ( splX )
                   z = zX;
                else if ( splE )
@@ -777,26 +801,51 @@ public:
          }
          Z.push_back( zRow );
       }
+
       /*
-       * 2) Fill in empty knot w/ Splines
+       * 2) Calculate Surface
        */
-      for ( r=0; r<nr; r++ ) {
-         nc = kdb[r].size();
-         for ( c=0; c<nc; c++ ) {
-            z = -1.0;
-            k = kdb[r][c];
-            if ( (ix=k._idx) ) {
-            }
-            Z[r][c] = z;
+      QUANT::CubicSurface srf( _X, _Y, Z );
+      DoubleList          xx, yy;
+
+assert( nr == m );
+assert( nc == n );
+      k0 = _kdb[0][0];
+      k1 = _kdb[m-1][n-1];
+      x0 = k0._exp;
+      x1 = k1._exp;
+      y0 = l_StrikeDiv * k0._strike;
+      y1 = l_StrikeDiv * k1._strike;
+      for ( double x=x0; x<=x1; xx.push_back( x ), x+=_xInc );
+      for ( double y=y0; y<=y1; yy.push_back( y ), y+=_yInc );
+      _Z = srf.Surface( xx, yy );
+
+      /*
+       * 3) Dump Grid of Knots if bForce
+       */
+      if ( bForce ) {
+         string dmp;
+         char  *bp, *cp;
+
+         bp  = new char[n*128];
+         cp  = bp;
+         cp += sprintf( cp, name() );
+         for ( size_t x=0; x<m; x++ )
+            cp += sprintf( cp, ",%ld", _kdb[x][0]._exp );
+         dmp += bp;
+         dmp += "\n";
+         for ( size_t y=0; y<n; y++ ) {
+            cp  = bp;
+            cp += sprintf( cp, "%.2f", l_StrikeDiv * _kdb[0][y]._strike );
+            for ( size_t x=0; x<m; x++ )
+               cp += sprintf( cp, ",%.3f", Z[x][y] );
+            dmp += bp;
+            dmp += "\n";
          }
+         delete[] bp;
+         ::fwrite( dmp.data(), 1, dmp.size(), stdout );
+         ::fflush( stdout );
       }
-
-      QUANT::CubicSurface cs( _X, _Y, Z );
-
-#ifdef TODO_SURFACE
-      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
-      _Y = cs.Spline( _X );
-#endif // TODO_SURFACE
       return true;
    }
 
@@ -853,10 +902,10 @@ private:
       Message       *msg;
       KnotDef        k, kz;
       KnotList       kdb;
-      u_int64_t      jExp, jStr, key;
+      u_int64_t      exp, jExp, jStr, key;
       size_t         i;
       double         ds;
-      SortedInt64Set edb, sdb;
+      SortedInt64Set edb, sdb, jdb;
       KnotDefMap     kMap;
 
       /*
@@ -873,6 +922,7 @@ private:
          k._idx    = udb[i];
          msg       = msgs[k._idx];
          k._exp    = _lvc.Expiration( *msg, false );
+         k._jExp   = _lvc.Expiration( *msg, true );
          k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
          key       = ( k._exp << 32 );
          key      += k._strike;
@@ -881,34 +931,38 @@ private:
           * Build ( Expiration, Strike ) matrix
           */
          edb.insert( k._exp );
+         jdb.insert( k._jExp );
          sdb.insert( k._strike );
       }
       /*
        * 2) Square Up by Expiration
        */
-      SortedInt64Set::iterator et, st;
+      SortedInt64Set::iterator et, jt, st;
       KnotDefMap::iterator     kt;
 
-      for ( i=0,et=edb.begin(); et!=edb.end(); i++,et++ ) {
-         jExp = (*et);
-         _X.push_back( jExp );
+      et = edb.begin();
+      jt = jdb.begin();
+      for ( i=0; et!=edb.end(); i++,et++,jt++ ) {
+         exp  = (*et);
+         jExp = (*jt);
+         _X.push_back( exp );
          for ( st=sdb.begin(); st!=sdb.end(); st++ ) {
             jStr = (*st);
             if ( !i )
                _Y.push_back( jStr );
-            key  = ( jExp << 32 );
+            key  = ( exp << 32 );
             key += jStr;
             if ( (kt=kMap.find( key )) != kMap.end() ) {
                k = (*kt).second;
                kdb.push_back( k );
             }
             else {
-               ds          = 1.0 / l_StrikeMul;
-               ds         *= k._strike;
+               ds          = l_StrikeDiv * k._strike;
                kz._splineX = _und.GetSpline( ds, _bPut );
-               kz._splineE = _und.GetSpline( jExp, _bPut );
+               kz._splineE = _und.GetSpline( exp, _bPut );
 assert( kz._splineX || kz._splineE );
-               kz._exp     = jExp;
+               kz._exp     = exp;
+               kz._jExp    = jExp;
                kz._strike  = jStr;
                kz._idx     = l_NoIndex;
                kdb.push_back( kz );
@@ -984,6 +1038,55 @@ assert( kz._splineX || kz._splineE );
          for ( c=x0; c<x1; rowK.push_back( row[c] ), c++ );
          _kdb.push_back( rowK );
       }
+   }
+
+   /**
+    * \brief Determine 'best' spline value from d1 or d2
+    *
+    * \param snap - Snapped LVC values
+    * \param col -  Current column from snap
+    * \param d1 - 1st Spline Value
+    * \param d2 - 2nd Spline Value
+    * \return 'Best' value for col based on snapped LVC values
+    */ 
+   double _BestZ( DoubleList &snap, size_t col, double d1, double d2 )
+   {
+      size_t c0, c1, sz;
+      double ds, rc;
+      bool   b0, b1;
+
+      /*
+       * 1) Find first non-zero snapped value up and down from col
+       */
+      sz = snap.size();
+      for ( c0=col; c0>=0 && !snap[c0]; c0-- );
+      for ( c1=col; c1<sz && !snap[c1]; c1++ );
+      b0 = ( (::int64_t)c0 >= 0 );
+      b1 = ( c1 < sz );
+      /*
+       * Return d1 or d2 depending on closest to non-zero snapped value
+       * If no snapped values, then return midpoint
+       */
+      rc = ( d1+d2 ) / 2.0;
+      if ( b0 || b1 ) {
+         if ( b0 && b1 ) {
+            if ( ( col-c0 ) <= ( c1-col ) )
+               ds = snap[c0];
+            else
+               ds = snap[c1];
+         }
+         else if ( b0 )
+            ds = snap[c0];
+         else if ( b1 )
+            ds = snap[c1];
+         rc = ( ::fabs( d1-ds ) < ::fabs( d2-ds ) ) ? d1 : d2;
+      }
+      return rc;
+   }
+
+   double _BestZ_OBSOLETE( DoubleList &snap, size_t col, double d1, double d2 )
+   {
+      return( d1+d2 ) / 2.0;
    }
 
 }; // class OptionsSurface

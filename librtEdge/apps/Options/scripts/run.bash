@@ -1,6 +1,7 @@
 #!/bin/bash
 
 clear
+/bin/rm -fv ./core.*
 ./bin64//OptionsCurve \
    -db     /RAMDISK//LVC//RUT3K.lvc \
    -svr    localhost:9015 \
