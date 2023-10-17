@@ -30,7 +30,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 12  23-09-xx
+ * ### Build 12  23-10-xx
  * 
  * -# More tuple-based leaks : mdd_PyList_PackX()
  *    - MDDpyLVC.PyGetTickers()
@@ -42,6 +42,11 @@ Features To Add
  *
  * -# Stats.cpp:
  *    - BBDailyStats
+ *
+ * -# No mo Book
+ *
+ * -# LVC.GetTickers() leak on WIN64:
+ *    - TODO
  *
  *
  * ### Build 10  23-09-06

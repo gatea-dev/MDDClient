@@ -120,7 +120,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Book.cpp" />
     <ClCompile Include="..\src\EventPump.cpp" />
     <ClCompile Include="..\src\LVC.cpp" />
     <ClCompile Include="..\src\LVCAdmin.cpp" />

@@ -8,8 +8,9 @@
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: Tape stuff
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
-*  (c) 1994-2020 Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -117,7 +118,7 @@ void EventPump::Drain( int iFilter )
    
 }
 
-void EventPump::Close( Book *bk )
+void EventPump::Close( Record *rec )
 {
    RTEDGE::Locker    l( _mtx ); 
    Updates::iterator ut;
@@ -125,7 +126,7 @@ void EventPump::Close( Book *bk )
 
    for ( ut=_upds.begin(); ut!=_upds.end(); ut++ ) {
       upd = (*ut);
-      if ( upd._bk == bk ) {
+      if ( upd._rec == rec ) {
          _upds.erase( ut );
          break; // for-loop
       }

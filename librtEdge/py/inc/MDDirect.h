@@ -15,6 +15,7 @@
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
 *     29 AUG 2023 jcs  Build 10: EVT_BDS
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -127,14 +128,14 @@ extern "C"
 //////////////////////////
 // structs / collections
 //////////////////////////
-class Book;
 class rtMsg;
+class Record;
 
 class Update
 {
 public:
    int     _mt;
-   Book   *_bk;
+   Record *_rec;
    string *_msg;
    void   *_arg;
    int     _nUpd;
@@ -143,7 +144,7 @@ public:
 };
 
 #define _INIT_MDDPY_UPD { 0, \
-                          (Book *)0, \
+                          (Record *)0, \
                           (string *)0, \
                           (void *)0, \
                           0, \
@@ -151,21 +152,20 @@ public:
                           { (char *)0, 0 } \
                         }
 
-typedef hash_map<int, Book *>    BookByOid;
-typedef hash_map<string, Book *> BookByName;
-typedef hash_map<int, rtFIELD>   Fields;
-typedef vector<PyObject *>       PyObjects;
-typedef vector<int>              Ints;
-typedef vector<Update>           Updates;
-typedef vector<rtMsg *>          rtMsgs;
-typedef LocklessFifo<Update>     UpdateFifo;
+typedef hash_map<int, Record *>    RecByOid;
+typedef hash_map<string, Record *> RecByName;
+typedef hash_map<int, rtFIELD>     Fields;
+typedef vector<PyObject *>         PyObjects;
+typedef vector<int>                Ints;
+typedef vector<Update>             Updates;
+typedef vector<rtMsg *>            rtMsgs;
+typedef LocklessFifo<Update>       UpdateFifo;
 
 ///////////////
 // Us
 ///////////////
 #include <EventPump.h>
 #include <RecCache.h>
-#include <Book.h>
 #include <LVC.h>
 #include <LVCAdmin.h>
 #include <Stats.h>

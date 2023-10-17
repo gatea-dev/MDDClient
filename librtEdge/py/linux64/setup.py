@@ -17,7 +17,6 @@ for pLib in [ 'mddWire', 'rtEdge' ]:
    LIB_DIR += [ '%s/lib%s/lib' % ( MDD_ROOT, pLib ) ]
    LIBS    += [ '%s64' % pLib ]
 SRCS        = [ './src/PyAPI.cpp',
-                './src/Book.cpp',
                 './src/EventPump.cpp',
                 './src/LVC.cpp',
                 './src/LVCAdmin.cpp',

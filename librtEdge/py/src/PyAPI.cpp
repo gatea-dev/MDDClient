@@ -15,6 +15,7 @@
 *     11 JAN 2023 jcs  Build  9: Python 3.x on Linux
 *     29 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema; OpenBDS()
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -952,96 +953,6 @@ static PyObject *MemSize( PyObject *self, PyObject *args )
 
 
 ////////////////////////////
-// Book.py
-////////////////////////////
-static PyObject *GetCleanBook( PyObject *self, PyObject *args )
-{
-   MDDpySubChan *ch;
-   const char *pSvc, *pTkr;
-   PyObject   *lst;
-   PyObject   *pyRtn, *pyBid, *pyAsk, *pyBr, *pyAr, *pyd, *pyn;
-   Book       *bk;
-   BookRow    *br, *ar;
-   char       *ecnKO[K];
-   int         cxt, i, nf, rtn;
-   BookRtn     bRtn;
-   double      dInversion, dMaturity, d0, dd;
-   bool        bOK;
-
-   /*
-    * Usage : GetCleanBook( cxt,
-    *                       'BBO',
-    *                       'EUR/USD',
-    *                        ecns[], 
-    *                        inversion_threshold, 
-    *                        maturity_threshold )
-    */
-   d0  = ::rtEdge_TimeNs();
-   rtn = PyArg_ParseTuple( args, 
-                           "issO!dd", 
-                           &cxt, 
-                           &pSvc, 
-                           &pTkr, 
-                           &PyList_Type, &lst,
-                           &dInversion,
-                           &dMaturity );
-   bOK  = ( rtn != 0 );
-   bOK &= ( (ch=_GetSub( cxt )) != (MDDpySubChan *)0 );
-   bk   = bOK ? ch->FindBook( pSvc, pTkr ) : (Book *)0;
-   if ( !bk ) {
-      pyBr  = PyInt_FromLong( -1 ); 
-      pyAr  = PyInt_FromLong( -1 ); 
-      dd    = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
-      pyd   = PyFloat_FromDouble( dd );
-      pyn   = PyInt_FromLong( 0 );
-      pyRtn = ::PyTuple_Pack( 7, Py_None, Py_None, pyBr, pyAr, lst, pyd, pyn );
-      Py_DECREF( pyBr );
-      Py_DECREF( pyAr );
-      Py_DECREF( pyd );
-      Py_DECREF( pyn );
-      return pyRtn;
-   }
-
-   // Parse Python List
-
-   nf = PyList_Size( lst );
-   if ( nf == 0 )
-      m_breakpoint();
-i = 0;
-#ifdef TODO_KO_AS_STRING
-   for ( i=0; i<nf; i++ ) {
-      pyKO     = PyList_GetItem( lst, i );
-      ecnKO[i] = PyString_AsString( pyKO );
-   }
-#endif // TODO_KO_AS_STRING
-   ecnKO[i] = (char *)0;
-   bRtn  = bk->GetCleanBook( dInversion, dMaturity, ecnKO );
-   br    = bRtn._bid;
-   ar    = bRtn._ask;
-   pyBid = br ? PyFloat_FromDouble( br->GetPrc() ) : Py_None;
-   pyAsk = ar ? PyFloat_FromDouble( ar->GetPrc() ) : Py_None;
-   pyBr  = PyInt_FromLong( br ? br->_nRow : -1 );
-   pyAr  = PyInt_FromLong( ar ? ar->_nRow : -1 );
-   dd    = 1000000.0 * ( ::rtEdge_TimeNs() - d0 );
-   pyd   = PyFloat_FromDouble( dd );
-   pyn   = PyInt_FromLong( bRtn._nItr );
-
-   // [ dBid, dAsk, br, ar, ecnKO, dLatency ]
-
-   pyRtn = ::PyTuple_Pack( 7, pyBid, pyAsk, pyBr, pyAr, lst, pyd, pyn );
-   if ( br )
-      Py_DECREF( pyBid );
-   if ( ar )
-      Py_DECREF( pyAsk );
-   Py_DECREF( pyBr );
-   Py_DECREF( pyAr );
-   Py_DECREF( pyd );
-   Py_DECREF( pyn );
-   return pyRtn;
-}
-
-
-////////////////////////////
 // Stats.cpp
 ////////////////////////////
 static PyObject *GetBBDailyStats( PyObject *self, PyObject *args )
@@ -1148,10 +1059,6 @@ static PyMethodDef EdgeMethods[] =
     { "Log",           Log,       _PY_ARGS, "Set MDD library logger." },
     { "CPU",           CPU,       _PY_ARGS, "Get process CPU usage." },
     { "MemSize",       MemSize,   _PY_ARGS, "Get process memory usage." },
-    /* 
-     * Book
-     */
-    { "GetCleanBook",   GetCleanBook, _PY_ARGS, "Book.GetCleanBook" },
     /* 
      * Stats
      */

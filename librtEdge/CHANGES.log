@@ -60,6 +60,10 @@ Features To Add
  *
  * -# Pump.cpp : poll()-driven exclusively
  *
+ * -# MDDirect.pyd : 
+ *    - LVC.getTickers leak : 
+ *    - No mo Book
+ *
  *
  * ### Build 64 23-09-13
  *

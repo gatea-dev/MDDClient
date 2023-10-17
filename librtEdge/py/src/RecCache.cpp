@@ -14,6 +14,7 @@
 *     24 MAY 2022 jcs  Build  7: _MDDPY_UNXTM
 *     14 AUG 2023 jcs  Build 10: Field.Value() : mddFld_undef = _MDDPY_NONE
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -40,8 +41,7 @@ static mddBuf   _zBuf = { (char *)0, 0 };
 static mddValue _zVal = { _zBuf };
 static mddField _zFld = { 0, _zVal, (const char *)0, mddFld_undef }; 
 
-namespace MDDPY
-{
+using namespace MDDPY;
 
 ///////////////////////////////
 // Constructor / Destructor
@@ -281,7 +281,7 @@ Record::Record( const char   *pSvc,
 
 Record::~Record()
 {
-   FldMap::iterator it;
+   MDDPY::FldMap::iterator it;
 
    for ( it=_flds.begin(); it!=_flds.end(); it++ )
       delete (*it).second;
@@ -394,6 +394,8 @@ void Record::Update( mddFieldList fl )
 }
 
 
+namespace MDDPY
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 //

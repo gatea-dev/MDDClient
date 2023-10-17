@@ -11,6 +11,7 @@
 *      1 DEC 2020 jcs  Build  3: SnapTape() / PyTapeSnapQry
 *      3 FEB 2022 jcs  Build  5: De-lint
 *     29 AUG 2023 jcs  Build 10: BDS
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -23,6 +24,7 @@ using namespace MDDPY;
 //////////////
 // Forwards
 //////////////
+class Record;
 class Schema;
 class rtMsg;
 class PyByteStream;
@@ -45,8 +47,8 @@ private:
 	ByteStreamByOid  _bStrByOid;
 	ByteStreamByName _bStrByName;
 	MDDPY::Schema   *_py_schema;
-	BookByName       _byName;
-	BookByOid        _byOid;
+	RecByName        _byName;
+	RecByOid         _byOid;
 	RTEDGE::Mutex    _mtx;
 	int              _iFilter;
 	bool             _bRTD;
@@ -63,7 +65,7 @@ public:
 	const char *Protocol();
 	int         Open( const char *, const char *, int );
 	int         OpenByteStream( const char *, const char *, int );
-	Book       *FindBook( const char *, const char * );
+	Record     *FindRecord( const char *, const char * );
 	Update      ToUpdate( rtMsg & );
 	int         Close( const char *, const char * );
 	PyObject   *Filter( int );

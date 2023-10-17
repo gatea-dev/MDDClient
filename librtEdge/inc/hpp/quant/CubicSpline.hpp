@@ -207,7 +207,7 @@ public:
 	   size_t             i, nx;
 
 	   nx = X.size();
-	   for ( i=0; i<X.size(); Y.push_back( ValueAt( X[i] ) ), i++ );
+	   for ( i=0; i<nx; Y.push_back( ValueAt( X[i] ) ), i++ );
 	   return RTEDGE::DoubleList( Y );
 	}
 

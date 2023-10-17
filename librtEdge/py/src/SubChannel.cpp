@@ -13,6 +13,7 @@
 *     11 JAN 2023 jcs  Build  9: PumpTapeXxx()
 *     29 AUG 2023 jcs  Build 10: BDS
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
+*     17 OCT 2023 jcs  Build 12: No mo Book
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -95,20 +96,20 @@ int MDDpySubChan::Open( const char *svc,
                         int         userID )
 {
    RTEDGE::Locker l( _mtx );
-   BookByOid     &bdb = _byOid;
-   BookByName    &ndb = _byName;
+   RecByOid      &bdb = _byOid;
+   RecByName     &ndb = _byName;
    string         s( _Key( svc, tkr ) );
-   Book          *bk;
+   Record        *rec;
    Update         u = _INIT_MDDPY_UPD;
    int            oid, nf;
 
    // Pre-condition(s)
 
-   if ( (bk=FindBook( svc, tkr )) ) {
-      if ( !(nf=bk->TouchAllFields()) )
+   if ( (rec=FindRecord( svc, tkr )) ) {
+      if ( !(nf=rec->TouchAllFields()) )
          return true;
       u._mt  = EVT_UPD;
-      u._bk  = bk;
+      u._rec = rec;
       _pmp.Add( u );
       return true;
    }
@@ -116,16 +117,15 @@ int MDDpySubChan::Open( const char *svc,
    // Safe to create and add to cache
 
    oid      = ReqID();
-   bk       = new Book( svc, tkr, userID, oid );
-   ndb[s]   = bk;
-   bdb[oid] = bk;
-// printf( "Subscribe( %s,%s,%d )\n", svc, tkr, oid ); fflush( stdout );
+   rec      = new Record( svc, tkr, userID, oid );
+   ndb[s]   = rec;
+   bdb[oid] = rec;
    return Subscribe( svc, tkr, (VOID_PTR)oid );
 }
 
 int MDDpySubChan::OpenByteStream( const char *svc, 
-                                const char *tkr, 
-                                int         userID )
+                                  const char *tkr, 
+                                  int         userID )
 {
    RTEDGE::Locker    l( _mtx );
    ByteStreamByOid  &bdb = _bStrByOid;
@@ -144,17 +144,17 @@ int MDDpySubChan::OpenByteStream( const char *svc,
    return sid;
 }
 
-Book *MDDpySubChan::FindBook( const char *pSvc, const char *pTkr )
+Record *MDDpySubChan::FindRecord( const char *pSvc, const char *pTkr )
 {
    RTEDGE::Locker       l( _mtx );
-   BookByName::iterator it;
+   RecByName::iterator it;
    string               s( _Key( pSvc, pTkr ) );
-   Book                *bk;
+   Record              *rec;
 
-   bk = (Book *)0;
+   rec = (Record *)0;
    if ( (it=_byName.find( s )) != _byName.end() )
-      bk = (*it).second;
-   return bk;
+      rec = (*it).second;
+   return rec;
 }
 
 Update MDDpySubChan::ToUpdate( rtMsg &m )
@@ -242,7 +242,7 @@ PyObject *MDDpySubChan::GetData( const char *pSvc,
                                  int        *fids )
 {
    RTEDGE::Locker l( _mtx );
-   Book          *bk;
+   Record        *rec;
    PyObject      *rtn, *pyV;
    MDDPY::Field  *fld;
    char          *pc;
@@ -251,10 +251,10 @@ PyObject *MDDpySubChan::GetData( const char *pSvc,
    // !fids[i] implies end of FID request list
 
    for ( nf=0; fids[nf]; nf++ );
-   bk  = FindBook( pSvc, pTkr );
-   rtn = bk ? ::PyList_New( nf ) : _PyReturn( Py_None );
-   for ( i=0; bk && i<nf; i++ ) {
-      fld = bk->GetField( fids[i] );
+   rec = FindRecord( pSvc, pTkr );
+   rtn = rec ? ::PyList_New( nf ) : _PyReturn( Py_None );
+   for ( i=0; rec && i<nf; i++ ) {
+      fld = rec->GetField( fids[i] );
       pc  = fld ? fld->data() : (char *)"";
       pyV = PyString_FromString( pc );
       ::PyList_SetItem( rtn, i, pyV );
@@ -386,7 +386,7 @@ void MDDpySubChan::OnService( const char *pSvc, bool bUp )
 void MDDpySubChan::OnData( RTEDGE::Message &msg )
 {
    IntMap::iterator it;
-   Book            *bk;
+   Record          *rec;
    IntMap          &idb = _tapeId2Arg;
    int              oid = (INT_PTR)msg.arg();
    int              sid = msg.StreamID();
@@ -408,8 +408,8 @@ void MDDpySubChan::OnData( RTEDGE::Message &msg )
       }
       else if ( (it=idb.find( sid )) != idb.end() )
          oid = (*it).second;
-      else if ( (bk=FindBook( msg.Service(), msg.Ticker() )) ) {
-         oid      = bk->oid();
+      else if ( (rec=FindRecord( msg.Service(), msg.Ticker() )) ) {
+         oid      = rec->oid();
          idb[sid] = oid;
       }
       else
@@ -426,7 +426,7 @@ void MDDpySubChan::OnData( RTEDGE::Message &msg )
    // Conflated / Filtered : Update queue
 
    u         = _ToUpdate( oid, msg );
-   bAdd      = ( ( u._mt & _iFilter ) && u._bk && !u._nUpd );
+   bAdd      = ( ( u._mt & _iFilter ) && u._rec && !u._nUpd );
    _bTapeUpd = IsTape();
    if (  bAdd || _bTapeUpd )
       _pmp.Add( u );
@@ -498,7 +498,7 @@ void MDDpySubChan::OnDead( RTEDGE::Message &msg, const char *pErr )
    // Conflated / Filtered : Update queue
 
    u = _ToUpdate( oid, pErr );
-   if ( ( u._mt & _iFilter ) && u._bk && !u._nUpd )
+   if ( ( u._mt & _iFilter ) && u._rec && !u._nUpd )
       _pmp.Add( u );
    _pmp.Notify();
 }
@@ -546,7 +546,7 @@ void MDDpySubChan::OnByteStream( PyByteStream &bStr )
    // 2) Conflated / Filtered : Update queue
 
    u = _ToUpdate( oid, dst );
-   if ( ( u._mt & _iFilter ) && u._bk )
+   if ( ( u._mt & _iFilter ) && u._rec )
       _pmp.Add( u );
    _pmp.Notify();
 }
@@ -567,7 +567,7 @@ void MDDpySubChan::OnByteStreamError( PyByteStream &bStr, const char *pErr )
    // Conflated / Filtered : Update queue
 
    u = _ToUpdate( oid, pErr );
-   if ( ( u._mt & _iFilter ) && u._bk && !u._nUpd )
+   if ( ( u._mt & _iFilter ) && u._rec && !u._nUpd )
       _pmp.Add( u );
    _pmp.Notify();
 }
@@ -578,31 +578,31 @@ void MDDpySubChan::OnByteStreamError( PyByteStream &bStr, const char *pErr )
 ///////////////////////////////
 Update MDDpySubChan::_ToUpdate( int oid, RTEDGE::Message &msg )
 {
-   RTEDGE::Locker      l( _mtx );
-   BookByOid          &bdb = _byOid;
-   BookByOid::iterator it;
-   mddFieldList        fl;
-   Book               *bk;
-   Update              u = _INIT_MDDPY_UPD;
-   int                 mt, nUpd;
+   RTEDGE::Locker     l( _mtx );
+   RecByOid          &bdb = _byOid;
+   RecByOid::iterator it;
+   mddFieldList       fl;
+   Record            *rec;
+   Update             u = _INIT_MDDPY_UPD;
+   int                mt, nUpd;
 
    // Update Cache : Find by oid
 
    fl._flds = (mddField *)msg.Fields();
    fl._nFld = msg.NumFields();
-   bk       = (Book *)0;
+   rec      = (Record *)0;
    mt       = EVT_UPD;
    nUpd     = 0;
    if ( (it=bdb.find( oid )) != bdb.end() ) {
-      bk   = (*it).second;
-      nUpd = bk->_nUpd;
-      bk->Update( fl );
+      rec  = (*it).second;
+      nUpd = rec->_nUpd;
+      rec->Update( fl );
    }
 
    // Update
 
    u._mt   = mt;
-   u._bk   = bk;
+   u._rec  = rec;
    u._nUpd = nUpd;
    u._tMsg = msg.MsgTime();
    return u;
@@ -610,25 +610,25 @@ Update MDDpySubChan::_ToUpdate( int oid, RTEDGE::Message &msg )
 
 Update MDDpySubChan::_ToUpdate( int oid, rtBUF bStr )
 {
-   RTEDGE::Locker      l( _mtx );
-   BookByOid          &bdb = _byOid;
-   BookByOid::iterator it;
-   Book               *bk;
-   Update              u = _INIT_MDDPY_UPD;
-   int                 mt, nUpd;
+   RTEDGE::Locker     l( _mtx );
+   RecByOid          &bdb = _byOid;
+   RecByOid::iterator it;
+   Record            *rec;
+   Update             u = _INIT_MDDPY_UPD;
+   int                mt, nUpd;
 
    // Update Cache : Find by oid
 
-   bk   = (Book *)0;
+   rec  = (Record *)0;
    mt   = EVT_BYSTR;
    nUpd = 0;
    if ( (it=bdb.find( oid )) != bdb.end() )
-      bk = (*it).second;
+      rec = (*it).second;
 
    // Update
 
    u._mt   = mt;
-   u._bk   = bk;
+   u._rec  = rec;
    u._nUpd = nUpd;
    u._bStr = bStr;
    return u;
@@ -636,25 +636,25 @@ Update MDDpySubChan::_ToUpdate( int oid, rtBUF bStr )
 
 Update MDDpySubChan::_ToUpdate( int oid, const char *pErr )
 {
-   RTEDGE::Locker      l( _mtx );
-   BookByOid          &bdb = _byOid;
-   BookByOid::iterator it;
-   Book               *bk;
-   Update              u = _INIT_MDDPY_UPD;
-   int                 mt, nUpd;
+   RTEDGE::Locker     l( _mtx );
+   RecByOid          &bdb = _byOid;
+   RecByOid::iterator it;
+   Record            *rec;
+   Update             u = _INIT_MDDPY_UPD;
+   int                mt, nUpd;
 
    // Update Cache : Find by oid
 
-   bk   = (Book *)0;
+   rec  = (Record *)0;
    mt   = EVT_STS;
    nUpd = 0;
    if ( (it=bdb.find( oid )) != bdb.end() )
-      bk   = (*it).second;
+      rec = (*it).second;
 
    // Update
 
    u._mt   = mt;
-   u._bk   = bk;
+   u._rec  = rec;
    u._msg  = new string( pErr );
    u._nUpd = nUpd;
    return u;
@@ -666,7 +666,7 @@ PyObject *MDDpySubChan::_Get1stUpd()
    PyObjects      v;
    PyObject      *rtn, *pym, *pyd, *pyByt;
    rtBUF          b;
-   Book          *bk;
+   Record        *rec;
    string        *s;
    Update         upd;
    const char    *ps, *svc, *tkr;
@@ -693,35 +693,35 @@ PyObject *MDDpySubChan::_Get1stUpd()
           * [ tUpd, oid, Svc, Tkr, nAgg, fld1, fld2, ... ]
           *   where fldN = [ fidN, valN, tyN ]
           */
-         bk   = upd._bk;
-         uoid = bk->_userReqID;
-         nAgg = bk->_nUpd - 1;
-         n    = bk->GetUpds( v );
+         rec  = upd._rec;
+         uoid = rec->_userReqID;
+         nAgg = rec->_nUpd - 1;
+         n    = rec->GetUpds( v );
          pyd  = ::PyList_New( n+5 );
          ::PyList_SetItem( pyd, 0, PyFloat_FromDouble( upd._tMsg ) );
          ::PyList_SetItem( pyd, 1, PyInt_FromLong( uoid ) );
-         ::PyList_SetItem( pyd, 2, PyString_FromString( bk->pSvc() ) );
-         ::PyList_SetItem( pyd, 3, PyString_FromString( bk->pTkr() ) );
+         ::PyList_SetItem( pyd, 2, PyString_FromString( rec->pSvc() ) );
+         ::PyList_SetItem( pyd, 3, PyString_FromString( rec->pTkr() ) );
          ::PyList_SetItem( pyd, 4, PyInt_FromLong( nAgg ) );
          for ( i=0; i<n; i++ )
             ::PyList_SetItem( pyd, i+5, v[i] );
-         bk->_nUpd = 0;
+         rec->_nUpd = 0;
          break;
       case EVT_BYSTR:
          /*
           * [ tUpd, oid, Svc, Tkr, bytestream ]
           */
-         bk    = upd._bk;
+         rec   = upd._rec;
          b     = upd._bStr;
-         uoid  = bk->_userReqID;
-         nAgg  = bk->_nUpd - 1;
-         n     = bk->GetUpds( v );
+         uoid  = rec->_userReqID;
+         nAgg  = rec->_nUpd - 1;
+         n     = rec->GetUpds( v );
          pyd   = ::PyList_New( 5 );
          pyByt = PyString_FromStringAndSize( b._data, b._dLen );
          ::PyList_SetItem( pyd, 0, PyFloat_FromDouble( upd._tMsg ) );
          ::PyList_SetItem( pyd, 1, PyInt_FromLong( uoid ) );
-         ::PyList_SetItem( pyd, 2, PyString_FromString( bk->pSvc() ) );
-         ::PyList_SetItem( pyd, 3, PyString_FromString( bk->pTkr() ) );
+         ::PyList_SetItem( pyd, 2, PyString_FromString( rec->pSvc() ) );
+         ::PyList_SetItem( pyd, 3, PyString_FromString( rec->pTkr() ) );
          ::PyList_SetItem( pyd, 4, pyByt );
          delete[] b._data;
          break;
@@ -731,10 +731,10 @@ PyObject *MDDpySubChan::_Get1stUpd()
          /*
           * [ tUpd, oid, Svc, Tkr, sts ]
           */
-         bk   = upd._bk;
-         uoid = bk ? bk->_userReqID : -1;
-         svc  = bk ? bk->pSvc() : "None";
-         tkr  = bk ? bk->pTkr() : "None";
+         rec  = upd._rec;
+         uoid = rec ? rec->_userReqID : -1;
+         svc  = rec ? rec->pSvc() : "None";
+         tkr  = rec ? rec->pTkr() : "None";
          s    = upd._msg;
          ps   = s->data();
          pyd = ::PyList_New( 5 );
