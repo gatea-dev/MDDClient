@@ -10,7 +10,7 @@
 *     26 SEP 2010 jcs  Build  8: Class-wide _sockMsg
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     11 SEP 2023 jcs  Build 32: _className
-*      5 OCT 2023 jcs  Build 65: poll() only
+*     17 OCT 2023 jcs  Build 65: poll() only; WIN64 working
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -179,7 +179,7 @@ void Pump::Run( double dPoll )
       ::DispatchMessage( &msg );
       buildFDs();
 #else
-   int            maxFd, err, i, fd, rc, tmMs;
+   int            err, i, fd, rc, tmMs;
    Socket        *sock;
    struct timeval tv, *tm, tt;
    double         dt, age, tExp;
@@ -189,7 +189,7 @@ void Pump::Run( double dPoll )
    // Polling Interval
 
    for ( dt=dNow(); _bRun; ) {
-      maxFd = buildFDs();
+      buildFDs();
       age   = dNow() - dt;
       tExp  = gmax( 0.0, dPoll - age );
       tv    = Logger::dbl2time( tExp );
@@ -338,9 +338,8 @@ void Pump::_Destroy()
 
 int Pump::buildFDs()
 {
-   Locker            lck( _mtx );
-   Sockets::iterator it;
-   int               rtn;
+   Locker lck( _mtx );
+   int    rtn;
 
    /*
     * WIN32 : _dels; Then walk all _sox
@@ -348,8 +347,11 @@ int Pump::buildFDs()
     */
    rtn = 0;
 #ifdef WIN32
-   int  i;
-   long evts;
+   long              evts;
+   Sockets::iterator it;
+   Socket           *sox;
+   int               fd, i;
+
 
    for ( i=0; i<_dels.size(); i++ )
       ::WSAAsyncSelect( (SOCKET)_dels[i], _hWnd, _sockMsg, 0 );
