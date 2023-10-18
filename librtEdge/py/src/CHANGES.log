@@ -45,6 +45,8 @@ Features To Add
  *
  * -# No mo Book
  *
+ * -# return _PyReturn( Py_None ) always
+ *
  * -# LVC.GetTickers() leak on WIN64:
  *    - TODO
  *

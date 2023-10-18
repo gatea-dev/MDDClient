@@ -491,10 +491,10 @@ static PyObject *LVCSchema( PyObject *self, PyObject *args )
    // Usage : LVCSchema( cxt )
 
    if ( !PyArg_ParseTuple( args, "i", &cxt ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (lvc=_GetLVC( cxt )) )
       return lvc->PySchema();
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCGetTkrs( PyObject *self, PyObject *args )
@@ -505,10 +505,10 @@ static PyObject *LVCGetTkrs( PyObject *self, PyObject *args )
    // Usage : LVCGetTickers( cxt )
 
    if ( !PyArg_ParseTuple( args, "i", &cxt ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (lvc=_GetLVC( cxt )) )
       return lvc->PyGetTickers();
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCSnap( PyObject *self, PyObject *args )
@@ -520,10 +520,10 @@ static PyObject *LVCSnap( PyObject *self, PyObject *args )
    // Usage : LVCSnap( cxt, svc, tkr )
 
    if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (lvc=_GetLVC( cxt )) )
       return lvc->PySnap( svc, tkr );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCSnapAll( PyObject *self, PyObject *args )
@@ -534,10 +534,10 @@ static PyObject *LVCSnapAll( PyObject *self, PyObject *args )
    // Usage : LVCSnapAll( cxt )
 
    if ( !PyArg_ParseTuple( args, "i", &cxt ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (lvc=_GetLVC( cxt )) )
       return lvc->PySnapAll();
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCClose( PyObject *self, PyObject *args )
@@ -585,10 +585,10 @@ static PyObject *LVCAdmAddBDS( PyObject *self, PyObject *args )
    // Usage : LVCAddBDS( cxt, svc, tkr )
 
    if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &bds ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) )
       adm->PyAddBDS( svc, bds );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
@@ -601,10 +601,10 @@ static PyObject *LVCAdmAddTkr( PyObject *self, PyObject *args )
 
    schema = "";
    if ( !PyArg_ParseTuple( args, "iss|s", &cxt, &svc, &tkr, &schema ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) )
       adm->PyAddTicker( svc, tkr, schema );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmDelTkr( PyObject *self, PyObject *args )
@@ -617,10 +617,10 @@ static PyObject *LVCAdmDelTkr( PyObject *self, PyObject *args )
 
    schema = "";
    if ( !PyArg_ParseTuple( args, "iss|s", &cxt, &svc, &tkr, &schema ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) )
       adm->PyDelTicker( svc, tkr, schema );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmDelTkrs( PyObject *self, PyObject *args )
@@ -637,9 +637,9 @@ static PyObject *LVCAdmDelTkrs( PyObject *self, PyObject *args )
 
    schema = "";
    if ( !PyArg_ParseTuple( args, "isO!|s", &cxt, &svc, &PyList_Type, &lst, &schema ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( !(nf=::PyList_Size( lst )) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) ) {
       tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
@@ -653,7 +653,7 @@ static PyObject *LVCAdmDelTkrs( PyObject *self, PyObject *args )
       delete[] tkrs;
       for ( i=0; i<nf; delete sdb[i++] );
    }
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
@@ -670,9 +670,9 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
 
    schema = "";
    if ( !PyArg_ParseTuple( args, "isO!|s", &cxt, &svc, &PyList_Type, &lst, &schema ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( !(nf=::PyList_Size( lst )) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) ) {
       tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
@@ -686,7 +686,7 @@ static PyObject *LVCAdmAddTkrs( PyObject *self, PyObject *args )
       delete[] tkrs;
       for ( i=0; i<nf; delete sdb[i++] );
    }
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmRfrshTkr( PyObject *self, PyObject *args )
@@ -699,12 +699,12 @@ static PyObject *LVCAdmRfrshTkr( PyObject *self, PyObject *args )
    // Usage : LVCRefreshTicker( cxt, svc, tkr )
 
    if ( !PyArg_ParseTuple( args, "iss", &cxt, &svc, &tkr ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    tkrs[0] = tkr;
    tkrs[1] = NULL;
    if ( (adm=_GetLVCAdmin( cxt )) )
       adm->PyRefreshTickers( svc, tkrs );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
@@ -720,9 +720,9 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
    // Usage : LVCRefreshTickers( cxt, svc, tkrs )
 
    if ( !PyArg_ParseTuple( args, "isO!", &cxt, &svc, &PyList_Type, &lst ) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( !(nf=::PyList_Size( lst )) )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( (adm=_GetLVCAdmin( cxt )) ) {
       tkrs = new const char *[nf+4];
       for ( i=0; i<nf; i++ ) {
@@ -736,7 +736,7 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
       delete[] tkrs;
       for ( i=0; i<nf; delete sdb[i++] );
    }
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 static PyObject *LVCAdmClose( PyObject *self, PyObject *args )

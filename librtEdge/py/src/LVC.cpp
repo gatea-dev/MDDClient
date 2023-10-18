@@ -12,6 +12,7 @@
 *     19 JUL 2022 jcs  Build  8: Snap() : None if !_tUpd
 *      5 SEP 2023 jcs  Build 10: PySchema() leak
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
+*     17 OCT 2023 jcs  Build 12: PySnapAll() : No Py_None
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -47,7 +48,7 @@ PyObject *MDDpyLVC::PySchema()
    // Pre-condition(s)
 
    if ( !(nf=sch.Size()) )
-      return Py_None;
+      return _PyReturn( Py_None );
 
    // Iterate
 
@@ -72,7 +73,7 @@ PyObject *MDDpyLVC::PyGetTickers()
    // Pre-condition(s)
 
    if ( !(nm=mdb.size()) )
-      return Py_None;
+      return _PyReturn( Py_None );
 
    // Iterate
 
@@ -92,19 +93,19 @@ PyObject *MDDpyLVC::PySnap( const char *svc, const char *tkr )
 
    if ( (msg=Snap( svc, tkr )) )
       return _rt2py( *msg );
-   return Py_None;
+   return _PyReturn( Py_None );
 }
 
 PyObject *MDDpyLVC::PySnapAll()
 {
-   RTEDGE::LVCAll    all( *this, GetSchema( false ) );
-   RTEDGE::LVCAll   &la = SnapAll_safe( all );
-   RTEDGE::Messages &mdb = la.msgs();
-   PyObject         *py;
-   size_t            i, nm;
+   RTEDGE::LVCAll     all( *this, GetSchema( false ) );
+   RTEDGE::LVCAll    &la = SnapAll_safe( all );
+   RTEDGE::Messages  &mdb = la.msgs();
+   PyObject          *py;
+   size_t             i, nm;
 
    if ( !(nm=mdb.size()) )
-      return Py_None;
+      return _PyReturn( Py_None );
    py = ::PyList_New( nm );
    for ( i=0; i<nm; ::PyList_SetItem( py, i, _rt2py( *mdb[i] ) ), i++ );
    return py;
@@ -126,9 +127,9 @@ PyObject *MDDpyLVC::_rt2py( RTEDGE::Message &msg )
    // Pre-condition(s)
 
    if ( !ld._tUpd )
-      return Py_None;
+      return _PyReturn( Py_None );
    if ( !(nf=msg.NumFields()) )
-      return Py_None;
+      return _PyReturn( Py_None );
 
    // OK to continue
 

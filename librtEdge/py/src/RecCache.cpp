@@ -124,11 +124,11 @@ PyObject *Field::GetValue( int &ty )
 
    // Field Type : { _MDDPY_INT, _MDDPY_INT64, _MDDPY_DBL, _MDDPY_STR }
 
-   py = Py_None;
+   py = (PyObject *)0;
    ty = _MDDPY_NONE;
    switch( f._type ) {
       case mddFld_undef:
-         break;
+         return _PyReturn( Py_None );
       case mddFld_string:
          py = PyString_FromString( data() );
          ty = _MDDPY_STR;
