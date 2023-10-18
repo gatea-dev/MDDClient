@@ -955,6 +955,9 @@ static PyObject *MemFree( PyObject *self, PyObject *args )
 {
    int rc;
 
+#if ( PY_MAJOR_VERSION >= 3 ) && ( PY_MINOR_VERSION >= 9 )
+   rc  = 0;
+#else 
    rc  = ::PyMethod_ClearFreeList();
    rc += ::PyFloat_ClearFreeList();
    rc += ::PyTuple_ClearFreeList();
@@ -965,6 +968,7 @@ static PyObject *MemFree( PyObject *self, PyObject *args )
 #else
    rc += ::PyInt_ClearFreeList();
 #endif // PY_MAJOR_VERSION >= 3
+#endif //  ( PY_MAJOR_VERSION >= 3 ) && ( PY_MINOR_VERSION >= 9 )
    return PyInt_FromLong( rc );
 }
 
