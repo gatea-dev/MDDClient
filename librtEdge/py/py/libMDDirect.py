@@ -22,8 +22,9 @@
 #      4 SEP 2023 jcs  EVT_BDS; DelTickers()
 #     20 SEP 2023 jcs  BBDailyStats
 #     27 SEP 2023 jcs  Tape debug
+#     16 OCT 2023 jcs  MemFree()
 #
-#  (c) 1994-2022, Gatea Ltd.
+#  (c) 1994-2023, Gatea Ltd.
 #################################################################
 import gc, math, sys, time, threading
 
@@ -121,6 +122,13 @@ def Version():
 def MemSizeKb():
    return MDDirect.MemSize()
 
+#################################
+# Clears internal Python FreeLists - int, float, etc.
+#
+# @return Number of blocks freed
+#################################
+def MemFree():
+   return MDDirect.MemFree()
 
 #################################
 # Returns number of Python objects

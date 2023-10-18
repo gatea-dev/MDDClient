@@ -951,6 +951,18 @@ static PyObject *MemSize( PyObject *self, PyObject *args )
    return PyInt_FromLong( RTEDGE::rtEdge::MemSize() );
 }
 
+static PyObject *MemFree( PyObject *self, PyObject *args )
+{
+   int rc;
+
+   rc  = ::PyMethod_ClearFreeList();
+   rc += ::PyFloat_ClearFreeList();
+   rc += ::PyInt_ClearFreeList();
+   rc += ::PyTuple_ClearFreeList();
+   rc += ::PyUnicode_ClearFreeList();
+   return PyInt_FromLong( rc );
+}
+
 
 ////////////////////////////
 // Stats.cpp
@@ -1059,6 +1071,7 @@ static PyMethodDef EdgeMethods[] =
     { "Log",           Log,       _PY_ARGS, "Set MDD library logger." },
     { "CPU",           CPU,       _PY_ARGS, "Get process CPU usage." },
     { "MemSize",       MemSize,   _PY_ARGS, "Get process memory usage." },
+    { "MemFree",       MemFree,   _PY_ARGS, "Clear Python FreeLists." },
     /* 
      * Stats
      */

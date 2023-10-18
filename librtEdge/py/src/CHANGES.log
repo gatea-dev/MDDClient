@@ -48,7 +48,7 @@ Features To Add
  * -# return _PyReturn( Py_None ) always
  *
  * -# LVC.GetTickers() leak on WIN64:
- *    - TODO
+ *    - MemFree()
  *
  *
  * ### Build 10  23-09-06
