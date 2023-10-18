@@ -957,9 +957,14 @@ static PyObject *MemFree( PyObject *self, PyObject *args )
 
    rc  = ::PyMethod_ClearFreeList();
    rc += ::PyFloat_ClearFreeList();
-   rc += ::PyInt_ClearFreeList();
    rc += ::PyTuple_ClearFreeList();
    rc += ::PyUnicode_ClearFreeList();
+#if PY_MAJOR_VERSION >= 3
+   rc += ::PyDict_ClearFreeList();
+   rc += ::PyList_ClearFreeList();
+#else
+   rc += ::PyInt_ClearFreeList();
+#endif // PY_MAJOR_VERSION >= 3
    return PyInt_FromLong( rc );
 }
 
