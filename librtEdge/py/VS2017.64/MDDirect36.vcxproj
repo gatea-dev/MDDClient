@@ -67,7 +67,7 @@
          ..\..\..\..\OpenSource\Python36\win64\include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
-         _MDD_PYTHON3;WIN32;_DEBUG;Py_LIMITED_API;_USRDLL;
+         _MDD_PYTHON3;WIN32;_DEBUG;_USRDLL;
          %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -101,7 +101,7 @@
          ..\..\..\..\OpenSource\Python36\win64\include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
-         _MDD_PYTHON3;WIN32;NDEBUG;Py_LIMITED_API;_USRDLL;
+         _MDD_PYTHON3;WIN32;NDEBUG;_USRDLL;
          %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
