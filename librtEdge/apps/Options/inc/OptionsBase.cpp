@@ -5,7 +5,7 @@
 *
 *  REVISION HISTORY:
 *     17 SEP 2023 jcs  Created (from GreekServer.cpp)
-*     15 OCT 2023 jcs  Build 65: ymd2julNum()
+*     15 OCT 2023 jcs  Build 65: _ymd2julNum()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -63,18 +63,22 @@ static bool _IsTrue( const char *p )
 /////////////////////////////////////
 // Handy-dandy Logger
 /////////////////////////////////////
+static FILE *_log = stdout;
+
 static void LOG( const char *fmt, ... )
 {
    va_list ap;
    char    bp[8*K], *cp;
+   string  tm;
 
    va_start( ap,fmt );
    cp  = bp;
+   cp += sprintf( cp, "[%s] ", rtEdge::pDateTimeMs( tm ) );
    cp += vsprintf( cp, fmt, ap );
    cp += sprintf( cp, "\n" );
    va_end( ap );
-   ::fwrite( bp, 1, cp-bp, stdout );
-   ::fflush( stdout );
+   ::fwrite( bp, 1, cp-bp, _log );
+   ::fflush( _log );
 }
 
 
@@ -245,7 +249,7 @@ public:
             /*
              * Query; Add if not there
              */
-            if ( !(rc=ymd2julNum( ymd )) ) {
+            if ( !(rc=_ymd2julNum( ymd )) ) {
                rc       = julNum( fld->GetAsDate() );
                jdb[ymd] = rc;
             }
@@ -255,7 +259,6 @@ public:
       }
       return rc;
    }
-
 
    ////////////////////////////////////
    // Expiration Time Stuff
@@ -344,6 +347,24 @@ public:
       n = jul.size(); 
       for ( i=0; i<n; unx.push_back( jul[i] * _SECPERDAY ), i++ );
       return unx;
+   }
+
+   /**
+    * \brief Convert list of yyyymmdd's to Unix Time
+    *
+    * \param ymd - IN] List of yyyymdd
+    * \param unx - [OUT] List of Unix Times
+    * \return unx 
+    */
+   DoubleList &ymd2Unix( DoubleList &ymd, DoubleList &unx )
+   {
+      DoubleList jul;
+      size_t     i, n;
+
+      unx.clear();
+      n = ymd.size(); 
+      for ( i=0; i<n; jul.push_back( _ymd2julNum( ymd[i] ) ), i++ );
+      return julNum2Unix( jul, unx );
    }
 
 
@@ -517,7 +538,7 @@ private:
     * \param ymd : YYYYMMDD
     * \return  Number of days since Jan 1, 1970; 0 if error
     */
-   u_int64_t ymd2julNum( u_int64_t ymd )
+   u_int64_t _ymd2julNum( u_int64_t ymd )
    {
       SortedInt64Map          &jdb = _julNumMap;
       SortedInt64Map::iterator it;
@@ -528,6 +549,5 @@ private:
          rc = (*it).second;
       return rc;
    }
-
 
 }; // class OptionsBase

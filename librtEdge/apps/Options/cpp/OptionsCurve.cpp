@@ -10,6 +10,7 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
+#include <SigHandler.h>
 #include <assert.h>
 #include <list>
 
@@ -97,6 +98,8 @@ class OptionsCurve : public OptionsBase
 public:
    bool   _square;
    bool   _trim;
+   bool   _dump;
+   bool   _surfCalc;
    double _xInc;
    double _yInc;
    int    _maxX;
@@ -108,12 +111,16 @@ public:
    OptionsCurve( const char *svr, 
                  bool        square,
                  bool        trim,
+                 bool        dump,
+                 bool        surfCalc,
                  double      xInc,
                  double      yInc,
                  int         maxX ) :
       OptionsBase( svr ),
       _square( square ),
       _trim( trim ),
+      _dump( dump ),
+      _surfCalc( surfCalc ),
       _xInc( xInc ),
       _yInc( yInc ),
       _maxX( maxX )
@@ -506,8 +513,8 @@ public:
    bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
       RTEDGE::DoubleXYList &XY = _CS.XY();
-      size_t                nk, nx;
-      double                x, x0, x1;
+      size_t                n, nk, nx;
+      double                x, x0, x1, minInc;
 
       // Pre-condition(s)
 
@@ -525,12 +532,14 @@ public:
       nx = XY.size();
       x0 = XY[1]._x;
       x1 = XY[nx-1]._x;
+      for ( n=1,minInc=99999.0; byExp() && n<nx; n++ )
+         minInc = gmin( minInc, XY[n]._x - XY[n-1]._x );
       for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
       _Y  = _CS.Spline( _X );
       return true;
    }
 
-   void Publish( Update &u, bool bImg=false )
+   int Publish( Update &u, bool bImg=false )
    {
       double     x0, xInc;
       int        xTy;
@@ -538,36 +547,34 @@ public:
       // Pre-condition
 
       if ( !IsWatched() )
-         return;
+         return 0;
+      if ( !_X.size() )
+         return 0;
 
       // Initialize / Publish
 
-      u.Init( name(), _StreamID, bImg );
-      if ( _X.size() ) {
-         DoubleList unx;
-         DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
+      DoubleList unx;
+      DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
 
-         x0   = X[0];
-         xInc = _xInc;
-         xTy  = byExp() ? xTy_NUM : xTy_DATE;
-         /*
-          * VectorView.js expects xInc to be in months
-          */
-         if ( !byExp() )
-            xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 );
-         u.AddField( l_fidInc, xInc );
-         u.AddField( l_fidXTy, xTy );
-         u.AddField( l_fidX0,  x0 );
-         /*
-          * X-axis values if Strike Spline (X-axis == Date)
-          */
-         if ( xTy == xTy_DATE )
-            u.AddVector( l_fidVecX, X, 0 );
-         u.AddVector( l_fidVecY, _Y, l_Precision );
-         u.Publish();
-      }
-      else
-         u.PubError( "Empty Spline" );
+      u.Init( name(), _StreamID, bImg );
+      x0   = X[0];
+      xInc = _xInc;
+      xTy  = byExp() ? xTy_NUM : xTy_DATE;
+      /*
+       * VectorView.js expects xInc to be in months
+       */
+      if ( !byExp() )
+         xInc *= byExp() ? 1.0 : ( 12.0 / 365.0 );
+      u.AddField( l_fidInc, xInc );
+      u.AddField( l_fidXTy, xTy );
+      u.AddField( l_fidX0,  x0 );
+      /*
+       * X-axis values if Strike Spline (X-axis == Date)
+       */
+      if ( xTy == xTy_DATE )
+         u.AddVector( l_fidVecX, X, 0 );
+      u.AddVector( l_fidVecY, _Y, l_Precision );
+      return u.Publish();
    }
 
    /////////////////////////
@@ -661,6 +668,8 @@ private:
    KnotGrid      _kdb;
    DoubleList    _X;
    DoubleList    _Y;
+   DoubleList    _XX; // Published
+   DoubleList    _YY; // Published
    DoubleGrid    _Z;
    double        _xInc;
    double        _yInc;
@@ -686,14 +695,86 @@ public:
       _kdb(),
       _X(),
       _Y(),
+      _XX(),
+      _YY(),
       _Z(),
       _xInc( und.lvc()._xInc ),
       _yInc( und.lvc()._yInc ),
       _StreamID( 0 ),
       _tCalc( 0 )
    {
+      string     &s  = *this;
+      const char *ty = bPut ? ".P" : ".C";
+
+      s += ty;
       _Init( all );
    }
+
+   /** 
+    * \brief Copy Constructor : Trim down from Last +/ Range
+    *
+    * \param c - Existing Full OptionsSurface
+    * \param tkr - Ticker Name
+    * \param last - Last Value
+    * \param range - Pct Strike Price Range +/-
+    */
+   OptionsSurface( OptionsSurface &c, 
+                   const char     *tkr,
+                   double          last, 
+                   double          range ) :
+      string( tkr ),
+      _und( c._und ),
+      _lvc( c._und.lvc() ),
+      _bPut( c._bPut ),
+      _kdb(),
+      _X( c._X ),  // Expiration
+      _Y(),
+      _Z(),
+      _xInc( c._und.lvc()._xInc ),
+      _yInc( c._und.lvc()._yInc ),
+      _StreamID( 0 ),
+      _tCalc( 0 )
+   {
+      KnotGrid   &kdb = c._kdb;
+      DoubleList &Y   = c._Y;
+      double      x0, x1, x, dr;
+      KnotDef     k;
+      size_t      i, M, N;
+      char        bp[K], *cp;
+
+      // Find the Range
+
+      dr = WithinRange( 0.0, range / 100.0, 1.0 );
+      x0 = last * ( 1.0 - dr );
+      x1 = last * ( 1.0 + dr );
+      for ( size_t i=0; i<Y.size(); i++ ) {
+         if ( InRange( x0, Y[i], x1 ) )
+            _Y.push_back( Y[i] );
+      }
+      for ( size_t r=0; r<kdb.size(); r++ ) {
+         KnotList src = kdb[r];
+         KnotList row;
+
+         for ( size_t c=0; c<src.size(); c++ ) {
+            k = src[c];
+            x = l_StrikeDiv * k._strike;
+            if ( InRange( x0, x, x1 ) )
+               row.push_back( k );
+         }
+         _kdb.push_back( KnotList( row ) );
+      }
+
+      // Log it
+
+      M = _kdb.size();
+      N = _kdb[0].size();
+      for ( i=1; i<M; assert( _kdb[i].size() == N ), i++ );
+      cp  = bp;
+      cp += sprintf( cp, "%-4s :", data() );
+      cp += sprintf( cp, " ( %3ld x %3ld )", M, N );
+      LOG( bp );
+   }
+
 
    /////////////////////////
    // Access
@@ -732,7 +813,7 @@ public:
       KnotDef        k, k0, k1;
       Message       *msg;
       OptionsSpline *splX, *splE;
-      size_t         r, c, nr, nc, ix, m,  n;
+      size_t         r, c, nr, nc, ix, m, n;
       double         z, zX, zE, dX;
       double         x0, x1, y0, y1;
       DoubleGrid     Z;
@@ -778,7 +859,7 @@ public:
             z = 0.0;
             k = _kdb[r][c];
             if ( (ix=k._idx) != l_NoIndex )
-               zRow.push_back( zSnap[c] );
+               z = zSnap[c];
             else {
                /*
                 * Take mid-point if both splines available; 
@@ -805,25 +886,57 @@ public:
       /*
        * 2) Calculate Surface
        */
-      QUANT::CubicSurface srf( _X, _Y, Z );
-      DoubleList          xx, yy;
+      double              xi, yi, d0, age;
+      int                 np;
 
 assert( nr == m );
 assert( nc == n );
       k0 = _kdb[0][0];
       k1 = _kdb[m-1][n-1];
-      x0 = k0._exp;
-      x1 = k1._exp;
+      x0 = k0._jExp;
+      x1 = k1._jExp;
       y0 = l_StrikeDiv * k0._strike;
       y1 = l_StrikeDiv * k1._strike;
-      for ( double x=x0; x<=x1; xx.push_back( x ), x+=_xInc );
-      for ( double y=y0; y<=y1; yy.push_back( y ), y+=_yInc );
-      _Z = srf.Surface( xx, yy );
+      /*
+       * Trim down increments so we don't melt Greenland
+       */
+      xi    = _lvc._xInc;
+      yi    = _lvc._yInc;
+      _xInc = xi;
+      _yInc = yi;
+      np    = ( x1-x0 ) / _xInc;
+      for ( ; np > _lvc._maxX; _xInc+=xi, np = ( x1-x0 ) / _xInc );
+      np    = ( y1-y0 ) / _yInc;
+      for ( ; np > _lvc._maxX; _yInc+=yi, np = ( y1-y0 ) / _yInc );
+      /*
+       * Rock on
+       */
+      if ( _lvc._surfCalc ) {
+         QUANT::CubicSurface srf( _X, _Y, Z );
+         size_t              nx, ny;
+
+         d0 = _lvc.TimeNs();
+         if ( !_XX.size() ) {
+            for ( double x=x0; x<=x1; _XX.push_back( x ), x+=_xInc );
+            for ( double y=y0; y<=y1; _YY.push_back( y ), y+=_yInc );
+         }
+         nx = _XX.size();
+         ny = _YY.size();
+         _Z = srf.Surface( _XX, _YY );
+         age = _lvc.TimeNs() - d0;
+         LOG( "%-8s Surface( %4ld x%4ld ) in %.3fs", name(), nx, ny, age );
+
+      }
+      else {
+         _XX = _X;
+         _YY = _Y;
+         _Z  = DoubleGrid( Z );
+      }
 
       /*
        * 3) Dump Grid of Knots if bForce
        */
-      if ( bForce ) {
+      if ( bForce && _lvc._dump ) {
          string dmp;
          char  *bp, *cp;
 
@@ -843,13 +956,13 @@ assert( nc == n );
             dmp += "\n";
          }
          delete[] bp;
-         ::fwrite( dmp.data(), 1, dmp.size(), stdout );
-         ::fflush( stdout );
+         ::fwrite( dmp.data(), 1, dmp.size(), _log );
+         ::fflush( _log );
       }
       return true;
    }
 
-   void Publish( Update &u )
+   int Publish( Update &u )
    {
       double x0, xInc;
       int    xTy;
@@ -857,21 +970,22 @@ assert( nc == n );
       // Pre-condition
 
       if ( !IsWatched() )
-         return;
+         return 0;
 
       // Initialize / Publish
 
       u.Init( name(), _StreamID, true );
-      if ( !_X.size() ) {
+      if ( !_XX.size() ) {
          u.PubError( "Empty Surface" );
-         return;
+         return 0;
       }
 
       // Rock on
 
       DoubleList X;
 
-      _lvc.julNum2Unix( _X, X );
+//      _lvc.ymd2Unix( _XX, X );
+      _lvc.julNum2Unix( _XX, X );
       x0   = X[0];
       xTy  = xTy_DATE;
       xInc = ( 12.0 / 365.0 );
@@ -884,9 +998,9 @@ assert( nc == n );
        * Z-axis : Surface
        */
       u.AddVector( l_fidVecX, X, 0 );             // Expiration 
-      u.AddVector( l_fidVecY, _Y, 2 );            // Strike
+      u.AddVector( l_fidVecY, _YY, 2 );           // Strike
       u.AddSurface( l_fidVecZ, _Z, l_Precision ); // Surface
-      u.Publish();
+      return u.Publish();
    }
 
    /////////////////////////
@@ -935,21 +1049,42 @@ private:
          sdb.insert( k._strike );
       }
       /*
-       * 2) Square Up by Expiration
+       * 3) Trim strike outliers
        */
+      SortedInt64Set           tmp;
       SortedInt64Set::iterator et, jt, st;
       KnotDefMap::iterator     kt;
+      u_int64_t                x0, x1;
+      double                   dd;
 
+      if ( sdb.size() ) {
+         st = sdb.begin();
+         x0 = (*st);
+         for ( st++; st!=sdb.end(); st++ ) {
+            x1 = (*st);
+            dd = ( x1-x0 ) / ( 0.5 * ( x0+x1 ) );
+            if ( dd < 1.0 )
+               tmp.insert( x0 );
+            else
+               _lvc.breakpoint();
+            x0 = x1;
+         }
+         tmp.insert( x1 );
+         sdb = tmp;
+      }
+      /*
+       * 4) Square Up by Expiration
+       */
       et = edb.begin();
       jt = jdb.begin();
       for ( i=0; et!=edb.end(); i++,et++,jt++ ) {
          exp  = (*et);
          jExp = (*jt);
-         _X.push_back( exp );
+         _X.push_back( jExp );
          for ( st=sdb.begin(); st!=sdb.end(); st++ ) {
             jStr = (*st);
             if ( !i )
-               _Y.push_back( jStr );
+               _Y.push_back( l_StrikeDiv * jStr );
             key  = ( exp << 32 );
             key += jStr;
             if ( (kt=kMap.find( key )) != kMap.end() ) {
@@ -972,7 +1107,7 @@ assert( kz._splineX || kz._splineE );
          kdb.clear();
       }
       /*
-       * 3) Validate; Trim; Log
+       * 5) Validate; Trim; Log
        */
       size_t M0, N0, M1, N1;
       char   bp[K], *cp;
@@ -986,7 +1121,7 @@ assert( kz._splineX || kz._splineE );
       N1 = _kdb[0].size();
       for ( i=1; i<M1; assert( _kdb[i].size() == N1 ), i++ );
       cp  = bp;
-      cp += sprintf( cp, "%-4s :", data() );
+      cp += sprintf( cp, "%-8s :", data() );
       cp += sprintf( cp, " ( %3ld x %3ld )", M0, N0 );
       cp += sprintf( cp, " -> ( %3ld x %3ld )", M1, N1 );
       LOG( bp );
@@ -1084,11 +1219,6 @@ assert( kz._splineX || kz._splineE );
       return rc;
    }
 
-   double _BestZ_OBSOLETE( DoubleList &snap, size_t col, double d1, double d2 )
-   {
-      return( d1+d2 ) / 2.0;
-   }
-
 }; // class OptionsSurface
 
 
@@ -1106,6 +1236,7 @@ private:
    Underlyers    _underlyers;
    SplineMap     _splines;
    SurfaceMap    _surfaces;
+   SurfaceMap    _surfacesR;  // Ephemeral : Range
    double        _tPub;
 
    /////////////////////
@@ -1123,6 +1254,7 @@ public:
       _underlyers(),
       _splines(),
       _surfaces(),
+      _surfacesR(),
       _tPub( 0.0 )
    {
       SetBinary( true );
@@ -1133,6 +1265,22 @@ public:
    // Operations
    /////////////////////
 public:
+   int Calc( double &srfAge )
+   {
+      LVCAll &all    = _lvc.ViewAll();
+      Update &u      = upd();
+      time_t  now    = TimeSec();
+      bool    bForce = true;
+      double  t0;
+      int     rc;
+
+      rc     = _CalcSplines( all, now, bForce, u );
+      t0     = _lvc.TimeNs();
+      rc    += _CalcSurfaces( all, now, bForce, u );
+      srfAge = _lvc.TimeNs() - t0;
+      return rc;
+   }
+
    int Calc( bool bForce=false )
    {
       LVCAll &all = _lvc.ViewAll();
@@ -1205,16 +1353,21 @@ public:
 
    size_t LoadSurfaces()
    {
-      SurfaceMap &sdb = _surfaces;
-      LVCAll     &all = _lvc.ViewAll();
-      Underlyers &udb = _underlyers;
-      Underlyer  *und;
-      string      s;
+      SurfaceMap     &sdb = _surfaces;
+      LVCAll         &all = _lvc.ViewAll();
+      Underlyers     &udb = _underlyers;
+      Underlyer      *und;
+      OptionsSurface *srf;
+      string          s;
 
       for ( size_t i=0; i<udb.size(); i++ ) {
          und    = udb[i];
-         s      = und->data();
-         sdb[s] = new OptionsSurface( *und, true, all );
+         srf    = new OptionsSurface( *und, true, all );
+         s      = srf->name();
+         sdb[s] = srf;
+         srf    = new OptionsSurface( *und, false, all );
+         s      = srf->name();
+         sdb[s] = srf;
       }
       return sdb.size();
    }
@@ -1230,69 +1383,136 @@ public:
 protected:
    virtual void OnConnect( const char *msg, bool bUp )
    {
-      const char *ty = bUp ? "UP" : "DOWN";
-      string      tm;
+      const char *svc = pPubName();
+      const char *ty  = bUp ? "UP" : "DOWN";
 
-      LOG( "[%s] PUB-CONN %s : %s", pDateTimeMs( tm ), msg, ty );
+      LOG( "PUB-CONN %s@%s : %s", svc, msg, ty );
    }
 
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
-      LVCAll             &all = _lvc.ViewAll();
-      SplineMap          &sdb = _splines;
-      Update             &u   = upd();
-      time_t              now = TimeSec();
-      SplineMap::iterator it;
-      string              tm, s( tkr );
-      OptionsSpline      *spl;
+      LVCAll              &all = _lvc.ViewAll();
+      SplineMap           &ldb = _splines;
+      SurfaceMap          &fdb = _surfaces;
+      SurfaceMap          &rdb = _surfacesR;
+      Update              &u   = upd();
+      time_t               now = TimeSec();
+      SplineMap::iterator  lt;
+      SurfaceMap::iterator ft;
+      string               s, ss, tt( tkr ), err;
+      char                *pt, *pl, *pr, *rp;
+      int                  nb;
+      double               last, rng;
+      OptionsSpline       *spl;
+      OptionsSurface      *srf, *srf1;
 
-      LOG( "[%s] OPEN  %s", pDateTimeMs( tm ), tkr );
-      if ( (it=sdb.find( s )) != sdb.end() ) {
-         spl = (*it).second;
-         spl->SetWatch( (size_t)arg );
-         spl->Calc( all, now, true );
-         spl->Publish( u, true );
+      /*
+       * Support <Surface> <Last> <+/- Strike>
+       *   e.g.. AAPL.P 100 50 for Last=$100 +/- $50
+       */
+      pt   = (char *)tt.data();
+      pt   = ::strtok_r( pt,   " ", &rp );
+      pl   = ::strtok_r( NULL, " ", &rp );
+      pr   = ::strtok_r( NULL, " ", &rp );
+      last = pl ? atof( pl ) : 0.0;
+      rng  = pr ? atof( pr ) : 0.0;
+      s    = tkr;
+      ss   = pt; 
+      nb   = 0;
+      LOG( "OPEN  %s", tkr );
+      if ( (lt=ldb.find( s )) != ldb.end() ) {
+         spl = (*lt).second;
+         if ( spl->X().size() ) {
+            spl->SetWatch( (size_t)arg );
+            spl->Calc( all, now, true );
+            nb = spl->Publish( u, true );
+         }
+         else
+            err = "Empty Spline";
       }
-      else {
+      else if ( (ft=fdb.find( s )) != fdb.end() ) {
+         srf = (*ft).second;
+         srf->SetWatch( (size_t)arg );
+         srf->Calc( all, now, true );
+         nb = srf->Publish( u );
+      }
+      else if ( rng && (ft=fdb.find( ss )) != fdb.end() ) {
+         srf  = (*ft).second;
+         srf1 = new OptionsSurface( *srf, tkr, last, rng );
+         if ( !srf1->M() || !srf1->N() ) {
+            err = "Empty surface";
+            u.Init( tkr, arg );
+            u.PubError( "Empty surface" );
+         }
+         else {
+            rdb[s] = srf1;
+            srf1->SetWatch( (size_t)arg );
+            srf1->Calc( all, now, true );
+            nb = srf1->Publish( u );
+         }
+      }
+      else
+         err = "non-existent ticker";
+
+      // Wanted : DEAD or Alive
+
+      if ( nb )
+         LOG( "IMG %s : %d bytes", tkr, nb );
+      else if ( err.length() ) {
          u.Init( tkr, arg );
-         u.PubError( "non-existent ticker" );
+         u.PubError( err.data() );
+         LOG( "DEAD %s : %s", tkr, err.data() );
       }
    }
 
    virtual void OnPubClose( const char *tkr )
    {
-      SplineMap          &sdb = _splines;
-      SplineMap::iterator it;
-      string              tm, s( tkr );
-      OptionsSpline      *spl;
+      SplineMap           &ldb = _splines;
+      SurfaceMap          &fdb = _surfaces;
+      SurfaceMap          &rdb = _surfacesR;
+      SplineMap::iterator  lt;
+      SurfaceMap::iterator ft;
+      string               s( tkr );
+      OptionsSpline       *spl;
+      OptionsSurface      *srf;
 
-      LOG( "[%s] CLOSE %s", pDateTimeMs( tm ), tkr );
-      if ( (it=sdb.find( s )) != sdb.end() ) {
-         spl = (*it).second;
+      LOG( "CLOSE %s", tkr );
+      if ( (lt=ldb.find( s )) != ldb.end() ) {
+         spl = (*lt).second;
          spl->SetWatch( 0 );
+      }
+      else if ( (ft=fdb.find( s )) != fdb.end() ) {
+         srf = (*ft).second;
+         srf->SetWatch( 0 );
+      }
+      else if ( (ft=rdb.find( s )) != rdb.end() ) {
+         srf = (*ft).second;
+         rdb.erase( ft );
+         delete srf;
       }
    }
 
    virtual void OnOpenBDS( const char *bds, void *tag )
    {
-      SplineMap                &sdb = _splines;
-      SplineMap::iterator       it;
+      SplineMap                &ldb = _splines;
+      SurfaceMap               &fdb = _surfaces;
+      SplineMap::iterator       lt;
+      SurfaceMap::iterator      ft;
       SortedStringSet           srt;
       SortedStringSet::iterator st;
-      string                    tm, k;
+      string                    k;
       char                     *tkr;
       vector<char *>            tkrs;
 
       // We're a whore
 
-      LOG( "[%s] OPEN.BDS %s", pDateTimeMs( tm ), bds );
-      for ( it=sdb.begin(); it!=sdb.end(); srt.insert( (*it).first ), it++ );
+      LOG( "OPEN.BDS %s", bds );
+      for ( lt=ldb.begin(); lt!=ldb.end(); srt.insert( (*lt).first ), lt++ );
+      for ( ft=fdb.begin(); ft!=fdb.end(); srt.insert( (*ft).first ), ft++ );
       for ( st=srt.begin(); st!=srt.end(); st++ ) {
          k   = (*st);
-         if ( (it=sdb.find( k )) != sdb.end() ) {
-            tkr = (char *)(*it).second->name();
-            tkrs.push_back( tkr );
-         }
+         tkr = (char *)k.data();
+         tkrs.push_back( tkr );
       }
       tkrs.push_back( (char *)0 );
       PublishBDS( bds, (size_t)tag, tkrs.data() );
@@ -1300,9 +1520,7 @@ protected:
 
    virtual void OnCloseBDS( const char *bds )
    {
-      string tm;
-
-      LOG( "[%s] CLOSE.BDS %s", pDateTimeMs( tm ), bds );
+      LOG( "CLOSE.BDS %s", bds );
    }
 
    virtual Update *CreateUpdate()
@@ -1359,9 +1577,7 @@ bool bImg = true; // VectorView.js needs fidVecX
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          srf = (*it).second;
          if ( srf->Calc( all, now, bForce ) ) {
-#ifdef TODO_SURFACE_PUBLISH
-            spl->Publish( u, bImg );
-#endif // TODO_SURFACE_PUBLISH
+            srf->Publish( u );
             rc += 1;
          }
       }
@@ -1379,9 +1595,10 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, sqr, trim;
+   bool        aOK, bCfg, sqr, trim, dump, sCalc, fg;
    double      rate, xInc, yInc;
    int         maxX;
+   FILE       *fp;
    const char *db, *svr, *svc;
 
    /////////////////////
@@ -1394,38 +1611,49 @@ int main( int argc, char **argv )
 
    // cmd-line args
 
-   db   = "./cache.lvc";
-   svr  = "localhost:9015";
-   svc  = "options.curve";
-   rate = 1.0;
-   xInc = 1.0; // 1 dollareeny
-   yInc = 1.0; // 1 dollareeny
-   maxX = 1000;
-   sqr  = false;
-   trim = false;
+   fg    = true;
+   db    = "./cache.lvc";
+   svr   = "localhost:9015";
+   svc   = "options.curve";
+   rate  = 1.0;
+   xInc  = 1.0; // 1 dollareeny
+   yInc  = 1.0; // 1 dollareeny
+   maxX  = 1000;
+   sqr   = false;
+   trim  = false;
+   dump  = false;
+   sCalc = false;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
-      s += "       [ -db      <LVC d/b filename> ] \\ \n";
-      s += "       [ -svr     <MDD Edge3 host:port> ] \\ \n";
-      s += "       [ -svc     <MDD Publisher Service> ] \\ \n";
-      s += "       [ -rate    <SnapRate> ] \\ \n";
-      s += "       [ -xInc    <Spline Increment> ] \\ \n";
-      s += "       [ -yInc    <Surface Increment> ] \\ \n";
-      s += "       [ -maxX    <Max Spline Values> ] \\ \n";
-      s += "       [ -square  <true to 'square up' splines> ] \\ \n";
-      s += "       [ -trim    <true to 'trim' surfaces> ] \\ \n";
+      s += "       [ -db       <LVC d/b filename> ] \\ \n";
+      s += "       [ -fg       <true to run in foreground> ] \\ \n";
+      s += "       [ -svr      <MDD Edge3 host:port> ] \\ \n";
+      s += "       [ -svc      <MDD Publisher Service> ] \\ \n";
+      s += "       [ -rate     <SnapRate> ] \\ \n";
+      s += "       [ -xInc     <Spline Increment> ] \\ \n";
+      s += "       [ -yInc     <Surface Increment> ] \\ \n";
+      s += "       [ -maxX     <Max Spline Values> ] \\ \n";
+      s += "       [ -square   <true to 'square up' splines> ] \\ \n";
+      s += "       [ -trim     <true to 'trim' surfaces> ] \\ \n";
+      s += "       [ -dump     <true to log Knots> ] \\ \n";
+      s += "       [ -surfCalc <true for CubicSpline.Surface()> ] \\ \n";
+      s += "       [ -log      <Log filename> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
-      LOG( "      -db      : %s", db );
-      LOG( "      -svr     : %s", svr );
-      LOG( "      -svc     : %s", svc );
-      LOG( "      -rate    : %.2f", rate );
-      LOG( "      -xInc    : %.2f", xInc );
-      LOG( "      -yInc    : %.2f", yInc );
-      LOG( "      -maxX    : %d", maxX );
-      LOG( "      -square  : %s", _pBool( sqr ) );
-      LOG( "      -trim    : %s", _pBool( trim ) );
+      LOG( "      -db       : %s", db );
+      LOG( "      -fg       : %s", _pBool( fg ) );
+      LOG( "      -svr      : %s", svr );
+      LOG( "      -svc      : %s", svc );
+      LOG( "      -rate     : %.2f", rate );
+      LOG( "      -xInc     : %.2f", xInc );
+      LOG( "      -yInc     : %.2f", yInc );
+      LOG( "      -maxX     : %d", maxX );
+      LOG( "      -square   : %s", _pBool( sqr ) );
+      LOG( "      -trim     : %s", _pBool( trim ) );
+      LOG( "      -dump     : %s", _pBool( dump ) );
+      LOG( "      -surfCalc : %s", _pBool( sCalc ) );
+      LOG( "      -log     : %s", "stdout" );
       return 0;
    }
 
@@ -1436,7 +1664,9 @@ int main( int argc, char **argv )
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
-      if ( !::strcmp( argv[i], "-db" ) )
+      if ( !::strcmp( argv[i], "-fg" ) )
+         fg = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-db" ) )
          db = argv[++i];
       else if ( !::strcmp( argv[i], "-svr" ) )
          svr = argv[++i];
@@ -1454,25 +1684,35 @@ int main( int argc, char **argv )
          sqr = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-trim" ) )
          trim = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-dump" ) )
+         dump = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-surfCalc" ) )
+         sCalc = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-log" ) ) {
+         if ( (fp=::fopen( argv[++i], "wb" )) )
+            _log = fp;
+      }
    }
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, trim, xInc, yInc, maxX );
+   OptionsCurve    lvc( db, sqr, trim, dump, sCalc, xInc, yInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate );
-   double          d0, age;
+   double          d0, srfAge, age;
    size_t          ns;
 
    /*
     * Dump Config
     */
    LOG( OptionsCurveID() );
-   LOG( "Config._square = %s", _pBool( lvc._square ) );
-   LOG( "Config._trim   = %s", _pBool( lvc._trim ) );
-   LOG( "Config._xInc   = %.2f", lvc._xInc );
-   LOG( "Config._yInc   = %.2f", lvc._yInc );
-   LOG( "Config._maxX   = %d", lvc._maxX );
+   LOG( "Config._square   = %s", _pBool( lvc._square ) );
+   LOG( "Config._trim     = %s", _pBool( lvc._trim ) );
+   LOG( "Config._dump     = %s", _pBool( lvc._dump ) );
+   LOG( "Config._surfCalc = %s", _pBool( lvc._surfCalc ) );
+   LOG( "Config._xInc     = %.2f", lvc._xInc );
+   LOG( "Config._yInc     = %.2f", lvc._yInc );
+   LOG( "Config._maxX     = %d", lvc._maxX );
    /*
     * Load Splines
     */
@@ -1494,15 +1734,22 @@ int main( int argc, char **argv )
     */
    LOG( "Initial Calcs ..." );
    d0  = lvc.TimeNs();
-   ns  = pub.Calc( true );
-   age = 1000.0 * ( lvc.TimeNs() - d0 );
-   LOG( "%d surfaces / splines cal'ed in %dms", ns, (int)age );
+   ns  = pub.Calc( srfAge );
+   age = lvc.TimeNs() - d0;
+   LOG( "Surface Calc in %.2fs", srfAge );
+   LOG( "%d surfaces / splines cal'ed in %.2fs", ns, age );
    /*
     * Rock on
     */
    LOG( "%s", pub.PubStart() );
-   LOG( "Hit <ENTER> to quit..." );
-   getchar();
+   if ( fg ) {
+      LOG( "Hit <ENTER> to quit..." );
+      getchar();
+   }
+   else {
+      for ( forkAndSig( false ); !_pSigLog; pub.Sleep( 0.25 ) );
+      LOG( "%s caught", _pSigLog );
+   }
    LOG( "Shutting down ..." );
    pub.Stop();
    LOG( "Done!!" );

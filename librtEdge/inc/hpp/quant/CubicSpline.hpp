@@ -8,8 +8,9 @@
 *     31 OCT 2022 jcs  Surface.
 *     26 NOV 2022 jcs  RTEDGE::DoubleXY / RTEDGE::DoubleXYZ
 *     29 SEP 2023 jcs  DoubleList Spline(); double ValueAt(); operator=()
+*     22 OCT 2023 jcs  Surface() debug
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __CubicSpline_H
 #define __CubicSpline_H
@@ -368,6 +369,16 @@ class CubicSurface
 	// Constructor / Destructor
 	////////////////////////////////////
 public:
+	/** \brief Constructor */
+	CubicSurface() :
+	   _X(),
+	   _Y(),
+	   _Z(),
+	   _Z2(),
+	   _M( 0 ),
+	   _N( 0 )
+	{ ; }
+
 	/**
 	 * \brief Constructor : Natural spline
 	 *
@@ -377,7 +388,9 @@ public:
 	 * \param Y - N Sampled Y-axis values
 	 * \param Z - MxN Sampled Z-axis values
 	 */
-	CubicSurface( RTEDGE::DoubleList &X, RTEDGE::DoubleList &Y, RTEDGE::DoubleGrid &Z ) :
+	CubicSurface( RTEDGE::DoubleList &X, 
+	              RTEDGE::DoubleList &Y, 
+	              RTEDGE::DoubleGrid &Z ) :
 	   _X(),
 	   _Y(),
 	   _Z(),
@@ -385,6 +398,7 @@ public:
 	   _M( X.size() ),
 	   _N( Y.size() )
 	{
+#ifdef OBSOLETE
 	   RTEDGE::DoubleList z;
 
 	   for ( size_t m=0; m<_M; _X.push_back( X[m] ), m++ );
@@ -397,8 +411,35 @@ public:
 	      for ( size_t n=0; n<_N; z.push_back( Z[m][n] ), n++ );
 	      _Z.push_back( z );
 	   }
+#endif // OBSOLETE
+	   _X = X;
+	   _Y = Y;
+	   _Z = Z;
 	   _Calc();
 	}
+
+
+	////////////////////////////////////
+	// Assignment Operator
+	////////////////////////////////////
+public:
+	/** 
+	 * \brief Assignment operator
+	 *
+	 * \param s - Source instance
+	 * \return Reference to this instance 
+	 */
+	CubicSurface &operator=( const CubicSurface &s )
+	{
+	   _X  = s._X;
+	   _Y  = s._Y;
+	   _Z  = s._Z;
+	   _Z2 = s._Z2;
+	   _M  = s._M;
+	   _N  = s._N;
+	   return *this;
+	}
+
 
 	////////////////////////////////////
 	// Access / Operations
@@ -425,13 +466,26 @@ public:
 	                            RTEDGE::DoubleList &Y )
 	{
 	   RTEDGE::DoubleGrid Z;
-#ifdef TODO_SURFACE
-	   size_t             i, nx;
+	   RTEDGE::DoubleList zRow;
+	   size_t             nx, ny;
+	   double             z;
 
 	   nx = X.size();
-	   for ( i=0; i<X.size(); Y.push_back( ValueAt( X[i] ) ), i++ );
-#endif // TODO_SURFACE
-	   return RTEDGE::DoubleGrid( Z );
+	   ny = Y.size();
+	   for ( size_t c=0; c<ny; c++ ) {
+	      RTEDGE::DoubleList  dst;
+	      RTEDGE::DoubleList &y2 = _SplineAt( Y[c], dst );
+
+	      zRow.clear();
+	      for ( size_t r=0; r<nx; r++ ) {
+	         CubicSpline cs( _X, y2 );
+
+	         z = cs.ValueAt( X[r] );
+	         zRow.push_back( z );
+	      }
+	      Z.push_back( zRow );
+	   }
+	   return RTEDGE::DoubleGrid( _Rotate( Z ) );
 	}
 
 	/**
@@ -445,16 +499,10 @@ public:
 	 */
 	double ValueAt( double x, double y )
 	{
-	   RTEDGE::DoubleList y2;
-	   double             z;
-
-	   for ( size_t m=0; m<_M; m++ ) {
-	      CubicSpline cs2( _Y, _Z[m] );
-
-	      y2.push_back( cs2.ValueAt( y ) );
-	   }
-
-	   CubicSpline cs1( _X, y2 );
+	   RTEDGE::DoubleList  dst;
+	   RTEDGE::DoubleList &y2 = _SplineAt( y, dst );
+	   double              z;
+	   CubicSpline         cs1( _X, y2 );
 
 	   z = cs1.ValueAt( x );
 	   return z;
@@ -466,6 +514,24 @@ public:
 	////////////////////////////////////
 private:
 	/**
+	 * \brief Calculate and Spline at y
+	 *
+	 * \param y - Independent variable at Y
+	 * \param dst - Destination List of Splines
+	 * \return Interpolated value at ( x, y )
+	 */
+	RTEDGE::DoubleList &_SplineAt( double y, RTEDGE::DoubleList &dst )
+	{
+	   dst.clear();
+	   for ( size_t m=0; m<_M; m++ ) {
+	      CubicSpline cs2( _Y, _Z[m] );
+
+	      dst.push_back( cs2.ValueAt( y ) );
+	   }
+	   return dst;
+	}
+
+	/**
 	 * \brief splie2.c : From Numerical Recipes in C, (c) 1986-1992
 	 */
 	void _Calc()
@@ -475,6 +541,26 @@ private:
 
 	      _Z2.push_back( cs.Y2() );
 	   }
+	}
+
+	/**
+	 * \brief Rotate NxM to MxN grid
+	 */
+	RTEDGE::DoubleGrid &_Rotate( RTEDGE::DoubleGrid &src )
+	{
+	   RTEDGE::DoubleGrid dst;
+	   RTEDGE::DoubleList zRow;
+	   size_t             M, N;
+
+	   M = src.size();
+	   N = M ? src[0].size() : 0;
+	   for ( size_t c=0; c<M; c++ ) {
+	      zRow.clear();
+	      for ( size_t r=0; r<N; zRow.push_back( src[c][r] ), r++ );
+	      dst.push_back( zRow );
+	   }
+	   src = dst;
+	   return src;
 	}
 
 	////////////////////////
