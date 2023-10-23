@@ -1580,14 +1580,17 @@ private:
       SplineMap          &sdb = _splines;
       SplineMap::iterator it;
       OptionsSpline      *spl;
-      int                 rc;
+      const char         *tkr;
+      int                 nb, rc;
 bool bImg = true; // VectorView.js needs fidVecX
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
+         tkr = (*it).first.data();
          spl = (*it).second;
          if ( spl->Calc( all, now, bForce ) ) {
-            spl->Publish( u, bImg );
+            nb  = spl->Publish( u, bImg );
             rc += 1;
+            LOG( "UPD %s : %d bytes", tkr, nb );
          }
       }
       return rc;
@@ -1598,13 +1601,16 @@ bool bImg = true; // VectorView.js needs fidVecX
       SurfaceMap          &sdb = _surfaces;
       SurfaceMap::iterator it;
       OptionsSurface      *srf;
-      int                  rc;
+      const char          *tkr;
+      int                  rc, nb;
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
+         tkr = (*it).first.data();
          srf = (*it).second;
          if ( srf->Calc( all, now, bForce ) ) {
-            srf->Publish( u );
+            nb  = srf->Publish( u );
             rc += 1;
+            LOG( "UPD %s : %d bytes", tkr, nb );
          }
       }
       return rc;
