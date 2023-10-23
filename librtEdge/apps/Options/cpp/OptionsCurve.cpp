@@ -1603,14 +1603,13 @@ bool bImg = true; // VectorView.js needs fidVecX
       OptionsSurface      *srf;
       const char          *tkr;
       int                  rc, nb;
-bool bImg = true; // VectorView.js needs fidVecX
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          tkr = (*it).first.data();
          srf = (*it).second;
          if ( srf->Calc( all, now, bForce ) ) {
             rc += 1;
-            if ( (nb=srf->Publish( u, bImg )) )
+            if ( (nb=srf->Publish( u )) )
                LOG( "UPD %s : %d bytes", tkr, nb );
          }
       }
