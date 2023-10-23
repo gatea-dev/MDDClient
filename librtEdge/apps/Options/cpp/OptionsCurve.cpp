@@ -10,7 +10,9 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
+#ifndef WIN32
 #include <SigHandler.h>
+#endif // WIN32
 #include <assert.h>
 #include <list>
 
@@ -1531,9 +1533,15 @@ protected:
       for ( lt=ldb.begin(); lt!=ldb.end(); srt.insert( (*lt).first ), lt++ );
       for ( ft=fdb.begin(); ft!=fdb.end(); srt.insert( (*ft).first ), ft++ );
       for ( st=srt.begin(); st!=srt.end(); st++ ) {
-         k   = (*st);
-         tkr = (char *)k.data();
-         tkrs.push_back( tkr );
+         k = (*st);
+         if ( (lt=ldb.find( k )) != ldb.end() ) {
+            tkr = (char *)(*lt).second->data();
+            tkrs.push_back( tkr );
+         }
+         else if ( (ft=fdb.find( k )) != fdb.end() ) {
+            tkr = (char *)(*ft).second->data();
+            tkrs.push_back( tkr );
+         }
       }
       tkrs.push_back( (char *)0 );
       PublishBDS( bds, (size_t)tag, tkrs.data() );
@@ -1699,10 +1707,12 @@ int main( int argc, char **argv )
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
-      if ( !::strcmp( argv[i], "-fg" ) )
-         fg = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-db" ) )
+      if ( !::strcmp( argv[i], "-db" ) )
          db = argv[++i];
+#ifndef WIN32
+      else if ( !::strcmp( argv[i], "-fg" ) )
+         fg = _IsTrue( argv[++i] );
+#endif // WIN32
       else if ( !::strcmp( argv[i], "-svr" ) )
          svr = argv[++i];
       else if ( !::strcmp( argv[i], "-svc" ) )
@@ -1781,10 +1791,12 @@ int main( int argc, char **argv )
       LOG( "Hit <ENTER> to quit..." );
       getchar();
    }
+#ifndef WIN32
    else {
       for ( forkAndSig( false ); !_pSigLog; pub.Sleep( 0.25 ) );
       LOG( "%s caught", _pSigLog );
    }
+#endif // WIN32
    LOG( "Shutting down ..." );
    pub.Stop();
    LOG( "Done!!" );
