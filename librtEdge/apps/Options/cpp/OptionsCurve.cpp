@@ -1588,9 +1588,9 @@ bool bImg = true; // VectorView.js needs fidVecX
          tkr = (*it).first.data();
          spl = (*it).second;
          if ( spl->Calc( all, now, bForce ) ) {
-            nb  = spl->Publish( u, bImg );
             rc += 1;
-            LOG( "UPD %s : %d bytes", tkr, nb );
+            if ( (nb=spl->Publish( u, bImg )) )
+               LOG( "UPD %s : %d bytes", tkr, nb );
          }
       }
       return rc;
@@ -1603,14 +1603,15 @@ bool bImg = true; // VectorView.js needs fidVecX
       OptionsSurface      *srf;
       const char          *tkr;
       int                  rc, nb;
+bool bImg = true; // VectorView.js needs fidVecX
 
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          tkr = (*it).first.data();
          srf = (*it).second;
          if ( srf->Calc( all, now, bForce ) ) {
-            nb  = srf->Publish( u );
             rc += 1;
-            LOG( "UPD %s : %d bytes", tkr, nb );
+            if ( (nb=srf->Publish( u, bImg )) )
+               LOG( "UPD %s : %d bytes", tkr, nb );
          }
       }
       return rc;
