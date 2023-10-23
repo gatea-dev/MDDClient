@@ -10,7 +10,7 @@ nohup ./bin64//OptionsCurve \
    -db       /RAMDISK//LVC//RUT3K.lvc \
    -svr      localhost:9015 \
    -svc      options.curve \
-   -rate     30.0 \
+   -rate     15.0 \
    -xInc     1.0 \
    -yInc     1.0 \
    -maxX     500 \

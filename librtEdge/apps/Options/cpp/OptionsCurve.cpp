@@ -101,7 +101,6 @@ public:
    bool   _square;
    bool   _trim;
    bool   _dump;
-   bool   _surfCalc;
    double _xInc;
    double _yInc;
    int    _maxX;
@@ -114,7 +113,6 @@ public:
                  bool        square,
                  bool        trim,
                  bool        dump,
-                 bool        surfCalc,
                  double      xInc,
                  double      yInc,
                  int         maxX ) :
@@ -122,7 +120,6 @@ public:
       _square( square ),
       _trim( trim ),
       _dump( dump ),
-      _surfCalc( surfCalc ),
       _xInc( xInc ),
       _yInc( yInc ),
       _maxX( maxX )
@@ -667,6 +664,7 @@ private:
    Underlyer    &_und;
    OptionsCurve &_lvc;
    bool          _bPut;
+   bool          _surfCalc;
    KnotGrid      _kdb;
    DoubleList    _X;
    DoubleList    _Y;
@@ -688,12 +686,14 @@ public:
     * \param und - Underlyer
     * \param bPut - true for surface of puts; false for calls
     * \param all - Current LVC Snapshot
+    * \param surfCalc - true for QUANT::CubicSurface; false for knots only
     */
-   OptionsSurface( Underlyer &und, bool bPut, LVCAll &all ) :
+   OptionsSurface( Underlyer &und, bool bPut, LVCAll &all, bool surfCalc ) :
       string( und ),
       _und( und ),
       _lvc( und.lvc() ),
       _bPut( bPut ),
+      _surfCalc( surfCalc ),
       _kdb(),
       _X(),
       _Y(),
@@ -708,6 +708,8 @@ public:
       string     &s  = *this;
       const char *ty = bPut ? ".P" : ".C";
 
+      if ( !_surfCalc )
+         s.insert( 0, "Knot_" );
       s += ty;
       _Init( all );
    }
@@ -730,6 +732,7 @@ public:
       _und( c._und ),
       _lvc( c._und.lvc() ),
       _bPut( c._bPut ),
+      _surfCalc( c._surfCalc ),
       _kdb(),
       _X(),
       _Y(),
@@ -899,8 +902,9 @@ public:
       /*
        * 2) Calculate Surface
        */
-      double              xi, yi, d0, age;
-      int                 np;
+      size_t nx, ny;
+      double xi, yi, d0, age;
+      int    np;
 
 assert( nr == m );
 assert( nc == n );
@@ -924,27 +928,25 @@ assert( nc == n );
       /*
        * Rock on
        */
-      if ( _lvc._surfCalc ) {
+      d0 = _lvc.TimeNs();
+      if ( _surfCalc ) {
          QUANT::CubicSurface srf( _X, _Y, Z );
-         size_t              nx, ny;
 
-         d0 = _lvc.TimeNs();
          if ( !_XX.size() ) {
             for ( double x=x0; x<=x1; _XX.push_back( x ), x+=_xInc );
             for ( double y=y0; y<=y1; _YY.push_back( y ), y+=_yInc );
          }
-         nx = _XX.size();
-         ny = _YY.size();
          _Z = srf.Surface( _XX, _YY );
-         age = _lvc.TimeNs() - d0;
-         LOG( "%-8s Surface( %4ld x%4ld ) in %.3fs", name(), nx, ny, age );
-
       }
       else {
          _XX = _X;
          _YY = _Y;
          _Z  = DoubleGrid( Z );
       }
+      age = _lvc.TimeNs() - d0;
+      nx  = _XX.size();
+      ny  = _YY.size();
+      LOG( "%-16s Surface( %4ld x%4ld ) in %.3fs", name(), nx, ny, age );
 
       /*
        * 3) Dump Grid of Knots if bForce
@@ -1134,7 +1136,7 @@ assert( kz._splineX || kz._splineE );
       N1 = _kdb[0].size();
       for ( i=1; i<M1; assert( _kdb[i].size() == N1 ), i++ );
       cp  = bp;
-      cp += sprintf( cp, "%-8s :", data() );
+      cp += sprintf( cp, "%-16s :", data() );
       cp += sprintf( cp, " ( %3ld x %3ld )", M0, N0 );
       cp += sprintf( cp, " -> ( %3ld x %3ld )", M1, N1 );
       LOG( bp );
@@ -1374,15 +1376,19 @@ public:
       Underlyer      *und;
       OptionsSurface *srf;
       string          s;
+      bool            bPut, surfCalc;
 
       for ( size_t i=0; i<udb.size(); i++ ) {
          und    = udb[i];
-         srf    = new OptionsSurface( *und, true, all );
-         s      = srf->name();
-         sdb[s] = srf;
-         srf    = new OptionsSurface( *und, false, all );
-         s      = srf->name();
-         sdb[s] = srf;
+         for ( size_t j=0; j<2; j++ ) {
+            bPut = ( j == 0 );
+            for ( size_t k=0; k<2; k++ ) {
+               surfCalc = ( k == 0 );
+               srf      = new OptionsSurface( *und, bPut, all, surfCalc );
+               s        = srf->name();
+               sdb[s]   = srf;
+            }
+         }
       }
       return sdb.size();
    }
@@ -1644,7 +1650,7 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, sqr, trim, dump, sCalc, fg;
+   bool        aOK, bCfg, sqr, trim, dump, fg;
    double      rate, xInc, yInc;
    int         maxX;
    FILE       *fp;
@@ -1671,7 +1677,6 @@ int main( int argc, char **argv )
    sqr   = false;
    trim  = false;
    dump  = false;
-   sCalc = false;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -1686,7 +1691,6 @@ int main( int argc, char **argv )
       s += "       [ -square   <true to 'square up' splines> ] \\ \n";
       s += "       [ -trim     <true to 'trim' surfaces> ] \\ \n";
       s += "       [ -dump     <true to log Knots> ] \\ \n";
-      s += "       [ -surfCalc <true for CubicSpline.Surface()> ] \\ \n";
       s += "       [ -log      <Log filename> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
@@ -1701,7 +1705,6 @@ int main( int argc, char **argv )
       LOG( "      -square   : %s", _pBool( sqr ) );
       LOG( "      -trim     : %s", _pBool( trim ) );
       LOG( "      -dump     : %s", _pBool( dump ) );
-      LOG( "      -surfCalc : %s", _pBool( sCalc ) );
       LOG( "      -log     : %s", "stdout" );
       return 0;
    }
@@ -1737,8 +1740,6 @@ int main( int argc, char **argv )
          trim = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-dump" ) )
          dump = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-surfCalc" ) )
-         sCalc = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-log" ) ) {
          if ( (fp=::fopen( argv[++i], "wb" )) )
             _log = fp;
@@ -1748,7 +1749,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, trim, dump, sCalc, xInc, yInc, maxX );
+   OptionsCurve    lvc( db, sqr, trim, dump, xInc, yInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, srfAge, age;
    size_t          ns;
@@ -1760,7 +1761,6 @@ int main( int argc, char **argv )
    LOG( "Config._square   = %s", _pBool( lvc._square ) );
    LOG( "Config._trim     = %s", _pBool( lvc._trim ) );
    LOG( "Config._dump     = %s", _pBool( lvc._dump ) );
-   LOG( "Config._surfCalc = %s", _pBool( lvc._surfCalc ) );
    LOG( "Config._xInc     = %.2f", lvc._xInc );
    LOG( "Config._yInc     = %.2f", lvc._yInc );
    LOG( "Config._maxX     = %d", lvc._maxX );
