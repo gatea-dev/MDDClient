@@ -168,7 +168,7 @@ public:
 
 	// Operations
 public:
-	void OnData( const char *, Field * );
+	void OnData( Field * );
 
 }; // class Knot
 
@@ -242,7 +242,7 @@ public:
 	void        AddWatch( void * );
 	void        ClearWatch();
 	void        Calc( DoubleList &X, DoubleList &Y, double );
-	void        Publish();
+	int         Publish();
 
 }; // class Spline
 

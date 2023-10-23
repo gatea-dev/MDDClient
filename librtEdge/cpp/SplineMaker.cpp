@@ -23,18 +23,22 @@ static DoubleGrid A;
 /////////////////////////////////////
 // Handy-dandy Logger
 /////////////////////////////////////
-static void LOG( char *fmt, ... )
+static FILE *_log = stdout;
+
+static void LOG( const char *fmt, ... )
 {
    va_list ap;
    char    bp[8*K], *cp;
+   string  tm;
 
    va_start( ap,fmt );
    cp  = bp;
+   cp += sprintf( cp, "[%s] ", rtEdge::pDateTimeMs( tm ) );
    cp += vsprintf( cp, fmt, ap );
    cp += sprintf( cp, "\n" );
    va_end( ap );
-   ::fwrite( bp, 1, cp-bp, stdout );
-   ::fflush( stdout );
+   ::fwrite( bp, 1, cp-bp, _log );
+   ::fflush( _log );
 }
 
 
@@ -134,7 +138,7 @@ KnotWatch *Knot::AddWatch( Curve &c, double intvl )
 ////////////////////////////////
 // Operations
 ////////////////////////////////
-void Knot::OnData( const char *tm, Field *f )
+void Knot::OnData( Field *f )
 {
    size_t      i, nw;
    const char *tkr;
@@ -149,7 +153,7 @@ void Knot::OnData( const char *tm, Field *f )
    _Y  = f->GetAsDouble();
    tkr = _Ticker.data();
    nw  = _wl.size();
-   LOG( "[%s] %s = %s", tm, tkr, f->GetAsString() );
+   LOG( "%s = %s", tkr, f->GetAsString() );
    for ( i=0; i<nw; _wl[i++]->_curve.OnData( *this ) );
 }
 
@@ -284,7 +288,7 @@ void Spline::Calc( DoubleList &X, DoubleList &Y, double xn )
    CubicSpline cs( X, Y );
    string      pd;
    double      x, d0, dd;
-   int         i, nx;
+   int         i, nx, nb;
 
    /*
     * Use Vector class as:
@@ -299,15 +303,18 @@ void Spline::Calc( DoubleList &X, DoubleList &Y, double xn )
    _Z = cs.Spline( _X );
    dd = 1000.0 * ( _pub.TimeNs() - d0 );
    LOG( "Spline %s Cal'ed in %.2fmS", tkr(), dd );
-   Publish();
+   if ( (nb=Publish()) )
+      LOG( "UPD %s : %d bytes", tkr(), nb );
 }
 
-void Spline::Publish()
+int Spline::Publish()
 {
    Update        &u = _pub.upd();
    KnotWatchList &wl = _curve.wl();
    size_t         i, n;
+   int            nb;
 
+   nb = 0;
    if ( _StreamID && _pub.XON() ) {
       n = _fidKnot ? wl.size() : 0;
       u.Init( tkr(), _StreamID, true );
@@ -317,8 +324,9 @@ void Spline::Publish()
          u.AddVector( _fidX, _X, 2 );
       if ( _fidY )
          u.AddVector( _fidY, _Z, _dtd._precision );
-      u.Publish();
+      nb = u.Publish();
    }
+   return nb;
 }
 
 
@@ -463,18 +471,16 @@ int Edge3Source::IOpenKnot( const char *svc, const char *tkr, void *arg )
 void Edge3Source::OnConnect( const char *msg, bool bUp )
 {
    const char *ty = bUp ? "UP" : "DOWN";
-   string      tm;
 
-   LOG( "[%s] SUB-CONN %s : %s", pDateTimeMs( tm ), msg, ty );
+   LOG( "SUB-CONN %s : %s", msg, ty );
 }
 
 void Edge3Source::OnService( const char *svc, bool bUp )
 {
    const char *ty = bUp ? "UP" : "DOWN";
-   string      tm;
 
    if ( ::strcmp( "__GLOBAL__", svc ) )
-      LOG( "[%s] SUB-SVC %s : %s", pDateTimeMs( tm ), svc, ty );
+      LOG( "SUB-SVC %s : %s", svc, ty );
 }
 
 void Edge3Source::OnData( Message &msg )
@@ -483,13 +489,10 @@ void Edge3Source::OnData( Message &msg )
    KnotById          &idb = _byId;
    KnotById::iterator it;
    Knot              *k;
-   const char        *tm;
-   string             tt;
 
    if ( (it=idb.find( sid )) != idb.end() ) {
       k  = (*it).second;
-      tm = pDateTimeMs( tt );
-      k->OnData( tm, msg.GetField( k->fid() ) );
+      k->OnData( msg.GetField( k->fid() ) );
    }
 }
 
@@ -518,18 +521,15 @@ void LVCSource::Pump()
    KnotByName::iterator it;
    Knot                *k;
    Message             *msg;
-   const char          *tm, *svc, *tkr;
-   string               tt;
+   const char          *svc, *tkr;
 
    _pub.SetXON( false );
    for ( it=idb.begin(); it!=idb.end(); it++ ) {
       k   = (*it).second;
       svc = _svc.data();
       tkr = k->tkr();
-      if ( (msg=Snap( svc, tkr )) ) {
-         tm = pDateTimeMs( tt );
-         k->OnData( tm, msg->GetField( k->fid() ) );
-      }
+      if ( (msg=Snap( svc, tkr )) )
+         k->OnData( msg->GetField( k->fid() ) );
    }
    _pub.SetXON( true );
 }
@@ -617,9 +617,8 @@ void SplinePublisher::SetXON( bool xon )
 void SplinePublisher::OnConnect( const char *msg, bool bUp )
 {
    const char *ty = bUp ? "UP" : "DOWN";
-   string      tm; 
 
-   LOG( "[%s] PUB-CONN %s : %s", pDateTimeMs( tm ), msg, ty );
+   LOG( "PUB-CONN %s : %s", msg, ty );
 }
 
 void SplinePublisher::OnPubOpen( const char *tkr, void *arg )
@@ -627,14 +626,16 @@ void SplinePublisher::OnPubOpen( const char *tkr, void *arg )
    SplineMap          &sdb = _splines;
    Update             &u   = upd();
    SplineMap::iterator it;
-   string              tm, s( tkr );
+   string              s( tkr );
    Spline             *spl;
+   int                 nb;
 
-   LOG( "[%s] OPEN  %s", pDateTimeMs( tm ), tkr );
+   LOG( "OPEN  %s", tkr );
    if ( (it=sdb.find( s )) != sdb.end() ) {
       spl = (*it).second;
       spl->AddWatch( arg );
-      spl->Publish();
+      nb = spl->Publish();
+      LOG( "IMG %s : %d bytes", nb );
    }
    else {
       u.Init( tkr, arg );
@@ -649,7 +650,7 @@ void SplinePublisher::OnPubClose( const char *tkr )
    string              tm, s( tkr );
    Spline             *spl;
 
-   LOG( "[%s] CLOSE %s", pDateTimeMs( tm ), tkr );
+   LOG( "CLOSE %s", tkr );
    if ( (it=sdb.find( s )) != sdb.end() ) {
       spl = (*it).second;
       spl->ClearWatch();
@@ -663,11 +664,11 @@ void SplinePublisher::OnOpenBDS( const char *bds, void *tag )
    SplineMap::iterator       it;
    SortedStringSet           srt;
    SortedStringSet::iterator st;
-   string                    tm, k;
+   string                    k;
    char                      err[K], *tkr;
    vector<char *>            tkrs;
 
-   LOG( "[%s] OPEN.BDS %s", pDateTimeMs( tm ), bds );
+   LOG( "OPEN.BDS %s", bds );
    if ( !::strcmp( bds, _bds.data() ) ) {
       _bdsStreamID =  (size_t)tag;
       for ( it=sdb.begin(); it!=sdb.end(); srt.insert( (*it).first ), it++ );
@@ -690,9 +691,7 @@ void SplinePublisher::OnOpenBDS( const char *bds, void *tag )
 
 void SplinePublisher::OnCloseBDS( const char *bds )
 {
-   string tm;
-
-   LOG( "[%s] CLOSE.BDS %s", pDateTimeMs( tm ), bds );
+   LOG( "CLOSE.BDS %s", bds );
    _bdsStreamID = 0;
 }
 

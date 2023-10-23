@@ -2,10 +2,9 @@
 
 ## Configurable
 
-PID=`pgrep SplineMaker`
-if [ -n "$PID" ]; then
-   pkill -e SplineMaker 
-   sleep 1
+pkill -e -u ${USER} SplineMaker
+if [ -n "$1" ]; then
+   exit
 fi
 
 /bin/rm -f ./nohup.out
