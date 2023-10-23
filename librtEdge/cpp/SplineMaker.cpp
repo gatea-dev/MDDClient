@@ -635,7 +635,7 @@ void SplinePublisher::OnPubOpen( const char *tkr, void *arg )
       spl = (*it).second;
       spl->AddWatch( arg );
       nb = spl->Publish();
-      LOG( "IMG %s : %d bytes", nb );
+      LOG( "IMG %s : %d bytes", tkr, nb );
    }
    else {
       u.Init( tkr, arg );
