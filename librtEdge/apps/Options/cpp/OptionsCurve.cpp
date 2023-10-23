@@ -716,18 +716,20 @@ public:
     * \param c - Existing Full OptionsSurface
     * \param tkr - Ticker Name
     * \param last - Last Value
-    * \param range - Pct Strike Price Range +/-
+    * \param lastRange - Pct Strike Price Range +/-
+    * \param months - Num months
     */
    OptionsSurface( OptionsSurface &c, 
                    const char     *tkr,
                    double          last, 
-                   double          range ) :
+                   double          lastRange,
+                   int             months ) :
       string( tkr ),
       _und( c._und ),
       _lvc( c._und.lvc() ),
       _bPut( c._bPut ),
       _kdb(),
-      _X( c._X ),  // Expiration
+      _X(),
       _Y(),
       _Z(),
       _xInc( c._und.lvc()._xInc ),
@@ -736,17 +738,24 @@ public:
       _tCalc( 0 )
    {
       KnotGrid   &kdb = c._kdb;
+      DoubleList &X   = c._X;
       DoubleList &Y   = c._Y;
       double      x0, x1, x, dr;
       KnotDef     k;
       size_t      i, M, N;
+      int         dx;
       char        bp[K], *cp;
 
       // Find the Range
 
-      dr = WithinRange( 0.0, range / 100.0, 1.0 );
+      dr = WithinRange( 0.0, lastRange / 100.0, 1.0 );
       x0 = last * ( 1.0 - dr );
       x1 = last * ( 1.0 + dr );
+      for ( size_t i=0; i<X.size(); i++ ) {
+         dx = X[i] - X[0];
+         if ( !months || ( dx/30 ) < months   )
+            _X.push_back( X[i] );
+      }
       for ( size_t i=0; i<Y.size(); i++ ) {
          if ( InRange( x0, Y[i], x1 ) )
             _Y.push_back( Y[i] );
@@ -761,7 +770,9 @@ public:
             if ( InRange( x0, x, x1 ) )
                row.push_back( k );
          }
-         _kdb.push_back( KnotList( row ) );
+         dx = row[0]._jExp - _X[0];
+         if ( !months || ( dx/30 ) < months   )
+            _kdb.push_back( KnotList( row ) );
       }
 
       // Log it
@@ -1407,22 +1418,25 @@ protected:
       SplineMap::iterator  lt;
       SurfaceMap::iterator ft;
       string               s, ss, tt( tkr ), err;
-      char                *pt, *pl, *pr, *rp;
-      int                  nb;
+      char                *pt, *pl, *pr, *pm, *rp;
+      int                  nb, mon;
       double               last, rng;
       OptionsSpline       *spl;
       OptionsSurface      *srf, *srf1;
 
       /*
-       * Support <Surface> <Last> <+/- Strike>
-       *   e.g.. AAPL.P 100 50 for Last=$100 +/- $50
+       * Support <Surface> <Last> <+/- Strike> <NumMonths>
+       *   e.g.. AAPL.P 100 50 0 for Last=$100 +/- $50 ALL months
+       *   e.g.. AAPL.P 100 50 3 for Last=$100 +/- $50 next 3 months
        */
       pt   = (char *)tt.data();
       pt   = ::strtok_r( pt,   " ", &rp );
       pl   = ::strtok_r( NULL, " ", &rp );
       pr   = ::strtok_r( NULL, " ", &rp );
+      pm   = ::strtok_r( NULL, " ", &rp );
       last = pl ? atof( pl ) : 0.0;
       rng  = pr ? atof( pr ) : 0.0;
+      mon  = pm ? atoi( pm ) : 0;
       s    = tkr;
       ss   = pt; 
       nb   = 0;
@@ -1445,7 +1459,7 @@ protected:
       }
       else if ( rng && (ft=fdb.find( ss )) != fdb.end() ) {
          srf  = (*ft).second;
-         srf1 = new OptionsSurface( *srf, tkr, last, rng );
+         srf1 = new OptionsSurface( *srf, tkr, last, rng, mon );
          if ( !srf1->M() || !srf1->N() ) {
             err = "Empty surface";
             u.Init( tkr, arg );

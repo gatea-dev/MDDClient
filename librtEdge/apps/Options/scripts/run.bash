@@ -13,7 +13,7 @@ nohup ./bin64//OptionsCurve \
    -rate     30.0 \
    -xInc     1.0 \
    -yInc     1.0 \
-   -maxX     1000 \
+   -maxX     500 \
    -square   false \
    -dump     false \
    -surfCalc true \
