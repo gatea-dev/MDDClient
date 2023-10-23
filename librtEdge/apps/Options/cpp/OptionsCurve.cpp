@@ -1238,6 +1238,7 @@ private:
    SurfaceMap    _surfaces;
    SurfaceMap    _surfacesR;  // Ephemeral : Range
    double        _tPub;
+   bool          _bName;
 
    /////////////////////
    // Constructor
@@ -1255,7 +1256,8 @@ public:
       _splines(),
       _surfaces(),
       _surfacesR(),
-      _tPub( 0.0 )
+      _tPub( 0.0 ),
+      _bName( false )
    {
       SetBinary( true );
       SetIdleCallback( true );
@@ -1387,6 +1389,11 @@ protected:
       const char *ty  = bUp ? "UP" : "DOWN";
 
       LOG( "PUB-CONN %s@%s : %s", svc, msg, ty );
+      _bName = false;
+      if ( bUp )
+         StartThread();
+      else
+         StopThread();
    }
 
    virtual void OnPubOpen( const char *tkr, void *arg )
@@ -1530,19 +1537,16 @@ protected:
 
    virtual void OnIdle()
    {
-      double now = TimeNs();
-      double age = now - _tPub;
-      int    n;
+      if ( !_bName )
+         SetThreadName( "MDD" );
+      _bName = true;
+//      _OnIdle();
+   }
 
-      // Pre-condition
-
-      if ( age < _pubRate )
-         return;
-
-      // Rock on
-
-      _tPub = now;
-      n     = Calc();
+   virtual void OnWorkerThread()
+   {
+      SetThreadName( "QUANT" ); 
+      for ( ; ThreadIsRunning(); Sleep( 0.25 ), _OnIdle() );
    }
 
    /////////////////////
@@ -1582,6 +1586,23 @@ bool bImg = true; // VectorView.js needs fidVecX
          }
       }
       return rc;
+   }
+
+   void _OnIdle()
+   {
+      double now = TimeNs();
+      double age = now - _tPub;
+      int    n;
+
+      // Pre-condition
+
+      if ( age < _pubRate )
+         return;
+
+      // Rock on
+
+      _tPub = now;
+      n     = Calc();
    }
 
 }; // SplinePublisher

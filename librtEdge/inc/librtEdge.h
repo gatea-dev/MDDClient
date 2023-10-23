@@ -34,6 +34,7 @@
 *      1 NOV 2022 jcs  Build 60: rtFld_vector
 *     14 FEB 2023 jcs  Build 62: quant/LU.hpp
 *      3 JUN 2023 jcs  Build 63: quant/FFT.hpp; rtEdge_hexDump()
+*     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -2042,6 +2043,17 @@ OSFileStat OS_GetFileStats( const char *pFile );
  * \see OS_StopThread()
  */
 Thread_Context OS_StartThread( rtEdgeThreadFcn fcn, void *arg );
+
+/**
+ * \brief Set worker thread name
+ *
+ * \param cxt - Initialized context from OS_StartThread()
+ * \param name - Thread Name
+ * \return 1 if thread is running and is this thread; 0 if not found or stopped
+ * \see OS_StartThread()
+ * \see OS_ThreadIsRunning()
+ */
+char OS_SetThreadName( Thread_Context cxt, char *name );
 
 /**
  * \brief Returns 1 if worker thread is running

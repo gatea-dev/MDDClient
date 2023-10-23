@@ -26,7 +26,8 @@
 *     10 JUN 2022 jcs  Build 55: Remap : Same address
 *     29 OCT 2022 jcs  Build 60: rtFld_vector
 *      8 MAR 2023 jcs  Build 62: _lvcMtx; static rtEdge_ioctl's
-*      3 JUN 2023 jcs  Build 6r: rtEdge_hexDump()
+*      3 JUN 2023 jcs  Build 63: rtEdge_hexDump()
+*     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -1867,6 +1868,17 @@ Thread_Context OS_StartThread( rtEdgeThreadFcn fcn, void *arg )
    cxt        = ATOMIC_INC( &_nCxt );
    _work[cxt] = new Thread( fcn, arg );
    return cxt;
+}
+
+char OS_SetThreadName( Thread_Context cxt, char *name )
+{
+   Thread *thr;
+   char    rc;
+
+   rc = 0;
+   if ( (thr=_GetThread( cxt )) )
+      rc = thr->SetName( name ) ? 0 : 1;
+   return rc;
 }
 
 char OS_ThreadIsRunning( Thread_Context cxt )

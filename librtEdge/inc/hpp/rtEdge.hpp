@@ -27,6 +27,7 @@
 *     26 NOV 2022 jcs  Build 61: DateTimeList; DoubleXY
 *      9 MAR 2023 jcs  Build 62: Dump( DoubleGrid & ); static GetThreadID()
 *      3 JUN 2023 jcs  Build 63: HexDump()
+*     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -992,6 +993,8 @@ public:
 	{
 	   if ( IsValid() )
 	      ::rtEdge_ioctl( _cxt, ioctl_setThreadName, (void *)name );
+	   if ( _cxtThr )
+	      ::OS_SetThreadName( _cxtThr, (char *)name );
 	   return GetThreadName();
 	}
 

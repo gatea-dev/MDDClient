@@ -64,6 +64,8 @@ Features To Add
  *    - LVC.getTickers leak : 
  *    - No mo Book
  *
+ * -# OS_SetThreadName()
+ *
  *
  * ### Build 64 23-09-13
  *
