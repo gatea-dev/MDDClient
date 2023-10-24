@@ -1003,7 +1003,7 @@ assert( nc == n );
       x0   = X[0];
       xTy  = xTy_DATE;
       xInc = ( 12.0 / 365.0 );
-u.AddEmptyField( 3, xInc );
+u.AddEmptyField( 3 );
       u.AddField( l_fidInc, xInc );
       u.AddField( l_fidXTy, xTy );
       u.AddField( l_fidX0,  x0 );
