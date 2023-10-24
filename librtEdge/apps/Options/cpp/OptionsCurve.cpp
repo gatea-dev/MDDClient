@@ -999,11 +999,11 @@ assert( nc == n );
 
       DoubleList X;
 
-//      _lvc.ymd2Unix( _XX, X );
       _lvc.julNum2Unix( _XX, X );
       x0   = X[0];
       xTy  = xTy_DATE;
       xInc = ( 12.0 / 365.0 );
+u.AddEmptyField( 3, xInc );
       u.AddField( l_fidInc, xInc );
       u.AddField( l_fidXTy, xTy );
       u.AddField( l_fidX0,  x0 );
@@ -1248,12 +1248,15 @@ private:
    OptionsCurve &_lvc;
    string        _svr;
    double        _pubRate;
+   int           _bdsDelay;
    Underlyers    _underlyers;
    SplineMap     _splines;
    SurfaceMap    _surfaces;
    SurfaceMap    _surfacesR;  // Ephemeral : Range
    double        _tPub;
    bool          _bName;
+   time_t        _tOpenBDS;
+   void         *_bdsStreamID;
 
    /////////////////////
    // Constructor
@@ -1262,17 +1265,21 @@ public:
    SplinePublisher( OptionsCurve &lvc,
                     const char   *svr, 
                     const char   *svc,
-                    double        pubRate ) :
+                    double        pubRate,
+                    int           bdsDelay ) :
       PubChannel( svc ),
       _lvc( lvc ),
       _svr( svr ),
       _pubRate( pubRate ),
+      _bdsDelay( bdsDelay ),
       _underlyers(),
       _splines(),
       _surfaces(),
       _surfacesR(),
       _tPub( 0.0 ),
-      _bName( false )
+      _bName( false ),
+      _tOpenBDS( 0 ),
+      _bdsStreamID( (void *)0 )
    {
       SetBinary( true );
       SetIdleCallback( true );
@@ -1523,19 +1530,91 @@ protected:
 
    virtual void OnOpenBDS( const char *bds, void *tag )
    {
+      char *tkrs[] = { (char *)0 };
+      int   nb;
+
+      // Publisher name only
+
+      LOG( "OPEN.BDS %s", bds );
+      if ( ::strcmp( bds, pPubName() ) ) {
+         Update &u = upd();
+         string  err( "non-existent BDS stream : Try " );
+
+         err += pPubName();
+         u.Init( bds, tag );
+         u.PubError( err.data() );
+         return;
+      }
+      _bdsStreamID = tag;
+      _tOpenBDS    = 0;
+      if ( _bdsDelay ) {
+         _tOpenBDS = TimeSec();
+         nb = PublishBDS( bds, (size_t)_bdsStreamID, tkrs );
+         LOG( "PUB-BDS : %d bytes", nb );
+      }
+      else
+         _PublishBDS();
+   }
+
+   virtual void OnCloseBDS( const char *bds )
+   {
+      LOG( "CLOSE.BDS %s", bds );
+      _bdsStreamID = (void *)0;
+      _tOpenBDS    = 0;
+   }
+
+   virtual Update *CreateUpdate()
+   {
+      return new Update( *this );
+   }
+
+   virtual void OnIdle()
+   {
+      time_t age;
+
+      // 1) Once
+
+      if ( !_bName )
+         SetThreadName( "MDD" );
+      _bName = true;
+
+      // 2) Once per BDS
+
+      if ( !_bdsStreamID || !_tOpenBDS || !_bdsDelay )
+         return;
+      age = TimeSec() - _tOpenBDS;
+      if ( age >= _bdsDelay ) {
+         _PublishBDS();
+         _tOpenBDS = 0;
+      }
+   }
+
+   virtual void OnWorkerThread()
+   {
+      SetThreadName( "QUANT" ); 
+      for ( ; ThreadIsRunning(); Sleep( 0.25 ), _OnIdle() );
+   }
+
+   /////////////////////
+   // (private) Helpers
+   /////////////////////
+private:
+   void _PublishBDS()
+   {
       SplineMap                &ldb = _splines;
       SurfaceMap               &fdb = _surfaces;
+      const char               *bds = pPubName();
       SplineMap::iterator       lt;
       SurfaceMap::iterator      ft;
       SortedStringSet           srt;
       SortedStringSet::iterator st;
       string                    k;
       char                     *tkr;
+      int                       nb;
       vector<char *>            tkrs;
 
-      // We're a whore
+      // Rock on ...
 
-      LOG( "OPEN.BDS %s", bds );
       for ( lt=ldb.begin(); lt!=ldb.end(); srt.insert( (*lt).first ), lt++ );
       for ( ft=fdb.begin(); ft!=fdb.end(); srt.insert( (*ft).first ), ft++ );
       for ( st=srt.begin(); st!=srt.end(); st++ ) {
@@ -1550,37 +1629,11 @@ protected:
          }
       }
       tkrs.push_back( (char *)0 );
-      PublishBDS( bds, (size_t)tag, tkrs.data() );
+      nb        = PublishBDS( bds, (size_t)_bdsStreamID, tkrs.data() );
+      _tOpenBDS = 0;
+      LOG( "PUB-BDS : %d bytes", nb );
    }
 
-   virtual void OnCloseBDS( const char *bds )
-   {
-      LOG( "CLOSE.BDS %s", bds );
-   }
-
-   virtual Update *CreateUpdate()
-   {
-      return new Update( *this );
-   }
-
-   virtual void OnIdle()
-   {
-      if ( !_bName )
-         SetThreadName( "MDD" );
-      _bName = true;
-//      _OnIdle();
-   }
-
-   virtual void OnWorkerThread()
-   {
-      SetThreadName( "QUANT" ); 
-      for ( ; ThreadIsRunning(); Sleep( 0.25 ), _OnIdle() );
-   }
-
-   /////////////////////
-   // (private) Helpers
-   /////////////////////
-private:
    int _CalcSplines( LVCAll &all, time_t now, bool bForce, Update &u )
    {
       SplineMap          &sdb = _splines;
@@ -1652,7 +1705,7 @@ int main( int argc, char **argv )
    string      s;
    bool        aOK, bCfg, sqr, trim, dump, fg;
    double      rate, xInc, yInc;
-   int         maxX;
+   int         maxX, dly;
    FILE       *fp;
    const char *db, *svr, *svc;
 
@@ -1677,6 +1730,7 @@ int main( int argc, char **argv )
    sqr   = false;
    trim  = false;
    dump  = false;
+   dly   = 0;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -1685,6 +1739,7 @@ int main( int argc, char **argv )
       s += "       [ -svr      <MDD Edge3 host:port> ] \\ \n";
       s += "       [ -svc      <MDD Publisher Service> ] \\ \n";
       s += "       [ -rate     <SnapRate> ] \\ \n";
+      s += "       [ -bdsDly   <BDS Pub Delay> ] \\ \n";
       s += "       [ -xInc     <Spline Increment> ] \\ \n";
       s += "       [ -yInc     <Surface Increment> ] \\ \n";
       s += "       [ -maxX     <Max Spline Values> ] \\ \n";
@@ -1699,6 +1754,7 @@ int main( int argc, char **argv )
       LOG( "      -svr      : %s", svr );
       LOG( "      -svc      : %s", svc );
       LOG( "      -rate     : %.2f", rate );
+      LOG( "      -bdsDly   : %d",   dly );
       LOG( "      -xInc     : %.2f", xInc );
       LOG( "      -yInc     : %.2f", yInc );
       LOG( "      -maxX     : %d", maxX );
@@ -1734,6 +1790,8 @@ int main( int argc, char **argv )
          maxX = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-rate" ) )
          rate = atof( argv[++i] );
+      else if ( !::strcmp( argv[i], "-bdsDly" ) )
+         dly = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-square" ) )
          sqr = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-trim" ) )
@@ -1750,7 +1808,7 @@ int main( int argc, char **argv )
    // Do it
    /////////////////////
    OptionsCurve    lvc( db, sqr, trim, dump, xInc, yInc, maxX );
-   SplinePublisher pub( lvc, svr, svc, rate );
+   SplinePublisher pub( lvc, svr, svc, rate, dly );
    double          d0, srfAge, age;
    size_t          ns;
 
@@ -1764,6 +1822,8 @@ int main( int argc, char **argv )
    LOG( "Config._xInc     = %.2f", lvc._xInc );
    LOG( "Config._yInc     = %.2f", lvc._yInc );
    LOG( "Config._maxX     = %d", lvc._maxX );
+   LOG( "Config._rate     = %.1fs", rate );
+   LOG( "Config._bdsDly   = %d", dly );
    /*
     * Load Splines
     */

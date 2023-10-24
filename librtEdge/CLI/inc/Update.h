@@ -13,6 +13,7 @@
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *     30 JUN 2023 jcs  Build 63: StringDoor
+*     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -219,6 +220,13 @@ public:
 	 * \param fld - rtEdgeField to add
 	 */
 	void AddField( rtEdgeField ^fld );
+
+	/**
+	 * \brief Add empty (null) field
+	 *
+	 * \param fld - Field ID
+	 */
+	void AddEmptyField( int fid );
 
 	/**
 	 * \brief Add string field to update

@@ -11,6 +11,7 @@ nohup ./bin64//OptionsCurve \
    -svr      localhost:9015 \
    -svc      options.curve \
    -rate     15.0 \
+   -bdsDly   30.0 \
    -xInc     1.0 \
    -yInc     1.0 \
    -maxX     500 \

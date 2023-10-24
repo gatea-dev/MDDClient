@@ -18,14 +18,13 @@
 *     26 JUN 2020 jcs  Build 44: De-lint
 *     29 MAR 2022 jcs  Build 52: _bUnPacked
 *     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
+*     24 OCT 2023 jcs  Build 65: _EmptyBDS
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_PubChannel_H
 #define __RTEDGE_PubChannel_H
 #include <hpp/rtEdge.hpp>
-
-#define _MAX_CHAN 100 // Max 100 connections per instance
 
 namespace RTEDGE
 {
@@ -35,6 +34,9 @@ class Update;
 
 #ifndef DOXYGEN_OMIT
 static CxtMap<PubChannel *> _pubChans;
+
+static char *_EmptyBDS = (char *)"Empty BDS";
+ 
 #endif // DOXYGEN_OMIT
 
 
@@ -496,9 +498,20 @@ public:
 	         nf     = 0;
 	      }
 	   }
+	   /*
+	    * 23-10-24 jcs Build 66
+	    */
+	   if ( !nf ) {
+	      f._fid   = DSPLY_NAME;
+	      f._type  = rtFld_string;
+	      b._data  = _EmptyBDS;
+	      b._dLen  = strlen( b._data );
+	      flds[nf] = f;
+	      nf      += 1;
+	   }
 	   if ( nf ) {
 	      d._nFld = nf;
-	      nb += Publish( d );
+	      nb     += Publish( d );
 	   }
 	   return nb;
 	}

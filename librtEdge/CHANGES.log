@@ -43,7 +43,15 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 65 23-10-xx
+ * ### Build 66 23-10-xx
+ *
+ * -# Publisher.PublishBDS() : _EmptyBDS (1 field) if no symbols 
+ *
+ * -# NULL / Empty Fields:
+ *    - Update.AddEmptyField()
+ *
+ *
+ * ### Build 65 23-10-22
  *
  * -# Field.GetAsDate() month : { 0 ... 11 }, not { 1 ... 12 }
  *

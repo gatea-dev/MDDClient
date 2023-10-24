@@ -308,9 +308,9 @@ public:
 	}
 
 	/**
-	 * \brief Returns field ID
+	 * \brief Returns true if empty (null) field
 	 *
-	 * \return Field ID
+	 * \return true if empty (null) field
 	 */
 	bool IsEmpty()
 	{

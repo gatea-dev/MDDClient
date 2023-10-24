@@ -19,6 +19,7 @@
 *      1 NOV 2022 jcs  Build 60: AddVector( precision )
 *     27 DEC 2022 jcs  Build 61: AddFieldList() : Handle vector
 *     30 SEP 2023 jcs  Build 65: AddSurface( DoubleGrid & )
+*     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -257,6 +258,21 @@ public:
 	   f._fid  = fid;
 	   b._data = pFld;
 	   b._dLen = fLen ? fLen : strlen( pFld );
+	   _Add( f );
+	}
+
+	/**
+	 * \brief Add empty (null) field
+	 * 
+	 * \param fid - Field ID
+	 */
+	void AddEmptyField( int fid )
+	{
+	   rtFIELD  f;
+
+	   ::memset( &f._val, 0, sizeof( rtVALUE ) );
+	   f._type = rtFld_undef;
+	   f._fid  = fid;
 	   _Add( f );
 	}
 

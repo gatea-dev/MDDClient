@@ -11,6 +11,7 @@
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *     30 JUN 2023 jcs  Build 63: StringDoor
+*     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -156,6 +157,7 @@ void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
 {
    switch( fld->Type() ) {
       case rtFldType::rtFld_undef:
+         AddEmptyField( fld->Fid() );
          break;
       case rtFldType::rtFld_string:
          AddFieldAsString( fld->Fid(), fld->GetAsString( false ) );
@@ -196,6 +198,11 @@ void rtEdgePubUpdate::AddField( rtEdgeField ^fld )
          AddFieldAsVector( fld->Fid(), fld->GetAsVector() );
          break;
    }
+}
+
+void rtEdgePubUpdate::AddEmptyField( int fid )
+{
+   _upd.AddEmptyField( fid );
 }
 
 void rtEdgePubUpdate::AddFieldAsString( int fid, String ^str )
