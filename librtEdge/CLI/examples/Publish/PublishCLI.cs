@@ -11,6 +11,7 @@
 *     22 OCT 2022 jcs  Build 58: -s service -t ticker
 *      3 NOV 2022 jcs  Build 60: Native vector field type
 *     23 JUN 2023 jcs  Build 63: -reuse
+*     25 OCT 2023 jcs  Build 66: -timeout / -bds
 *
 *  (c) 1994-2022, Gatea, Ltd.
 ******************************************************************************/
@@ -18,8 +19,36 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using librtEdge;
+
+///////////////////////////
+//
+//       W a t c h
+//
+///////////////////////////
+class Watch
+{
+   ////////////////////////////////
+   // Members
+   ////////////////////////////////
+   public string _Ticker;
+   public IntPtr _StreamID;
+   public long   _tOpen;
+
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+   public Watch( string tkr, IntPtr StreamID, long now )
+   {
+      _Ticker   = tkr;
+      _StreamID = StreamID;
+      _tOpen    = now;
+   }
+
+} // class Watch
+
 
 ///////////////////////////
 //
@@ -35,13 +64,16 @@ class PublishCLI : rtEdgePublisher
    private int                          _vPrec;
    private bool                         _bReuse;
    private bool                         _bVecFld;
-   private Dictionary<string, IntPtr>   _wl;
+   private int                          _tmout;
+   private string                       _bds;
+   private Dictionary<string, Watch>    _wl;
    private Dictionary<string, MyVector> _wlV;
    private Timer                        _tmr;
    private TimerCallback                _cbk;
    private int                          _rtl;
    private string[]                     _chn;
    private rtEdgePubUpdate              _upd;
+   private int                          _bdsStreamID;
 
    ////////////////////////////////
    // Constructor
@@ -52,28 +84,34 @@ class PublishCLI : rtEdgePublisher
                       int    vecSz,
                       int    vPrec,
                       bool   bReuse,
-                      bool   bVecFld ) :
+                      bool   bVecFld,
+                      int    tmout,
+                      string bds ) :
       base( svr, svc, true, false ) // binary, bStart 
    {
       int tMs;
 
       // Fields / Watchlist
 
-      _vecSz   = vecSz;
-      _vPrec   = vPrec;
-      _bReuse  = bReuse;
-      _bVecFld = bVecFld;
-      _wl      = new Dictionary<string, IntPtr>();
-      _wlV     = new Dictionary<string, MyVector>();
-      _rtl     = 0;
-      _chn     = null;
-      _upd     = null;
+      _vecSz       = vecSz;
+      _vPrec       = vPrec;
+      _bReuse      = bReuse;
+      _bVecFld     = bVecFld;
+      _tmout       = tmout;
+      _bds         = bds;
+      _wl          = new Dictionary<string, Watch>();
+      _wlV         = new Dictionary<string, MyVector>();
+      _rtl         = 0;
+      _chn         = null;
+      _upd         = null;
+      _bdsStreamID = 0;
 
       // Timer Callback
 
       tMs  = (int)( 1000.0 * tTmr );
       _cbk = new TimerCallback( PublishAll );
       _tmr = new Timer( _cbk, this, tMs, tMs );
+      SetIdleCallback( _tmout != 0 );
    }
 
 
@@ -83,10 +121,12 @@ class PublishCLI : rtEdgePublisher
    public void PublishAll( object data )
    {
       MyVector vec;
+      Watch    w;
 
       lock( _wl ) {
          foreach ( var kv in _wl ) {
-            PubTkr( (string)kv.Key, (IntPtr)kv.Value, false );
+            w = (Watch)kv.Value;
+            PubTkr( w._Ticker, w._StreamID, false );
          }
       }
       lock( _wlV ) {
@@ -182,10 +222,11 @@ class PublishCLI : rtEdgePublisher
    public override void OnOpen( string tkr, IntPtr arg )
    {
       string[] kv = tkr.Split('#');
+      string   fmt;
       bool     bChn;
-      IntPtr   w;
+      Watch    w;
       MyVector vec;
-      int      lnk;
+      int      lnk, nb;
 
       Console.WriteLine( "[{0}] OPEN {1}", DateTimeMs(), tkr );
       bChn = ( _chn != null ) && ( kv.Length == 2 );
@@ -214,8 +255,16 @@ class PublishCLI : rtEdgePublisher
                PubChainLink( lnk, kv[1], arg );
             else {
                PubTkr( tkr, arg, true );
-               if ( !_wl.TryGetValue( tkr, out w ) )
-                  _wl.Add( tkr, arg );
+               if ( !_wl.TryGetValue( tkr, out w ) ) {
+                  _wl.Add( tkr, new Watch( tkr, arg, TimeSec() ) );
+                  if ( _bdsStreamID != 0 ) {
+                     string[] tkrs = { tkr };
+
+                     nb  = PublishBDS( _bds, _bdsStreamID, tkrs );
+                     fmt = "[{0}] PUB.BDS {1} [{2} bytes]";
+                     Console.WriteLine( fmt, DateTimeMs(), tkr, nb );
+                  }
+               }
             }
          }
       }
@@ -229,6 +278,75 @@ class PublishCLI : rtEdgePublisher
       }
       lock( _wlV ) {
          _wlV.Remove( tkr );
+      }
+   }
+
+   public override void OnOpenBDS( string tkr, IntPtr arg )
+   {
+      rtEdgePubUpdate u;
+      string          err, tm;
+      int             nb;
+      string[]        tkrs;
+
+      tm = DateTimeMs();
+      Console.WriteLine( "[{0}] OPEN.BDS {1}", tm, tkr );
+      lock( _wl ) {
+         if ( tkr == _bds ) {
+            _bdsStreamID = (int)arg;
+            tkrs = _wl.Keys.ToArray();
+            nb = PublishBDS( _bds, _bdsStreamID, tkrs );
+            Console.WriteLine( "[{0}] PUB.BDS {1} [{2} bytes]", tm, tkr, nb )u
+         }
+         else {
+            err  = "Unsupported BDS " + tkr;
+            u = new rtEdgePubUpdate( this, tkr, arg, false );
+            u.PubError( err );
+         }
+      }
+   }
+
+   public override void OnCloseBDS( string tkr )
+   {
+      Console.WriteLine( "[{0}] CLOSE.BDS {1}", DateTimeMs(), tkr );
+      _bdsStreamID = 0;
+   }
+
+   public override void OnIdle()
+   {
+      Watch  w;
+      string tkr;
+      IntPtr arg;
+      long   age, now;
+
+      // Pre-condition
+
+      if ( _tmout == 0 )
+         return;
+
+      // Walk all open ticker; Age out the geriatrics
+
+      List<string>    dels = new List<string>();
+      rtEdgePubUpdate u;
+
+      lock( _wl ) {
+         now = TimeSec();
+         foreach ( var kv in _wl ) {
+            w   = (Watch)kv.Value;
+            arg = w._StreamID;
+            tkr = w._Ticker;
+            age = now - w._tOpen;
+            if ( age > _tmout ) {
+               Console.WriteLine( "[{0}] DEAD {1}", DateTimeMs(), tkr );
+               if ( (u=_upd) == null )
+                  _upd  = new rtEdgePubUpdate( this, tkr, arg, true );
+               u.Init( tkr, arg, true );
+               u.PubError( "STREAM CLOSED BY PUBLISHER" );
+               dels.Add( tkr );
+            }
+         }
+      }
+      lock( dels ) {
+         for ( var i=0; i<dels.Count; OnClose( dels[i] ), i++ );
       }
    }
 
@@ -267,8 +385,8 @@ class PublishCLI : rtEdgePublisher
    {
       try {
          PublishCLI pub;
-         string     s, svr, svc, ty;
-         int        i, argc,  hbeat, vecSz, vPrec;
+         string     s, svr, svc, bds, ty;
+         int        i, argc,  hbeat, vecSz, vPrec, tmout;
          double     tPub;
          bool       aOK, bPack, bReuse, bFldV;
 
@@ -289,6 +407,8 @@ class PublishCLI : rtEdgePublisher
          bFldV  = false;
          bPack  = true;
          bReuse = false;
+         tmout  = 0;
+         bds    = null;
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
             s  = "Usage: %s \\ \n";
             s += "       [ -h       <Source : host:port> ] \\ \n";
@@ -300,6 +420,8 @@ class PublishCLI : rtEdgePublisher
             s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
             s += "       [ -reuse   <true for reuse update> ] \\ \n";
             s += "       [ -hbeat   <Heartbeat> ] \\ \n";
+            s += "       [ -timeout <TimeOut Stream> ] \\ \n";
+            s += "       [ -bds     <BDS name> ] \\ \n";
             Console.WriteLine( s );
             Console.Write( "   Defaults:\n" );
             Console.Write( "      -h       : {0}\n", svr );
@@ -311,6 +433,8 @@ class PublishCLI : rtEdgePublisher
             Console.Write( "      -packed  : {0}\n", bPack );
             Console.Write( "      -reuse   : {0}\n", bReuse );
             Console.Write( "      -hbeat   : {0}\n", hbeat );
+            Console.Write( "      -timeout : {0}\n", tmout );
+            Console.Write( "      -bds     : {0}\n", bds );
             return 0;
          }
 
@@ -339,12 +463,24 @@ class PublishCLI : rtEdgePublisher
                bReuse = _IsTrue( args[++i] );
             else if ( args[i] == "-hbeat" )
                hbeat = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-timeout" )
+               tmout = Convert.ToInt32( args[++i], 10 );
+            else if ( args[i] == "-bds" )
+               bds = args[++i];
          }
 
          // Rock on
 
          Console.WriteLine( rtEdge.Version() );
-         pub = new PublishCLI( svr, svc, tPub, vecSz, vPrec, bReuse, bFldV );
+         pub = new PublishCLI( svr, 
+                               svc, 
+                               tPub, 
+                               vecSz, 
+                               vPrec, 
+                               bReuse, 
+                               bFldV, 
+                               tmout,
+                               bds );
          pub.PubStart();
          pub.SetUnPacked( !bPack );
          pub.SetHeartbeat( hbeat );

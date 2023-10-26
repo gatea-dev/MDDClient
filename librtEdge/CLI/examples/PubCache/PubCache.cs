@@ -261,7 +261,7 @@ class PubCache : rtEdgePublisher
    // Constructor
    ////////////////////////////////
    public PubCache( string svr, string svc, string tkrs, int tTmr ) :
-      base( svr, svc, true, false, true)
+      base( svr, svc, true, false ) // binary, bStart
    {
       string[] csv = tkrs.Split(',');
       int      i, nt;
@@ -321,7 +321,7 @@ class PubCache : rtEdgePublisher
        */
       rec.AddFieldAsString( 3, rec.Symbol() );
       rec.AddFieldAsInt32( 6, ++_rtl );
-      rec.AddFieldAsInt32( 7, 314159265359 );
+      rec.AddFieldAsInt64( 7, 314159265359 );
       rec.AddFieldAsDouble( 14263, rtEdge.TimeNs() );
       /*
        * Pubish if watched

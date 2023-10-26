@@ -45,7 +45,9 @@ Features To Add
  *
  * ### Build 66 23-10-xx
  *
- * -# Publisher.PublishBDS() : _EmptyBDS (1 field) if no symbols 
+ * -# BDS Empty Symbol List
+ *    - C/C++ : Publisher.PublishBDS() : _EmptyBDS (1 field) if no symbols 
+ *    - CLI   : BDSSymbolList
  *
  * -# NULL / Empty Fields:
  *    - Update.AddEmptyField()

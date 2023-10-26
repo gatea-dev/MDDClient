@@ -15,6 +15,7 @@
 *     23 MAY 2022 jcs  Build 54: OnError()
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*     26 OCT 2023 jcs  Build 65: BDSSymbolList
 *
 *  (c) 1994-2022, Gatea Ltd.
 ******************************************************************************/
@@ -615,5 +616,44 @@ public:
 	void SetNativeFields( bool ) { ; } 
 
 };  // class rtEdgePublisher
+
+#ifndef DOXYGEN_OMIT
+
+public ref class BDSSymbolList : public StringDoor
+{
+private:
+	vector<char *> _tkrs;
+
+	//////////////////////////////////
+	// Constructor / Destructor
+	//////////////////////////////////
+public:
+	BDSSymbolList() :
+	   StringDoor(),
+	   _tkrs()
+	{ ; }
+
+	//////////////////////////////////
+	// Access / Operations
+	//////////////////////////////////
+public:
+	char **tkrs() 
+	{
+	   return _tkrs.data();
+	}
+
+	void Add( String ^tkr )
+	{
+	   _tkrs.push_back( _pStr( tkr ) );
+	} 
+
+	void EOF()
+	{
+	   _tkrs.push_back( (char *)0 );
+	} 
+
+}; // class BDSSymbolList
+
+#endif // DOXYGEN_OMIT
 
 } // namespace librtEdge

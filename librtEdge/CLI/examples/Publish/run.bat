@@ -1,8 +1,6 @@
 
 echo off
 
-rem Usage : <host:port> <Svc> <tUpdMs> <ChainFile>
-
 cls
-PublishCLI.exe localhost:9995 %1% 250 ./chain.tkr
+PublishCLI.exe -h localhost:9985 -s twap -bds twap
 

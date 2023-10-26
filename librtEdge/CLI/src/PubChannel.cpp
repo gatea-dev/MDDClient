@@ -15,8 +15,9 @@
 *     23 MAY 2022 jcs  Build 54: OnError()
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
+*     26 OCT 2023 jcs  Build 65: PublishBDS() : vector<char *>
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <PubChannel.h>
@@ -323,6 +324,19 @@ int rtEdgePublisher::PublishBDS( String               ^bds,
                                  int                   StreamID, 
                                  cli::array<String ^> ^symbols )
 {
+   BDSSymbolList bdb;
+   int           i;
+
+   for ( i=0; i<symbols->Length; bdb.Add( symbols[i] ), i++ );
+   bdb.EOF();
+   return _pub->PublishBDS( _pStr( bds ), StreamID, bdb.tkrs() );
+}
+
+#ifdef OBSOLETE
+int rtEdgePublisher::PublishBDS( String               ^bds, 
+                                 int                   StreamID, 
+                                 cli::array<String ^> ^symbols )
+{
    char *syms[K];
    int   i, n, nb;
 
@@ -344,5 +358,6 @@ int rtEdgePublisher::PublishBDS( String               ^bds,
    }
    return nb;
 }
+#endif // OBSOLETE
 
 } // namespace librtEdge
