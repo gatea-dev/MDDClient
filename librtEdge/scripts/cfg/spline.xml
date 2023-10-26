@@ -1,7 +1,8 @@
 <SplineMaker DataSource="LVC" RunInForeground="false" PumpInterval="15.0" >
    <Subscriber Service  = "velocity"
                Username = "SplineMaker"
-               Server   = "/RAMDISK//LVC/Velocity_20230108.lvc"
+               Server   = "/RAMDISK//LVC/Velocity_202301025.lvc"
+               Server_LWC   = "/RAMDISK//LVC/Velocity_20230108.lvc"
                Server_MDD   = "gatea.com:9998" >
 
       <Curve Name="Swaps" FieldID="6" >

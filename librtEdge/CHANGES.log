@@ -50,6 +50,8 @@ Features To Add
  * -# NULL / Empty Fields:
  *    - Update.AddEmptyField()
  *
+ * -# Field.Dump() : rtFld_vector : dSz*16
+ *
  *
  * ### Build 65 23-10-22
  *

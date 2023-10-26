@@ -22,6 +22,7 @@
 *     15 DEC 2022 jcs  Build 61: DateTimeList; Dump() buffer overflow w/ vector
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
 *     18 SEP 2023 jcs  Build 65: GetAsDate() : Month -= 1
+*     26 OCT 2023 jcs  Build 66: Dump() vector : dLen * 32
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -885,8 +886,11 @@ public:
 	   switch( ty ) {
 	      case rtFld_string:
 	      case rtFld_bytestream:
-	      case rtFld_vector:
 	         dSz = b._dLen;
+	         break;
+	      case rtFld_vector:
+	         dSz  = b._dLen;
+	         dSz *= 32; // 32-bytes per sprintf( "%ld" )
 	         break;
 	      default:
 	         dSz = K;

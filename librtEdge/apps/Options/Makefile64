@@ -12,8 +12,8 @@
 ## Warnings
 
 WARN       = -Wall
-WARN      += -Wno-write-strings
-WARN      += -Wno-unused-but-set-variable
+## WARN      += -Wno-write-strings
+## WARN      += -Wno-unused-but-set-variable
 
 ## Linux
 
