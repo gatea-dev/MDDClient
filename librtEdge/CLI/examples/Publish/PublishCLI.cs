@@ -295,7 +295,7 @@ class PublishCLI : rtEdgePublisher
             _bdsStreamID = (int)arg;
             tkrs = _wl.Keys.ToArray();
             nb = PublishBDS( _bds, _bdsStreamID, tkrs );
-            Console.WriteLine( "[{0}] PUB.BDS {1} [{2} bytes]", tm, tkr, nb )u
+            Console.WriteLine( "[{0}] PUB.BDS {1} [{2} bytes]", tm, tkr, nb );
          }
          else {
             err  = "Unsupported BDS " + tkr;

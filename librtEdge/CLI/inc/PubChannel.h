@@ -622,7 +622,7 @@ public:
 public ref class BDSSymbolList : public StringDoor
 {
 private:
-	std::vector<char *> _tkrs;
+	std::vector<char *> *_tkrs;
 
 	//////////////////////////////////
 	// Constructor / Destructor
@@ -630,8 +630,13 @@ private:
 public:
 	BDSSymbolList() :
 	   StringDoor(),
-	   _tkrs()
+	   _tkrs( new std::vector<char *>() )
 	{ ; }
+
+	~BDSSymbolList()
+	{
+	   delete _tkrs;
+	}
 
 	//////////////////////////////////
 	// Access / Operations
@@ -639,17 +644,17 @@ public:
 public:
 	char **tkrs() 
 	{
-	   return _tkrs.data();
+	   return _tkrs->.data();
 	}
 
 	void Add( String ^tkr )
 	{
-	   _tkrs.push_back( (char *)_pStr( tkr ) );
+	   _tkrs->push_back( (char *)_pStr( tkr ) );
 	} 
 
 	void eof()
 	{
-	   _tkrs.push_back( (char *)0 );
+	   _tkrs->push_back( (char *)0 );
 	} 
 
 }; // class BDSSymbolList

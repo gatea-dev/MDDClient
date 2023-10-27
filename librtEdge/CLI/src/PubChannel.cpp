@@ -332,32 +332,4 @@ int rtEdgePublisher::PublishBDS( String               ^bds,
    return _pub->PublishBDS( _pStr( bds ), StreamID, bdb.tkrs() );
 }
 
-#ifdef OBSOLETE
-int rtEdgePublisher::PublishBDS( String               ^bds, 
-                                 int                   StreamID, 
-                                 cli::array<String ^> ^symbols )
-{
-   char *syms[K];
-   int   i, n, nb;
-
-   // 1K at a time ...
-
-   nb = 0;
-   n  = 0;
-   for ( i=0; i<symbols->Length; i++ ) {
-      syms[n++] = (char *)_pStr( symbols[i] );
-      if ( n == K-1 ) {
-         syms[n] = (char *)0;
-         nb     += _pub->PublishBDS( _pStr( bds ), StreamID, syms );
-         n       = 0;
-      }
-   }
-   if ( n ) {
-      syms[n] = (char *)0;
-      nb     += _pub->PublishBDS( _pStr( bds ), StreamID, syms );
-   }
-   return nb;
-}
-#endif // OBSOLETE
-
 } // namespace librtEdge
