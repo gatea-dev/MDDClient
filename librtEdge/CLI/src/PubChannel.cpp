@@ -328,7 +328,7 @@ int rtEdgePublisher::PublishBDS( String               ^bds,
    int           i;
 
    for ( i=0; i<symbols->Length; bdb.Add( symbols[i] ), i++ );
-   bdb.EOF();
+   bdb.eof();
    return _pub->PublishBDS( _pStr( bds ), StreamID, bdb.tkrs() );
 }
 
