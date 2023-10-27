@@ -644,7 +644,7 @@ public:
 public:
 	char **tkrs() 
 	{
-	   return _tkrs->.data();
+	   return _tkrs->data();
 	}
 
 	void Add( String ^tkr )
