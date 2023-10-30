@@ -18,10 +18,10 @@
 
 // Configurable Precision
 
-static int     l_Precision =     2;
-static double  l_StrikeMul =   100.0;
-static double  l_StrikeDiv =   1.0 / l_StrikeMul;
-static size_t  l_NoIndex   =    -1;
+static double      l_StrikeMul =   100.0;
+static double      l_StrikeDiv =   1.0 / l_StrikeMul;
+static size_t      l_NoIndex   =    -1;
+static const char *l_Undef     = "???";
 
 // Record Templates
 
@@ -76,13 +76,17 @@ const char *OptionsCurveID()
 class KnotDef
 {
 public:
-   OptionsSpline *_splineX; // Non-zero implies calc each time 
-   OptionsSpline *_splineE; // Non-zero implies calc each time 
+   OptionsSpline *_splineX;  // Non-zero implies calc each time 
+   OptionsSpline *_splineE;  // Non-zero implies calc each time 
+   const char    *_pSplX;    // _splineX->name()
+   const char    *_pSplE;    // _splineE->name()
+   char           _lvcName[128];
    u_int64_t      _strike;
    u_int64_t      _exp;
    u_int64_t      _jExp;    // julNum( exp )
    size_t         _idx;     // Non-zero implies real-time
    double         _tUpd;    // Time of last update in LVC
+   double         _lwc;     // Last Value from LVC
 
 }; // KnotDef
 
@@ -99,13 +103,16 @@ typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 class OptionsCurve : public OptionsBase
 {
 public:
-   bool   _square;
-   bool   _trim;
-   bool   _dump;
-   bool   _bUpdAlways;
-   double _xInc;
-   double _yInc;
-   int    _maxX;
+   bool    _square;
+   bool    _trim;
+   bool    _dump;
+   bool    _bUpdAlways;
+   bool    _knotCalc;
+   int     _precision;
+   double  _xInc;
+   double  _yInc;
+   int     _maxX;
+   KnotDef _kz;
 
    /////////////////////////
    // Constructor
@@ -116,6 +123,8 @@ public:
                  bool        trim,
                  bool        dump,
                  bool        bUpdAlways,
+                 bool        knotCalc,
+                 int         precision,
                  double      xInc,
                  double      yInc,
                  int         maxX ) :
@@ -124,10 +133,14 @@ public:
       _trim( trim ),
       _dump( dump ),
       _bUpdAlways( bUpdAlways ),
+      _knotCalc( knotCalc ),
+      _precision( precision ),
       _xInc( xInc ),
       _yInc( yInc ),
       _maxX( maxX )
-   { ; }
+   {
+      ::memset( &_kz, 0, sizeof( _kz ) );
+   }
 
 }; // class OptionsCurve
 
@@ -315,6 +328,21 @@ public:
       return string( buf );
    }
 
+   void SnapLVCFlds( KnotDef &k, Message &m )
+   {
+      Field      *fld;
+      const char *pf;
+
+      // 1) Display Name
+
+      pf = ( (fld=m.GetField( 3 )) ) ?  fld->GetAsString() : l_Undef;
+      strcpy( k._lvcName, pf );
+
+      // 2) Value
+
+      k._lwc = _lvc.MidQuote( m );
+   }
+
 }; // class Underlyer
 
 
@@ -398,6 +426,8 @@ public:
    const char *name()     { return data(); }
    DoubleList &X()        { return _X; }
    DoubleList &Y()        { return _Y; }
+   u_int64_t   tExp()     { return _tExp; };
+   u_int64_t   dStr()     { return _dStr; };
    bool        byExp()    { return( _tExp != 0 ); }
    size_t      NumKnots() { return _kdb.size(); }
 
@@ -576,7 +606,7 @@ public:
        */
       if ( xTy == xTy_DATE )
          u.AddVector( l_fidVecX, X, 0 );
-      u.AddVector( l_fidVecY, _Y, l_Precision );
+      u.AddVector( l_fidVecY, _Y, _lvc._precision );
       return u.Publish();
    }
 
@@ -605,15 +635,15 @@ private:
        */
       _X.clear();
       _Y.clear();
-      k._splineX = (OptionsSpline *)0;
-      k._splineE = (OptionsSpline *)0;
+      k = _lvc._kz;
       for ( size_t i=0; i<udb.size(); i++ ) {
-         ix        = udb[i];
-         msg       = msgs[ix];
-         k._exp    = _lvc.Expiration( *msg, false );
-         k._jExp   = _lvc.Expiration( *msg, true );
-         k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
-         k._tUpd   = msg->MsgTime();
+         ix         = udb[i];
+         msg        = msgs[ix];
+         _und.SnapLVCFlds( k, *msg );
+         k._exp     = _lvc.Expiration( *msg, false );
+         k._jExp    = _lvc.Expiration( *msg, true );
+         k._strike  = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
+         k._tUpd    = msg->MsgTime();
          if ( byExp() ) {
             if ( k._exp == _tExp ) {
                k._idx = ix;
@@ -832,16 +862,14 @@ public:
     */ 
    bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
-      Messages      &msgs = all.msgs();
-      KnotDef        k, k0, k1;
-      Message       *msg;
-      OptionsSpline *splX, *splE;
-      size_t         r, c, nr, nc, ix, m, n;
-      const char    *pX, *pE;
-      double         z, zX, zE, dX;
-      double         x0, x1, y0, y1;
-      bool           bUpd;
-      DoubleGrid     Z;
+      Messages  &msgs = all.msgs();
+      KnotDef    k, k0, k1;
+      Message   *msg;
+      size_t     r, c, nr, nc, ix, m, n;
+      double     z, zX, zE, dX;
+      double     x0, x1, y0, y1;
+      bool       bUpd;
+      DoubleGrid Z;
 
       // Pre-condition(s)
 
@@ -889,28 +917,50 @@ public:
             k = _kdb[r][c];
             if ( (ix=k._idx) != l_NoIndex )
                z = zSnap[c];
-            else {
+            else if ( _lvc._knotCalc ) {
+               QUANT::CubicSpline *csX, *csE;
+
                /*
                 * Take mid-point if both splines available; 
                 * Else, the only available spline
                 */
-               pX = k._splineX ? k._splineX->name() : NULL;
-               pE = k._splineE ? k._splineE->name() : NULL;
-               if ( pX == pE )
+               csX = (QUANT::CubicSpline *)0;
+               csE = (QUANT::CubicSpline *)0;
+               if ( k._pSplX == k._pSplE )
                  _lvc.breakpoint();
-               if ( (splX=k._splineX) )
-                  zX = splX->CS( all, now ).ValueAt( k._jExp );
-               if ( (splE=k._splineE) ) {
-                  dX = l_StrikeDiv * k._strike;
-                  zE = splE->CS( all, now ).ValueAt( dX );
+               if ( k._splineX ) {
+                  csX = &k._splineX->CS( all, now );
+                  zX  = csX->ValueAt( k._jExp );
                }
-               if ( splX && splE )
-                  z = _BestZ( zSnap, c, zX, zE );
-               else if ( splX )
+               if ( k._splineE ) {
+                  csE = &k._splineE->CS( all, now );
+                  dX  = l_StrikeDiv * k._strike;
+                  zE  = csE->ValueAt( dX );
+               }
+               /*
+                * If both splines available, BestZ is as follows:
+                *    1) If k._splineX and strikes match, use zX
+                *    2) If k._splineE and expirations match, use zE
+                *    3) Else _BestZ()
+                */
+               if ( csX && csE ) {
+                  if ( k._strike == k._splineX->dStr() )
+                     z = zX;
+                  else if ( k._exp == k._splineE->tExp() )
+                     z = zE;
+                  else
+                     z = _BestZ( *csX, *csE, zSnap, c, zX, zE );
+               }
+               /*
+                * Else, Only 1 available : use it
+                */
+               else if ( csX )
                   z = zX;
-               else if ( splE )
+               else if ( csE )
                   z = zE;
             }
+            else
+               z = -1.0;
             zRow.push_back( z );
          }
          Z.push_back( zRow );
@@ -1031,9 +1081,9 @@ u.AddEmptyField( 3 );
        * Y-axis : Stike
        * Z-axis : Surface
        */
-      u.AddVector( l_fidVecX, X, 0 );             // Expiration 
-      u.AddVector( l_fidVecY, _YY, 2 );           // Strike
-      u.AddSurface( l_fidVecZ, _Z, l_Precision ); // Surface
+      u.AddVector( l_fidVecX, X, 0 );                 // Expiration 
+      u.AddVector( l_fidVecY, _YY, 2 );               // Strike
+      u.AddSurface( l_fidVecZ, _Z, _lvc._precision ); // Surface
       return u.Publish();
    }
 
@@ -1055,6 +1105,7 @@ private:
       double         ds;
       SortedInt64Set edb, sdb, jdb;
       KnotDefMap     kMap;
+      OptionsSpline *spl;
 
       /*
        * 1) Put / Call
@@ -1064,18 +1115,18 @@ private:
       /*
        * 2) Clear shit out; Jam away ...
        */
-      k._splineX = (OptionsSpline *)0;
-      k._splineE = (OptionsSpline *)0;
       for ( i=0; i<udb.size(); i++ ) {
-         k._idx    = udb[i];
-         msg       = msgs[k._idx];
-         k._exp    = _lvc.Expiration( *msg, false );
-         k._jExp   = _lvc.Expiration( *msg, true );
-         k._strike = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
-         k._tUpd   = msg->MsgTime();
-         key       = ( k._exp << 32 );
-         key      += k._strike;
-         kMap[key] = k;
+         k          = _lvc._kz;
+         k._idx     = udb[i];
+         msg        = msgs[k._idx];
+         _und.SnapLVCFlds( k, *msg );
+         k._exp     = _lvc.Expiration( *msg, false );
+         k._jExp    = _lvc.Expiration( *msg, true );
+         k._strike  = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
+         k._tUpd    = msg->MsgTime();
+         key        = ( k._exp << 32 );
+         key       += k._strike;
+         kMap[key]  = k;
          /*
           * Build ( Expiration, Strike ) matrix
           */
@@ -1128,8 +1179,11 @@ private:
             }
             else {
                ds          = l_StrikeDiv * k._strike;
+               kz          = _lvc._kz;
                kz._splineX = _und.GetSpline( ds, _bPut );
                kz._splineE = _und.GetSpline( exp, _bPut );
+               kz._pSplX   = (spl=kz._splineX) ? spl->name() : (const char *)0;
+               kz._pSplE   = (spl=kz._splineE) ? spl->name() : (const char *)0;
 assert( kz._splineX || kz._splineE );
                kz._exp     = exp;
                kz._jExp    = jExp;
@@ -1212,15 +1266,24 @@ assert( kz._splineX || kz._splineE );
    }
 
    /**
-    * \brief Determine 'best' spline value from d1 or d2
+    * \brief Determine 'best' spline value from dX or dE
     *
+    * TODO : closest to csX / csE knots
+    *
+    * \param csX - CubicSpline : Strike Price
+    * \param csE - CubicSpline : Expiration Date
     * \param snap - Snapped LVC values
     * \param col -  Current column from snap
-    * \param d1 - 1st Spline Value
-    * \param d2 - 2nd Spline Value
+    * \param dX - Value from Strike Price Spline
+    * \param dE - Value from Expiration Spline
     * \return 'Best' value for col based on snapped LVC values
     */ 
-   double _BestZ( DoubleList &snap, size_t col, double d1, double d2 )
+   double _BestZ( QUANT::CubicSpline &csX,
+                  QUANT::CubicSpline &csE,
+                  DoubleList         &snap, 
+                  size_t              col, 
+                  double              dX, 
+                  double              dE )
    {
       size_t c0, c1, sz;
       double ds, rc;
@@ -1235,10 +1298,10 @@ assert( kz._splineX || kz._splineE );
       b0 = ( (::int64_t)c0 >= 0 );
       b1 = ( c1 < sz );
       /*
-       * Return d1 or d2 depending on closest to non-zero snapped value
+       * Return dX or dE depending on closest to non-zero snapped value
        * If no snapped values, then return midpoint
        */
-      rc = ( d1+d2 ) / 2.0;
+      rc = ( dX+dE ) / 2.0;
       if ( b0 || b1 ) {
          if ( b0 && b1 ) {
             if ( ( col-c0 ) <= ( c1-col ) )
@@ -1250,7 +1313,7 @@ assert( kz._splineX || kz._splineE );
             ds = snap[c0];
          else if ( b1 )
             ds = snap[c1];
-         rc = ( ::fabs( d1-ds ) < ::fabs( d2-ds ) ) ? d1 : d2;
+         rc = ( ::fabs( dX-ds ) < ::fabs( dE-ds ) ) ? dX : dE;
       }
       return rc;
    }
@@ -1746,9 +1809,9 @@ int main( int argc, char **argv )
    Strings     tkrs;
    Ints        fids;
    string      s;
-   bool        aOK, bCfg, sqr, trim, dump, fg, uAll;
+   bool        aOK, bCfg, sqr, trim, dump, fg, uAll, kCalc;
    double      rate, xInc, yInc;
-   int         maxX, dly;
+   int         maxX, dly, prec;
    FILE       *fp;
    const char *db, *svr, *svc;
 
@@ -1774,40 +1837,46 @@ int main( int argc, char **argv )
    trim  = false;
    dump  = false;
    uAll  = true;
+   kCalc = true;
+   prec  = 2;
    dly   = 0;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
-      s += "       [ -db       <LVC d/b filename> ] \\ \n";
-      s += "       [ -fg       <true to run in foreground> ] \\ \n";
-      s += "       [ -svr      <MDD Edge3 host:port> ] \\ \n";
-      s += "       [ -svc      <MDD Publisher Service> ] \\ \n";
-      s += "       [ -rate     <SnapRate> ] \\ \n";
-      s += "       [ -bdsDly   <BDS Pub Delay> ] \\ \n";
-      s += "       [ -xInc     <Spline Increment> ] \\ \n";
-      s += "       [ -yInc     <Surface Increment> ] \\ \n";
-      s += "       [ -maxX     <Max Spline Values> ] \\ \n";
-      s += "       [ -square   <true to 'square up' splines> ] \\ \n";
-      s += "       [ -trim     <true to 'trim' surfaces> ] \\ \n";
-      s += "       [ -dump     <true to log Knots> ] \\ \n";
-      s += "       [ -updAll   <false to only update if new LVC data> ] \\ \n";
-      s += "       [ -log      <Log filename> ] \\ \n";
+      s += "       [ -db        <LVC d/b filename> ] \\ \n";
+      s += "       [ -fg        <true to run in foreground> ] \\ \n";
+      s += "       [ -svr       <MDD Edge3 host:port> ] \\ \n";
+      s += "       [ -svc       <MDD Publisher Service> ] \\ \n";
+      s += "       [ -rate      <SnapRate> ] \\ \n";
+      s += "       [ -bdsDly    <BDS Pub Delay> ] \\ \n";
+      s += "       [ -xInc      <Spline Increment> ] \\ \n";
+      s += "       [ -yInc      <Surface Increment> ] \\ \n";
+      s += "       [ -maxX      <Max Spline Values> ] \\ \n";
+      s += "       [ -square    <true to 'square up' splines> ] \\ \n";
+      s += "       [ -trim      <true to 'trim' surfaces> ] \\ \n";
+      s += "       [ -dump      <true to log Knots> ] \\ \n";
+      s += "       [ -updAll    <false to only update if new LVC data> ] \\ \n";
+      s += "       [ -knotCalc  <false for -1 in empty Knots> ] \\ \n";
+      s += "       [ -precision <Value precision> ] \\ \n";
+      s += "       [ -log       <Log filename> ] \\ \n";
       LOG( (char *)s.data(), argv[0] );
       LOG( "   Defaults:" );
-      LOG( "      -db       : %s", db );
-      LOG( "      -fg       : %s", _pBool( fg ) );
-      LOG( "      -svr      : %s", svr );
-      LOG( "      -svc      : %s", svc );
-      LOG( "      -rate     : %.2f", rate );
-      LOG( "      -bdsDly   : %d",   dly );
-      LOG( "      -xInc     : %.2f", xInc );
-      LOG( "      -yInc     : %.2f", yInc );
-      LOG( "      -maxX     : %d", maxX );
-      LOG( "      -square   : %s", _pBool( sqr ) );
-      LOG( "      -trim     : %s", _pBool( trim ) );
-      LOG( "      -dump     : %s", _pBool( dump ) );
-      LOG( "      -updAll   : %s", _pBool( uAll ) );
-      LOG( "      -log     : %s", "stdout" );
+      LOG( "      -db        : %s", db );
+      LOG( "      -fg        : %s", _pBool( fg ) );
+      LOG( "      -svr       : %s", svr );
+      LOG( "      -svc       : %s", svc );
+      LOG( "      -rate      : %.2f", rate );
+      LOG( "      -bdsDly    : %d",   dly );
+      LOG( "      -xInc      : %.2f", xInc );
+      LOG( "      -yInc      : %.2f", yInc );
+      LOG( "      -maxX      : %d", maxX );
+      LOG( "      -square    : %s", _pBool( sqr ) );
+      LOG( "      -trim      : %s", _pBool( trim ) );
+      LOG( "      -dump      : %s", _pBool( dump ) );
+      LOG( "      -updAll    : %s", _pBool( uAll ) );
+      LOG( "      -knotCalc  : %s", _pBool( kCalc ) );
+      LOG( "      -precision : %d", prec );
+      LOG( "      -log       : %s", "stdout" );
       return 0;
    }
 
@@ -1846,6 +1915,10 @@ int main( int argc, char **argv )
          dump = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-updAll" ) )
          uAll = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-knotCalc" ) )
+         kCalc = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-precision" ) )
+         prec = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-log" ) ) {
          if ( (fp=::fopen( argv[++i], "wb" )) )
             _log = fp;
@@ -1855,7 +1928,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, trim, dump, uAll, xInc, yInc, maxX );
+   OptionsCurve    lvc( db, sqr, trim, dump, uAll, kCalc, prec, xInc, yInc, maxX );
    SplinePublisher pub( lvc, svr, svc, rate, dly );
    double          d0, srfAge, age;
    size_t          ns;
@@ -1864,15 +1937,17 @@ int main( int argc, char **argv )
     * Dump Config
     */
    LOG( OptionsCurveID() );
-   LOG( "Config._square   = %s", _pBool( lvc._square ) );
-   LOG( "Config._trim     = %s", _pBool( lvc._trim ) );
-   LOG( "Config._dump     = %s", _pBool( lvc._dump ) );
-   LOG( "Config._bUpdAll  = %s", _pBool( lvc._bUpdAlways ) );
-   LOG( "Config._xInc     = %.2f", lvc._xInc );
-   LOG( "Config._yInc     = %.2f", lvc._yInc );
-   LOG( "Config._maxX     = %d", lvc._maxX );
-   LOG( "Config._rate     = %.1fs", rate );
-   LOG( "Config._bdsDly   = %d", dly );
+   LOG( "Config._square    = %s", _pBool( lvc._square ) );
+   LOG( "Config._trim      = %s", _pBool( lvc._trim ) );
+   LOG( "Config._dump      = %s", _pBool( lvc._dump ) );
+   LOG( "Config._bUpdAll   = %s", _pBool( lvc._bUpdAlways ) );
+   LOG( "Config._knotCalc  = %s", _pBool( lvc._knotCalc ) );
+   LOG( "Config._precision = %d", lvc._precision );
+   LOG( "Config._xInc      = %.2f", lvc._xInc );
+   LOG( "Config._yInc      = %.2f", lvc._yInc );
+   LOG( "Config._maxX      = %d", lvc._maxX );
+   LOG( "Config._rate      = %.1fs", rate );
+   LOG( "Config._bdsDly    = %d", dly );
    /*
     * Load Splines
     */

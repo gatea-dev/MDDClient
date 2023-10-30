@@ -554,9 +554,9 @@ private:
 
 	   M = src.size();
 	   N = M ? src[0].size() : 0;
-	   for ( size_t c=0; c<M; c++ ) {
+	   for ( size_t c=0; c<N; c++ ) {
 	      zRow.clear();
-	      for ( size_t r=0; r<N; zRow.push_back( src[c][r] ), r++ );
+	      for ( size_t r=0; r<M; zRow.push_back( src[r][c] ), r++ );
 	      dst.push_back( zRow );
 	   }
 	   src = dst;
