@@ -86,6 +86,7 @@ static const char *fmtDbl( double dv, string &s )
 class KnotDef
 {
 public:
+   Contract      *_greek;    // GREEK::Contract
    OptionsSpline *_splineX;  // Non-zero implies calc each time 
    OptionsSpline *_splineE;  // Non-zero implies calc each time 
    const char    *_pSplX;    // _splineX->name()
@@ -96,7 +97,8 @@ public:
    u_int64_t      _jExp;    // julNum( exp )
    size_t         _idx;     // Non-zero implies real-time
    double         _tUpd;    // Time of last update in LVC
-   double         _lwc;     // Last Value from LVC
+   double         _C;       // Last Value from LVC
+   double         _ImpVol;  // Calculated Implied Volacility
 
 }; // KnotDef
 
@@ -113,15 +115,16 @@ typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 class OptionsCurve : public OptionsBase
 {
 public:
-   bool    _square;
-   bool    _trim;
-   bool    _dump;
-   bool    _knotCalc;
-   int     _precision;
-   double  _xInc;
-   double  _yInc;
-   int     _maxX;
-   KnotDef _kz;
+   bool      _square;
+   bool      _trim;
+   bool      _dump;
+   bool      _knotCalc;
+   int       _precision;
+   double    _xInc;
+   double    _yInc;
+   int       _maxX;
+   KnotDef   _kz;
+   u_int64_t _jToday;
 
    /////////////////////////
    // Constructor
@@ -144,9 +147,61 @@ public:
       _precision( precision ),
       _xInc( xInc ),
       _yInc( yInc ),
-      _maxX( maxX )
+      _maxX( maxX ),
+      _jToday( 0 )
    {
+      struct timeval tv   = { TimeSec(), 0 };
+      rtDateTime     dtTm = unix2rtDateTime( tv );
+
       ::memset( &_kz, 0, sizeof( _kz ) );
+      _jToday = julNum( dtTm._date );
+   }
+
+   /////////////////////////
+   // Operations
+   /////////////////////////
+   /**
+    * \brief Set today from YYYYMMDD
+    *
+    * \param ymd - YYYYMMDD
+    */
+   void SetToday( int ymd )
+   {
+      rtDate dt;
+
+      dt._year   = ymd / 10000; 
+      dt._month  = ( ymd / 100 ) % 100;
+      dt._month -= 1;
+      dt._mday   = ymd % 100;
+      dt._month  = WithinRange( 0, dt._month, 11 );
+      dt._mday   = WithinRange( 1, dt._mday,  31 ); 
+      _jToday    = julNum( dt );
+   }
+
+   /**
+    * \brief Find via brute force index for ( Service, Ticker )
+    *
+    * \param all - Current LVC Snap
+    * \param tkr - Ticker to find
+    * \param svc - (Optional) Service
+    * \return LVC Index; l_NoIndex if not found
+    */
+   size_t FindIndex( LVCAll     &all, 
+                     const char *tkr, 
+                     const char *svc=(const char *)0 )
+   {
+      Messages &msgs = all.msgs();
+      Message  *msg;
+
+      for ( size_t ix=0; ix<msgs.size(); ix++ ) {
+         msg = msgs[ix];
+         if ( ::strcmp( msg->Ticker(), tkr ) )
+            continue; // for-j
+         if ( svc && ::strcmp( msg->Service(), svc ) )
+            continue; // for-j
+         return ix;
+      }
+      return l_NoIndex;
    }
 
 }; // class OptionsCurve
@@ -193,8 +248,8 @@ public:
    // Access
    /////////////////////////
 public:
-   _DoubleList &X()        { return _X; }
-   _DoubleList &Y()        { return _Y; }
+   _DoubleList &X()       { return _X; }
+   _DoubleList &Y()       { return _Y; }
    size_t      NumKnots() { return _kdb.size(); }
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
@@ -215,9 +270,7 @@ public:
    void Load( LVCAll &all )
    {
       XmlElemVector &edb  = _xe.elements();
-      Messages      &msgs = all.msgs();
       const char    *svc, *tkr;
-      Message       *msg;
       XmlElem       *xk;
       KnotDef        k;
 
@@ -237,25 +290,14 @@ public:
          if ( !(k._exp=xk->getAttrValue( "Interval", (int)0 )) )
             continue; // for-i
          strcpy( k._lvcName, tkr );
-         k._lwc = xk->getAttrValue( "Value", 0.0 );
-         if ( k._lwc ) { 
+         k._C = xk->getAttrValue( "Value", 0.0 );
+         if ( k._C ) { 
             _kdb.push_back( k );
             continue; // for-i
          }
-         /*
-          * Stupid : Do it once to figure out LVC Index since
-          * LVC_Snap() / LVC_View() do not give you the index
-          */
-         for ( size_t j=0; j<msgs.size(); j++ ) {
-            msg = msgs[j];
-            if ( ::strcmp( msg->Ticker(), tkr ) )
-               continue; // for-j
-            if ( ::strcmp( msg->Service(), svc ) )
-               continue; // for-j
-            k._idx = j;
+         k._idx = _lvc.FindIndex( all, tkr, svc );
+         if ( k._idx != l_NoIndex )
             _kdb.push_back( k );
-            break; // for-j
-         }
       }
    }
 
@@ -292,7 +334,7 @@ public:
          k     = _kdb[i];
          msg   = k._idx ? msgs[k._idx] : (Message *)0;
          pt._x = _kdb[i]._exp;
-         pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._lwc;
+         pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
          XY.push_back( pt );
       }
 
@@ -346,20 +388,26 @@ private:
    SortedInt64Set _exps;
    _DoubleList    _strikes;
    SplineMap      _splines;
+   size_t         _idx;   // Underlyer Index in LVC
+   double         _S;     // Underlyer Price
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   Underlyer( OptionsCurve &lvc, const char *und ) :
+   Underlyer( OptionsCurve &lvc, LVCAll &all, const char *und ) :
       string( und ),
       _lvc( lvc ),
       _byExp(),
       _byStr(),
       _exps(),
       _strikes(),
-      _splines()
-   { ; }
+      _splines(),
+      _idx( lvc.FindIndex( all, und ) ),
+      _S( 0.0 )
+   {
+      Snap( all );
+   }
 
    /////////////////////////
    // Access
@@ -370,7 +418,8 @@ public:
    IndexCache     &byExp()   { return _byExp; }
    IndexCache     &byStr()   { return _byStr; }
    SortedInt64Set &exps()    { return _exps; }
-   _DoubleList     &strikes() { return _strikes; }
+   _DoubleList    &strikes() { return _strikes; }
+   double          S()       { return _S; }
 
    /**
     * \brief Return true if valid expiration date
@@ -425,6 +474,18 @@ public:
       }
       for ( it=strikes.begin(); it!=strikes.end(); it++ )
          _strikes.push_back( l_StrikeDiv * (*it)  );
+   }
+
+   double Snap( LVCAll &all )
+   {
+      Messages &msgs = all.msgs();
+      Message  *msg;
+
+      if ( _idx != l_NoIndex ) {
+         msg = msgs[_idx];
+         _S  = _lvc.Last( *msg );
+      }
+      return _S;
    }
 
 
@@ -517,7 +578,9 @@ public:
 
    void SnapLVCFlds( KnotDef &k, Message &m )
    {
+      Contract   *grk;
       Field      *fld;
+      double      r;
       const char *pf;
 
       // 1) Display Name
@@ -527,7 +590,11 @@ public:
 
       // 2) Value
 
-      k._lwc = _lvc.MidQuote( m );
+      k._C = _lvc.MidQuote( m );
+      if ( (grk=k._greek) ) {
+r = 0.10; // TODO : From RiskFreeSpline
+         k._ImpVol = grk->ImpliedVolatility( k._C, _S, r );
+      }
    }
 
 }; // class Underlyer
@@ -611,11 +678,13 @@ public:
    /////////////////////////
 public:
    const char *name()     { return data(); }
-   _DoubleList &X()        { return _X; }
-   _DoubleList &Y()        { return _Y; }
+   _DoubleList &X()       { return _X; }
+   _DoubleList &Y()       { return _Y; }
    u_int64_t   tExp()     { return _tExp; };
    u_int64_t   dStr()     { return _dStr; };
    bool        byExp()    { return( _tExp != 0 ); }
+   bool        IsPut()    { return( _type == spline_put ); }
+   bool        IsCall()   { return( _type == spline_call ); }
    size_t      NumKnots() { return _kdb.size(); }
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
@@ -803,10 +872,11 @@ public:
 private:
    void _Init( LVCAll &all )
    {
-      Messages &msgs  = all.msgs();
+      Messages &msgs = all.msgs();
       Ints      udb;
       Message  *msg;
       KnotDef   k;
+      double    dX, Tt;
       int       ix;
 
       /*
@@ -829,11 +899,15 @@ private:
          _und.SnapLVCFlds( k, *msg );
          k._exp     = _lvc.Expiration( *msg, false );
          k._jExp    = _lvc.Expiration( *msg, true );
-         k._strike  = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
+         Tt         = 1.0 * ( k._jExp - _lvc._jToday ) / 365.0;
+         dX         = _lvc.StrikePrice( *msg );
+         k._strike  = (u_int64_t)( dX * l_StrikeMul );
          k._tUpd    = msg->MsgTime();
          if ( byExp() ) {
             if ( k._exp == _tExp ) {
-               k._idx = ix;
+               k._idx   = ix;
+               if ( IsPut() || IsCall() )
+                  k._greek = new Contract( IsCall(), dX, Tt );
                _kdb.push_back( k );
             }
          }
@@ -1455,8 +1529,6 @@ assert( kz._splineX || kz._splineE );
    /**
     * \brief Determine 'best' spline value from dX or dE
     *
-    * TODO : closest to csX / csE knots
-    *
     * \param csX - CubicSpline : Strike Price
     * \param csE - CubicSpline : Expiration Date
     * \param snap - Snapped LVC values
@@ -1604,7 +1676,7 @@ public:
        */
       for ( nt=ndb.begin(); nt!=ndb.end(); nt++ ) {
          tkr = (*nt).data();
-         und = new Underlyer( _lvc, tkr );
+         und = new Underlyer( _lvc, all, tkr );
          und->Init( all );
          udb.push_back( und );
       }
@@ -1879,6 +1951,13 @@ private:
       LOG( "PUB-BDS : %d bytes", nb );
    }
 
+   void _SnapUnderlyers( LVCAll &all )
+   {
+      Underlyers &udb = _underlyers;
+
+      for ( size_t i=0; i<udb.size(); udb[i]->Snap( all ), i++ );
+   }
+
    int _CalcSplines( LVCAll &all, time_t now, bool bForce, Update &u )
    {
       SplineMap          &sdb = _splines;
@@ -1888,6 +1967,7 @@ private:
       int                 nb, rc;
 bool bImg = true; // VectorView.js needs fidVecX
 
+      _SnapUnderlyers( all );
       for ( rc=0,it=sdb.begin(); it!=sdb.end(); it++ ) {
          tkr = (*it).first.data();
          spl = (*it).second;
