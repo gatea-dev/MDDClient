@@ -18,7 +18,7 @@
 #include <GREEK/_Volatility.hpp>
 #endif // DOXYGEN_OMIT
 
-namespace GREEK
+namespace QUANT
 {
 ////////////////////////////////////////////////
 //
@@ -225,6 +225,6 @@ private:
 
 };  // class Contract
 
-} // namespace QUODD
+} // namespace QUANT
 
 #endif // __GREEK_CONTRACT_HPP 

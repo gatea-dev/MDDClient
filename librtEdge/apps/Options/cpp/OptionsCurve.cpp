@@ -45,9 +45,9 @@ typedef hash_map<string, OptionsSurface *> SurfaceMap;
 typedef vector<Underlyer *>                Underlyers;
 
 /////////////////////////////////////
-// Version
+// Version, etc.
 /////////////////////////////////////
-const char *OptionsCurveID()
+static const char *OptionsCurveID()
 {
    static string s;
    const char   *sccsid;
@@ -65,6 +65,16 @@ const char *OptionsCurveID()
    }
    sccsid = s.data();
    return sccsid+4;
+}
+
+static const char *fmtDbl( double dv, string &s )
+{
+   char buf[100], out[100];
+
+   sprintf( buf, "%.3f", dv );
+   sprintf( out, "%10s", buf );
+   s = out;
+   return s.data();
 }
 
 
@@ -1998,6 +2008,38 @@ int main( int argc, char **argv )
    }
    if ( ::strcmp( pLog, "stdout" ) && (fp=::fopen( pLog, "wb" )) )
       _log = fp;
+   LOG( "Started %s", OptionsCurveID() );
+
+   /////////////////////
+   // Uncle G Sanity Check
+   /////////////////////
+   Contract    c1( true, 20.0, 0.25 );
+   Contract    c2( false, 1.6, 0.5 );
+   Contract    c3( false, 300.0, 0.3333 );
+   double      dv;
+   int         i;
+   const char *pfx[] = { "[Hull 11.10 pg 246 =  0.235]",
+                         "[Hull 14.1  pg 319 = -0.458]",
+                         "[Hull 14.4  pg 322 =-18.150]",
+                         "[Hull 14.7  pg 327 =  0.009]",
+                         "[Hull 14.9  pg 330 = 66.440]",
+                         "[Hull 14.10 pg 330 =-42.570]",
+                         (const char *)0 };
+
+   i  = 0;
+   dv = c1.ImpliedVolatility( 1.875, 21.0, 0.1 );
+   LOGRAW( "UncleG.%s ImpVol = %s", pfx[i++], fmtDbl( dv, s ) );
+   dv = c2.Delta( 1.62, 0.15, 0.10, 0.13 );
+   LOGRAW( "UncleG.%s Delta  = %s", pfx[i++], fmtDbl( dv, s ) );
+   dv = c3.Theta( 305, 0.25, 0.08, 0.03 );
+   LOGRAW( "UncleG.%s Theta  = %s", pfx[i++], fmtDbl( dv, s ) );
+   dv = c3.Gamma( 305, 0.25, 0.08, 0.03 );
+   LOGRAW( "UncleG.%s Gamma  = %s", pfx[i++], fmtDbl( dv, s ) );
+   dv = c3.Vega( 305, 0.25, 0.08, 0.03 );
+   LOGRAW( "UncleG.%s Vega   = %s", pfx[i++], fmtDbl( dv, s ) );
+   dv = c3.Rho( 305, 0.25, 0.08, 0.03 );
+   LOGRAW( "UncleG.%s Rho    = %s", pfx[i++], fmtDbl( dv, s ) );
+
 
    /////////////////////
    // Do it

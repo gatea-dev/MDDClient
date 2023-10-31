@@ -6,7 +6,7 @@
 *  REVISION HISTORY:
 *      7 MAY 2000 jcs  Created.
 *      . . .
-*     31 OCT 2023 jcs  namespace GREEK
+*     31 OCT 2023 jcs  namespace QUANT
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -15,7 +15,7 @@
 
 #ifndef DOXYGEN_OMIT
 
-namespace GREEK
+namespace QUANT
 {
 
 ////////////////////////////////////////////////
@@ -507,7 +507,7 @@ public:
 
 }; // class OptionRho
 
-}  // namespace GREEK
+}  // namespace QUANT
 
 #endif // DOXYGEN_OMIT
  
