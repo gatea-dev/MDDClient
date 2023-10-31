@@ -14,10 +14,12 @@
 *      3 NOV 2022 jcs  Build 60: AddVector()
 *     26 JAN 2023 jcs  Build 62: PubTkr_SIMPLE()
 *     14 SEP 2023 jcs  Build 64: -dead
+*     31 OCT 2023 jcs  Build 66: ../quant
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+// #include <quant.hpp>
 
 #if !defined(M_PI)
 #define M_E            2.7182818284590452354   /* e */

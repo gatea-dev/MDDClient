@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *     14 FEB 2023 jcs  Created.
+*     31 OCT 2023 jcs  Move out of librtEdge
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -37,7 +38,7 @@ namespace QUANT
  * -# Decompose N x N matrix A
  * -# Solve() : B = A * X after decomposition
  */
-class LU : public RTEDGE::rtEdge
+class LU
 {
 	////////////////////////////////////
 	// Constructor / Destructor
@@ -48,8 +49,7 @@ public:
 	 *
 	 * \param A - Input Matrix
 	 */
-	LU( RTEDGE::DoubleGrid &A ) :
-	   RTEDGE::rtEdge(),
+	LU( QUANT::DoubleGrid &A ) :
 	   _A(),
 	   _N( A.size() ),
 	   _LU(),
@@ -69,7 +69,7 @@ public:
 	 *
 	 * \return original matrix
 	 */
-	RTEDGE::DoubleGrid &A_matrix() { return _A; }
+	QUANT::DoubleGrid &A_matrix() { return _A; }
 
 	/**
 	 * \brief Return matrix size
@@ -83,7 +83,7 @@ public:
 	 *
 	 * \return decomposed matrix LU
 	 */
-	RTEDGE::DoubleGrid &LU_matrix() { return _LU; }
+	QUANT::DoubleGrid &LU_matrix() { return _LU; }
 
 	/**
 	 * \brief Return true if decomposed
@@ -103,11 +103,11 @@ public:
 	 * \param X : Right hand size vector of length n
 	 * \return B
 	 */
-	RTEDGE::DoubleList &BackSub( RTEDGE::DoubleList &X )
+	QUANT::DoubleList &BackSub( QUANT::DoubleList &X )
 	{
-	   RTEDGE::DoubleGrid &A   = _LU;
-	   RTEDGE::DoubleList &B   = _B;
-	   RTEDGE::DoubleList &idx = _lu_idx;
+	   QUANT::DoubleGrid &A   = _LU;
+	   QUANT::DoubleList &B   = _B;
+	   QUANT::DoubleList &idx = _lu_idx;
 	   int                 i, ii, ip, j, N;
 	   double              sum;
 
@@ -139,11 +139,11 @@ public:
 	 *
 	 * \return LU 
 	 */
-	RTEDGE::DoubleGrid &Decompose()
+	QUANT::DoubleGrid &Decompose()
 	{
 	   int                i, j, k, imax, N;
 	   double             big, dum, sum, tmp;
-	   RTEDGE::DoubleList vv;
+	   QUANT::DoubleList vv;
 
 	   _lu_d = 1.0;
 	   _lu_idx.clear();
@@ -205,11 +205,11 @@ public:
 	 *
 	 * \return Inverted matrix 
 	 */
-	RTEDGE::DoubleGrid Invert()
+	QUANT::DoubleGrid Invert()
 	{
 	   size_t     i, j;
-	   RTEDGE::DoubleList X;
-	   RTEDGE::DoubleGrid rc, inv;
+	   QUANT::DoubleList X;
+	   QUANT::DoubleGrid rc, inv;
 
 	   _LU.clear();
 	   Decompose();
@@ -217,7 +217,7 @@ public:
 	      X.clear();
 	      for ( i=0; i<_N; X.push_back( 0.0 ), i++ );
 	      X[j] = 1.0;
-	      rc.push_back( RTEDGE::DoubleList( BackSub( X ) ) ); 
+	      rc.push_back( QUANT::DoubleList( BackSub( X ) ) ); 
 	   }
 	   return _Transpose( rc );
 	}
@@ -226,9 +226,9 @@ public:
 	// private Helpers
 	 ////////////////////////
 private:
-	void _Copy( RTEDGE::DoubleGrid &src, RTEDGE::DoubleGrid &dst )
+	void _Copy( QUANT::DoubleGrid &src, QUANT::DoubleGrid &dst )
 	{
-	   RTEDGE::DoubleList a;
+	   QUANT::DoubleList a;
 
 	   dst.clear();
 	   for ( size_t i=0; i<_N; i++ ) {
@@ -238,9 +238,9 @@ private:
 	   }    
 	}
 
-	RTEDGE::DoubleGrid _Transpose( RTEDGE::DoubleGrid &src )
+	QUANT::DoubleGrid _Transpose( QUANT::DoubleGrid &src )
 	{
-	   RTEDGE::DoubleGrid dst;
+	   QUANT::DoubleGrid dst;
 	   size_t             i, j, N;
 
 	   // ENSURE : MUST BE N x N
@@ -249,7 +249,7 @@ private:
 	   N = src.size();
 	   for ( i=0; i<N; i++ )
 	      for ( j=0; j<N; dst[i][j]=src[j][i], j++ );
-	   return RTEDGE::DoubleGrid( dst );
+	   return QUANT::DoubleGrid( dst );
 	}
 
 	////////////////////////
@@ -257,17 +257,17 @@ private:
 	 ////////////////////////
 private:
 	/** \brief Original Matrix */
-	RTEDGE::DoubleGrid _A;
+	QUANT::DoubleGrid _A;
 	/** \brief Matrix Struct : N x N */
 	size_t             _N;
 	/** \brief Decomposed Matrix */
-	RTEDGE::DoubleGrid _LU;
+	QUANT::DoubleGrid _LU;
 	/** \brief Records the row permutation effected by partial pivoting */
-	RTEDGE::DoubleList _lu_idx;
+	QUANT::DoubleList _lu_idx;
 	/** \brief 1 if even row interchanges; -1 if odd */
 	int                _lu_d;
 	/** \brief Result Matrix */
-	RTEDGE::DoubleList _B;
+	QUANT::DoubleList _B;
 
 }; // class LU
 

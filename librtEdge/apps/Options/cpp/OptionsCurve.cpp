@@ -10,6 +10,7 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
+#include <libOptionGreeks.h>
 #ifndef WIN32
 #include <SigHandler.h>
 #endif // WIN32
@@ -60,7 +61,8 @@ const char *OptionsCurveID()
       cp  = bp;
       cp += sprintf( cp, "@(#)OptionsCurve Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
-      cp += sprintf( cp, rtEdge::Version() );
+      cp += sprintf( cp, "%s\n", rtEdge::Version() );
+      cp += sprintf( cp, "%s", GREEK::Calculator::Version() );
       s   = bp;
    }
    sccsid = s.data();
@@ -106,7 +108,6 @@ public:
    bool    _square;
    bool    _trim;
    bool    _dump;
-   bool    _bUpdAlways;
    bool    _knotCalc;
    int     _precision;
    double  _xInc;
@@ -122,7 +123,6 @@ public:
                  bool        square,
                  bool        trim,
                  bool        dump,
-                 bool        bUpdAlways,
                  bool        knotCalc,
                  int         precision,
                  double      xInc,
@@ -132,7 +132,6 @@ public:
       _square( square ),
       _trim( trim ),
       _dump( dump ),
-      _bUpdAlways( bUpdAlways ),
       _knotCalc( knotCalc ),
       _precision( precision ),
       _xInc( xInc ),
@@ -143,6 +142,186 @@ public:
    }
 
 }; // class OptionsCurve
+
+
+
+////////////////////////////////////////////////
+//
+//    c l a s s   R i s k F r e e S p l i n e
+//
+////////////////////////////////////////////////
+class RiskFreeSpline : public string
+{
+private:
+   OptionsCurve      &_lvc;
+   XmlElem           &_xe;
+   string             _svc;
+   int                _fid;
+   KnotList           _kdb;
+   _DoubleList         _X;
+   _DoubleList         _Y;
+   QUANT::CubicSpline _CS; // Last Calc
+   double             _xInc;
+   time_t             _tCalc;
+
+   /////////////////////////
+   // Constructor
+   /////////////////////////
+public:
+   RiskFreeSpline( OptionsCurve &lvc, XmlElem &xe ) :
+      _lvc( lvc ),
+      _xe( xe ),
+      _svc( xe.getAttrValue( "Service", "velocity" ) ),
+      _fid( xe.getAttrValue( "FieldID", 6 ) ),
+      _kdb(),
+      _X(),
+      _Y(),
+      _CS(),
+      _xInc( 1 ), // Daily
+      _tCalc( 0 )
+   { ; }
+
+   /////////////////////////
+   // Access
+   /////////////////////////
+public:
+   _DoubleList &X()        { return _X; }
+   _DoubleList &Y()        { return _Y; }
+   size_t      NumKnots() { return _kdb.size(); }
+
+   QUANT::CubicSpline &CS( LVCAll &all, time_t now )
+   {
+      SnapKnots( all, now );
+      return _CS;
+   }
+
+   /////////////////////////
+   // Operations
+   /////////////////////////
+public:
+   /**
+    * \brief Initialize / Load Spline from LVC
+    *
+    * \param all - Current LVC Snap
+    */ 
+   void Load( LVCAll &all )
+   {
+      XmlElemVector &edb  = _xe.elements();
+      Messages      &msgs = all.msgs();
+      const char    *svc, *tkr;
+      Message       *msg;
+      XmlElem       *xk;
+      KnotDef        k;
+
+      // Pre-condition
+
+      if ( _kdb.size() )
+         return;
+
+      // Safe to to continue ...
+
+      svc = _svc.data();
+      for ( size_t i=0; i<edb.size(); i++ ) {
+         ::memset( &k, 0, sizeof( k ) );
+         xk = edb[i];
+         if ( !(tkr=xk->getAttrValue( "Ticker", (const char *)0 )) )
+            continue; // for-i
+         if ( !(k._exp=xk->getAttrValue( "Interval", (int)0 )) )
+            continue; // for-i
+         strcpy( k._lvcName, tkr );
+         k._lwc = xk->getAttrValue( "Value", 0.0 );
+         if ( k._lwc ) { 
+            _kdb.push_back( k );
+            continue; // for-i
+         }
+         /*
+          * Stupid : Do it once to figure out LVC Index since
+          * LVC_Snap() / LVC_View() do not give you the index
+          */
+         for ( size_t j=0; j<msgs.size(); j++ ) {
+            msg = msgs[j];
+            if ( ::strcmp( msg->Ticker(), tkr ) )
+               continue; // for-j
+            if ( ::strcmp( msg->Service(), svc ) )
+               continue; // for-j
+            k._idx = j;
+            _kdb.push_back( k );
+            break; // for-j
+         }
+      }
+   }
+
+   /**
+    * \brief Build Spline from current LVC Snap
+    *
+    * \param all - Current LVC Snap
+    * \param now - Current Unix Time
+    * \return true if Calc'ed; false if not
+    */ 
+   bool SnapKnots( LVCAll &all, time_t now )
+   {
+      Messages    &msgs = all.msgs();
+      Message     *msg;
+      KnotDef      k;
+      size_t       i, nk;
+      DoubleXYList XY;
+      DoubleXY     pt;
+
+      // Pre-condition(s)
+
+      if ( _tCalc == now )
+         return false;
+      if ( !(nk=_kdb.size()) )
+         return false;
+
+      /*
+       * 1) Pull out real-time Knot values from LVC
+       */
+      _tCalc = now;
+      _X.clear();
+      _Y.clear();
+      for ( i=0; i<nk; i++ ) {
+         k     = _kdb[i];
+         msg   = k._idx ? msgs[k._idx] : (Message *)0;
+         pt._x = _kdb[i]._exp;
+         pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._lwc;
+         XY.push_back( pt );
+      }
+
+      QUANT::CubicSpline cs( XY );
+
+      _CS = cs;
+      return true;
+   }
+
+   /**
+    * \brief Build Spline from current LVC Snap
+    *
+    * \param all - Current LVC Snap
+    * \param now - Current Unix Time
+    */ 
+   void Calc( LVCAll &all, time_t now )
+   {
+      DoubleXYList &XY = _CS.XY();
+      size_t         nx;
+      double         x, x0, x1;
+
+      // Pre-condition(s)
+
+      if ( !SnapKnots( all, now ) )
+         return;
+
+      // Rock on
+
+      nx = XY.size();
+      x0 = XY[1]._x;
+      x1 = XY[nx-1]._x;
+      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
+      _Y  = _CS.Spline( _X );
+   }
+
+}; // class RiskFreeSpline
+
 
 
 ////////////////////////////////////////////////
@@ -157,7 +336,7 @@ private:
    IndexCache     _byExp; // Expiration
    IndexCache     _byStr; // Strike Price
    SortedInt64Set _exps;
-   DoubleList     _strikes;
+   _DoubleList    _strikes;
    SplineMap      _splines;
 
    /////////////////////////
@@ -183,7 +362,7 @@ public:
    IndexCache     &byExp()   { return _byExp; }
    IndexCache     &byStr()   { return _byStr; }
    SortedInt64Set &exps()    { return _exps; }
-   DoubleList     &strikes() { return _strikes; }
+   _DoubleList     &strikes() { return _strikes; }
 
    /**
     * \brief Return true if valid expiration date
@@ -362,8 +541,8 @@ private:
    u_int64_t          _dStr;
    SplineType         _type;
    KnotList           _kdb;
-   DoubleList         _X;
-   DoubleList         _Y;
+   _DoubleList         _X;
+   _DoubleList         _Y;
    QUANT::CubicSpline _CS; // Last Calc
    double             _xInc;
    int                _StreamID;
@@ -424,8 +603,8 @@ public:
    /////////////////////////
 public:
    const char *name()     { return data(); }
-   DoubleList &X()        { return _X; }
-   DoubleList &Y()        { return _Y; }
+   _DoubleList &X()        { return _X; }
+   _DoubleList &Y()        { return _Y; }
    u_int64_t   tExp()     { return _tExp; };
    u_int64_t   dStr()     { return _dStr; };
    bool        byExp()    { return( _tExp != 0 ); }
@@ -459,7 +638,7 @@ public:
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
-      DoubleList   &xdb  = _und.strikes();
+      _DoubleList   &xdb  = _und.strikes();
       double        x0   = xdb[0];
       double        x1   = xdb[xdb.size()-1];
       Message      *msg;
@@ -545,9 +724,9 @@ public:
     */ 
    bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
-      RTEDGE::DoubleXYList &XY = _CS.XY();
-      size_t                n, nk, nx;
-      double                x, x0, x1, minInc;
+      DoubleXYList &XY = _CS.XY();
+      size_t         n, nk, nx;
+      double         x, x0, x1, minInc;
 
       // Pre-condition(s)
 
@@ -586,8 +765,8 @@ public:
 
       // Initialize / Publish
 
-      DoubleList unx;
-      DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
+      _DoubleList unx;
+      _DoubleList &X = byExp() ? _X : _lvc.julNum2Unix( _X, unx );
 
       u.Init( name(), _StreamID, bImg );
       x0   = X[0];
@@ -701,11 +880,11 @@ private:
    bool          _bPut;
    bool          _surfCalc;
    KnotGrid      _kdb;
-   DoubleList    _X;
-   DoubleList    _Y;
-   DoubleList    _XX; // Published
-   DoubleList    _YY; // Published
-   DoubleGrid    _Z;
+   _DoubleList   _X;
+   _DoubleList   _Y;
+   _DoubleList   _XX; // Published
+   _DoubleList   _YY; // Published
+   _DoubleGrid   _Z;
    double        _xInc;
    double        _yInc;
    int           _StreamID;
@@ -778,8 +957,8 @@ public:
       _tCalc( 0 )
    {
       KnotGrid   &kdb = c._kdb;
-      DoubleList &X   = c._X;
-      DoubleList &Y   = c._Y;
+      _DoubleList &X   = c._X;
+      _DoubleList &Y   = c._Y;
       double      x0, x1, x, dr;
       KnotDef     k;
       size_t      i, M, N;
@@ -837,9 +1016,9 @@ public:
    const char *name() { return data(); }
    size_t      M()    { return _X.size(); }
    size_t      N()    { return _Y.size(); }
-   DoubleList &X()    { return _X; }
-   DoubleList &Y()    { return _Y; }
-   DoubleGrid &Z()    { return _Z; }
+   _DoubleList &X()    { return _X; }
+   _DoubleList &Y()    { return _Y; }
+   _DoubleGrid &Z()    { return _Z; }
 
    /////////////////////////
    // WatchList
@@ -869,7 +1048,7 @@ public:
       double     z, zX, zE, dX;
       double     x0, x1, y0, y1;
       bool       bUpd;
-      DoubleGrid Z;
+      _DoubleGrid Z;
 
       // Pre-condition(s)
 
@@ -891,7 +1070,7 @@ public:
       n      = N();
       bUpd   = true;
       for ( r=0; r<nr; r++ ) {
-         DoubleList zRow, zSnap;
+         _DoubleList zRow, zSnap;
          double     tUpd;
 
          /*
@@ -1010,7 +1189,7 @@ assert( nc == n );
       else {
          _XX = _X;
          _YY = _Y;
-         _Z  = DoubleGrid( Z );
+         _Z  = _DoubleGrid( Z );
       }
       age = _lvc.TimeNs() - d0;
       nx  = _XX.size();
@@ -1066,7 +1245,7 @@ assert( nc == n );
 
       // Rock on
 
-      DoubleList X;
+      _DoubleList X;
 
       _lvc.julNum2Unix( _XX, X );
       x0   = X[0];
@@ -1280,7 +1459,7 @@ assert( kz._splineX || kz._splineE );
     */ 
    double _BestZ( QUANT::CubicSpline &csX,
                   QUANT::CubicSpline &csE,
-                  DoubleList         &snap, 
+                  _DoubleList         &snap, 
                   size_t              col, 
                   double              dX, 
                   double              dE )
@@ -1332,7 +1511,6 @@ private:
    OptionsCurve &_lvc;
    string        _svr;
    double        _pubRate;
-   int           _bdsDelay;
    Underlyers    _underlyers;
    SplineMap     _splines;
    SurfaceMap    _surfaces;
@@ -1340,7 +1518,6 @@ private:
    Mutex         _wlMtxR;
    double        _tPub;
    bool          _bName;
-   time_t        _tOpenBDS;
    void         *_bdsStreamID;
 
    /////////////////////
@@ -1350,13 +1527,11 @@ public:
    SplinePublisher( OptionsCurve &lvc,
                     const char   *svr, 
                     const char   *svc,
-                    double        pubRate,
-                    int           bdsDelay ) :
+                    double        pubRate ) :
       PubChannel( svc ),
       _lvc( lvc ),
       _svr( svr ),
       _pubRate( pubRate ),
-      _bdsDelay( bdsDelay ),
       _underlyers(),
       _splines(),
       _surfaces(),
@@ -1364,7 +1539,6 @@ public:
       _wlMtxR(),
       _tPub( 0.0 ),
       _bName( false ),
-      _tOpenBDS( 0 ),
       _bdsStreamID( (void *)0 )
    {
       SetBinary( true );
@@ -1403,9 +1577,8 @@ public:
       return rc;
    }
 
-   size_t LoadSplines()
+   size_t LoadSplines( LVCAll &all )
    {
-      LVCAll                   &all = _lvc.ViewAll();
       Underlyers               &udb = _underlyers;
       SplineMap                &sdb = _splines;
       SortedStringSet           ndb = _lvc.Underlyers( all );
@@ -1432,9 +1605,9 @@ public:
        */
       for ( size_t i=0; i<udb.size(); i++ ) {
          SortedInt64Set          &edb = udb[i]->exps();
-         DoubleList              &xdb = udb[i]->strikes();
+         _DoubleList              &xdb = udb[i]->strikes();
          SortedInt64Set::iterator et;
-         DoubleList::iterator     xt;
+         _DoubleList::iterator     xt;
 
          und = udb[i];
          for ( et=edb.begin(); et!=edb.end(); et++ ) {
@@ -1618,9 +1791,6 @@ protected:
 
    virtual void OnOpenBDS( const char *bds, void *tag )
    {
-      char *tkrs[] = { (char *)0 };
-      int   nb;
-
       // Publisher name only
 
       LOG( "OPEN.BDS %s", bds );
@@ -1634,21 +1804,13 @@ protected:
          return;
       }
       _bdsStreamID = tag;
-      _tOpenBDS    = 0;
-      if ( _bdsDelay ) {
-         _tOpenBDS = TimeSec();
-         nb = PublishBDS( bds, (size_t)_bdsStreamID, tkrs );
-         LOG( "PUB-BDS : %d bytes", nb );
-      }
-      else
-         _PublishBDS();
+      _PublishBDS();
    }
 
    virtual void OnCloseBDS( const char *bds )
    {
       LOG( "CLOSE.BDS %s", bds );
       _bdsStreamID = (void *)0;
-      _tOpenBDS    = 0;
    }
 
    virtual Update *CreateUpdate()
@@ -1658,23 +1820,11 @@ protected:
 
    virtual void OnIdle()
    {
-      time_t age;
-
-      // 1) Once
+      // Once
 
       if ( !_bName )
          SetThreadName( "MDD" );
       _bName = true;
-
-      // 2) Once per BDS
-
-      if ( !_bdsStreamID || !_tOpenBDS || !_bdsDelay )
-         return;
-      age = TimeSec() - _tOpenBDS;
-      if ( age >= _bdsDelay ) {
-         _PublishBDS();
-         _tOpenBDS = 0;
-      }
    }
 
    virtual void OnWorkerThread()
@@ -1717,8 +1867,7 @@ private:
          }
       }
       tkrs.push_back( (char *)0 );
-      nb        = PublishBDS( bds, (size_t)_bdsStreamID, tkrs.data() );
-      _tOpenBDS = 0;
+      nb = PublishBDS( bds, (size_t)_bdsStreamID, tkrs.data() );
       LOG( "PUB-BDS : %d bytes", nb );
    }
 
@@ -1806,130 +1955,59 @@ breakpoint();
 //////////////////////////
 int main( int argc, char **argv )
 {
-   Strings     tkrs;
-   Ints        fids;
-   string      s;
-   bool        aOK, bCfg, sqr, trim, dump, fg, uAll, kCalc;
-   double      rate, xInc, yInc;
-   int         maxX, dly, prec;
-   FILE       *fp;
-   const char *db, *svr, *svc;
+   GREEK::Calculator calc;
+   XmlParser         x;
+   XmlElem          *xs;
+   string            s;
+   FILE             *fp;
 
    /////////////////////
    // Quickie checks
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
-      LOG( "%s", OptionsCurveID() );
-      return 0;
-   }
-
-   // cmd-line args
-
-   fg    = true;
-   db    = "./cache.lvc";
-   svr   = "localhost:9015";
-   svc   = "options.curve";
-   rate  = 1.0;
-   xInc  = 1.0; // 1 dollareeny
-   yInc  = 1.0; // 1 dollareeny
-   maxX  = 1000;
-   sqr   = false;
-   trim  = false;
-   dump  = false;
-   uAll  = true;
-   kCalc = true;
-   prec  = 2;
-   dly   = 0;
-   bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
-   if ( bCfg ) {
-      s  = "Usage: %s \\ \n";
-      s += "       [ -db        <LVC d/b filename> ] \\ \n";
-      s += "       [ -fg        <true to run in foreground> ] \\ \n";
-      s += "       [ -svr       <MDD Edge3 host:port> ] \\ \n";
-      s += "       [ -svc       <MDD Publisher Service> ] \\ \n";
-      s += "       [ -rate      <SnapRate> ] \\ \n";
-      s += "       [ -bdsDly    <BDS Pub Delay> ] \\ \n";
-      s += "       [ -xInc      <Spline Increment> ] \\ \n";
-      s += "       [ -yInc      <Surface Increment> ] \\ \n";
-      s += "       [ -maxX      <Max Spline Values> ] \\ \n";
-      s += "       [ -square    <true to 'square up' splines> ] \\ \n";
-      s += "       [ -trim      <true to 'trim' surfaces> ] \\ \n";
-      s += "       [ -dump      <true to log Knots> ] \\ \n";
-      s += "       [ -updAll    <false to only update if new LVC data> ] \\ \n";
-      s += "       [ -knotCalc  <false for -1 in empty Knots> ] \\ \n";
-      s += "       [ -precision <Value precision> ] \\ \n";
-      s += "       [ -log       <Log filename> ] \\ \n";
-      LOG( (char *)s.data(), argv[0] );
-      LOG( "   Defaults:" );
-      LOG( "      -db        : %s", db );
-      LOG( "      -fg        : %s", _pBool( fg ) );
-      LOG( "      -svr       : %s", svr );
-      LOG( "      -svc       : %s", svc );
-      LOG( "      -rate      : %.2f", rate );
-      LOG( "      -bdsDly    : %d",   dly );
-      LOG( "      -xInc      : %.2f", xInc );
-      LOG( "      -yInc      : %.2f", yInc );
-      LOG( "      -maxX      : %d", maxX );
-      LOG( "      -square    : %s", _pBool( sqr ) );
-      LOG( "      -trim      : %s", _pBool( trim ) );
-      LOG( "      -dump      : %s", _pBool( dump ) );
-      LOG( "      -updAll    : %s", _pBool( uAll ) );
-      LOG( "      -knotCalc  : %s", _pBool( kCalc ) );
-      LOG( "      -precision : %d", prec );
-      LOG( "      -log       : %s", "stdout" );
+      LOGRAW( "%s", OptionsCurveID() );
       return 0;
    }
 
    /////////////////////
-   // cmd-line args
+   // Config
    /////////////////////
-   for ( int i=1; i<argc; i++ ) {
-      aOK = ( i+1 < argc );
-      if ( !aOK )
-         break; // for-i
-      if ( !::strcmp( argv[i], "-db" ) )
-         db = argv[++i];
-#ifndef WIN32
-      else if ( !::strcmp( argv[i], "-fg" ) )
-         fg = _IsTrue( argv[++i] );
-#endif // WIN32
-      else if ( !::strcmp( argv[i], "-svr" ) )
-         svr = argv[++i];
-      else if ( !::strcmp( argv[i], "-svc" ) )
-         svc = argv[++i];
-      else if ( !::strcmp( argv[i], "-xInc" ) )
-         xInc = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-yInc" ) )
-         yInc = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-maxX" ) )
-         maxX = atoi( argv[++i] );
-      else if ( !::strcmp( argv[i], "-rate" ) )
-         rate = atof( argv[++i] );
-      else if ( !::strcmp( argv[i], "-bdsDly" ) )
-         dly = atoi( argv[++i] );
-      else if ( !::strcmp( argv[i], "-square" ) )
-         sqr = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-trim" ) )
-         trim = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-dump" ) )
-         dump = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-updAll" ) )
-         uAll = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-knotCalc" ) )
-         kCalc = _IsTrue( argv[++i] );
-      else if ( !::strcmp( argv[i], "-precision" ) )
-         prec = atoi( argv[++i] );
-      else if ( !::strcmp( argv[i], "-log" ) ) {
-         if ( (fp=::fopen( argv[++i], "wb" )) )
-            _log = fp;
-      }
+   if ( !x.Load( argv[1] ) ) {
+      LOG( "Invalid XML file %s; Exitting ...", argv[1] );
+      return 0;
    }
+   _IsTrue( "mew" ); // So compiler won't complain
+
+   XmlElem    &root  = *x.root();
+   bool        fg    = root.getElemValue( "fg", true );  
+   const char *db    = root.getElemValue( "db", "./cache.lvc" );
+   const char *svr   = root.getElemValue( "svr", "localhost:9015" );
+   const char *svc   = root.getElemValue( "svc", "options.curve" );
+   double      rate  = root.getElemValue( "rate", 1.0 );
+   double      xInc  = root.getElemValue( "xInc", 1.0 );
+   double      yInc  = root.getElemValue( "yInc", 1.0 );
+   int         maxX  = root.getElemValue( "maxX", 1000 );
+   bool        sqr   = root.getElemValue( "square", false );
+   bool        trim  = root.getElemValue( "trim", false );
+   bool        dump  = root.getElemValue( "dump", false );
+   bool        kCalc = root.getElemValue( "knotCalc", true );
+   int         prec  = root.getElemValue( "precision", 2 );
+   const char *pLog  = root.getElemValue( "log", "stdout" );
+   const char *_UST  = "RiskFree";
+
+   if ( !(xs=root.find( _UST )) ) {
+      LOG( "<%s> element not found; Exitting ...", _UST );
+      return 0;
+   }
+   if ( ::strcmp( pLog, "stdout" ) && (fp=::fopen( pLog, "wb" )) )
+      _log = fp;
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, trim, dump, uAll, kCalc, prec, xInc, yInc, maxX );
-   SplinePublisher pub( lvc, svr, svc, rate, dly );
+   OptionsCurve    lvc( db, sqr, trim, dump, kCalc, prec, xInc, yInc, maxX );
+   RiskFreeSpline  rf( lvc, *xs );
+   SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, srfAge, age;
    size_t          ns;
 
@@ -1940,20 +2018,24 @@ int main( int argc, char **argv )
    LOG( "Config._square    = %s", _pBool( lvc._square ) );
    LOG( "Config._trim      = %s", _pBool( lvc._trim ) );
    LOG( "Config._dump      = %s", _pBool( lvc._dump ) );
-   LOG( "Config._bUpdAll   = %s", _pBool( lvc._bUpdAlways ) );
    LOG( "Config._knotCalc  = %s", _pBool( lvc._knotCalc ) );
    LOG( "Config._precision = %d", lvc._precision );
    LOG( "Config._xInc      = %.2f", lvc._xInc );
    LOG( "Config._yInc      = %.2f", lvc._yInc );
    LOG( "Config._maxX      = %d", lvc._maxX );
    LOG( "Config._rate      = %.1fs", rate );
-   LOG( "Config._bdsDly    = %d", dly );
    /*
     * Load Splines
     */
    LOG( "Loading splines ..." );
    d0  = lvc.TimeNs();
-   ns    = pub.LoadSplines();
+   {
+      LVCAll &all = lvc.ViewAll();
+
+      rf.Load( all );
+      rf.Calc( all, lvc.TimeSec() );
+      ns = pub.LoadSplines( all );
+   }
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld splines loaded in %dms", ns, (int)age );
    /*

@@ -22,6 +22,8 @@ Known Bugs
 
 Features To Add
 ---------------
+TODO : Move SplineMaker / apps/Options into quant
+
 -# TapeHeader.h
 -# Surface.hpp
 -# rtFld_vector : AddVector( string[] )
@@ -53,6 +55,10 @@ Features To Add
  *    - Update.AddEmptyField()
  *
  * -# Field.Dump() : rtFld_vector : dSz*16
+ *
+ * -# Move quant out
+ *    - No mo DoubleXY / DoubleXYZ
+ *    - No mo inc/hpp/quant
  *
  *
  * ### Build 65 23-10-22

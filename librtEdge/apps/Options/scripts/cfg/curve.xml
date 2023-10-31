@@ -1,0 +1,30 @@
+<OptionsCurve>
+  <fg> false </fg>
+  <db> /RAMDISK//LVC//RUT3K.lvc </db>
+  <svr> localhost:9015 </svr>
+  <svc> options.curve </svc>
+  <rate> 15.0 </rate>
+  <xInc> 1.0 </xInc>
+  <yInc> 1.0 </yInc>
+  <maxX> 500 </maxX>
+  <square> false </square>
+  <knotCalc> true </knotCalc>
+  <precision> 2 </precision>
+  <dump> false </dump>
+  <log> /tmp/OptionsCurve.log </log>
+
+  <RiskFree Service="velocity" FieldID="6">
+    <Knot Ticker="US1DY GOVT"  Interval="1" Value="5.50" />
+    <Knot Ticker="US3MT GOVT"  Interval="91" />
+    <Knot Ticker="US6MT GOVT"  Interval="182" />
+    <Knot Ticker="US1YT GOVT"  Interval="365" />
+    <Knot Ticker="US2YT GOVT"  Interval="730" />
+    <Knot Ticker="US3YT GOVT"  Interval="1096" />
+    <Knot Ticker="US5YT GOVT"  Interval="1826" />
+    <Knot Ticker="US7YT GOVT"  Interval="2557" />
+    <Knot Ticker="US10YT GOVT" Interval="3652" />
+    <Knot Ticker="US20YT GOVT" Interval="7305" />
+    <Knot Ticker="US30YT GOVT" Interval="10957" />
+
+  </RiskFree>
+</OptionsCurve>

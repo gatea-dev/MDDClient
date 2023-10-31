@@ -35,6 +35,7 @@
 *     14 FEB 2023 jcs  Build 62: quant/LU.hpp
 *      3 JUN 2023 jcs  Build 63: quant/FFT.hpp; rtEdge_hexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
+*     31 OCT 2023 jcs  Build 66: No mo quant
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -2260,13 +2261,7 @@ _CPP_END
 #include <hpp/Update.hpp>
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
-#include <hpp/quant/CubicSpline.hpp>
-#include <hpp/quant/FFT.hpp>
-#include <hpp/quant/LU.hpp>
 #include <hpp/struct/Vector.hpp>
-#ifdef _SURFACE_NOT_READY
-#include <hpp/struct/Surface.hpp>
-#endif /* _SURFACE_NOT_READY */
 #endif /* __cplusplus */
 
 #endif // __LIB_RTEDGE_H

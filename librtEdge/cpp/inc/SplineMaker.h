@@ -7,12 +7,14 @@
 *     25 DEC 2022 jcs  XON
 *      9 FEB 2023 jcs  Build 62: Curve-specific service; _fidKnot
 *     13 OCT 2023 jcs  Build 65: MaxX
+*     31 OCT 2023 jcs  Build 66: quant.hpp
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __SPLINE_MAKER_H
 #define __SPLINE_MAKER_H
 #include <librtEdge.h>
+#include <quant.hpp>
 
 using namespace std;
 using namespace RTEDGE;

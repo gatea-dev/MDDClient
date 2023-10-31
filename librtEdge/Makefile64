@@ -19,8 +19,9 @@
 #      6 JUN 2018 jcs  Build 35: Bridge
 #     14 MAY 2020 jcs  Build 44: git-ready
 #      3 MAY 2022 jcs  Build 53: MDD2DataDog
-#      1 SEP 2022 jcs  Build 56: TapeChannel
+#      1 SEP 2022 jcs  Build 55: TapeChannel
 #     17 SEP 2022 jcs  Build 56: SplineMaker
+#     31 OCT 2023 jcs  Build 66: QUANT_ROOT
 #
 # (c) 1994-2022, Gatea Ltd.
 #######################################################
@@ -40,14 +41,17 @@ BIN_DIR   = bin$(BITS)
 CCC       = g++ $(ARCH)
 CC        = gcc $(ARCH)
 
-### libmddWire library
+### libmddWire / quant library
 
-MDWLIB    = libmddWire
-MDW_ROOT  = ../$(MDWLIB)
-MDW_LDIR  = $(MDW_ROOT)/lib
-MDW_INC   = -I$(MDW_ROOT)/inc -I$(MDW_ROOT)/expat/xmlparse
-MDW_LIBS  = $(MDW_LDIR)/$(MDWLIB)$(BITS).a
-MDW_LIBS += $(MDW_ROOT)/expat/lib/libexpat.a
+MDD_ROOT   = ..
+MDWLIB     = libmddWire
+MDW_ROOT   = $(MDD_ROOT)/$(MDWLIB)
+QUANT_ROOT = $(MDD_ROOT)/quant
+MDW_LDIR   = $(MDW_ROOT)/lib
+MDW_INC    = -I$(MDW_ROOT)/inc -I$(MDW_ROOT)/expat/xmlparse
+MDW_INC   += -I$(QUANT_ROOT)/inc
+MDW_LIBS   = $(MDW_LDIR)/$(MDWLIB)$(BITS).a
+MDW_LIBS  += $(MDW_ROOT)/expat/lib/libexpat.a
 
 ## Compiler, Linker, etc.
 

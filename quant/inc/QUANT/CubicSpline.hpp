@@ -6,9 +6,10 @@
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
 *     31 OCT 2022 jcs  Surface.
-*     26 NOV 2022 jcs  RTEDGE::DoubleXY / RTEDGE::DoubleXYZ
+*     26 NOV 2022 jcs  QUANT::DoubleXY / QUANT::DoubleXYZ
 *     29 SEP 2023 jcs  DoubleList Spline(); double ValueAt(); operator=()
 *     22 OCT 2023 jcs  Surface() debug
+*     31 OCT 2023 jcs  Move out of librtEdge
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -66,14 +67,14 @@ public:
 	 * \param X - Sampled X-axis values
 	 * \param Y - Sampled Y-axis values
 	 */
-	CubicSpline( RTEDGE::DoubleList &X, RTEDGE::DoubleList &Y ) :
+	CubicSpline( QUANT::DoubleList &X, QUANT::DoubleList &Y ) :
 	   _XY(),
 	   _Y2(),
 	   _Size( _gmin( X.size(), Y.size() ) ),
 	   _yp1( _HUGE ),
 	   _ypn( _HUGE )
 	{
-	   RTEDGE::DoubleXY xy;
+	   QUANT::DoubleXY xy;
 
 	   _XY.resize( _Size+1 );
 	   _Y2.resize( _Size+1 );
@@ -95,7 +96,7 @@ public:
 	 * 
 	 * \param XY - Sampled ( x,y ) values
 	 */
-	CubicSpline( RTEDGE::DoubleXYList &XY ) :
+	CubicSpline( QUANT::DoubleXYList &XY ) :
 	   _XY(),
 	   _Y2(),
 	   _Size( XY.size() ),
@@ -118,7 +119,7 @@ public:
 	 * \param yp1 - 2nd order derivitive at left boundary 
 	 * \param ypN - 2nd order derivitive at right boundary 
 	 */
-	CubicSpline( RTEDGE::DoubleXYList &XY, double yp1, double ypN ) : 
+	CubicSpline( QUANT::DoubleXYList &XY, double yp1, double ypN ) : 
 	   _XY(),
 	   _Y2(),
 	   _Size( XY.size() ),
@@ -165,7 +166,7 @@ public:
 	 *
 	 * \return Sampled ( x,y ) values
 	 */
-	RTEDGE::DoubleXYList &XY()
+	QUANT::DoubleXYList &XY()
 	{
 	   return _XY;
 	}
@@ -175,7 +176,7 @@ public:
 	 *
 	 * \return Calculated 2nd order derivitive array
 	 */
-	RTEDGE::DoubleList &Y2()
+	QUANT::DoubleList &Y2()
 	{
 	   return _Y2;
 	}
@@ -188,9 +189,9 @@ public:
 	 * \param xInc - x Increment
 	 * \return Calculated Spline as DoubleList
 	 */
-	RTEDGE::DoubleList Spline( double x0, double x1, double xInc )
+	QUANT::DoubleList Spline( double x0, double x1, double xInc )
 	{
-	   RTEDGE::DoubleList X;
+	   QUANT::DoubleList X;
 
 	   for ( double x=x0; x<=x1; X.push_back( x ), x+=xInc );
 	   return Spline( X );
@@ -202,14 +203,14 @@ public:
 	 * \param X - x value array
 	 * \return Calculated Spline as DoubleList
 	 */
-	RTEDGE::DoubleList Spline( RTEDGE::DoubleList &X )
+	QUANT::DoubleList Spline( QUANT::DoubleList &X )
 	{
-	   RTEDGE::DoubleList Y;
+	   QUANT::DoubleList Y;
 	   size_t             i, nx;
 
 	   nx = X.size();
 	   for ( i=0; i<nx; Y.push_back( ValueAt( X[i] ) ), i++ );
-	   return RTEDGE::DoubleList( Y );
+	   return QUANT::DoubleList( Y );
 	}
 
 	/**
@@ -259,8 +260,8 @@ private:
 	 */
 	void _Calc()
 	{
-	   RTEDGE::DoubleList &y2 = _Y2;
-	   RTEDGE::DoubleList  u;
+	   QUANT::DoubleList &y2 = _Y2;
+	   QUANT::DoubleList  u;
 	   size_t              i, k, n;
 	   double              p, qn, sig, un;
 
@@ -325,9 +326,9 @@ private:
 	////////////////////////
 private:
 	/** \brief Sampled ( x,y ) values */
-	RTEDGE::DoubleXYList _XY;
+	QUANT::DoubleXYList _XY;
 	/** \brief 2nd order derivative at _Y : Calculated Values */
-	RTEDGE::DoubleList   _Y2;
+	QUANT::DoubleList   _Y2;
 	/** \brief _XY.size() */
 	size_t               _Size;
 	/** 
@@ -360,7 +361,7 @@ private:
  * You pass in the sampled values into the Constructor, which calculates and 
  * stores the 2nd order derivitive at each sampled point.  Then you iterate 
  * over the X-axis at your discretion and call 
- * ValueAt( RTEDGE::DoubleList, RTEDGE::DoubleList ) to get the value at 
+ * ValueAt( QUANT::DoubleList, QUANT::DoubleList ) to get the value at 
  * each iteration point
  */
 class CubicSurface
@@ -388,9 +389,9 @@ public:
 	 * \param Y - N Sampled Y-axis values
 	 * \param Z - MxN Sampled Z-axis values
 	 */
-	CubicSurface( RTEDGE::DoubleList &X, 
-	              RTEDGE::DoubleList &Y, 
-	              RTEDGE::DoubleGrid &Z ) :
+	CubicSurface( QUANT::DoubleList &X, 
+	              QUANT::DoubleList &Y, 
+	              QUANT::DoubleGrid &Z ) :
 	   _X(),
 	   _Y(),
 	   _Z(),
@@ -399,7 +400,7 @@ public:
 	   _N( Y.size() )
 	{
 #ifdef OBSOLETE
-	   RTEDGE::DoubleList z;
+	   QUANT::DoubleList z;
 
 	   for ( size_t m=0; m<_M; _X.push_back( X[m] ), m++ );
 	   for ( size_t n=0; n<_N; _Y.push_back( Y[n] ), n++ );
@@ -450,7 +451,7 @@ public:
 	 *
 	 * \return Calculated 2nd order derivitive grid
 	 */
-	RTEDGE::DoubleGrid &Z2()
+	QUANT::DoubleGrid &Z2()
 	{
 	   return _Z2;
 	}
@@ -462,19 +463,19 @@ public:
 	 * \param Y - y value array
 	 * \return Calculated Spline as DoubleList
 	 */
-	RTEDGE::DoubleGrid Surface( RTEDGE::DoubleList &X, 
-	                            RTEDGE::DoubleList &Y )
+	QUANT::DoubleGrid Surface( QUANT::DoubleList &X, 
+	                            QUANT::DoubleList &Y )
 	{
-	   RTEDGE::DoubleGrid Z;
-	   RTEDGE::DoubleList zRow;
+	   QUANT::DoubleGrid Z;
+	   QUANT::DoubleList zRow;
 	   size_t             nx, ny;
 	   double             z;
 
 	   nx = X.size();
 	   ny = Y.size();
 	   for ( size_t c=0; c<ny; c++ ) {
-	      RTEDGE::DoubleList  dst;
-	      RTEDGE::DoubleList &y2 = _SplineAt( Y[c], dst );
+	      QUANT::DoubleList  dst;
+	      QUANT::DoubleList &y2 = _SplineAt( Y[c], dst );
 
 	      zRow.clear();
 	      for ( size_t r=0; r<nx; r++ ) {
@@ -485,7 +486,7 @@ public:
 	      }
 	      Z.push_back( zRow );
 	   }
-	   return RTEDGE::DoubleGrid( _Rotate( Z ) );
+	   return QUANT::DoubleGrid( _Rotate( Z ) );
 	}
 
 	/**
@@ -499,8 +500,8 @@ public:
 	 */
 	double ValueAt( double x, double y )
 	{
-	   RTEDGE::DoubleList  dst;
-	   RTEDGE::DoubleList &y2 = _SplineAt( y, dst );
+	   QUANT::DoubleList  dst;
+	   QUANT::DoubleList &y2 = _SplineAt( y, dst );
 	   double              z;
 	   CubicSpline         cs1( _X, y2 );
 
@@ -520,7 +521,7 @@ private:
 	 * \param dst - Destination List of Splines
 	 * \return Interpolated value at ( x, y )
 	 */
-	RTEDGE::DoubleList &_SplineAt( double y, RTEDGE::DoubleList &dst )
+	QUANT::DoubleList &_SplineAt( double y, QUANT::DoubleList &dst )
 	{
 	   dst.clear();
 	   for ( size_t m=0; m<_M; m++ ) {
@@ -546,10 +547,10 @@ private:
 	/**
 	 * \brief Rotate NxM to MxN grid
 	 */
-	RTEDGE::DoubleGrid &_Rotate( RTEDGE::DoubleGrid &src )
+	QUANT::DoubleGrid &_Rotate( QUANT::DoubleGrid &src )
 	{
-	   RTEDGE::DoubleGrid dst;
-	   RTEDGE::DoubleList zRow;
+	   QUANT::DoubleGrid dst;
+	   QUANT::DoubleList zRow;
 	   size_t             M, N;
 
 	   M = src.size();
@@ -568,13 +569,13 @@ private:
 	////////////////////////
 private:
 	/** \brief M X-axis values */
-	RTEDGE::DoubleList _X;
+	QUANT::DoubleList _X;
 	/** \brief N Y-axis values */
-	RTEDGE::DoubleList _Y;
+	QUANT::DoubleList _Y;
 	/** \brief MxN sampled Z-axis values */
-	RTEDGE::DoubleGrid _Z;
+	QUANT::DoubleGrid _Z;
 	/** \brief 2nd order derivative at _Z : Calculated Values */
-	RTEDGE::DoubleGrid _Z2;
+	QUANT::DoubleGrid _Z2;
 	/** \brief _M x _N Grid of Points */
 	size_t     _M;
 	/** \brief _M x _N Grid of Points */

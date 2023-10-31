@@ -6,15 +6,23 @@
 *  REVISION HISTORY:
 *     17 SEP 2023 jcs  Created (from GreekServer.cpp)
 *     15 OCT 2023 jcs  Build 65: _ymd2julNum()
+*     31 OCT 2023 jcs  Build 66: quant.hpp
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
+#include <quant.hpp>
 #include <stdarg.h>
 #include <set>
 
 using namespace RTEDGE;
+using namespace QUANT;
 using namespace std;
+
+// RTEDGE Only
+
+#define _DoubleGrid   RTEDGE::DoubleGrid
+#define _DoubleList   RTEDGE::DoubleList
 
 // Templatized Collections
 
@@ -74,6 +82,21 @@ static void LOG( const char *fmt, ... )
    va_start( ap,fmt );
    cp  = bp;
    cp += sprintf( cp, "[%s] ", rtEdge::pDateTimeMs( tm ) );
+   cp += vsprintf( cp, fmt, ap );
+   cp += sprintf( cp, "\n" );
+   va_end( ap );
+   ::fwrite( bp, 1, cp-bp, _log );
+   ::fflush( _log );
+}
+
+static void LOGRAW( const char *fmt, ... )
+{
+   va_list ap;
+   char    bp[8*K], *cp;
+   string  tm;
+
+   va_start( ap,fmt );
+   cp  = bp;
    cp += vsprintf( cp, fmt, ap );
    cp += sprintf( cp, "\n" );
    va_end( ap );
@@ -175,6 +198,20 @@ public:
    // Access - Per Message
    ////////////////////////////////////
    /**
+    * \brief Find and return Field Value as double
+    *
+    * \param msg - Message snapped from LVC
+    * \param fid - Field
+    * \return Field value as double
+    */
+   double GetAsDouble( Message &msg, int fid )
+   {
+      Field  *fld;
+
+      return( (fld=msg.GetField( fid )) ? fld->GetAsDouble() : 0.0 );
+   }
+
+   /**
     * \brief Return Bid-Ask Mid Point
     *
     * \param msg - Message snapped from LVC
@@ -191,10 +228,10 @@ public:
        *    3) Close
        *    4) max( bid, ask )
        */
-      last = _GetAsDouble( msg, _TRDPRC_1 );
-      cls  = _GetAsDouble( msg, _HST_CLOSE );
-      bid  = _GetAsDouble( msg, _BID );
-      ask  = _GetAsDouble( msg, _ASK );
+      last = GetAsDouble( msg, _TRDPRC_1 );
+      cls  = GetAsDouble( msg, _HST_CLOSE );
+      bid  = GetAsDouble( msg, _BID );
+      ask  = GetAsDouble( msg, _ASK );
       if ( bid && ask )
          rc = 0.5 * ( bid+ask );
       else if ( last )
@@ -214,7 +251,7 @@ public:
     */
    double Last( Message &msg )
    {
-      return _GetAsDouble( msg, _TRDPRC_1 );
+      return GetAsDouble( msg, _TRDPRC_1 );
    }
 
    /**
@@ -225,7 +262,7 @@ public:
     */
    double StrikePrice( Message &msg )
    {
-      return _GetAsDouble( msg, _STRIKE_PRC );
+      return GetAsDouble( msg, _STRIKE_PRC );
    }
 
    /**
@@ -339,7 +376,7 @@ public:
     * \param unx - [OUT] List of Unix Times
     * \return unx 
     */
-   DoubleList &julNum2Unix( DoubleList &jul, DoubleList &unx )
+   _DoubleList &julNum2Unix( _DoubleList &jul, _DoubleList &unx )
    {
       size_t i, n;
 
@@ -356,9 +393,9 @@ public:
     * \param unx - [OUT] List of Unix Times
     * \return unx 
     */
-   DoubleList &ymd2Unix( DoubleList &ymd, DoubleList &unx )
+   _DoubleList &ymd2Unix( _DoubleList &ymd, _DoubleList &unx )
    {
-      DoubleList jul;
+      _DoubleList jul;
       size_t     i, n;
 
       unx.clear();
@@ -518,20 +555,6 @@ public:
    // (private) Helpers
    ////////////////////////////////////
 private:
-   /**
-    * \brief Find and return Field Value as double
-    *
-    * \param msg - Message snapped from LVC
-    * \param fid - Field
-    * \return Field value as double
-    */
-   double _GetAsDouble( Message &msg, int fid )
-   {
-      Field  *fld;
-
-      return( (fld=msg.GetField( fid )) ? fld->GetAsDouble() : 0.0 );
-   }
-
    /**
     * \brief Convert YYYYMMDD to julNum
     *

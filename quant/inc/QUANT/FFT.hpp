@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *     28 MAY 2023 jcs  Created.
+*     31 OCT 2023 jcs  Move out of librtEdge
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -41,7 +42,7 @@ namespace QUANT
  * -# Array length = 2*N
  * -# N must be divisible   length = 2*N
  */
-class FFT : public RTEDGE::rtEdge
+class FFT
 {
 	////////////////////////////////////
 	// Constructor / Destructor
@@ -52,8 +53,7 @@ public:
 	 *
 	 * \param A - Input Array : Complex of length _NN or Real of length 2*_NN 
 	 */
-	FFT( RTEDGE::DoubleList &A ) :
-	   RTEDGE::rtEdge(),
+	FFT( QUANT::DoubleList &A ) :
 	   _A(),
 	   _N( A.size() / 2 ),
 	   _FFT()
@@ -71,7 +71,7 @@ public:
 	 *
 	 * \return Original array
 	 */
-	RTEDGE::DoubleList &A_matrix() { return _A; }
+	QUANT::DoubleList &A_matrix() { return _A; }
 
 	/**
 	 * \brief Return array size
@@ -85,7 +85,7 @@ public:
 	 *
 	 * \return FFT array
 	 */
-	RTEDGE::DoubleList &operator()() { return _FFT; }
+	QUANT::DoubleList &operator()() { return _FFT; }
 
 
 	////////////////////////////////////
@@ -97,7 +97,7 @@ public:
 	 *
 	 * \return FFT array
 	 */
-	RTEDGE::DoubleList &Discrete()
+	QUANT::DoubleList &Discrete()
 	{
 	   _four1( 1 );
 	   return (*this)();
@@ -107,7 +107,7 @@ public:
 	 *
 	 * \return FFT array
 	 */
-	RTEDGE::DoubleList &Inverse()
+	QUANT::DoubleList &Inverse()
 	{
 	   _four1( -1 );
 	   return (*this)();
@@ -121,7 +121,7 @@ private:
 	/**
 	 * \brief four1.c : From Numerical Recipes in C, (c) 1986-1992
 	 */
-	RTEDGE::DoubleList &_four1( int isign )
+	QUANT::DoubleList &_four1( int isign )
 	{
 	   size_t n, mmax, m, j, istep, i;
 	   double wtemp, wr, wpr, wpi, wi, theta, tempr, tempi;
@@ -193,11 +193,11 @@ private:
 	 ////////////////////////
 private:
 	/** \brief Original List */
-	RTEDGE::DoubleList _A;
+	QUANT::DoubleList _A;
 	/** \brief _A.size() */
 	size_t             _N;
 	/** \brief FFT */
-	RTEDGE::DoubleList _FFT;
+	QUANT::DoubleList _FFT;
 
 }; // class FFT
 

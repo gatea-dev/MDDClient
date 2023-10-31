@@ -28,6 +28,7 @@
 *      9 MAR 2023 jcs  Build 62: Dump( DoubleGrid & ); static GetThreadID()
 *      3 JUN 2023 jcs  Build 63: HexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
+*     31 OCT 2023 jcs  Build 66: No mo DoubleXY
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -147,49 +148,8 @@ public:
 }; // class rtDateTime
 
 
-////////////////////////////////////////////////
-//
-//      c l a s s   D o u b l e X Y
-//
-////////////////////////////////////////////////
-
-/**
- * \class DoubleXY
- * \brief ( x,y ) tuple
- */
-class DoubleXY
-{
-public:
-	/** \brief X value */
-	double _x;
-	/** \brief Y value */
-	double _y;
-
-}; // class DoubleXY
-
-
-////////////////////////////////////////////////
-//
-//      c l a s s   D o u b l e X Y Z
-//
-////////////////////////////////////////////////
-
-/**
- * \class DoubleXYZ
- * \brief ( x,y ) tuple
- */
-class DoubleXYZ : public DoubleXY
-{
-public:
-	/** \brief Z value */
-	double _z;
-
-}; // class DoubleXYZ
-
 typedef std::vector<std::string>  Strings;
 typedef std::vector<double>       DoubleList;
-typedef std::vector<DoubleXY>     DoubleXYList;
-typedef std::vector<DoubleXYZ>    DoubleXYZList;
 typedef std::vector<DoubleList>   DoubleGrid;
 typedef std::vector<rtDateTime>   DateTimeList;
 
