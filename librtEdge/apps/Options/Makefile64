@@ -31,19 +31,16 @@ CCC       = g++ $(ARCH)
 MDD_ROOT     = ../../..
 MDWLIB       = libmddWire
 EDGLIB       = librtEdge
-GRKLIB       = libOptionGreeks
 MDW_ROOT     = $(MDD_ROOT)/$(MDWLIB)
 EDG_ROOT     = $(MDD_ROOT)/$(EDGLIB)
 QUANT_ROOT   = $(MDD_ROOT)/quant
-GRK_ROOT     = $(MDD_ROOT)/Drivers/$(GRKLIB)
 
 MDDS_INC     = -I$(MDW_ROOT)/inc -I$(EDG_ROOT)/inc 
-MDDS_INC    += -I$(QUANT_ROOT)/inc -I$(GRK_ROOT)/inc
+MDDS_INC    += -I$(QUANT_ROOT)/inc
 MDDS_INC    += -I$(MDW_ROOT)/expat/xmlparse
 MDDS_LIBS    = $(MDW_ROOT)/lib/$(MDWLIB)$(BITS).a
 MDDS_LIBS   += $(EDG_ROOT)/lib/$(EDGLIB)$(BITS).a
 MDDS_LIBS   += $(MDW_ROOT)/expat/lib/libexpat.a
-MDDS_LIBS   += $(GRK_ROOT)/lib/$(GRKLIB)$(BITS).a
 
 ## Compiler, Linker, etc.
 

@@ -10,7 +10,6 @@
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
-#include <libOptionGreeks.h>
 #ifndef WIN32
 #include <SigHandler.h>
 #endif // WIN32
@@ -62,7 +61,6 @@ const char *OptionsCurveID()
       cp += sprintf( cp, "@(#)OptionsCurve Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
       cp += sprintf( cp, "%s\n", rtEdge::Version() );
-      cp += sprintf( cp, "%s", GREEK::Calculator::Version() );
       s   = bp;
    }
    sccsid = s.data();
@@ -1955,11 +1953,10 @@ breakpoint();
 //////////////////////////
 int main( int argc, char **argv )
 {
-   GREEK::Calculator calc;
-   XmlParser         x;
-   XmlElem          *xs;
-   string            s;
-   FILE             *fp;
+   XmlParser x;
+   XmlElem  *xs;
+   string    s;
+   FILE     *fp;
 
    /////////////////////
    // Quickie checks
