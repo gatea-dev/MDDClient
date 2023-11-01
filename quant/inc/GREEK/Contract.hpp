@@ -51,7 +51,7 @@ public:
 	 *
 	 * \param bCall - true if CALL; false if PUT
 	 * \param X - Contract Strike Price
-	 * \param Tt - Time to expiration
+	 * \param Tt - Time to expiration in % years
 	 */
 	Contract( bool bCall, double X, double Tt ) :
 	   _bCall( bCall ),
@@ -77,9 +77,29 @@ public:
 
 
 	////////////////////////////////////
-	// Calculations
+	// Access
 	////////////////////////////////////
 public:
+	/**
+	 * \brief Return Time to Expiration in % years
+	 *
+	 * \return Time to Expiration in % years
+	 */
+	double Tt()
+	{
+	   return _Tt;
+	}
+
+	/**
+	 * \brief Return Contract Strike Price
+	 *
+	 * \return Contract Strike Price
+	 */
+	double X()
+	{
+	   return _X;
+	}
+
 	/**
 	 * \brief Last calc time in micros - ImpliedVolatility(), Delta(), etc.
 	 *

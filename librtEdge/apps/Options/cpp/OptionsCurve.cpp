@@ -38,6 +38,7 @@ static int l_fidVecZ   = -8003;
 
 class OptionsSpline;
 class OptionsSurface;
+class RiskFreeSpline;
 class Underlyer;
 
 typedef hash_map<string, OptionsSpline *>  SplineMap;
@@ -115,47 +116,56 @@ typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 class OptionsCurve : public OptionsBase
 {
 public:
-   bool      _square;
-   bool      _trim;
-   bool      _dump;
-   bool      _knotCalc;
-   int       _precision;
-   double    _xInc;
-   double    _yInc;
-   int       _maxX;
-   KnotDef   _kz;
-   u_int64_t _jToday;
+   RiskFreeSpline *_riskFree;
+   bool            _square;
+   bool            _trim;
+   bool            _dump;
+   bool            _knotCalc;
+   int             _precision;
+   double          _xInc;
+   double          _yInc;
+   int             _maxX;
+   KnotDef         _kz;
+   u_int64_t       _jToday;
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   OptionsCurve( const char *svr, 
-                 bool        square,
-                 bool        trim,
-                 bool        dump,
-                 bool        knotCalc,
-                 int         precision,
-                 double      xInc,
-                 double      yInc,
-                 int         maxX ) :
-      OptionsBase( svr ),
-      _square( square ),
-      _trim( trim ),
-      _dump( dump ),
-      _knotCalc( knotCalc ),
-      _precision( precision ),
-      _xInc( xInc ),
-      _yInc( yInc ),
-      _maxX( maxX ),
+   OptionsCurve( XmlElem &xe ) :
+      OptionsBase( xe.getElemValue( "db", "./cache.lvc" ) ),
+      _riskFree( (RiskFreeSpline *)0 ),
+      _square( xe.getElemValue( "square", true ) ),
+      _trim( xe.getElemValue( "trim", false ) ),
+      _dump( xe.getElemValue( "dump", false ) ),
+      _knotCalc( xe.getElemValue( "knotCalc", true ) ),
+      _precision( xe.getElemValue( "precision", 2 ) ),
+      _xInc( xe.getElemValue( "xInc", 1.0 ) ),
+      _yInc( xe.getElemValue( "yInc", 1.0 ) ),
+      _maxX( xe.getElemValue( "maxX", 1000 ) ),
       _jToday( 0 )
    {
       ::memset( &_kz, 0, sizeof( _kz ) );
    }
 
    /////////////////////////
+   // Access
+   /////////////////////////
+   RiskFreeSpline &riskFree() { return *_riskFree; }
+
+   /////////////////////////
    // Operations
    /////////////////////////
+   /**
+    * \brief Set RiskFreeSpline
+    *
+    * \param rf - RiskFreeSpline
+    */
+   void SetRiskFree( RiskFreeSpline *rf )
+   {
+      _riskFree = rf;
+   }
+
    /**
     * \brief Set today from YYYYMMDD
     *
@@ -268,13 +278,14 @@ public:
    // Access
    /////////////////////////
 public:
-   _DoubleList &X()       { return _X; }
-   _DoubleList &Y()       { return _Y; }
-   size_t      NumKnots() { return _kdb.size(); }
+   _DoubleList         &X()       { return _X; }
+   _DoubleList         &Y()       { return _Y; }
+   size_t              NumKnots() { return _kdb.size(); }
+   QUANT::CubicSpline &CS()       { return _CS; }
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
    {
-      SnapKnots( all, now );
+      Calc( all, now );
       return _CS;
    }
 
@@ -347,7 +358,6 @@ public:
       /*
        * 1) Pull out real-time Knot values from LVC
        */
-      _tCalc = now;
       _X.clear();
       _Y.clear();
       for ( i=0; i<nk; i++ ) {
@@ -384,9 +394,10 @@ public:
 
       // Rock on
 
-      nx = XY.size();
-      x0 = XY[1]._x;
-      x1 = XY[nx-1]._x;
+      _tCalc = now;
+      nx     = XY.size();
+      x0     = XY[1]._x;
+      x1     = XY[nx-1]._x;
       for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
       _Y  = _CS.Spline( _X );
    }
@@ -403,28 +414,35 @@ public:
 class Underlyer : public string
 {
 private:
-   OptionsCurve  &_lvc;
-   IndexCache     _byExp; // Expiration
-   IndexCache     _byStr; // Strike Price
-   SortedInt64Set _exps;
-   _DoubleList    _strikes;
-   SplineMap      _splines;
-   size_t         _idx;   // Underlyer Index in LVC
-   double         _S;     // Underlyer Price
+   OptionsCurve   &_lvc;
+   RiskFreeSpline &_riskFree;
+   string          _ric;
+   IndexCache      _byExp; // Expiration
+   IndexCache      _byStr; // Strike Price
+   SortedInt64Set  _exps;
+   _DoubleList     _strikes;
+   SplineMap       _splines;
+   size_t          _idx;   // Underlyer Index in LVC
+   double          _S;     // Underlyer Price
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   Underlyer( OptionsCurve &lvc, LVCAll &all, const char *und ) :
+   Underlyer( OptionsCurve &lvc, 
+              LVCAll       &all, 
+              const char   *und, 
+              const char   *ric ) :
       string( und ),
       _lvc( lvc ),
+      _riskFree( lvc.riskFree() ),
+      _ric( ric ),
       _byExp(),
       _byStr(),
       _exps(),
       _strikes(),
       _splines(),
-      _idx( lvc.FindIndex( all, und ) ),
+      _idx( lvc.FindIndex( all, ric ) ),
       _S( 0.0 )
    {
       Messages  &mdb  = all.msgs();
@@ -500,6 +518,7 @@ public:
       }
       for ( it=strikes.begin(); it!=strikes.end(); it++ )
          _strikes.push_back( l_StrikeDiv * (*it)  );
+      Snap( all );
    }
 
    double Snap( LVCAll &all )
@@ -606,7 +625,7 @@ public:
    {
       Contract   *grk;
       Field      *fld;
-      double      r;
+      double      r, Tt;
       const char *pf;
 
       // 1) Display Name
@@ -617,9 +636,17 @@ public:
       // 2) Value
 
       k._C = _lvc.MidQuote( m );
+      if ( (grk=k._greek) ) {
+         QUANT::CubicSpline &CS = _riskFree.CS();
+
+         /* CS X-axis is in days (from Interval in XML config)
+          * CS X-axis is in days (from Interval in XML config)
+          */
+         Tt = grk->Tt() * 365.25;
+         r  = CS.ValueAt( Tt );
 r = 0.10; // TODO : From RiskFreeSpline
-      if ( (grk=k._greek) )
          k._Greeks = grk->AllGreeks( k._C, _S, r );
+      }
    }
 
 }; // class Underlyer
@@ -1686,11 +1713,11 @@ public:
    {
       Underlyers               &udb = _underlyers;
       SplineMap                &sdb = _splines;
-      SortedStringSet           ndb = _lvc.Underlyers( all );
-      SortedStringSet::iterator nt;
+      SortedStringMap           ndb = _lvc.Underlyers( all );
+      SortedStringMap::iterator nt;
       Underlyer                *und;
       OptionsSpline            *spl;
-      const char               *tkr;
+      const char               *tkr, *ric;
       u_int64_t                 tExp;
       double                    dX;
       string                    s;
@@ -1700,8 +1727,9 @@ public:
        * 1) Underlyers
        */
       for ( nt=ndb.begin(); nt!=ndb.end(); nt++ ) {
-         tkr = (*nt).data();
-         und = new Underlyer( _lvc, all, tkr );
+         tkr = (*nt).first.data();
+         ric = (*nt).second.data();
+         und = new Underlyer( _lvc, all, tkr, ric );
          und->Init( all );
          udb.push_back( und );
       }
@@ -2092,19 +2120,10 @@ int main( int argc, char **argv )
 
    XmlElem    &root  = *x.root();
    bool        fg    = root.getElemValue( "fg", true );  
-   const char *db    = root.getElemValue( "db", "./cache.lvc" );
    int         dbDt  = root.getElemValue( "dbDate", 0 );
    const char *svr   = root.getElemValue( "svr", "localhost:9015" );
    const char *svc   = root.getElemValue( "svc", "options.curve" );
    double      rate  = root.getElemValue( "rate", 1.0 );
-   double      xInc  = root.getElemValue( "xInc", 1.0 );
-   double      yInc  = root.getElemValue( "yInc", 1.0 );
-   int         maxX  = root.getElemValue( "maxX", 1000 );
-   bool        sqr   = root.getElemValue( "square", false );
-   bool        trim  = root.getElemValue( "trim", false );
-   bool        dump  = root.getElemValue( "dump", false );
-   bool        kCalc = root.getElemValue( "knotCalc", true );
-   int         prec  = root.getElemValue( "precision", 2 );
    const char *pLog  = root.getElemValue( "log", "stdout" );
    const char *_UST  = "RiskFree";
 
@@ -2150,8 +2169,7 @@ int main( int argc, char **argv )
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( db, sqr, trim, dump, kCalc, prec, xInc, yInc, maxX );
-   RiskFreeSpline  rf( lvc, *xs );
+   OptionsCurve    lvc( root );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, srfAge, age;
    size_t          ns;
@@ -2159,6 +2177,7 @@ int main( int argc, char **argv )
    /*
     * Dump Config
     */
+   lvc.SetRiskFree( new RiskFreeSpline( lvc, *xs ) );
    lvc.SetToday( dbDt );
    lvc.SetNow();
    LOG( OptionsCurveID() );
@@ -2177,7 +2196,8 @@ int main( int argc, char **argv )
    LOG( "Loading splines ..." );
    d0  = lvc.TimeNs();
    {
-      LVCAll &all = lvc.ViewAll();
+      LVCAll         &all = lvc.ViewAll();
+      RiskFreeSpline &rf  = lvc.riskFree();
 
       rf.Load( all );
       rf.Calc( all, lvc.TimeSec() );

@@ -30,6 +30,7 @@ typedef vector<int>                           Ints;
 typedef map<u_int64_t, int, less<u_int64_t> > SortedInt64Map;
 typedef set<u_int64_t, less<u_int64_t> >      SortedInt64Set;
 typedef set<string, less<string> >            SortedStringSet;
+typedef map<string, string, less<string> >    SortedStringMap;
 
 // Inbound Record Template
 
@@ -40,6 +41,7 @@ typedef set<string, less<string> >            SortedStringSet;
 #define _ASK          25
 #define _STRIKE_PRC   66
 #define _EXPIR_DATE   67
+#define _STOCK_RIC  1026
 #define _UN_SYMBOL  4200
 
 #define _MIL     1000000
@@ -176,21 +178,23 @@ public:
     * \param all - LVCAll w/ snapped values from LVC
     * \return Sorted list of all underlyers
     */
-   SortedStringSet Underlyers( LVCAll &all ) 
+   SortedStringMap Underlyers( LVCAll &all ) 
    {
       Messages       &msgs = all.msgs();
       Field          *fld;
-      string          val;
-      SortedStringSet rc;
+      string          k;
+      SortedStringMap rc;
 
       for ( size_t i=0; i<msgs.size(); i++ ) {
          if ( !(fld=msgs[i]->GetField( _UN_SYMBOL )) )
             continue; // for-i
-         val = fld->GetAsString();
-         if ( rc.find( val ) == rc.end() )
-            rc.insert( val );
+         k = fld->GetAsString();
+         if ( !(fld=msgs[i]->GetField( _STOCK_RIC )) )
+            continue; // for-i
+         if ( rc.find( k ) == rc.end() )
+            rc[k] = string( fld->GetAsString() );
       }
-      return SortedStringSet( rc );
+      return SortedStringMap( rc );
    }
 
 

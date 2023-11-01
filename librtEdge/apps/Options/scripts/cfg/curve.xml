@@ -24,8 +24,10 @@
     <Knot Ticker="US5YT GOVT"  Interval="1826" />
     <Knot Ticker="US7YT GOVT"  Interval="2557" />
     <Knot Ticker="US10YT GOVT" Interval="3652" />
+<!--
     <Knot Ticker="US20YT GOVT" Interval="7305" />
     <Knot Ticker="US30YT GOVT" Interval="10957" />
+ -->
 
   </RiskFree>
 </OptionsCurve>
