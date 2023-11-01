@@ -98,7 +98,7 @@ public:
    size_t         _idx;     // Non-zero implies real-time
    double         _tUpd;    // Time of last update in LVC
    double         _C;       // Last Value from LVC
-   double         _ImpVol;  // Calculated Implied Volacility
+   Greeks         _Greeks;  // Calculated Greeks
 
 }; // KnotDef
 
@@ -150,16 +150,25 @@ public:
       _maxX( maxX ),
       _jToday( 0 )
    {
-      struct timeval tv   = { TimeSec(), 0 };
-      rtDateTime     dtTm = unix2rtDateTime( tv );
-
       ::memset( &_kz, 0, sizeof( _kz ) );
-      _jToday = julNum( dtTm._date );
    }
 
    /////////////////////////
    // Operations
    /////////////////////////
+   /**
+    * \brief Set today from YYYYMMDD
+    *
+    * \param ymd - YYYYMMDD
+    */
+   void SetNow()
+   {
+      struct timeval tv  = { TimeSec(), 0 };
+      rtDateTime     now = unix2rtDateTime( tv );
+
+      SetToday( now._date );
+   }
+
    /**
     * \brief Set today from YYYYMMDD
     *
@@ -175,7 +184,18 @@ public:
       dt._mday   = ymd % 100;
       dt._month  = WithinRange( 0, dt._month, 11 );
       dt._mday   = WithinRange( 1, dt._mday,  31 ); 
-      _jToday    = julNum( dt );
+      SetToday( dt );
+   }
+
+   /**
+    * \brief Set today from rtDate
+    *
+    * \param dt - Today as rtDate
+    */
+   void SetToday( rtDate dt )
+   {
+      if ( !_jToday )
+         _jToday = julNum( dt );
    }
 
    /**
@@ -221,8 +241,8 @@ private:
    string             _svc;
    int                _fid;
    KnotList           _kdb;
-   _DoubleList         _X;
-   _DoubleList         _Y;
+   _DoubleList        _X;
+   _DoubleList        _Y;
    QUANT::CubicSpline _CS; // Last Calc
    double             _xInc;
    time_t             _tCalc;
@@ -333,6 +353,7 @@ public:
       for ( i=0; i<nk; i++ ) {
          k     = _kdb[i];
          msg   = k._idx ? msgs[k._idx] : (Message *)0;
+// TODO : Factor in _lvc._jToday
          pt._x = _kdb[i]._exp;
          pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
          XY.push_back( pt );
@@ -406,6 +427,11 @@ public:
       _idx( lvc.FindIndex( all, und ) ),
       _S( 0.0 )
    {
+      Messages  &mdb  = all.msgs();
+      double     tm   = mdb[0]->MsgTime();
+      rtDateTime dtTm = lvc.unix2rtDateTime( tm );
+
+      lvc.SetToday( dtTm._date );
       Snap( all );
    }
 
@@ -585,16 +611,15 @@ public:
 
       // 1) Display Name
 
-      pf = ( (fld=m.GetField( 3 )) ) ?  fld->GetAsString() : l_Undef;
+      pf = ( (fld=m.GetField( 3 )) ) ? fld->GetAsString() : l_Undef;
       strcpy( k._lvcName, pf );
 
       // 2) Value
 
       k._C = _lvc.MidQuote( m );
-      if ( (grk=k._greek) ) {
 r = 0.10; // TODO : From RiskFreeSpline
-         k._ImpVol = grk->ImpliedVolatility( k._C, _S, r );
-      }
+      if ( (grk=k._greek) )
+         k._Greeks = grk->AllGreeks( k._C, _S, r );
    }
 
 }; // class Underlyer
@@ -2068,6 +2093,7 @@ int main( int argc, char **argv )
    XmlElem    &root  = *x.root();
    bool        fg    = root.getElemValue( "fg", true );  
    const char *db    = root.getElemValue( "db", "./cache.lvc" );
+   int         dbDt  = root.getElemValue( "dbDate", 0 );
    const char *svr   = root.getElemValue( "svr", "localhost:9015" );
    const char *svc   = root.getElemValue( "svc", "options.curve" );
    double      rate  = root.getElemValue( "rate", 1.0 );
@@ -2133,6 +2159,8 @@ int main( int argc, char **argv )
    /*
     * Dump Config
     */
+   lvc.SetToday( dbDt );
+   lvc.SetNow();
    LOG( OptionsCurveID() );
    LOG( "Config._square    = %s", _pBool( lvc._square ) );
    LOG( "Config._trim      = %s", _pBool( lvc._trim ) );

@@ -14,8 +14,17 @@
 #define __GREEK_CONTRACT_HPP
 #include <string.h>
 #ifndef DOXYGEN_OMIT
+#ifdef WIN32
+#include <windows.h>
+#include <sys/timeb.h>
+#else
+#include <sys/time.h>
+#endif // WIN32
 #include <GREEK/_Option.hpp>
 #include <GREEK/_Volatility.hpp>
+
+static double _ZMIL = 1000000.0;
+
 #endif // DOXYGEN_OMIT
 
 namespace QUANT
@@ -50,8 +59,7 @@ public:
 	   _Tt( Tt ),
 	   _dtExp( 0 ),
 	   _tCalcUs( 0.0 )
-	{
-	}
+	{ ; }
 
 	/**
 	 * \brief Constructor.
@@ -92,26 +100,24 @@ public:
 	 *
 	 * \param C - Contract Price
 	 * \param S - Underlyer Price
-	 * \param stDev - Volatility (Standard Deviation)
 	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return All Greeks
 	 */
-	Greeks AllGreeks( double C, 
-	                  double S, 
-	                  double stDev, 
-	                  double r, 
-	                  double q=0.0 )
+	Greeks AllGreeks( double C, double S, double r, double q=0.0 )
 	{
 	   Greeks rc;
+	   double d0;
 
-	   rc._impVol = ImpliedVolatility( C, S, r );
-	   rc._delta  = Delta( S, stDev, r, q );
-	   rc._theta  = Theta( S, stDev, r, q );
-	   rc._gamma  = Gamma( S, stDev, r, q );
-	   rc._vega   = Vega( S, stDev, r, q );
-	   rc._rho    = Rho( S, stDev, r, q );
-	   rc._tCalcUs = 0.0; // TODO
+	   d0          = _dNow();
+	   rc._impVol  = ImpliedVolatility( C, S, r );
+	   rc._delta   = Delta( S, rc._impVol, r, q );
+	   rc._theta   = Theta( S, rc._impVol, r, q );
+	   rc._gamma   = Gamma( S, rc._impVol, r, q );
+	   rc._vega    = Vega( S, rc._impVol, r, q );
+	   rc._rho     = Rho( S, rc._impVol, r, q );
+	   rc._tCalcUs = ( _dNow() - d0 ) * _ZMIL;
+	   _tCalcUs    = rc._tCalcUs;
 	   return rc;
 	}
 
@@ -124,7 +130,10 @@ public:
 	 * \param precision - Precision of calculation
 	 * \return Implied volatility
 	 */
-	double ImpliedVolatility( double C, double S, double r, double precision=0.001 )
+	double ImpliedVolatility( double C, 
+	                          double S, 
+	                          double r, 
+	                          double precision=0.001 )
 	{
 	   Volatility v( S, _X, r, _Tt, _bCall, precision ); 
 	   bool       bBi;
@@ -212,6 +221,40 @@ public:
 	   return _bCall ?  grk.call( S, _Tt, q ) : grk.put( S, _Tt, q );
 	}
 
+	////////////////////////
+	// (Private) Helpers
+	////////////////////////
+private:
+	struct timeval _tvNow()
+	{
+	   struct timeval tv;
+
+	   // Platform-dependent
+#ifdef WIN32
+	   struct _timeb tb;
+
+	   ::_ftime( &tb );
+	   tv.tv_sec  = tb.time;
+	   tv.tv_usec = tb.millitm * 1000;
+#else
+	   ::gettimeofday( &tv, (struct timezone *)0 );
+#endif // WIN32
+	   return tv;
+	}
+
+	static double _Time2dbl( struct timeval t0 )
+	{
+	   double rtn;
+	   static double _num = 1.0 / _ZMIL;
+
+	   rtn = t0.tv_sec + ( t0.tv_usec *_num );
+	   return rtn;
+	}
+
+	double _dNow()
+	{
+	   return _Time2dbl( _tvNow() );
+	}
 
 	////////////////////////
 	// Private Members
