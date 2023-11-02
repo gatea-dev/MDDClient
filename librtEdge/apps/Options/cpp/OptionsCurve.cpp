@@ -95,11 +95,12 @@ public:
    char           _lvcName[128];
    u_int64_t      _strike;
    u_int64_t      _exp;
-   u_int64_t      _jExp;    // julNum( exp )
-   size_t         _idx;     // Non-zero implies real-time
-   double         _tUpd;    // Time of last update in LVC
-   double         _C;       // Last Value from LVC
-   Greeks         _Greeks;  // Calculated Greeks
+   u_int64_t      _jExp;       // julNum( exp )
+   size_t         _idx;        // Non-zero implies real-time
+   double         _tUpd;       // Time of last update in LVC
+   double         _C;          // Last Value from LVC
+   Greeks         _GreeksLVC;  // Snapped Greeks
+   Greeks         _Greeks;     // Calculated Greeks
 
 }; // KnotDef
 
@@ -156,6 +157,20 @@ public:
    /////////////////////////
    // Operations
    /////////////////////////
+   /**
+    * \brief Return % year to expire from KnotDef expiration
+    *
+    * \param k - KnotDef
+    * \return % year to expire from KnotDef expiration
+    */
+   double Tt( KnotDef &k )
+   {
+      double rc;
+
+      rc = 1.0 * ( k._jExp - _jToday ) / 365.0;
+      return rc;
+   }
+
    /**
     * \brief Set RiskFreeSpline
     *
@@ -234,6 +249,42 @@ public:
       return l_NoIndex;
    }
 
+   /////////////////////////
+   // Class-wide
+   /////////////////////////
+public:
+   /**
+    * \brief Return Z value from KnotDef based on CalcType
+    *
+    * \param k - KnotDef
+    * \param calcTy - Calc Type : Price, ImpVol, Delta, etc., 
+    * \return Z value from KnotDef based on CalcType
+    */
+   static double Z( KnotDef &k, CalcType calcTy )
+   {
+      Greeks &gj = k._Greeks;
+      Greeks &gl = k._GreeksLVC;
+      double  rc;
+
+      rc = k._C;
+      switch( calcTy ) {
+         case calc_price:     rc = k._C;       break;
+         case calc_impVol:    rc = gj._impVol; break;
+         case calc_delta:     rc = gj._delta;  break;
+         case calc_theta:     rc = gj._theta;  break;
+         case calc_gamma:     rc = gj._gamma;  break;
+         case calc_vega:      rc = gj._vega;   break;
+         case calc_rho:       rc = gj._rho;    break;
+         case calc_impVolRTR: rc = gl._impVol; break;
+         case calc_deltaRTR:  rc = gl._delta;  break;
+         case calc_thetaRTR:  rc = gl._theta;  break;
+         case calc_gammaRTR:  rc = gl._gamma;  break;
+         case calc_vegaRTR:   rc = gl._vega;   break;
+         case calc_rhoRTR:    rc = gl._rho;    break;
+      }
+      return rc;
+   }
+
 }; // class OptionsCurve
 
 
@@ -289,6 +340,7 @@ public:
       return _CS;
    }
 
+
    /////////////////////////
    // Operations
    /////////////////////////
@@ -343,6 +395,7 @@ public:
    {
       Messages    &msgs = all.msgs();
       Message     *msg;
+      KnotList     kdb;
       KnotDef      k;
       size_t       i, nk;
       DoubleXYList XY;
@@ -363,11 +416,12 @@ public:
       for ( i=0; i<nk; i++ ) {
          k     = _kdb[i];
          msg   = k._idx ? msgs[k._idx] : (Message *)0;
-// TODO : Factor in _lvc._jToday
          pt._x = _kdb[i]._exp;
          pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
          XY.push_back( pt );
+         kdb.push_back( k );
       }
+      _kdb = kdb;
 
       QUANT::CubicSpline cs( XY );
 
@@ -640,13 +694,15 @@ public:
          QUANT::CubicSpline &CS = _riskFree.CS();
 
          /* CS X-axis is in days (from Interval in XML config)
-          * CS X-axis is in days (from Interval in XML config)
+          * CS Y-axis is in pct : Divide by 100
           */
-         Tt = grk->Tt() * 365.25;
-         r  = CS.ValueAt( Tt );
-r = 0.10; // TODO : From RiskFreeSpline
-         k._Greeks = grk->AllGreeks( k._C, _S, r );
+         Tt           = grk->Tt() * 365.25;
+         r            = CS.ValueAt( Tt );
+         r           *= 0.01;
+         k._Greeks    = grk->AllGreeks( k._C, _S, r );
+_lvc.breakpoint(); 
       }
+      k._GreeksLVC = _lvc.GreeksDontWantNoFreaks( m );
    }
 
 }; // class Underlyer
@@ -666,10 +722,10 @@ private:
    IndexCache        &_idx;
    u_int64_t          _tExp;
    u_int64_t          _dStr;
-   SplineType         _type;
+   SplineType         _splineType;
    KnotList           _kdb;
-   _DoubleList         _X;
-   _DoubleList         _Y;
+   _DoubleList        _X;
+   _DoubleList        _Y;
    QUANT::CubicSpline _CS; // Last Calc
    double             _xInc;
    int                _StreamID;
@@ -690,7 +746,7 @@ public:
       _idx( und.byExp() ),
       _tExp( tExp ),
       _dStr( 0 ),
-      _type( splineType ),
+      _splineType( splineType ),
       _kdb(),
       _X(),
       _Y(),
@@ -713,7 +769,7 @@ public:
       _idx( und.byStr() ),
       _tExp( 0 ),
       _dStr( (u_int64_t)( dStr * l_StrikeMul ) ),
-      _type( splineType ),
+      _splineType( splineType ),
       _kdb(),
       _X(),
       _Y(),
@@ -735,13 +791,32 @@ public:
    u_int64_t   tExp()     { return _tExp; };
    u_int64_t   dStr()     { return _dStr; };
    bool        byExp()    { return( _tExp != 0 ); }
-   bool        IsPut()    { return( _type == spline_put ); }
-   bool        IsCall()   { return( _type == spline_call ); }
+   bool        IsPut()    { return( _splineType == spline_put ); }
+   bool        IsCall()   { return( _splineType == spline_call ); }
    size_t      NumKnots() { return _kdb.size(); }
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
    {
-      SnapKnots( all, now );
+      Calc( all, now );
+      return _CS;
+   }
+
+   QUANT::CubicSpline &CS( LVCAll &all, CalcType calcType )
+   {
+      DoubleXYList &XY = _CS.XY();
+      size_t         n, nx;
+      double         x, x0, x1, minInc;
+
+      // Rock on
+
+      SnapKnots( all, 0, calcType );
+      nx = XY.size();
+      x0 = XY[1]._x;
+      x1 = XY[nx-1]._x;
+      for ( n=1,minInc=99999.0; byExp() && n<nx; n++ )
+         minInc = gmin( minInc, XY[n]._x - XY[n-1]._x );
+      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
+      _Y  = _CS.Spline( _X );
       return _CS;
    }
 
@@ -761,16 +836,19 @@ public:
     *
     * \param all - Current LVC Snap
     * \param now - Current Unix Time
+    * \param calcType - Calculation Type
     * \return true if Calc'ed; false if not
     */ 
-   bool SnapKnots( LVCAll &all, time_t now )
+   bool SnapKnots( LVCAll &all, time_t now, CalcType calcType=calc_price )
    {
       OptionsCurve &lvc  = _und.lvc();
       Messages     &msgs = all.msgs();
-      _DoubleList   &xdb  = _und.strikes();
+      _DoubleList  &xdb  = _und.strikes();
       double        x0   = xdb[0];
       double        x1   = xdb[xdb.size()-1];
       Message      *msg;
+      KnotList      kdb;
+      KnotDef       k;
       int           ix, np;
       size_t        i, nk;
       double        m, dy, xi;
@@ -793,16 +871,20 @@ public:
       _X.clear();
       _Y.clear();
       for ( i=0,bUpd=false; i<nk; i++ ) {
-         ix    = _kdb[i]._idx;
+         k     = _kdb[i];
+         ix    = k._idx;
          msg   = msgs[ix];
+         _und.SnapLVCFlds( k, *msg );
          dUpd  = msg->MsgTime();
          bUpd |= ( (time_t)dUpd > _tCalc );
          dStr  = lvc.StrikePrice( *msg );
          dExp  = lvc.Expiration( *msg, true );
          pt._x = byExp() ? dStr : dExp;
-         pt._y = lvc.MidQuote( *msg );
+         pt._y = _lvc.Z( k, calcType );
          lXY.push_back( pt );
+         kdb.push_back( k );
       }
+      _kdb = kdb;
       /*
        * 2a) Straight-line beginning to min Strike (or Expiration)
        */
@@ -934,7 +1016,7 @@ private:
       /*
        * 1) Put / Call / Both??
        */
-      switch( _type ) {
+      switch( _splineType ) {
          case spline_put:  udb = _idx._puts;  break;
          case spline_call: udb = _idx._calls; break;
          case spline_both: udb = _idx._both;  break;
@@ -951,7 +1033,7 @@ private:
          _und.SnapLVCFlds( k, *msg );
          k._exp     = _lvc.Expiration( *msg, false );
          k._jExp    = _lvc.Expiration( *msg, true );
-         Tt         = 1.0 * ( k._jExp - _lvc._jToday ) / 365.0;
+         Tt         = _lvc.Tt( k );
          dX         = _lvc.StrikePrice( *msg );
          k._strike  = (u_int64_t)( dX * l_StrikeMul );
          k._tUpd    = msg->MsgTime();
@@ -1012,6 +1094,7 @@ private:
    Underlyer    &_und;
    OptionsCurve &_lvc;
    bool          _bPut;
+   CalcType      _calcType;
    bool          _surfCalc;
    KnotGrid      _kdb;
    _DoubleList   _X;
@@ -1041,6 +1124,7 @@ public:
       _und( und ),
       _lvc( und.lvc() ),
       _bPut( bPut ),
+      _calcType( calc_price ),
       _surfCalc( surfCalc ),
       _kdb(),
       _X(),
@@ -1075,11 +1159,13 @@ public:
                    const char     *tkr,
                    double          last, 
                    double          lastRange,
-                   int             months ) :
+                   int             months,
+                   CalcType        calcType ):
       string( tkr ),
       _und( c._und ),
       _lvc( c._und.lvc() ),
       _bPut( c._bPut ),
+      _calcType( calcType ),
       _surfCalc( c._surfCalc ),
       _kdb(),
       _X(),
@@ -1175,13 +1261,14 @@ public:
     */ 
    bool Calc( LVCAll &all, time_t now, bool bForce=false )
    {
-      Messages  &msgs = all.msgs();
-      KnotDef    k, k0, k1;
-      Message   *msg;
-      size_t     r, c, nr, nc, ix, m, n;
-      double     z, zX, zE, dX;
-      double     x0, x1, y0, y1;
-      bool       bUpd;
+      Messages   &msgs = all.msgs();
+      KnotGrid    kdb;
+      KnotDef     k, k0, k1;
+      Message    *msg;
+      size_t      r, c, nr, nc, ix, m, n;
+      double      z, zX, zE, dX;
+      double      x0, x1, y0, y1;
+      bool        bUpd;
       _DoubleGrid Z;
 
       // Pre-condition(s)
@@ -1205,7 +1292,8 @@ public:
       bUpd   = true;
       for ( r=0; r<nr; r++ ) {
          _DoubleList zRow, zSnap;
-         double     tUpd;
+         KnotList    kRow;
+         double      tUpd;
 
          /*
           * 1a) Snap real-time Knot values from LVC
@@ -1217,11 +1305,14 @@ public:
             if ( (ix=k._idx) != l_NoIndex ) {
                msg   = msgs[ix];
                tUpd  = msg->MsgTime();
-               z     = _lvc.MidQuote( *msg );
+               _und.SnapLVCFlds( k, *msg );
+               z     = _lvc.Z( k, _calcType ); 
                bUpd &= ( tUpd > k._tUpd );
             }
             zSnap.push_back( z );
+            kRow.push_back( k );
          }
+         kdb.push_back( kRow );
          /*
           * 1b) Build row from snapped and interpolated values
           */
@@ -1242,11 +1333,17 @@ public:
                if ( k._pSplX == k._pSplE )
                  _lvc.breakpoint();
                if ( k._splineX ) {
-                  csX = &k._splineX->CS( all, now );
+                  if ( _calcType == calc_price )
+                     csX = &k._splineX->CS( all, now );
+                  else
+                     csX = &k._splineX->CS( all, _calcType );
                   zX  = csX->ValueAt( k._jExp );
                }
                if ( k._splineE ) {
-                  csE = &k._splineE->CS( all, now );
+                  if ( _calcType == calc_price )
+                     csE = &k._splineE->CS( all, now );
+                  else
+                     csE = &k._splineE->CS( all, _calcType );
                   dX  = l_StrikeDiv * k._strike;
                   zE  = csE->ValueAt( dX );
                }
@@ -1278,6 +1375,7 @@ public:
          }
          Z.push_back( zRow );
       }
+      _kdb = kdb;
       if ( !bUpd && !bForce )
          _lvc.breakpoint();
 
@@ -1415,7 +1513,7 @@ private:
       KnotList       kRow;
       u_int64_t      exp, jExp, jStr, key;
       size_t         i;
-      double         ds;
+      double         ds, dX, Tt;
       SortedInt64Set edb, sdb, jdb;
       KnotDefMap     kMap;
       OptionsSpline *spl;
@@ -1435,8 +1533,11 @@ private:
          _und.SnapLVCFlds( k, *msg );
          k._exp     = _lvc.Expiration( *msg, false );
          k._jExp    = _lvc.Expiration( *msg, true );
-         k._strike  = (u_int64_t)( _lvc.StrikePrice( *msg ) * l_StrikeMul );
+         Tt         = _lvc.Tt( k );
+         dX         = _lvc.StrikePrice( *msg );
+         k._strike  = (u_int64_t)( dX * l_StrikeMul );
          k._tUpd    = msg->MsgTime();
+         k._greek   = new Contract( !_bPut, dX, Tt );
          key        = ( k._exp << 32 );
          key       += k._strike;
          kMap[key]  = k;
@@ -1826,22 +1927,63 @@ protected:
       SplineMap::iterator  lt;
       SurfaceMap::iterator ft;
       string               s, ss, tt( tkr ), err;
-      char                *pt, *pl, *pr, *pm, *rp;
+      char                *pt, *pl, *pr, *pm, *r0, *r1;
       int                  nb, mon;
       double               last, rng;
       OptionsSpline       *spl;
       OptionsSurface      *srf, *srf1;
+      CalcType             calcTy;
 
-      /*
-       * Support <Surface> <Last> <+/- Strike> <NumMonths>
-       *   e.g.. AAPL.P 100 50 0 for Last=$100 +/- $50 ALL months
-       *   e.g.. AAPL.P 100 50 3 for Last=$100 +/- $50 next 3 months
+      ////////////////////////////////////////////////////////////////////
+      // Support <Surface> [<Last> <+/- Strike> <NumMonths> [, <Type> ]
+      //   where <Type> = vol | delta | theta | gamma | vega | rho 
+      //   e.g.. AAPL.P 100 50 0 for Last=$100 +/- $50 ALL months
+      //         AAPL.P 100 50 3 for Last=$100 +/- $50 next 3 months
+      //         AAPL.P 100 50 3,rho
+      ////////////////////////////////////////////////////////////////////
+      /* 
+       * Surface,Type
        */
+      pt     = (char *)tt.data();
+      pt     = ::strtok_r( pt,   ",", &r0 );
+      pl     = ::strtok_r( NULL, ",", &r0 );
+      calcTy = calc_price;
+      if ( pl ) {
+         if ( !::strcmp( pl, "impVol" ) || !::strcmp( pl, "vol" ) )
+            calcTy = calc_impVol;
+         else if ( !::strcmp( pl, "delta" ) )
+            calcTy = calc_delta;
+         else if ( !::strcmp( pl, "theta" ) )
+            calcTy = calc_theta;
+         else if ( !::strcmp( pl, "gamma" ) )
+            calcTy = calc_gamma;
+         else if ( !::strcmp( pl, "vega" ) )
+            calcTy = calc_vega;
+         else if ( !::strcmp( pl, "rho" ) )
+            calcTy = calc_rho;
+         else if ( !::strcmp( pl, "impVolRTR" ) )
+            calcTy = calc_impVolRTR;
+         else if ( !::strcmp( pl, "deltaRTR" ) )
+            calcTy = calc_deltaRTR;
+         else if ( !::strcmp( pl, "thetaRTR" ) )
+            calcTy = calc_thetaRTR;
+         else if ( !::strcmp( pl, "gammaRTR" ) )
+            calcTy = calc_gammaRTR;
+         else if ( !::strcmp( pl, "vegaRTR" ) )
+            calcTy = calc_vegaRTR;
+         else if ( !::strcmp( pl, "rhoRTR" ) )
+            calcTy = calc_rhoRTR;
+      }
+      /*
+       * AAPL.P 100 50 3
+       */
+      s    = pt;
+      tt   = s;
       pt   = (char *)tt.data();
-      pt   = ::strtok_r( pt,   " ", &rp );
-      pl   = ::strtok_r( NULL, " ", &rp );
-      pr   = ::strtok_r( NULL, " ", &rp );
-      pm   = ::strtok_r( NULL, " ", &rp );
+      pt   = ::strtok_r( pt,   " ", &r1 );
+      pl   = ::strtok_r( NULL, " ", &r1 );
+      pr   = ::strtok_r( NULL, " ", &r1 );
+      pm   = ::strtok_r( NULL, " ", &r1 );
       last = pl ? atof( pl ) : 0.0;
       rng  = pr ? atof( pr ) : 0.0;
       mon  = pm ? atoi( pm ) : 0;
@@ -1867,7 +2009,7 @@ protected:
       }
       else if ( rng && (ft=fdb.find( ss )) != fdb.end() ) {
          srf  = (*ft).second;
-         srf1 = new OptionsSurface( *srf, tkr, last, rng, mon );
+         srf1 = new OptionsSurface( *srf, tkr, last, rng, mon, calcTy );
          if ( !srf1->M() || !srf1->N() ) {
             err = "Empty surface";
             u.Init( tkr, arg );

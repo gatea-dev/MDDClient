@@ -197,12 +197,14 @@ private:
    int          _vecSz;
    int          _vecPrec;
    bool         _bVecFld;
+   int          _nDead;
    string       _dead;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
    const char **_chn;
    int          _nLnk;
+   int          _nOpn;
 
    ////////////////////////////////
    // Constructor
@@ -212,17 +214,20 @@ public:
               int         vecSz, 
               int         vecPrec, 
               bool        bVecFld, 
+              int         nDead,
               const char *dead ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
       _bVecFld( bVecFld ),
+      _nDead( nDead ),
       _dead( dead ),
       _wl(),
       _wlV(),
       _mtx(),
       _chn( (const char **)0 ),
-      _nLnk( 0 )
+      _nLnk( 0 ),
+      _nOpn( 0 )
    {
       SetUserPubMsgTy( true );
    }
@@ -408,16 +413,25 @@ public:
       Watch      *w;
       MyVector   *v;
       const char *err;
-      char       *pfx, *ric;
+      char       *pfx, *ric, buf[K];
       bool        bChn;
       int         StreamID = (int)(size_t)arg;
 
-      pfx  = ::strtok( (char *)tmp.data(), "#" );
-      ric  = ::strtok( NULL, "#" );
-      bChn = _chn && ric;
-      err  = _dead.data();
+      pfx    = ::strtok( (char *)tmp.data(), "#" );
+      ric    = ::strtok( NULL, "#" );
+      bChn   = _chn && ric;
+      err    = _dead.data();
+      _nOpn += 1;
       ::fprintf( stdout, "OPEN [%6d] %s\n", StreamID, tkr ); ::fflush( stdout );
-      if ( _dead.length() ) {
+      if ( _nDead && !( _nOpn % _nDead ) ) {
+         sprintf( buf, "Request %d vs _nDead=%d", _nOpn, _nDead );
+         err = buf;
+         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
+         ::fflush( stdout );
+         u.Init( tkr, StreamID );
+         u.PubError( err );
+      }
+      else if ( _dead.length() ) {
          ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          ::fflush( stdout );
          u.Init( tkr, StreamID );
@@ -514,7 +528,7 @@ int main( int argc, char **argv )
    const char *lnks[_MAX_CHAIN];
    char       *cp;
    double      tPub, tRun, d0, dn;
-   int         i, nl, nt, hBeat, vecSz, vPrec;
+   int         i, nl, nt, hBeat, vecSz, vPrec, nDead;
    bool        bCfg, bPack, bFldV, aOK;
    string      s;
    rtBuf64     chn;
@@ -538,6 +552,7 @@ int main( int argc, char **argv )
    bFldV = false;
    bPack = true;
    dead  = "";
+   nDead = 0;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -551,6 +566,7 @@ int main( int argc, char **argv )
       s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
       s += "       [ -hbeat   <Heartbeat> ] \\ \n";
       s += "       [ -x       <Error to publish as DEAD; Empty for data> ] \\ \n";
+      s += "       [ -nx      <NumOpen to publish dead> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -563,6 +579,7 @@ int main( int argc, char **argv )
       printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
       printf( "      -hbeat   : %d\n", hBeat );
       printf( "      -x       : %s\n", dead );
+      printf( "      -nx      : %d\n", nDead );
       return 0;
    }
 
@@ -593,9 +610,11 @@ int main( int argc, char **argv )
          hBeat = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-x" ) )
          dead = argv[++i];
+      else if ( !::strcmp( argv[i], "-nx" ) )
+         nDead = atoi( argv[++i] );
    }
 
-   MyChannel pub( svc, vecSz, vPrec, bFldV, dead );
+   MyChannel pub( svc, vecSz, vPrec, bFldV, nDead, dead );
 
    ::srand48( pub.TimeSec() ); 
    s = "";

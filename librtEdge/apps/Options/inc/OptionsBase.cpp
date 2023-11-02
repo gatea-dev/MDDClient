@@ -43,6 +43,14 @@ typedef map<string, string, less<string> >    SortedStringMap;
 #define _EXPIR_DATE   67
 #define _STOCK_RIC  1026
 #define _UN_SYMBOL  4200
+#define _IMP_VOL    1642
+#define _IMP_VOLA   2144
+#define _IMP_VOLB   2145
+#define _DELTA      2305
+#define _GAMMA      2306
+#define _THETA      2307
+#define _VEGA       2308
+#define _RHO        2309
 
 #define _MIL     1000000
 #define _SECPERDAY 86400
@@ -54,6 +62,22 @@ typedef enum {
    spline_call = 1,
    spline_both = 2,
 } SplineType;
+
+typedef enum {
+   calc_price     =  0,
+   calc_impVol    =  1,
+   calc_delta     =  2,
+   calc_theta     =  3,
+   calc_gamma     =  4,
+   calc_vega      =  5,
+   calc_rho       =  6,
+   calc_impVolRTR =  7,
+   calc_deltaRTR  =  8,
+   calc_thetaRTR  =  9,
+   calc_gammaRTR  = 10,
+   calc_vegaRTR   = 11,
+   calc_rhoRTR    = 12,
+} CalcType;
 
 ////////////////////////////////////////////////
 //
@@ -245,6 +269,25 @@ public:
       else
          rc = gmax( bid,  ask );
       return rc;
+   }
+
+   /**
+    * \brief Return Greeks
+    *
+    * \param msg - Message snapped from LVC
+    * \return Greeks
+    */
+   Greeks GreeksDontWantNoFreaks( Message &msg )
+   {
+      Greeks g;
+
+      g._impVol = GetAsDouble( msg, _IMP_VOL ); 
+      g._delta  = GetAsDouble( msg, _DELTA ); 
+      g._theta  = GetAsDouble( msg, _THETA ); 
+      g._gamma  = GetAsDouble( msg, _GAMMA ); 
+      g._vega   = GetAsDouble( msg, _VEGA ); 
+      g._rho    = GetAsDouble( msg, _RHO ); 
+      return g;
    }
 
    /**

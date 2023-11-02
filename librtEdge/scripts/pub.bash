@@ -1,7 +1,7 @@
 
 clear
 if [ -n "$1" ]; then
-   DEAD="-x $1"
+   DEAD="-nx $1"
 else
    DEAD=""
 fi
