@@ -197,14 +197,14 @@ private:
    int          _vecSz;
    int          _vecPrec;
    bool         _bVecFld;
-   int          _nDead;
+   string       _togl;
    string       _dead;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
    const char **_chn;
    int          _nLnk;
-   int          _nOpn;
+   bool         _XON;
 
    ////////////////////////////////
    // Constructor
@@ -214,20 +214,20 @@ public:
               int         vecSz, 
               int         vecPrec, 
               bool        bVecFld, 
-              int         nDead,
+              const char *togl,
               const char *dead ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
       _bVecFld( bVecFld ),
-      _nDead( nDead ),
+      _togl( togl ),
       _dead( dead ),
       _wl(),
       _wlV(),
       _mtx(),
       _chn( (const char **)0 ),
       _nLnk( 0 ),
-      _nOpn( 0 )
+      _XON( true )
    {
       SetUserPubMsgTy( true );
    }
@@ -421,11 +421,19 @@ public:
       ric    = ::strtok( NULL, "#" );
       bChn   = _chn && ric;
       err    = _dead.data();
-      _nOpn += 1;
       ::fprintf( stdout, "OPEN [%6d] %s\n", StreamID, tkr ); ::fflush( stdout );
-      if ( _nDead && !( _nOpn % _nDead ) ) {
-         sprintf( buf, "Request %d vs _nDead=%d", _nOpn, _nDead );
+      if ( !::strcmp( tkr, _togl.data() ) ) { 
+         _XON = !_XON;
+         sprintf( buf, "XON toggled = %s", _XON ? "true" : "false" );
          err = buf;
+         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
+         ::fflush( stdout );
+         u.Init( tkr, StreamID );
+         u.PubError( err );
+         return;
+      }
+      if ( !_XON ) {
+         err = "XOFF";
          ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          ::fflush( stdout );
          u.Init( tkr, StreamID );
@@ -524,11 +532,11 @@ static bool _IsTrue( const char *p )
 
 int main( int argc, char **argv )
 {
-   const char *svr, *svc, *pChn, *ty, *dead;
+   const char *svr, *svc, *pChn, *ty, *dead, *togl;
    const char *lnks[_MAX_CHAIN];
    char       *cp;
    double      tPub, tRun, d0, dn;
-   int         i, nl, nt, hBeat, vecSz, vPrec, nDead;
+   int         i, nl, nt, hBeat, vecSz, vPrec;
    bool        bCfg, bPack, bFldV, aOK;
    string      s;
    rtBuf64     chn;
@@ -552,7 +560,7 @@ int main( int argc, char **argv )
    bFldV = false;
    bPack = true;
    dead  = "";
-   nDead = 0;
+   togl  = "";
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
@@ -566,7 +574,7 @@ int main( int argc, char **argv )
       s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
       s += "       [ -hbeat   <Heartbeat> ] \\ \n";
       s += "       [ -x       <Error to publish as DEAD; Empty for data> ] \\ \n";
-      s += "       [ -nx      <NumOpen to publish dead> ] \\ \n";
+      s += "       [ -tx      <Toggle Ticker : Sub once for DEAD; 2nd for IMG > ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -579,7 +587,7 @@ int main( int argc, char **argv )
       printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
       printf( "      -hbeat   : %d\n", hBeat );
       printf( "      -x       : %s\n", dead );
-      printf( "      -nx      : %d\n", nDead );
+      printf( "      -tx      : %s\n", togl );
       return 0;
    }
 
@@ -610,11 +618,11 @@ int main( int argc, char **argv )
          hBeat = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-x" ) )
          dead = argv[++i];
-      else if ( !::strcmp( argv[i], "-nx" ) )
-         nDead = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-tx" ) )
+         togl = argv[++i];
    }
 
-   MyChannel pub( svc, vecSz, vPrec, bFldV, nDead, dead );
+   MyChannel pub( svc, vecSz, vPrec, bFldV, togl, dead );
 
    ::srand48( pub.TimeSec() ); 
    s = "";
