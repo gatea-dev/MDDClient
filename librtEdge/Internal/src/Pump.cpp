@@ -44,7 +44,9 @@ using namespace RTEDGE_PRIVATE;
 #define NT_EXCEPT_EVENTS  ( FD_CLOSE )
 LRESULT CALLBACK u_wndProc( HWND, UINT, WPARAM, LPARAM );
 void    CALLBACK u_tmrProc( HWND, UINT, UINT, DWORD );
-static UINT _sockMsg = 0;
+static UINT   _sockMsg = 0;
+static string _sockMsgName( "RTEDGE_PRICATE::EventPump" );
+static string _className( _sockMsgName );
 #endif // WIN32
 
 ////////////////////////////////////////////
@@ -280,20 +282,24 @@ void Pump::_Create()
    // WIN32-specific
 #ifdef WIN32
    WNDCLASS wndClass;
+   char     obuf[K];
 
    // 1) Register (hidden) window class
 
    ::memset( (void *)&wndClass, 0, sizeof( wndClass ) );
-   wndClass.lpszClassName = "RTEDGE_PRIVATE::EventPump Window";
+   wndClass.lpszClassName = _className.data();
    wndClass.hInstance     = GetWindowInstance( NULL );
    wndClass.lpfnWndProc   = &u_wndProc;
    wndClass.cbWndExtra    = sizeof(Pump *);
    if ( !_sockMsg ) {
+      _className            += ::rtEdge_pTimeMs( obuf, ::rtEdge_TimeNs() );
+      _sockMsgName          += obuf;
+      wndClass.lpszClassName = _className.data();
       if ( !::RegisterClass( &wndClass ) ) {
          ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
          return;
       }
-      _sockMsg = ::RegisterWindowMessage( "RTEDGE_PRIVATE::EventPump" );
+      _sockMsg = ::RegisterWindowMessage( _sockMsgName.data() );
    }
 
    // 3) Create (hidden) window; Start timer
