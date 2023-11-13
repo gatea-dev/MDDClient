@@ -11,6 +11,7 @@
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     11 SEP 2023 jcs  Build 32: _className
 *     17 OCT 2023 jcs  Build 65: poll() only; WIN64 working
+*     13 NOV 2023 jcs  Build 66: RTEDGE_PRIVATE::EventPump
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -283,7 +284,7 @@ void Pump::_Create()
    // 1) Register (hidden) window class
 
    ::memset( (void *)&wndClass, 0, sizeof( wndClass ) );
-   wndClass.lpszClassName = "EventPump Window";
+   wndClass.lpszClassName = "RTEDGE_PRIVATE::EventPump Window";
    wndClass.hInstance     = GetWindowInstance( NULL );
    wndClass.lpfnWndProc   = &u_wndProc;
    wndClass.cbWndExtra    = sizeof(Pump *);
@@ -292,7 +293,7 @@ void Pump::_Create()
          ::MessageBox( NULL, "Error", "RegisterClass()", MB_OK );
          return;
       }
-      _sockMsg = ::RegisterWindowMessage( "EventPump" );
+      _sockMsg = ::RegisterWindowMessage( "RTEDGE_PRIVATE::EventPump" );
    }
 
    // 3) Create (hidden) window; Start timer

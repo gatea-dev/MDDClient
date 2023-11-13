@@ -317,9 +317,13 @@ public:
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
       dtTm       = unix2rtDateTime( tv );
+      u.AddField( fid++, -19630411 );
+      u.AddField( fid++, -M_PI );
+/*
       u.AddField( fid++, dtTm );
       u.AddField( fid++, w._rtl++ );
       u.AddField( fid++, M_PI );
+ */
       return u.Publish();
    }
 
