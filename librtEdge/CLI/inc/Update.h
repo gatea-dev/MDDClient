@@ -224,7 +224,7 @@ public:
 	/**
 	 * \brief Add empty (null) field
 	 *
-	 * \param fld - Field ID
+	 * \param fid - Field ID
 	 */
 	void AddEmptyField( int fid );
 
@@ -315,6 +315,7 @@ public:
 	/**
 	 * \brief Add vector of DateTimes field to update
 	 *
+	 * \param fid - Field ID
 	 * \param vector - Field value as vector
 	 * \return Array of doubles to store until calling Publish()
 	 */

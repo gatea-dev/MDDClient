@@ -23,6 +23,7 @@
 #     20 SEP 2023 jcs  BBDailyStats
 #     27 SEP 2023 jcs  Tape debug
 #     16 OCT 2023 jcs  MemFree()
+#      6 DEC 2023 jcs  GetField( bDeepCopy )
 #
 #  (c) 1994-2023, Gatea Ltd.
 #################################################################
@@ -1021,10 +1022,12 @@ class rtEdgeData:
    ########################
    # Returns specific rtEdgeField by Field ID, or None if not found
    #
+   # @param reqFid - Requested Field ID
+   # @param bDeepCopy - True for deep copy into unique rtEdgeField
    # @return Specific rtEdgeField by Field ID, or None if not found
    # @see rtEdgeField
    ########################
-   def GetField( self, reqFid ):
+   def GetField( self, reqFid, bDeepCopy=True ):
       # Build once / message
       #
       idb = self._byFid
@@ -1037,7 +1040,8 @@ class rtEdgeData:
       #
       fld = None
       if reqFid in idb:
-         fld         = self._fld
+         if bDeepCopy: fld = rtEdgeField()
+         else:         fld = self._fld
          ( val, ty ) = idb[reqFid]
          fld._Set( reqFid, val, ty, self._FieldName( reqFid ) )
       return fld

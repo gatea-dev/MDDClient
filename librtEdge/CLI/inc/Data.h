@@ -22,6 +22,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( String ^ )
+*      6 DEC 2023 jcs  Build 67: volatile GetField()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -131,6 +132,56 @@ public:
 
 	/**
 	 * \brief Retrieve and return requested field by FID
+	 *
+	 * The returned rtEdgeField is volatile and is valid until the 
+	 * next call to GetField().  This is done for performance reasons.
+	 * Internally, the rtEdgeData creates and maintains a single 
+	 * rtEdgeField instance that is populated and returned on each call
+	 * to GetField().
+	 *
+	 * For example, the following both return the ASK field (FID 25):
+	 *
+	 * \code
+	 *    public override void OnData( rtEdgeData d )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both the bid and ask refer to the same rtEdgeField
+	 *       // instance which is set to the ASK (field 25) value
+	 *       //////////////////////////////////////////////////////////
+	 *       rtEdgeField bid = d.GetField( 22 );    
+	 *       rtEdgeField ask = d.GetField( 25 );    
+	 *    }
+	 * \endcode
+	 *
+	 * You may make a deep copy by using the rtEdgeField copy constructor
+	 * as follows:
+	 *
+	 * \code
+	 *    public override void OnData( rtEdgeData d )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both bid and ask are deep copies and refer to the 
+	 *       // correct fields
+	 *       //////////////////////////////////////////////////////////
+	 *       rtEdgeField bid = new rtEdgeField( d.GetField( 22 ) );
+	 *       rtEdgeField ask = new rtEdgeField( d.GetField( 25 ) );    
+	 *    }
+	 * \endcode
+	 *
+	 * For best performance, use the GetField() instance before calling 
+	 * GetField() again:
+	 *
+	 * \code
+	 *    public override void OnData( rtEdgeData d )
+	 *    {
+	 *       double      bid, ask;
+	 *       rtEdgeField f;
+	 *
+	 *       bid = ( (f=d.GetField( 22 )) != null ) ? f.GetAsDouble() : 0.0;
+	 *       ask = ( (f=d.GetField( 25 )) != null ) ? f.GetAsDouble() : 0.0;
+	 *    }
+	 * \endcode
+	 *
 	 *
 	 * \param fid - Requested Field ID 
 	 * \return rtEdgeField if found; null otherwise
