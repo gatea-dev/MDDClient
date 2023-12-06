@@ -15,8 +15,9 @@
 *      5 APR 2022 jcs  Build 52: core : MsgTime() w/ LVC
 *      1 SEP 2022 jcs  Build 56: RTL()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
+*      6 DEC 2023 jcs  Build 67: volatile GetField()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Message_H
 #define __RTEDGE_Message_H
@@ -559,7 +560,58 @@ public:
 	}
 
 	/**
-	 * \brief Retrieve and return requested field
+	 * \brief Retrieve and return requested field by FID
+	 *
+	 * The returned Field is volatile and is valid until the next call to 
+	 * GetField().  This is done for performance reasons.  Internally, the 
+	 * Message instance creates and maintains a single Field instance that is 
+	 * populated and returned on each call to GetField().
+	 *
+	 * For example, the following both return the ASK field (FID 25):
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both the bid and ask refer to the same Field
+	 *       // instance which is set to the ASK (field 25) value
+	 *       //////////////////////////////////////////////////////////
+	 *       Field *bid = msg.GetField( "BID" );
+	 *       Field *ask = msg.GetField( "ASK" );
+	 *    }
+	 * \endcode
+	 *
+	 * You may make a deep copy by using the Field::Copy() method as follows:
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both bid and ask are deep copies and refer to the
+	 *       // correct fields
+	 *       //////////////////////////////////////////////////////////
+	 *       Field bid, ask, *f;
+	 *
+	 *       if ( (f=msg.GetField( "BID" )) )
+	 *          bimsg.Copy( *f );
+	 *       if ( (f=d.GetField( "ASK" )) )
+	 *          ask.Copy( *f );
+	 *    }
+	 * \endcode
+	 *
+	 * For best performance, use the GetField() instance before calling
+	 * GetField() again:
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       double bid, ask;
+	 *       Field *f;
+	 *
+	 *       bid = (f=d.GetField( "BID" )) ? f->GetAsDouble() : 0.0;
+	 *       ask = (f=d.GetField( "ASK" )) ? f->GetAsDouble() : 0.0;
+	 *    }
+	 * \endcode
 	 *
 	 * \param fieldName - Schema name of field to retrieve
 	 * \return Field if found; Else null
@@ -573,10 +625,61 @@ public:
 	}
 
 	/**
-	 * \brief Retrieve and return requested field
+	 * \brief Retrieve and return requested field by FID
 	 *
-	 * \param fid -  ID of field to retrieve 
-	 * \return Field if found; Else null
+	 * The returned Field is volatile and is valid until the next call to 
+	 * GetField().  This is done for performance reasons.  Internally, the 
+	 * Message instance creates and maintains a single Field instance that is 
+	 * populated and returned on each call to GetField().
+	 *
+	 * For example, the following both return the ASK field (FID 25):
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both the bid and ask refer to the same Field
+	 *       // instance which is set to the ASK (field 25) value
+	 *       //////////////////////////////////////////////////////////
+	 *       Field *bid = msg.GetField( 22 );
+	 *       Field *ask = msg.GetField( 25 );
+	 *    }
+	 * \endcode
+	 *
+	 * You may make a deep copy by using the Field::Copy() method as follows:
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       //////////////////////////////////////////////////////////
+	 *       // Both bid and ask are deep copies and refer to the
+	 *       // correct fields
+	 *       //////////////////////////////////////////////////////////
+	 *       Field bid, ask, *f;
+	 *
+	 *       if ( (f=msg.GetField( 22 )) )
+	 *          bimsg.Copy( *f );
+	 *       if ( (f=d.GetField( 25 )) )
+	 *          ask.Copy( *f );
+	 *    }
+	 * \endcode
+	 *
+	 * For best performance, use the GetField() instance before calling
+	 * GetField() again:
+	 *
+	 * \code
+	 *    virtual void OnData( Message &msg )
+	 *    {
+	 *       double bid, ask;
+	 *       Field *f;
+	 *
+	 *       bid = (f=d.GetField( 22 )) ? f->GetAsDouble() : 0.0;
+	 *       ask = (f=d.GetField( 25 )) ? f->GetAsDouble() : 0.0;
+	 *    }
+	 * \endcode
+	 *
+	 * \param fid - Requested Field ID
+	 * \return Field if found; null otherwise
 	 */
 	Field *GetField( int fid )
 	{
