@@ -23,18 +23,22 @@ using librtEdge;
 public class MyThread
 {
    private String _lvcFile;
+   private int    _numSnap;
+   private LVC    _share;
    private bool   _bRun;
    private Thread _thr;
 
    ////////////////////////////////
    // Constructor
    ////////////////////////////////
-   public MyThread( String lvcFile )
+   public MyThread( String lvcFile, int numSnap, bool bShare )
    {
       ThreadStart beg;
 
       beg      = new ThreadStart( this.Run );
       _lvcFile = lvcFile;
+      _numSnap = numSnap;
+      _share   = bShare ? new LVC( _lvcFile ) : null;
       _bRun    = true;
       _thr     = new Thread( beg );
    }
@@ -53,6 +57,9 @@ public class MyThread
       if ( _thr != null )
          _thr.Join();
       _thr = null;
+      if ( _share != null )
+         _share.Destroy();
+      _share = null;
    }
 
    private void Run()
@@ -68,13 +75,26 @@ public class MyThread
    ///////////////////////
    private void SnapAll()
    {
-      LVC        lvc = new LVC( _lvcFile );
-      LVCDataAll all = lvc.ViewAll();
-      String     ds  = all._dSnap.ToString( "F3" );
+      bool       bShr = ( _share != null );
+      LVC        lvc  = bShr ? _share : new LVC( _lvcFile );
+      LVCDataAll all;
+      int        i, nt;
+      double     ds;
 
-      Console.WriteLine( "SnapAll() : {0} tkrs in {1}s", all._nTkr, ds );
-      lvc.FreeAll();
-      lvc.Destroy();
+      nt = 0;
+      ds = 0.0;
+      for ( i=0; _bRun && i<_numSnap; i++ ) {
+         all = lvc.ViewAll();
+         ds += all._dSnap;
+         nt  = (int)all._nTkr;
+      }
+      Console.Write( "{0} SnapAll()", _numSnap );
+      Console.Write( " : {0} tkrs in {1}s", nt, ds.ToString( "F3" ) ); 
+      Console.WriteLine( "; Mem={0} (Kb)", rtEdge.MemSize() );
+      if ( !bShr ) {
+         lvc.FreeAll();
+         lvc.Destroy();
+      }
    }
 
 };  // class MyThread
@@ -97,14 +117,14 @@ public class MyAdmin : LVCAdmin
    ///////////////////////////////////
    // LVCAdmin Asynchronous Callbacks
    ///////////////////////////////////
-   override void OnAdminACK( bool bAdd, String svc, String tkr )
+   public override void OnAdminACK( bool bAdd, String svc, String tkr )
    {
       String ty = bAdd ? "ADD" : "DEL";
 
       Console.WriteLine( "ACK.{0} : ( {1},{2} )", ty, svc, tkr );
    }
 
-   override void OnAdminNAK( bool bAdd, String svc, String tkr )
+   public override void OnAdminNAK( bool bAdd, String svc, String tkr )
    {
       String ty = bAdd ? "ADD" : "DEL";
 
@@ -132,9 +152,9 @@ class LVCAddAndDumpCLI
    ////////////////////////////////
    public static int Main( String[] args ) 
    {
-      bool   aOK, run;
+      bool   aOK, run, bShare;
       String s, svr, svc, dbFile;
-      int    i, argc;
+      int    i, argc, nSnap;
 
       /////////////////////
       // Quickie checks
@@ -147,16 +167,22 @@ class LVCAddAndDumpCLI
       svr    = "localhost:8775";
       svc    = "bloomberg";
       dbFile = "./cache.lvc";
+      nSnap  = 1;
+      bShare = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -h  <LVC Admin host:port> ] \\ \n";
          s += "       [ -s  <Service> ] \\ \n";
          s += "       [ -db <LVC d/b filename> ] \\ \n";
+         s += "       [ -numSnap <Num SnapAll() per iteration> ] \\ \n";
+         s += "       [ -shared  <if -threads, 1 LVC>> ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
-         Console.Write( "      -h  : {0}\n", svr );
-         Console.Write( "      -s  : {0}\n", svc );
-         Console.Write( "      -db : {0}\n", dbFile );
+         Console.Write( "      -h       : {0}\n", svr );
+         Console.Write( "      -s       : {0}\n", svc );
+         Console.Write( "      -db      : {0}\n", dbFile );
+         Console.Write( "      -numSnap : {0}\n", nSnap );
+         Console.Write( "      -shared  : {0}\n", bShare );
          return 0;
       }
 
@@ -173,6 +199,10 @@ class LVCAddAndDumpCLI
             svc = args[++i];
          else if ( args[i] == "-db" )
             dbFile = args[++i];
+         else if ( args[i] == "-numSnap" )
+            Int32.TryParse( args[++i], out nSnap );
+         else if ( args[i] == "-db" )
+            bShare = _IsTrue( args[++i] );
       }
 
       ////////////////
@@ -181,7 +211,7 @@ class LVCAddAndDumpCLI
       MyThread lvc;
       MyAdmin  adm;
 
-      lvc = new MyThread( dbFile );
+      lvc = new MyThread( dbFile, nSnap, bShare );
       adm = new MyAdmin( svr ); 
       Console.WriteLine( "Enter <Ticker> to ADD; QUIT to stop ..." );
       lvc.Start();
