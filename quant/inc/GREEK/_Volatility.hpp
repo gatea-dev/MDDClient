@@ -7,6 +7,7 @@
 *     22 OCT 2000 jcs  Created.
 *      . . .
 *     31 OCT 2023 jcs  namespace QUANT
+*     15 DEC 2023 jcs  Constructor arg mixup
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/

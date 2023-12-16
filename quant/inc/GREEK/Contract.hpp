@@ -155,7 +155,7 @@ public:
 	                          double r, 
 	                          double precision=0.001 )
 	{
-	   Volatility v( S, _X, r, _Tt, _bCall, precision ); 
+	   Volatility v( S, _X, r, _Tt, precision, _bCall ); 
 	   bool       bBi;
 
 	   return v.volatility( C, bBi );

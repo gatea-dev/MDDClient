@@ -7,6 +7,7 @@
 *      7 MAY 2000 jcs  Created.
 *      . . .
 *     31 OCT 2023 jcs  namespace QUANT
+*     15 DEC 2023 jcs  BlackScholes._var
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -141,9 +142,10 @@ public:
 class BlackScholes
 {
 public:
-	double _X;	   // Strike Price
-	double _r;	   // Risk-free Interest Rate
-	double _stDev;	// Standard Deviation
+	double _X;      // Strike Price
+	double _r;      // Risk-free Interest Rate
+	double _stDev;  // Standard Deviation
+	double _var2;   // ( _stDev * _stDev ) / 2.0
 
 	///////////////////////////////
 	// Constructor
@@ -152,7 +154,8 @@ public:
 	BlackScholes( QUANT::DoubleList &ts, double X, double r ) :
 	   _X( IsZero( X ) ? 1 : X ),
 	   _r( IsZero( r ) ? 1 : r ),
-	   _stDev( 0.0 )
+	   _stDev( 0.0 ),
+	   _var2( 0.0 )
 	{
 	   Stats st( ts );
 
@@ -162,13 +165,15 @@ public:
 	BlackScholes( double stDev, double X, double r ) :
 	   _X( IsZero( X ) ? 1 : X ),
 	   _r( IsZero( r ) ? 1 : r ),
-	   _stDev( stDev )
+	   _stDev( stDev ),
+	   _var2( ( stDev*stDev ) / 2.0 )
 	{ ; }
 
 	BlackScholes( BlackScholes &b ) :
 	   _X( b._X ),
 	   _r( b._r ),
-	   _stDev( b._stDev )
+	   _stDev( b._stDev ),
+	   _var2( b._var2 )
 	{ ; }
 
 
@@ -178,46 +183,48 @@ public:
 public:
 	double call( double S, double tExp )
 	{
-	   double     cd1 = d1( S, tExp );
-	   double     cd2 = cd1 - ( _stDev * ::sqrt( tExp ) );
-	   double     rtn;
-	   NormalDist n1( cd1 );
-	   NormalDist n2( cd2 );
+	   double     D1 = d1( S, tExp );
+	   double     D2 = D1 - ( _stDev * ::sqrt( tExp ) );
+	   NormalDist n1( D1 );
+	   NormalDist n2( D2 );
+	   double     rtn, ert;
 
-	   rtn = ( S * (n1)() ) - ( _X * ::pow( M_E, -( _r*tExp ) ) * (n2)() );
+	   ert = ::pow( M_E, -( _r*tExp ) );
+	   rtn = ( S * (n1)() ) - ( _X * ert * (n2)() );
 	   return rtn;
 	}
 
 	double put( double S, double tExp )
 	{
-	   double     cd1 = d1( S, tExp );
-	   double     cd2 = cd1 - ( _stDev * ::sqrt( tExp ) );
-	   double     rtn;
-	   NormalDist n1( -cd1 );
-	   NormalDist n2( -cd2 );
+	   double     D1 = d1( S, tExp );
+	   double     D2 = D1 - ( _stDev * ::sqrt( tExp ) );
+	   NormalDist n1( -D1 );
+	   NormalDist n2( -D2 );
+	   double     rtn, ert;
 
-	   rtn = ( _X * ::pow( M_E, -( _r*tExp ) ) * (n2)() ) - ( S * (n1)() );
+	   ert = ::pow( M_E, -( _r*tExp ) );
+	   rtn = ( _X * ert * (n2)() ) - ( S * (n1)() );
 	   return rtn;
 	}
 
 	double d1( double S, double tExp, double q=0.0 )
 	{
-	   double rtn;
+	   double num, den, r;
 
-	   rtn  = ::log( S/_X );
-	   rtn += ( ( _r - q ) + ( ( _stDev*_stDev ) / 2 ) ) * tExp;
-	   rtn /= ( _stDev * ::sqrt( tExp ) );
-	   return rtn;
+	   r   = _r - q;
+	   num = ::log( S/_X ) + ( ( r + _var2 ) * tExp );
+	   den = ( _stDev * ::sqrt( tExp ) );
+	   return( num / den );
 	}
 
 	double d2( double S, double tExp, double q=0.0 )
 	{
-	   double rtn;
+	   double num, den, r;
 
-	   rtn  = ::log( S/_X );
-	   rtn += ( ( _r - q ) - ( ( _stDev*_stDev ) / 2 ) ) * tExp;
-	   rtn /= ( _stDev * ::sqrt( tExp ) );
-	   return rtn;
+	   r   = _r - q;
+	   num = ::log( S/_X ) + ( ( r - _var2 ) * tExp );
+	   den = ( _stDev * ::sqrt( tExp ) );
+	   return( num / den );
 	}
 
 }; // class BlackScholes
