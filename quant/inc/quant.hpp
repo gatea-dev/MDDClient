@@ -109,6 +109,7 @@ typedef struct {
 /*
  * Hull : Options, Futures and Other Derivitives
  */
+#include <GREEK/RiskFreeCurve.hpp>
 #include <GREEK/Contract.hpp>
 
 #endif // __MDD_QUANT_HPP

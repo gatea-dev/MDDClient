@@ -50,6 +50,43 @@ class RiskFreeCurve
 public:
 	/**
 	 * \brief Constructor.
+	 */
+	RiskFreeCurve() :
+	   _X(),
+	   _Y(),
+	   _r(),
+	   _rMap(),
+	   _julNumMap(),
+	   _now( _tvNow().tv_sec ),
+	   _lt( _snap_localtime() )
+	{ ; }
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param X - Maturity (i.e., X-axis) values as julNum 
+	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
+	 * \param n - Num X, Y
+	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 */
+	RiskFreeCurve( double *X, double *Y, size_t n, bool bJulNum ) :
+	   _X(),
+	   _Y(),
+	   _r(),
+	   _rMap(),
+	   _julNumMap(),
+	   _now( _tvNow().tv_sec ),
+	   _lt( _snap_localtime() )
+	{
+	   DoubleList XX, YY;
+
+	   for ( size_t i=0; i<n; XX.push_back( X[i++] ) );
+	   for ( size_t i=0; i<n; YY.push_back( Y[i++] ) );
+	   _Init( XX, YY, bJulNum );
+	}
+
+	/**
+	 * \brief Constructor.
 	 *
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
@@ -64,14 +101,43 @@ public:
 	   _now( _tvNow().tv_sec ),
 	   _lt( _snap_localtime() )
 	{
-	   size_t n = gmin( X.size(), Y.size() );
+	   _Init( X, Y, bJulNum );
+	}
 
-	   if ( bJulNum )
-	      for ( size_t i=0; i<n; _X.push_back( X[i++] ) );
-	   else
-	      for ( size_t i=0; i<n; _X.push_back( JulNum( X[i++] ) ) );
-	   for ( size_t i=0; i<n; _Y.push_back( Y[i++] ) );
-	   Calc();
+
+	////////////////////////////////////
+	// Initialization
+	////////////////////////////////////
+	/**
+	 * \brief Initialize and calculate Spline.
+	 *
+	 * \param X - Maturity (i.e., X-axis) values as julNum 
+	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
+	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \return Spline Size
+	 */
+	size_t Init( DoubleList &X, DoubleList &Y, bool bJulNum )
+	{
+	   _Init( X, Y, bJulNum );
+	   return _rMap.size();
+	}
+
+	/**
+	 * \brief Initialize and calculate Spline.
+	 *
+	 * \param X - Maturity (i.e., X-axis) values as julNum 
+	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
+	 * \param n - Num X, Y
+	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \return Spline Size
+	 */
+	size_t Init( double *X, double *Y, size_t n, bool bJulNum )
+	{
+	   DoubleList XX, YY;
+
+	   for ( size_t i=0; i<n; XX.push_back( X[i++] ) );
+	   for ( size_t i=0; i<n; YY.push_back( Y[i++] ) );
+	   return Init( XX, YY, bJulNum );
 	}
 
 
@@ -115,10 +181,7 @@ public:
 	 */
 	double r( double Tt )
 	{
-	   double jul = _now / 86400;
-
-	   jul += ( 365.25 * Tt );
-	   return r( (u_int64_t)jul );
+	   return r( JulNum( Tt ) );
 	}
 
 
@@ -179,10 +242,48 @@ public:
 	   return rc;
 	}
 
+	/**
+	 * \brief Convert Time to Expiration in % years to julNum
+	 *
+	 * \param Tt - Time to Expiration in % years
+	 * \return julNum
+	 */
+	u_int64_t JulNum( double Tt )
+	{
+	   double jul = _now / 86400;
+
+	   jul += ( 365.25 * Tt );
+	   return (u_int64_t)jul;
+	}
+
+
 	////////////////////////
 	// Helpers
 	////////////////////////
 private:
+	/**
+	 * \brief Initialize and calculate Spline.
+	 *
+	 * \param X - Maturity (i.e., X-axis) values as julNum 
+	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
+	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 */
+	void _Init( DoubleList &X, DoubleList &Y, bool bJulNum )
+	{
+	   size_t n = gmin( X.size(), Y.size() );
+
+	   _X.clear();
+	   _Y.clear();
+	   _r.clear();
+	   _rMap.clear();
+	   if ( bJulNum )
+	      for ( size_t i=0; i<n; _X.push_back( X[i++] ) );
+	   else
+	      for ( size_t i=0; i<n; _X.push_back( JulNum( X[i++] ) ) );
+	   for ( size_t i=0; i<n; _Y.push_back( Y[i++] ) );
+	   Calc();
+	}
+
 	u_int64_t _ymd2julNum( u_int64_t ymd )
 	{
 	   struct tm lt;
