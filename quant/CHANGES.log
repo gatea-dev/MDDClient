@@ -1,0 +1,52 @@
+/******************************************************************************
+*
+*  CHANGES.log
+*     doxygen-enabled CHANGES.log
+*
+*  REVISION HISTORY:
+*     17 DEC 2022 jcs  Created
+*
+*  (c) 1994-2022, Gatea Ltd.
+******************************************************************************/
+
+/*
+
+Known Bugs
+----------
+
+
+Features To Add
+---------------
+
+*/
+
+/**
+ * \mainpage librtEdge API Reference Manual
+ *
+ * librtEdge allows you to consume and publish real-time and historical data
+ * from the MD-Direct platform via C or C++ through the following components:
+ * Function | Component | Description
+ * ---- | --- | ----
+ * Subscribe | rtEdgeCache3 | Consume real-time data
+ * Publish | rtEdgeCache3 | Publish real-time data
+ * Tick-by-Tick | gateaRecorder | Pull out every recorded message for a day
+ * Bulk Snapshot | LVC | Bulk snapshot (5000 tickers in under 1 millisecond)
+ * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
+ *
+ * ## Change Log
+ *
+ *
+ * ### Build  2 23-12-xx
+ *
+ * -# Debug against customer Greeks:
+ *    - _Volatility.hpp : Constructor arg mixup
+ *    - _Option.hpp : BlackScholes._var2
+ *
+ * -# RiskFreeCurve.hpp
+ *
+ *
+ * ### Build  1 23-10-26
+ *
+ * -# Created from librtEdge
+ *
+ */

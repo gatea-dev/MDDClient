@@ -7,6 +7,7 @@
 *      7 APR 2016 jcs  Created.
 *     . . .
 *     31 OCT 2023 jcs  Created (from libOptionGreeks)
+*     17 DEC 2023 jcs  Build  2: RiskFreeCurve
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -20,6 +21,7 @@
 #else
 #include <sys/time.h>
 #endif // WIN32
+#include <GREEK/RiskFreeCurve.hpp>
 #include <GREEK/_Option.hpp>
 #include <GREEK/_Volatility.hpp>
 
@@ -247,33 +249,17 @@ public:
 private:
 	struct timeval _tvNow()
 	{
-	   struct timeval tv;
-
-	   // Platform-dependent
-#ifdef WIN32
-	   struct _timeb tb;
-
-	   ::_ftime( &tb );
-	   tv.tv_sec  = tb.time;
-	   tv.tv_usec = tb.millitm * 1000;
-#else
-	   ::gettimeofday( &tv, (struct timezone *)0 );
-#endif // WIN32
-	   return tv;
+	   return RiskFreeCurve::_tvNow();
 	}
 
-	static double _Time2dbl( struct timeval t0 )
+	double _Time2dbl( struct timeval t0 )
 	{
-	   double rtn;
-	   static double _num = 1.0 / _ZMIL;
-
-	   rtn = t0.tv_sec + ( t0.tv_usec *_num );
-	   return rtn;
+	   return RiskFreeCurve::_Time2dbl( t0 );
 	}
 
 	double _dNow()
 	{
-	   return _Time2dbl( _tvNow() );
+	   return RiskFreeCurve::_dNow();
 	}
 
 	////////////////////////

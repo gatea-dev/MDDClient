@@ -7,7 +7,7 @@
 *      7 MAY 2000 jcs  Created.
 *      . . .
 *     31 OCT 2023 jcs  namespace QUANT
-*     15 DEC 2023 jcs  BlackScholes._var
+*     15 DEC 2023 jcs  BlackScholes._var2
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -85,7 +85,7 @@ static double _a5    =  1.330274429;
 static double _sqpi  =  1 / sqrt( 2 * M_PI );
 
 /**
- * \class NormamlDist
+ * \class NormalDist
  * \brief Normal Distribution 
  */
 class NormalDist
