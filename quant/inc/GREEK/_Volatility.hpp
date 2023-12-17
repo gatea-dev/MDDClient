@@ -92,6 +92,7 @@ public:
 	      est = 0.25; // 0.0;
 	 */
 	   est = ( est == 0.0 ) ? 0.25 : est;
+est = ( est <= 0.01 ) ? 0.25 : est;
 	   bBiSection = !_volNewtonRaphson( C, est, maxItr, rtn );
 	   if ( bBiSection )
 	      _volBisection( C, maxItr, rtn );
@@ -124,11 +125,14 @@ private:
 	      if ( IsZero( vg ) )
 	         return false;
 	      xn   = x0 - ( db - C ) / vg;
-	      if ( fpu_error( xn ) || ( xn < 0.0 ) ) {
+	      if ( fpu_error( xn ) || ( xn < 0.0 ) )
 	         return false;
-	      }
+/*
+ * 23-12-17 jcs
+ *
 	      if ( !InRange( 0.0, xn, 1.0 ) )
 	         return false;
+ */
 	   }
 	   rtn = xn;
 	   return InRange( 0.0, xn, 1.0 );

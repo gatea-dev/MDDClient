@@ -54,13 +54,16 @@ public:
 	 * \param bCall - true if CALL; false if PUT
 	 * \param X - Contract Strike Price
 	 * \param Tt - Time to expiration in % years
+	 * \param maxItr - Max Iterations for Newton-Raphson
 	 */
-	Contract( bool bCall, double X, double Tt ) :
+	Contract( bool bCall, double X, double Tt, int maxItr=5 ) :
 	   _bCall( bCall ),
 	   _X( X ),
 	   _Tt( Tt ),
 	   _dtExp( 0 ),
-	   _tCalcUs( 0.0 )
+	   _maxItr( maxItr ),
+	   _tCalcUs( 0.0 ),
+	   _bBi( false )
 	{ ; }
 
 	/**
@@ -69,12 +72,15 @@ public:
 	 * \param bCall - true if CALL; false if PUT
 	 * \param X - Contract Strike Price
 	 * \param dtExp - Expiration date in YYYYMMDD
+	 * \param maxItr - Max Iterations for Newton-Raphson
 	 */
-	Contract( bool bCall, double X, int dtExp ) :
+	Contract( bool bCall, double X, int dtExp, int maxItr=5 ) :
 	   _bCall( bCall ),
 	   _X( X ),
 	   _Tt( 0.0 ),
-	   _dtExp( dtExp )
+	   _dtExp( dtExp ),
+	   _maxItr( maxItr ),
+	   _bBi( false )
 	{ ; }
 
 
@@ -158,9 +164,19 @@ public:
 	                          double precision=0.001 )
 	{
 	   Volatility v( S, _X, r, _Tt, precision, _bCall ); 
-	   bool       bBi;
 
-	   return v.volatility( C, bBi );
+	   return v.volatility( C, _bBi, _maxItr );
+	}
+
+	/**
+	 * \brief Return calculation type of last ImpliedVolatility()
+	 *
+	 * \return Calculation Type of last call to ImpliedVolatility()
+	 * \see ImpliedVolatility()
+	 */
+	const char *ImpVolCalcType()
+	{
+	   return _bBi ? "Bi-Section" : "Newton-Raphson";
 	}
 
 	/**
@@ -270,7 +286,9 @@ private:
 	double _X;       // Strike Price
 	double _Tt;      // Time to expire
 	int    _dtExp;   // Expiration date in YYYYMMDD
+	int    _maxItr;
 	double _tCalcUs; // Time of last calc in micros
+	bool   _bBi;
 
 };  // class Contract
 
