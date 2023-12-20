@@ -6,6 +6,7 @@
 *     13 SEP 2023 jcs  Created (from LVCDump.cpp)
 *     20 SEP 2023 jcs  FullSpline
 *     13 OCT 2023 jcs  OptionsSurface
+*     17 DEC 2023 jcs  Build 67: RiskFreeCur
 *
 *  (c) 1994-2023, Gatea, Ltd.
 ******************************************************************************/
@@ -96,6 +97,7 @@ public:
    u_int64_t      _strike;
    u_int64_t      _exp;
    u_int64_t      _jExp;       // julNum( exp )
+   double         _Tt;         // % year expiration
    size_t         _idx;        // Non-zero implies real-time
    double         _tUpd;       // Time of last update in LVC
    double         _C;          // Last Value from LVC
@@ -117,7 +119,7 @@ typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 class OptionsCurve : public OptionsBase
 {
 public:
-   RiskFreeSpline *_riskFree;
+   RiskFreeSpline &_riskFree;
    bool            _square;
    bool            _trim;
    bool            _dump;
@@ -133,9 +135,9 @@ public:
    // Constructor
    /////////////////////////
 public:
-   OptionsCurve( XmlElem &xe ) :
+   OptionsCurve( XmlElem &xe, RiskFreeSpline *rf ) :
       OptionsBase( xe.getElemValue( "db", "./cache.lvc" ) ),
-      _riskFree( (RiskFreeSpline *)0 ),
+      _riskFree( *rf ),
       _square( xe.getElemValue( "square", true ) ),
       _trim( xe.getElemValue( "trim", false ) ),
       _dump( xe.getElemValue( "dump", false ) ),
@@ -152,7 +154,7 @@ public:
    /////////////////////////
    // Access
    /////////////////////////
-   RiskFreeSpline &riskFree() { return *_riskFree; }
+   RiskFreeSpline &riskFree() { return _riskFree; }
 
    /////////////////////////
    // Operations
@@ -169,16 +171,6 @@ public:
 
       rc = 1.0 * ( k._jExp - _jToday ) / 365.0;
       return rc;
-   }
-
-   /**
-    * \brief Set RiskFreeSpline
-    *
-    * \param rf - RiskFreeSpline
-    */
-   void SetRiskFree( RiskFreeSpline *rf )
-   {
-      _riskFree = rf;
    }
 
    /**
@@ -294,25 +286,25 @@ public:
 //    c l a s s   R i s k F r e e S p l i n e
 //
 ////////////////////////////////////////////////
-class RiskFreeSpline : public string
+class RiskFreeSpline : public QUANT::RiskFreeCurve
 {
 private:
-   OptionsCurve      &_lvc;
-   XmlElem           &_xe;
-   string             _svc;
-   int                _fid;
-   KnotList           _kdb;
-   _DoubleList        _X;
-   _DoubleList        _Y;
-   QUANT::CubicSpline _CS; // Last Calc
-   double             _xInc;
-   time_t             _tCalc;
+   OptionsCurve     &_lvc;
+   XmlElem          &_xe;
+   string            _svc;
+   int               _fid;
+   KnotList          _kdb;
+   QUANT::DoubleList _X;
+   QUANT::DoubleList _Y;
+   double            _xInc;
+   time_t            _tCalc;
 
    /////////////////////////
    // Constructor
    /////////////////////////
 public:
-   RiskFreeSpline( OptionsCurve &lvc, XmlElem &xe ) :
+   RiskFreeSpline( OptionsCurve &lvc, time_t now, XmlElem &xe ) :
+      QUANT::RiskFreeCurve( now ),
       _lvc( lvc ),
       _xe( xe ),
       _svc( xe.getAttrValue( "Service", "velocity" ) ),
@@ -320,8 +312,7 @@ public:
       _kdb(),
       _X(),
       _Y(),
-      _CS(),
-      _xInc( 1 ), // Daily
+      _xInc( 1.0 ), // Daily
       _tCalc( 0 )
    { ; }
 
@@ -329,17 +320,9 @@ public:
    // Access
    /////////////////////////
 public:
-   _DoubleList         &X()       { return _X; }
-   _DoubleList         &Y()       { return _Y; }
-   size_t              NumKnots() { return _kdb.size(); }
-   QUANT::CubicSpline &CS()       { return _CS; }
-
-   QUANT::CubicSpline &CS( LVCAll &all, time_t now )
-   {
-      Calc( all, now );
-      return _CS;
-   }
-
+   QUANT::DoubleList &X()        { return _X; }
+   QUANT::DoubleList &Y()        { return _Y; }
+   size_t             NumKnots() { return _kdb.size(); }
 
    /////////////////////////
    // Operations
@@ -352,10 +335,11 @@ public:
     */ 
    void Load( LVCAll &all )
    {
-      XmlElemVector &edb  = _xe.elements();
-      const char    *svc, *tkr;
-      XmlElem       *xk;
-      KnotDef        k;
+      RiskFreeSpline &R    = _lvc.riskFree();
+      XmlElemVector  &edb  = _xe.elements();
+      const char     *svc, *tkr;
+      XmlElem        *xk;
+      KnotDef         k;
 
       // Pre-condition
 
@@ -370,8 +354,9 @@ public:
          xk = edb[i];
          if ( !(tkr=xk->getAttrValue( "Ticker", (const char *)0 )) )
             continue; // for-i
-         if ( !(k._exp=xk->getAttrValue( "Interval", (int)0 )) )
+         if ( !(k._Tt=xk->getAttrValue( "Interval", 0.0 )) )
             continue; // for-i
+         k._jExp = R.JulNum( k._Tt );
          strcpy( k._lvcName, tkr );
          k._C = xk->getAttrValue( "Value", 0.0 );
          if ( k._C ) { 
@@ -393,13 +378,12 @@ public:
     */ 
    bool SnapKnots( LVCAll &all, time_t now )
    {
-      Messages    &msgs = all.msgs();
-      Message     *msg;
-      KnotList     kdb;
-      KnotDef      k;
-      size_t       i, nk;
-      DoubleXYList XY;
-      DoubleXY     pt;
+      Messages   &msgs = all.msgs();
+      Message    *msg;
+      const char *tkr;
+      KnotDef     k;
+      double      y;
+      size_t      i, nk;
 
       // Pre-condition(s)
 
@@ -414,18 +398,19 @@ public:
       _X.clear();
       _Y.clear();
       for ( i=0; i<nk; i++ ) {
-         k     = _kdb[i];
-         msg   = k._idx ? msgs[k._idx] : (Message *)0;
-         pt._x = _kdb[i]._exp;
-         pt._y = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
-         XY.push_back( pt );
-         kdb.push_back( k );
+         k   = _kdb[i];
+         msg = k._idx ? msgs[k._idx] : (Message *)0;
+         y   = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
+         y  *= 0.01; // Velocity in Pct
+         _X.push_back( k._jExp );
+         _Y.push_back( y );
+         if ( msg && !_tCalc ) {
+            tkr = msg->Ticker();
+            LOG( "RiskFree %-13s : %5.2f%% = %7.4f", tkr, k._Tt, y );
+         }
       }
-      _kdb = kdb;
-
-      QUANT::CubicSpline cs( XY );
-
-      _CS = cs;
+      _tCalc = now;
+      Init( _X, _Y, true );
       return true;
    }
 
@@ -437,23 +422,7 @@ public:
     */ 
    void Calc( LVCAll &all, time_t now )
    {
-      DoubleXYList &XY = _CS.XY();
-      size_t         nx;
-      double         x, x0, x1;
-
-      // Pre-condition(s)
-
-      if ( !SnapKnots( all, now ) )
-         return;
-
-      // Rock on
-
-      _tCalc = now;
-      nx     = XY.size();
-      x0     = XY[1]._x;
-      x1     = XY[nx-1]._x;
-      for ( x=x0; x<=x1; _X.push_back( x ), x+=_xInc );
-      _Y  = _CS.Spline( _X );
+      SnapKnots( all, now );
    }
 
 }; // class RiskFreeSpline
@@ -679,7 +648,6 @@ public:
    {
       Contract   *grk;
       Field      *fld;
-      double      r, Tt;
       const char *pf;
 
       // 1) Display Name
@@ -690,18 +658,9 @@ public:
       // 2) Value
 
       k._C = _lvc.MidQuote( m );
-      if ( (grk=k._greek) ) {
-         QUANT::CubicSpline &CS = _riskFree.CS();
-
-         /* CS X-axis is in days (from Interval in XML config)
-          * CS Y-axis is in pct : Divide by 100
-          */
-         Tt           = grk->Tt() * 365.25;
-         r            = CS.ValueAt( Tt );
-         r           *= 0.01;
-         k._Greeks    = grk->AllGreeks( k._C, _S, r );
+      if ( (grk=k._greek) )
+         k._Greeks = grk->AllGreeks( k._C, _S );
 _lvc.breakpoint(); 
-      }
       k._GreeksLVC = _lvc.GreeksDontWantNoFreaks( m );
    }
 
@@ -1006,12 +965,13 @@ public:
 private:
    void _Init( LVCAll &all )
    {
-      Messages &msgs = all.msgs();
-      Ints      udb;
-      Message  *msg;
-      KnotDef   k;
-      double    dX, Tt;
-      int       ix;
+      RiskFreeSpline &R    = _lvc.riskFree();
+      Messages       &msgs = all.msgs();
+      Ints            udb;
+      Message        *msg;
+      KnotDef         k;
+      double          dX, Tt;
+      int             ix;
 
       /*
        * 1) Put / Call / Both??
@@ -1041,7 +1001,7 @@ private:
             if ( k._exp == _tExp ) {
                k._idx   = ix;
                if ( IsPut() || IsCall() )
-                  k._greek = new Contract( IsCall(), dX, Tt );
+                  k._greek = new Contract( R, IsCall(), dX, Tt );
                _kdb.push_back( k );
             }
          }
@@ -1504,19 +1464,20 @@ u.AddEmptyField( 3 );
 private:
    void _Init( LVCAll &all )
    {
-      Messages      &msgs  = all.msgs();
-      IndexCache    &byExp = _und.byExp();
-      IndexCache    &byStr = _und.byStr();
-      Ints           udb, xdb;
-      Message       *msg;
-      KnotDef        k, kz;
-      KnotList       kRow;
-      u_int64_t      exp, jExp, jStr, key;
-      size_t         i;
-      double         ds, dX, Tt;
-      SortedInt64Set edb, sdb, jdb;
-      KnotDefMap     kMap;
-      OptionsSpline *spl;
+      RiskFreeSpline &R    = _lvc.riskFree();
+      Messages       &msgs  = all.msgs();
+      IndexCache     &byExp = _und.byExp();
+      IndexCache     &byStr = _und.byStr();
+      Ints            udb, xdb;
+      Message        *msg;
+      KnotDef         k, kz;
+      KnotList        kRow;
+      u_int64_t       exp, jExp, jStr, key;
+      size_t          i;
+      double          ds, dX, Tt;
+      SortedInt64Set  edb, sdb, jdb;
+      KnotDefMap      kMap;
+      OptionsSpline  *spl;
 
       /*
        * 1) Put / Call
@@ -1537,7 +1498,7 @@ private:
          dX         = _lvc.StrikePrice( *msg );
          k._strike  = (u_int64_t)( dX * l_StrikeMul );
          k._tUpd    = msg->MsgTime();
-         k._greek   = new Contract( !_bPut, dX, Tt );
+         k._greek   = new Contract( R, !_bPut, dX, Tt );
          key        = ( k._exp << 32 );
          key       += k._strike;
          kMap[key]  = k;
@@ -2262,7 +2223,6 @@ int main( int argc, char **argv )
 
    XmlElem    &root  = *x.root();
    bool        fg    = root.getElemValue( "fg", true );  
-   int         dbDt  = root.getElemValue( "dbDate", 0 );
    const char *svr   = root.getElemValue( "svr", "localhost:9015" );
    const char *svc   = root.getElemValue( "svc", "options.curve" );
    double      rate  = root.getElemValue( "rate", 1.0 );
@@ -2280,18 +2240,23 @@ int main( int argc, char **argv )
    /////////////////////
    // Uncle G Sanity Check
    /////////////////////
-   Contract    c1( true, 20.0, 0.25 );
-   Contract    c2( false, 1.6, 0.5 );
-   Contract    c3( false, 300.0, 0.3333 );
-   double      dv;
-   int         i;
-   const char *pfx[] = { "[Hull 11.10 pg 246 =  0.235]",
-                         "[Hull 14.1  pg 319 = -0.458]",
-                         "[Hull 14.4  pg 322 =-18.150]",
-                         "[Hull 14.7  pg 327 =  0.009]",
-                         "[Hull 14.9  pg 330 = 66.440]",
-                         "[Hull 14.10 pg 330 =-42.570]",
-                         (const char *)0 };
+fmtDbl( 3.14, s );
+#ifdef TODO_CONTRACT
+   double         X[] = { 0.25, 0.3333, 0.50 };
+   double         Y[] = { 0.1, 0.03, 0.1 };
+   RiskFreeSpline R( X, Y, 3 );
+   Contract       c1( R, true, 20.0, 0.25 );
+   Contract       c2( R, false, 1.6, 0.5 );
+   Contract       c3( R, false, 300.0, 0.3333 );
+   double         dv;
+   int            i;
+   const char    *pfx[] = { "[Hull 11.10 pg 246 =  0.235]",
+                            "[Hull 14.1  pg 319 = -0.458]",
+                            "[Hull 14.4  pg 322 =-18.150]",
+                            "[Hull 14.7  pg 327 =  0.009]",
+                            "[Hull 14.9  pg 330 = 66.440]",
+                            "[Hull 14.10 pg 330 =-42.570]",
+                            (const char *)0 };
 
    i  = 0;
    dv = c1.ImpliedVolatility( 1.875, 21.0, 0.1 );
@@ -2306,12 +2271,23 @@ int main( int argc, char **argv )
    LOGRAW( "UncleG.%s Vega   = %s", pfx[i++], fmtDbl( dv, s ) );
    dv = c3.Rho( 305, 0.25, 0.08, 0.03 );
    LOGRAW( "UncleG.%s Rho    = %s", pfx[i++], fmtDbl( dv, s ) );
+#endif // TODO_CONTRACT
+
+   /////////////////////
+   // d/b Date
+   /////////////////////
+   int       dbDt = root.getElemValue( "dbDate", 0 );
+   time_t    now  = OptionsCurve::TimeSec();
+   struct tm lt;
+
+   ::localtime_r( &now, &lt );
+   now = RiskFreeSpline::_ymd2unix( dbDt, lt );
 
 
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( root );
+   OptionsCurve    lvc( root, new RiskFreeSpline( lvc, now, *xs ) );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, srfAge, age;
    size_t          ns;
@@ -2319,7 +2295,6 @@ int main( int argc, char **argv )
    /*
     * Dump Config
     */
-   lvc.SetRiskFree( new RiskFreeSpline( lvc, *xs ) );
    lvc.SetToday( dbDt );
    lvc.SetNow();
    LOG( OptionsCurveID() );

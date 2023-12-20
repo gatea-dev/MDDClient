@@ -15,15 +15,15 @@
   <log> /tmp/OptionsCurve.log </log>
 
   <RiskFree Service="velocity" FieldID="6">
-    <Knot Ticker="US1DY GOVT"  Interval="1" Value="5.50" />
-    <Knot Ticker="US3MT GOVT"  Interval="91" />
-    <Knot Ticker="US6MT GOVT"  Interval="182" />
-    <Knot Ticker="US1YT GOVT"  Interval="365" />
-    <Knot Ticker="US2YT GOVT"  Interval="730" />
-    <Knot Ticker="US3YT GOVT"  Interval="1096" />
-    <Knot Ticker="US5YT GOVT"  Interval="1826" />
-    <Knot Ticker="US7YT GOVT"  Interval="2557" />
-    <Knot Ticker="US10YT GOVT" Interval="3652" />
+    <Knot Ticker="US1DY GOVT"  Interval="0.001" Value="5.50" />
+    <Knot Ticker="US3MT GOVT"  Interval="0.25" />
+    <Knot Ticker="US6MT GOVT"  Interval="0.5" />
+    <Knot Ticker="US1YT GOVT"  Interval="1" />
+    <Knot Ticker="US2YT GOVT"  Interval="2" />
+    <Knot Ticker="US3YT GOVT"  Interval="3" />
+    <Knot Ticker="US5YT GOVT"  Interval="5" />
+    <Knot Ticker="US7YT GOVT"  Interval="7" />
+    <Knot Ticker="US10YT GOVT" Interval="10" />
 <!--
     <Knot Ticker="US20YT GOVT" Interval="7305" />
     <Knot Ticker="US30YT GOVT" Interval="10957" />

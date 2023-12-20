@@ -14,6 +14,7 @@
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *     10 NOV 2022 jcs  Build 61: DateTime in vector
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
+*     20 DEC 2023 jcs  Build 67: TypeFromXxx()
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -201,6 +202,20 @@ public:
 	 * \return Native field type
 	 */
 	rtFldType Type();
+
+	/**    
+	 * \brief Returns field type from Message
+	 *      
+	 * \return Field Type from Message
+	 */     
+	rtFldType TypeFromMsg();
+
+	/**    
+	 * \brief Returns field type from Schema 
+	 *      
+	 * \return Field Type from Schema 
+	 */     
+	rtFldType TypeFromSchema();
 
 	/**
 	 * \brief Returns field value as 8-bit int

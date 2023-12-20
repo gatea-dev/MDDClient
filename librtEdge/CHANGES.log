@@ -15,6 +15,7 @@ Performance
 -----------
 -# Publish : 33 mikes to the wire on 2.9 GHz Linux
 
+-# Buffer.SetCircQ() : Instead of Move()
 
 Known Bugs
 ----------
@@ -52,6 +53,8 @@ TODO : Move SplineMaker / apps/Options into quant
  * -# rtEdgeData.GetField() : volatile w/ code
  *
  * -# libMDDirect.py : GetField( bDeepCopy )
+ *
+ * -# rtEdgeField.TypeFromMsg() / TypeFromSchema()
  *
  *
  * ### Build 66 23-10-26
