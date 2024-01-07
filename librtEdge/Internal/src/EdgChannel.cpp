@@ -26,8 +26,9 @@
 *     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
 *     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
+*      5 JAN 2024 jcs  Build 67: Buffer.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -722,7 +723,7 @@ void EdgChannel::OnRead()
 
    // 2) OK, now we chop up ...
 
-   cp = _in._bp;
+   cp = _in.bp();
    sz = _in.bufSz();
    for ( i=0,nMsg=0; i<sz; ) {
       b._data = (char *)cp;
@@ -772,8 +773,7 @@ void EdgChannel::OnRead()
    }
    if ( nMsg && nL )
       _in.Move( sz-nL, nL );
-   _in.Reset();
-   _in._cp += nL;
+   _in.Set( nL );
 }
 
 

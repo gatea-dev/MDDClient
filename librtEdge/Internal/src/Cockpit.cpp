@@ -6,8 +6,9 @@
 *  REVISION HISTORY:
 *     22 AUG 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: _LVC
+*      5 JAN 2024 jcs  Build 67: Buffer.h
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -125,7 +126,7 @@ void Cockpit::OnRead()
 
    // 2) OK, now we chop up ...
 
-   cp = _in._bp;
+   cp = _in.bp();
    sz = _in.bufSz();
    for ( i=0,nMsg=0; i<sz; ) {
       _xml.reset();
@@ -167,8 +168,7 @@ void Cockpit::OnRead()
    }
    if ( nMsg && nL )
       _in.Move( sz-nL, nL );
-   _in.Reset();
-   _in._cp += nL;
+   _in.Set( nL );
 }
 
 void Cockpit::_OnXML()

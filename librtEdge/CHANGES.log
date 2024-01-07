@@ -46,7 +46,7 @@ TODO : Move SplineMaker / apps/Options into quant
  * ## Change Log
  *
  *
- * ### Build 67 23-12-xx
+ * ### Build 67 24-01-xx
  *
  * -# Pump.cpp : RegisterWindowsMessage( 'RTEDGE_PRIVATE::EventPump' )
  *
@@ -55,6 +55,10 @@ TODO : Move SplineMaker / apps/Options into quant
  * -# libMDDirect.py : GetField( bDeepCopy )
  *
  * -# rtEdgeField.TypeFromMsg() / TypeFromSchema()
+ *
+ * -# High Updating publisher overflow:
+ *   - Buffer.cpp / CircularBuffer
+ *   - rtEdgePubAttr._bCircularBuffer
  *
  *
  * ### Build 66 23-10-26

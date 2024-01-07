@@ -16,8 +16,9 @@
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     26 OCT 2023 jcs  Build 65: PublishBDS() : vector<char *>
+*      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <PubChannel.h>
@@ -216,6 +217,11 @@ void rtEdgePublisher::SetUnPacked( bool bUnPacked )
 void rtEdgePublisher::SetPerms( bool bPerms )
 {
    _pub->SetPerms( bPerms );
+}
+
+void rtEdgePublisher::SetCircularBuffer( bool bCircularBuffer )
+{
+   _pub->SetCircularBuffer( bCircularBuffer );
 }
 
 void rtEdgePublisher::SetUserPubMsgTy( bool bUserMsgTy )

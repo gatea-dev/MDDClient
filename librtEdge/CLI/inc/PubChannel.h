@@ -16,8 +16,9 @@
 *      1 SEP 2022 jcs  Build 56: pSvrHosts()
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     26 OCT 2023 jcs  Build 65: BDSSymbolList
+*      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -248,6 +249,16 @@ public:
 	 * \param bPerms - true to set to supply perms; Else false (default)
 	 */
 	void SetPerms( bool bPerms );
+
+	/**
+	 * \brief Sets outbound buffer type - Circular or Regular
+	 *
+	 * The buffer type is set once in Start().  Therefore, this
+	 * must be called BEFORE calling Start().
+	 *
+	 * \param bCircularBuffer - true for Circular outbound buffer
+	 */
+	void SetCircularBuffer( bool bCircularBuffer );
 
 	/**
 	 * \brief Allow / Disallow user-supplied message type in Publish().

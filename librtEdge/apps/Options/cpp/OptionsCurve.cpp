@@ -406,7 +406,7 @@ public:
          _Y.push_back( y );
          if ( msg && !_tCalc ) {
             tkr = msg->Ticker();
-            LOG( "RiskFree %-13s : %5.2f%% = %7.4f", tkr, k._Tt, y );
+            LOG( "RiskFree %-13s : %5.2f = %7.4f%%", tkr, k._Tt, 100.0 * y );
          }
       }
       _tCalc = now;

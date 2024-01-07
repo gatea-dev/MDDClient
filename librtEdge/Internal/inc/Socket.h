@@ -20,13 +20,15 @@
 *     12 FEB 2020 jcs  Build 42: _tHbeat
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      6 SEP 2022 jcs  Build 56: _bOverflow
+*      5 JAN 2024 jcs  Build 67: Buffer.h
 *
-*  (c) 1994-2022 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_SOCKET_H
 #define __EDGLIB_SOCKET_H
 #include <EDG_Internal.h>
 #include <WireMold64.h>
+#include <Buffer.h>
 
 namespace RTEDGE_PRIVATE
 {
@@ -41,38 +43,6 @@ class Thread;
 
 typedef vector<string *>   Hosts;
 typedef vector<int>        Ports;
-
-///////////////////
-// Buffer
-///////////////////
-class Buffer
-{
-public:
-	char *_bp;
-	char *_cp;
-	int   _nAlloc;
-	int   _maxSiz;
-
-	// Constructor / Destructor
-public:
-	Buffer( int, int maxSiz=_MAX_BUF_SIZ );
-	~Buffer();
-
-	// Access
-public:
-	rtBUF buf();
-	int   bufSz();
-	int   nLeft();
-
-	// Operations
-public:
-	bool Grow( int );
-	void Reset();
-	void Move( int, int );
-	bool Append( char *, int );
-
-}; // class Buffer
-
 
 /////////////////////////////////////////
 // Socket
@@ -101,7 +71,7 @@ protected:
 	volatile int       _fd;
 	bool               _bStart;
 	Buffer             _in;
-	Buffer             _out;
+	Buffer            *_out;
 	rtEdgeChanStats   *_st;
 	rtEdgeChanStats    _dfltStats;
 	mddFieldList       _fl;
@@ -119,7 +89,7 @@ protected:
 
 	// Constructor / Destructor
 public:
-	Socket( const char *, bool bConnectionless=false );
+	Socket( const char *, bool bConnectionless=false, bool bCircBuf=false );
 	virtual ~Socket();
 
 	// Access / Operations
@@ -127,6 +97,7 @@ public:
 	Thread     &thr();
 	Pump       &pump();
 	Mutex      &mtx();
+	Buffer     &oBuf();
 	const char *dstConn();
 	int         fd();
 	bool        IsCache();

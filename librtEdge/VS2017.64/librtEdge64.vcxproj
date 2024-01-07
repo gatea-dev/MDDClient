@@ -137,6 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Internal\src\EDG_API.cpp" />
+    <ClCompile Include="..\Internal\src\Buffer.cpp" />
     <ClCompile Include="..\Internal\src\Cockpit.cpp" />
     <ClCompile Include="..\Internal\src\RecCache.cpp" />
     <ClCompile Include="..\Internal\src\EdgChannel.cpp" />

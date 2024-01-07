@@ -27,8 +27,9 @@
 *      6 DEC 2018 jcs  Build 41: VS2017 : size_t not long
 *     12 FEB 2020 jcs  Build 42: Socket._tHbeat
 *      5 MAY 2022 jcs  Build 53: _bPub
+*      5 JAN 2024 jcs  Build 67: CircularBuffer
 *
-*  (c) 1994-2022 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -51,7 +52,9 @@ static const char *_GetCache = "<GetCache/>\n";
 ////////////////////////////////////////////
 PubChannel::PubChannel( rtEdgePubAttr  attr,
                         rtEdge_Context cxt ) :
-   Socket( attr._pSvrHosts, attr._bConnectionless ? true : false ),
+   Socket( attr._pSvrHosts, 
+           attr._bConnectionless ? true : false,
+           attr._bCircularBuffer ? true : false ),
    _cxt( cxt ),
    _schemaCbk( (rtEdgeDataFcn)0 ),
    _schema( (rtEdgeData *)0 ),
@@ -605,7 +608,7 @@ void PubChannel::OnRead()
 
    // 2) OK, now we chop up ...
 
-   cp = _in._bp;
+   cp = _in.bp();
    sz = _in.bufSz();
    for ( i=0,nMsg=0; i<sz; ) {
       b._data = (char *)cp;
@@ -634,8 +637,7 @@ void PubChannel::OnRead()
    nL = WithinRange( 0, sz-i, INFINITEs );
    if ( nMsg && nL )
       _in.Move( sz-nL, nL );
-   _in.Reset();
-   _in._cp += nL;
+   _in.Set( nL );
 }
 
 void PubChannel::_OnMPAC()
@@ -645,7 +647,7 @@ void PubChannel::_OnMPAC()
 
    // Stupid XML Protocol : 2 cmds (for now)
 
-   cp = _in._bp;
+   cp = _in.bp();
    sz = _in.bufSz();
    if ( ::strstr( cp, _SymList ) == cp ) {
       nc = _PubStreamSymList();

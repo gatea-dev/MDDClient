@@ -19,8 +19,9 @@
 *     29 MAR 2022 jcs  Build 52: _bUnPacked
 *     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
 *     24 OCT 2023 jcs  Build 65: _EmptyBDS
+*      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_PubChannel_H
 #define __RTEDGE_PubChannel_H
@@ -80,6 +81,7 @@ public:
 	   _bUserMsgTy( false ),
 	   _bRandom( false ),
 	   _bUnPacked( false ),
+	   _bCircularBuffer( false ),
 	   _hopCnt( 0 ),
 	   _upd( (Update *)0 )
 	{
@@ -212,6 +214,7 @@ public:
 	   _attr._pPubName        = pPubName();
 	   _attr._bInteractive    = bInteractive ? 1 : 0;
 	   _attr._bConnectionless = 0;
+	   _attr._bCircularBuffer = _bCircularBuffer ? 1 : 0;
 	   _attr._udpPort         = 0;
 	   _attr._connCbk         = _connCbk;
 	   _attr._openCbk         = _openCbk;
@@ -273,6 +276,7 @@ public:
 	   _attr._pPubName        = pPubName();
 	   _attr._bInteractive    = 0;
 	   _attr._bConnectionless = 1;
+	   _attr._bCircularBuffer = _bCircularBuffer ? 1 : 0;
 	   _attr._udpPort         = localPort;
 	   _attr._connCbk         = _connCbk;
 	   _attr._openCbk         = _openCbk;
@@ -336,6 +340,20 @@ public:
 	void SetPerms( bool bPerms )
 	{
 	   _bPerms = bPerms;
+	}
+
+	/**
+	 * \brief Sets outbound buffer type - Circular or Regular
+	 *
+	 * The buffer type is set once in Start().  Therefore, this
+	 * must be called BEFORE calling Start().
+	 *
+	 * \param bCircularBuffer - true for Circular outbound buffer
+	 */
+	void SetCircularBuffer( bool bCircularBuffer )
+	{
+	   if ( !IsValid() )
+	      _bCircularBuffer = bCircularBuffer;
 	}
 
 	/**
@@ -852,6 +870,7 @@ private:
 	bool          _bUserMsgTy;
 	bool          _bRandom;
 	bool          _bUnPacked;
+	bool          _bCircularBuffer;
 	size_t        _hopCnt;
 	Update       *_upd;
 

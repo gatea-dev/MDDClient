@@ -15,6 +15,7 @@
 *     26 JAN 2023 jcs  Build 62: PubTkr_SIMPLE()
 *     14 SEP 2023 jcs  Build 64: -dead
 *     31 OCT 2023 jcs  Build 66: ../quant
+*      7 JAN 2023 jcs  Build 67: -nPub; -circBuf
 *
 *  (c) 1994-2023, Gatea Ltd.
 ******************************************************************************/
@@ -185,8 +186,11 @@ public:
 //
 ////////////////////////
 
+class MyChannel;
+
 typedef map<string, Watch *>    WatchList;
 typedef map<string, MyVector *> WatchListV;
+typedef vector<MyChannel *>     MyChannels;
 
 class MyChannel : public PubChannel
 {
@@ -197,6 +201,8 @@ private:
    int          _vecSz;
    int          _vecPrec;
    bool         _bVecFld;
+   bool         _bFull;
+   int          _qTxKb;
    string       _togl;
    string       _dead;
    WatchList    _wl;
@@ -214,12 +220,16 @@ public:
               int         vecSz, 
               int         vecPrec, 
               bool        bVecFld, 
+              bool        bFull, 
+              int         qTxKb, 
               const char *togl,
               const char *dead ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
       _bVecFld( bVecFld ),
+      _bFull( bFull ),
+      _qTxKb( WithinRange( 1, qTxKb, 256*K ) ),
       _togl( togl ),
       _dead( dead ),
       _wl(),
@@ -273,6 +283,7 @@ public:
    size_t PublishAll()
    {
       Locker               lck( _mtx );
+      const char          *svc = pPubName();
       WatchList::iterator  it;
       WatchListV::iterator vt;
       Watch               *w;
@@ -291,26 +302,27 @@ public:
       }
       nt = _wl.size() + _wlV.size();
       if ( nt )
-         ::fprintf( stdout, "Publish %ld tkrs; %ld bytes\n", nt, nb );
+         ::fprintf( stdout, "Publish %ld tkrs ( %s ); %ld bytes\n", nt, svc, nb );
       ::fflush( stdout );
       return nt;
    }
 
    size_t PubTkr( Watch &w )
    {
-      return PubTkr_SIMPLE( w );
+      return _bFull ? PubTkr_FULL( w ) : PubTkr_SIMPLE( w );
    }
 
    size_t PubTkr_SIMPLE( Watch &w )
    {
       Locker         lck( _mtx );
-      Update        &u = upd();
+      Update        &u   = upd();
+      const char    *svc = pPubName();
       rtDateTime     dtTm;
       struct timeval tv;
       int            fid;
 
       if ( w._bImg )
-         ::fprintf( stdout, "IMG [%d] : %s\n", w._StreamID, w.tkr() );
+         ::fprintf( stdout, "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
       fid        = 6;
@@ -330,7 +342,8 @@ public:
    size_t PubTkr_FULL( Watch &w )
    {
       Locker         lck( _mtx );
-      Update        &u = upd();
+      Update        &u   = upd();
+      const char    *svc = pPubName();
       rtDateTime     dtTm;
       int            i, fid;
       u_int64_t      i64;
@@ -339,7 +352,7 @@ public:
       struct timeval tv;
 
       if ( w._bImg )
-         ::fprintf( stdout, "IMG [%d] : %s\n", w._StreamID, w.tkr() );
+         ::fprintf( stdout, "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
       fid        = 6;
@@ -404,8 +417,15 @@ public:
    virtual void OnConnect( const char *msg, bool bUP )
    {
       const char *pUp = bUP ? "UP" : "DOWN";
+      int         qSz;
 
-      ::fprintf( stdout, "CONN %s : %s\n", pUp, msg );
+      ::fprintf( stdout, "CONN %s : %s", pUp, msg );
+      if ( bUP ) {
+         SetTxBufSize( _qTxKb*K );
+         qSz = GetTxMaxBufSize();
+         ::fprintf( stdout, "; TX Queue=%dK", qSz/K );
+      }
+      ::fprintf( stdout, "\n" );
       ::fflush( stdout );
    }
 
@@ -425,7 +445,8 @@ public:
       ric    = ::strtok( NULL, "#" );
       bChn   = _chn && ric;
       err    = _dead.data();
-      ::fprintf( stdout, "OPEN [%6d] %s\n", StreamID, tkr ); ::fflush( stdout );
+      ::fprintf( stdout, "OPEN [%6d] ( %s,%s )\n", StreamID, pPubName(), tkr ); 
+      ::fflush( stdout );
       if ( !::strcmp( tkr, _togl.data() ) ) { 
          _XON = !_XON;
          sprintf( buf, "XON toggled = %s", _XON ? "true" : "false" );
@@ -468,7 +489,7 @@ public:
       WatchListV::iterator vt;
       string               s( tkr );
 
-      ::fprintf( stdout, "CLOSE %s\n", tkr );
+      ::fprintf( stdout, "CLOSE ( %s,%s )\n", pPubName(), tkr );
       ::fflush( stdout );
       if ( (it=_wl.find( s )) != _wl.end() ) {
          _wl.erase( it );
@@ -538,10 +559,10 @@ int main( int argc, char **argv )
 {
    const char *svr, *svc, *pChn, *ty, *dead, *togl;
    const char *lnks[_MAX_CHAIN];
-   char       *cp;
+   char       *cp, *rp, sSvr[K], sSvc[K];
    double      tPub, tRun, d0, dn;
-   int         i, nl, nt, hBeat, vecSz, vPrec;
-   bool        bCfg, bPack, bFldV, aOK;
+   int         i, nl, hBeat, vecSz, vPrec, nPub, txQ;
+   bool        bCfg, bPack, bFldV, bCirc, bFull, aOK;
    string      s;
    rtBuf64     chn;
 
@@ -562,23 +583,33 @@ int main( int argc, char **argv )
    vecSz = 0;
    vPrec = 2;
    bFldV = false;
+   bCirc = false;
+   bFull = false;
+   txQ   = K;
    bPack = true;
    dead  = "";
    togl  = "";
+   nPub  = 1;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
-      s += "       [ -h       <Source : host:port> ] \\ \n";
-      s += "       [ -s       <Service> ] \\ \n";
-      s += "       [ -pub     <Publication Interval> ] \\ \n";
-      s += "       [ -run     <App Run Time> ] \\ \n";
-      s += "       [ -vector  <Vector length; 0 for no vector> ] \\ \n";
-      s += "       [ -vecPrec <Vector Precision> ] \\ \n";
-      s += "       [ -vecFld  <If vector, true to publish as field> ] \\ \n";
-      s += "       [ -packed  <true for packed; false for UnPacked> ] \\ \n";
-      s += "       [ -hbeat   <Heartbeat> ] \\ \n";
-      s += "       [ -x       <Error to publish as DEAD; Empty for data> ] \\ \n";
-      s += "       [ -tx      <Toggle Ticker : Sub once for DEAD; 2nd for IMG > ] \\ \n";
+      s += "  [ -h       <Source : host:port> ] \\ \n";
+      s += "  [ -s       <Service> ] \\ \n";
+      s += "  [ -pub     <Publication Interval> ] \\ \n";
+      s += "  [ -run     <App Run Time> ] \\ \n";
+      s += "  [ -vector  <Vector length; 0 for no vector> ] \\ \n";
+      s += "  [ -vecPrec <Vector Precision> ] \\ \n";
+      s += "  [ -vecFld  <If vector, true to publish as field> ] \\ \n";
+      s += "  [ -packed  <true for packed; false for UnPacked> ] \\ \n";
+      s += "  [ -hbeat   <Heartbeat> ] \\ \n";
+      s += "  [ -x       <Error to publish as DEAD; Empty for data> ] \\ \n";
+      s += "  [ -tx      <Toggle Ticker : Sub once for DEAD; 2nd for IMG > ] \\ \n";
+      s += "  [ -nPub    <Number of Publisher> ] \\ \n";
+      s += "  [           1) Names are <Service>, <Service>.1, ... ] \\ \n";
+      s += "  [           2) Connect at <host:port>, <host:port+1>, ... ] \\ \n";
+      s += "  [ -circBuf <true for circular buffer; false for normal> ] \\ \n";
+      s += "  [ -full    <true for full payload; false for small> ] \\ \n";
+      s += "  [ -txQ     <TX queue size in Kb> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -590,8 +621,12 @@ int main( int argc, char **argv )
       printf( "      -vecFld  : %s\n", bFldV ? "YES" : "NO" );
       printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
       printf( "      -hbeat   : %d\n", hBeat );
-      printf( "      -x       : %s\n", dead );
-      printf( "      -tx      : %s\n", togl );
+      printf( "      -x       : <empty>\n" );
+      printf( "      -tx      : <empty>\n" );
+      printf( "      -nPub    : %d\n", nPub );
+      printf( "      -circBuf : %s\n", bCirc ? "YES" : "NO" );
+      printf( "      -full    : %s\n", bFull ? "YES" : "NO" );
+      printf( "      -txQ     : %dK\n", txQ );
       return 0;
    }
 
@@ -624,50 +659,80 @@ int main( int argc, char **argv )
          dead = argv[++i];
       else if ( !::strcmp( argv[i], "-tx" ) )
          togl = argv[++i];
+      else if ( !::strcmp( argv[i], "-nPub" ) ) {
+         nPub = atoi( argv[++i] );
+         nPub = WithinRange( 1, nPub, 1024 );
+      }
+      else if ( !::strcmp( argv[i], "-circBuf" ) )
+         bCirc = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-full" ) )
+         bFull = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-txQ" ) )
+         txQ   = atoi( argv[++i] );
    }
 
-   MyChannel pub( svc, vecSz, vPrec, bFldV, togl, dead );
+   MyChannels pubs;
+   MyChannel *pub;
 
-   ::srand48( pub.TimeSec() ); 
+   strcpy( sSvc, svc );
+   for ( i=0; i<nPub; i++ ) {
+      pub = new MyChannel( sSvc, vecSz, vPrec, bFldV, bFull, txQ, togl, dead );
+      pubs.push_back( pub );
+      sprintf( sSvc, "%s.%d", svc, i+1 );
+   }
+   pub = pubs[0];
+   ::srand48( pub->TimeSec() ); 
    s = "";
-   if ( pChn && (chn=pub.MapFile( pChn ))._dLen ) {
+   if ( pChn && (chn=pub->MapFile( pChn ))._dLen ) {
       string tmp( chn._data, chn._dLen );
 
       s = tmp;
-      pub.UnmapFile( chn );
+      pub->UnmapFile( chn );
    }
-   cp = ::strtok( (char *)s.data(), "\n" );
+   cp = ::strtok_r( (char *)s.data(), "\n", &rp );
    for ( nl=0; nl<_MAX_CHAIN-1 && cp; nl++ ) {
       lnks[nl] = cp;
-      cp       = ::strtok( NULL, "\n" );
+      cp       = ::strtok_r( NULL, "\n", &rp );
    }
    lnks[nl] = NULL;
-   pub.SetUnPacked( !bPack );
-   pub.SetChain( lnks, nl );
-   ::fprintf( stdout, "%s\n", pub.Version() );
-   ::fprintf( stdout, "%sPACKED\n", pub.IsUnPacked() ? "UN" : "" );
+   for ( i=0; i<nPub; pubs[i++]->SetCircularBuffer( bCirc ) );
+   for ( i=0; i<nPub; pubs[i++]->SetUnPacked( !bPack ) );
+   for ( i=0; i<nPub; pubs[i++]->SetChain( lnks, nl ) );
+   ::fprintf( stdout, "%s\n", pub->Version() );
+   ::fprintf( stdout, "%sPACKED\n", pub->IsUnPacked() ? "UN" : "" );
+   ::fprintf( stdout, "%s BUFFER\n", bCirc ? "Circular" : "Normal" );
+   ::fprintf( stdout, "%s PAYLOAD\n", bFull ? "Full" : "Small" );
    if ( vecSz ) {
       ty = bFldV ? "FIELD" : "BYTESTREAM";
       ::fprintf( stdout, "%d VECTOR as %s\n", vecSz, ty );
    }
-   pub.SetBinary( true );
-   pub.SetHeartbeat( hBeat );
+   for ( i=0; i<nPub; i++ ) {
+      string hp( svr );
+      char  *ph = ::strtok_r( (char *)hp.data(), ":", &rp );
+      char  *pp = ::strtok_r( NULL, ":", &rp );
+
+      svc = pubs[i]->pPubName();
+      sprintf( sSvr, "%s:%d", ph, atoi( pp ) + i );
+      pubs[i]->SetBinary( true );
+      pubs[i]->SetHeartbeat( hBeat );
 #ifdef TODO_PERMS_BUT_NOT_NOW
-   pub.SetPerms( true );
+      pubs[i]->SetPerms( true );
 #endif // TODO_PERMS_BUT_NOT_NOW
-   ::fprintf( stdout, "%s\n", pub.Start( svr ) );
-   pub.SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
+      ::fprintf( stdout, "%s@%s\n", svc, pubs[i]->Start( sSvr ) );
+//      pubs[i]->SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
+   }
    ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
    ::fflush( stdout );
-   for ( i=0,d0=dn=pub.TimeNs(); ( dn-d0 ) < tRun; i++ ) {
-      pub.Sleep( tPub );
-      nt = pub.PublishAll();
+   for ( d0=dn=pub->TimeNs(); ( dn-d0 ) < tRun; ) {
+      for ( i=0; i<nPub; pubs[i++]->Sleep( tPub ) );
+      for ( i=0; i<nPub; pubs[i++]->PublishAll() );
+      dn = pub->TimeNs();
    }
 
    // Clean up
 
    ::fprintf( stdout, "Cleaning up ...\n" ); ::fflush( stdout );
-   pub.Stop();
+   for ( i=0; i<nPub; pubs[i++]->Stop() );
    printf( "Done!!\n " );
    return 1;
 }

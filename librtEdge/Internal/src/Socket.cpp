@@ -27,8 +27,9 @@
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      6 SEP 2022 jcs  Build 56: Buffer.Grow() bug; ioctl_getTxMaxSize
 *      3 JUN 2023 jcs  Build 63: HexDump(), not HexLog()
+*      5 JAN 2024 jcs  Build 67: Buffer.h
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -38,126 +39,6 @@ using namespace RTEDGE_PRIVATE;
 
 static socklen_t _dSz = sizeof( struct sockaddr_in );
 static int       _pSz = sizeof( Mold64PktHdr );
-
-/////////////////////////////////////////////////////////////////////////////
-//
-//                 c l a s s      B u f f e r
-//
-/////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////
-// Constructor / Destructor
-////////////////////////////////////////////
-Buffer::Buffer( int nAlloc, int maxSz ) :
-   _bp( (char *)0 ),
-   _cp( (char *)0 ),
-   _nAlloc( 0 ),
-   _maxSiz( maxSz )
-{
-   Grow( nAlloc );
-   Reset();
-}
-
-Buffer::~Buffer()
-{
-   delete[] _bp;
-}
-
-
-////////////////////////////////////////////
-// Access
-////////////////////////////////////////////
-rtBUF Buffer::buf()
-{
-   rtBUF b;
-
-   b._data = _bp;
-   b._dLen = bufSz();
-   return b;
-}
-
-int Buffer::bufSz()
-{
-   return( _cp - _bp );
-}
-
-int Buffer::nLeft()
-{
-   int rtn;
-
-   rtn = _nAlloc - bufSz() - 1;
-   return rtn;
-}
-
-
-////////////////////////////////////////////
-// Operations
-////////////////////////////////////////////
-bool Buffer::Grow( int nReqGrow )
-{
-   char *lwc;
-   int   bSz, nGrow;
-
-   // Pre-condition
-
-   nGrow = gmin( nReqGrow, ( _maxSiz-_nAlloc ) );
-   nGrow = WithinRange( 0, nGrow, _maxSiz );  // Build 56
-   if ( !nGrow )
-      return false;
-
-   // Save
-
-   lwc = _bp;
-   bSz = _cp - _bp;
-
-   // Grow
-
-   _nAlloc += nGrow;
-   _bp      = new char[_nAlloc];
-   _cp      = _bp;
-
-   // Restore
-
-   if ( lwc ) {
-      if ( bSz ) {
-         ::memcpy( _bp, lwc, bSz );
-         _cp += bSz;
-      }
-      delete[] lwc;
-   }
-   return true;
-}
-
-void Buffer::Reset()
-{
-   _cp = _bp;
-}
-
-void Buffer::Move( int off, int len )
-{
-   char *cp;
-
-   cp  = _bp;
-   cp += off;
-   ::memmove( _bp, cp, len );
-   _cp  = _bp;
-   _cp += len;
-}
-
-bool Buffer::Append( char *cp, int len )
-{
-   // Grow by up to _maxSiz, if needed
-
-   if ( ( nLeft() < len ) && !Grow( _nAlloc ) )
-      return false;
-
-   // OK to copy
-
-   ::memcpy( _cp, cp, len );
-   _cp += len;
-   return true;
-}
-
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -171,7 +52,7 @@ Logger *Socket::_log = (Logger *)0;
 ////////////////////////////////////////////
 // Constructor / Destructor
 ////////////////////////////////////////////
-Socket::Socket( const char *pHosts, bool bConnectionless ) :
+Socket::Socket( const char *pHosts, bool bConnectionless, bool bCircBuf ) :
    _thr( new Thread() ),
    _bConnectionless( bConnectionless ),
    _mdd( (mddWire_Context)0 ),
@@ -188,8 +69,8 @@ Socket::Socket( const char *pHosts, bool bConnectionless ) :
    _dstConn( "Undefined:0" ),
    _fd( 0 ),
    _bStart( false ),
-   _in( K*K ),
-   _out( K*K ),
+   _in(),
+   _out( (Buffer *)0 ),
    _st( (rtEdgeChanStats *)0 ),
    _bCache( false ),
    _bBinary( false ),
@@ -206,6 +87,14 @@ Socket::Socket( const char *pHosts, bool bConnectionless ) :
    const char *_sep1 = ":";
    Hosts       tmp;
    size_t      i, sz;
+
+   // Buffer Initialization
+
+   _out = bCircBuf ?  new CircularBuffer() : new Buffer();
+   if ( bConnectionless )
+      _out->SetConnectionless();
+   _in.Init( K*K );
+   _out->Init( K*K );
 
    // host:port,host:port, ...
 
@@ -269,6 +158,7 @@ Socket::~Socket()
    ::mddFieldList_Free( _fl );
    ::mddBldBuf_Free( _bldBuf );
    delete _thr;
+   delete _out;
    if ( _log )
       _log->logT( 3, "~Socket( %s )\n", dstConn() );
 }
@@ -292,6 +182,11 @@ Mutex &Socket::mtx()
    return _mtx;
 }
 
+Buffer &Socket::oBuf()
+{
+   return *_out;
+}
+
 const char *Socket::dstConn()
 {
    return _dstConn.data();
@@ -309,7 +204,7 @@ bool Socket::IsCache()
 
 bool Socket::IsWritable()
 {
-   return( _out.bufSz() > 0 );
+   return( oBuf().bufSz() > 0 );
 }
 
 int Socket::SetRcvBuf( int bufSiz )
@@ -440,7 +335,8 @@ const char *Socket::Connect()
 
 bool Socket::Disconnect( const char *reason )
 {
-   rtEdgeChanStats &st = stats();
+   rtEdgeChanStats &st  = stats();
+   Buffer          &out = oBuf();
 
    // Stats / Close
 
@@ -454,13 +350,14 @@ bool Socket::Disconnect( const char *reason )
       CLOSE( _fd );
    _fd = 0;
    _in.Reset();
-   _out.Reset();
+   out.Reset();
    return true;
 }
 
 bool Socket::Write( const char *pData, int dLen )
 {
-   rtEdgeChanStats &st = stats();
+   rtEdgeChanStats &st  = stats();
+   Buffer          &out = oBuf();
    Locker           l( _mtx );
    struct sockaddr *sa;
    bool             bOK;
@@ -481,16 +378,16 @@ bool Socket::Write( const char *pData, int dLen )
       return bOK;
    }
 
-   if ( (bOK=_out.Append( (char *)pData, dLen )) )
+   if ( (bOK=out.Push( (char *)pData, dLen )) )
       OnWrite();
    else {
       Locker lck( _ovrFloMtx );
 
-      sprintf( buf, "Overflow : %d bytes; ", _out.bufSz() );
+      sprintf( buf, "Overflow : %d bytes; ", out.bufSz() );
       _overflow  = buf;
       _overflow += dstConn();
    }
-   st._qSiz    =  _out.bufSz();
+   st._qSiz    = out.bufSz();
    st._qSizMax = gmax( st._qSiz, st._qSizMax );
    return bOK;
 }
@@ -501,7 +398,8 @@ bool Socket::Write( const char *pData, int dLen )
 ////////////////////////////////////////////
 bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
 {
-   rtEdgeChanStats  &st = stats();
+   rtEdgeChanStats  &st  = stats();
+   Buffer           &out = oBuf();
    rtEdgeChanStats **rtn;
    mddProtocol      *pro;
    bool              bArg, *pbArg;
@@ -560,14 +458,14 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
          /*
           * Default max is 10MB
           */
-         cap          = _out.bufSz() ? _out._maxSiz : _out._nAlloc;
-         _out._maxSiz = gmax( cap, *p32 );
+         cap          = out.bufSz() ? out.maxSiz() : out.nAlloc();
+         out.maxSiz() = gmax( cap, *p32 );
          return true;
       case ioctl_getTxBufSize:
-         *p32 = _out.bufSz();
+         *p32 = out.bufSz();
          return true;
       case ioctl_getTxMaxSize:
-         *p32 = _out._maxSiz;
+         *p32 = out.maxSiz();
          return true;
       case ioctl_setThreadProcessor:
          thr().SetThreadProcessor( *p32 );
@@ -611,40 +509,25 @@ void Socket::OnRead()
 {
    rtEdgeChanStats &st = stats();
    int              tot, nb, nL;
-   double           d0, dd;
 
    // Drain ; Connectionless is 1 read ...
 
    setNonBlocking();
    if ( !(nL=_in.nLeft()) )
-      _in.Grow( _in._nAlloc );
+      _in.Grow( _in.nAlloc() );
    nL = _in.nLeft();
-   d0 = _bLatency ? ::rtEdge_TimeNs() : 0.0;
    if ( _bConnectionless ) {
       _in.Reset();
-      nb         = gmax( ::recv( fd(), _in._cp, nL, 0 ), 0 );
+      nb         = _in.ReadIn( fd(), nL );
       tot        = nb;
-      _in._cp   += nb;
       st._nByte += _bPub ? 0 : nb;
    }
    else {
-      for ( tot=0; (nb=READ( fd(), _in._cp, nL )) > 0; ) {
-         dd = _bLatency ? 1000000.0 * ( ::rtEdge_TimeNs() - d0 ) : 0.0;
-         if ( _bLatency ) {
-            printf( "[%d] READ( %d ) in %.1fuS\n", fd(), nb, dd ); 
-            fflush( stdout );
-         }
+      for ( tot=0; (nb=_in.ReadIn( fd(), nL )) > 0; ) {
          nb         = gmax( nb,0 );
          st._nByte += _bPub ? 0 : nb;
-         if ( nb && _log && _log->CanLog( 3 ) ) {
-            Locker lck( _log->mtx() );
-
-            _log->logT( 3, "RAW-RD " );
-            _log->HexDump( 3, _in._cp, nb );
-         }
-         _in._cp += nb;
-         nL      -= nb;
-         tot     += nb;
+         nL        -= nb;
+         tot       += nb;
       }
    }
    setBlocking();
@@ -657,10 +540,9 @@ void Socket::OnRead()
 void Socket::OnWrite()
 {
    Locker           l( _mtx );
-   rtEdgeChanStats &st = stats();
-   const char      *cp;
-   int              wSz, nWr, nL, tb, nb;
-   double           d0, dd;
+   rtEdgeChanStats &st  = stats();
+   Buffer          &out = oBuf();
+   int              wSz, nWr, nL, off, nb;
 
    // Pre-condition
 
@@ -670,38 +552,25 @@ void Socket::OnWrite()
    // 1) Drain ...
 
    setNonBlocking();
-   cp  = _out._bp;
-   wSz = _out.bufSz();
+   wSz = out.bufSz();
    nWr = wSz;
-   d0  = _bLatency ? ::rtEdge_TimeNs() : 0.0;
-   for ( tb=0; nWr && ( (nb=WRITE( fd(), cp, nWr )) > 0 );  ) {
-      dd = _bLatency ? 1000000.0 * ( ::rtEdge_TimeNs() - d0 ) : 0.0;
-      if ( _bLatency ) {
-         printf( "[%d] WRITE( %d ) in %.1fuS\n", fd(), nb, dd );
-         fflush( stdout );
-      }
-      if ( nb && _log && _log->CanLog( 3 ) ) {
-         Locker lck( _log->mtx() );
-
-         _log->logT( 3, "RAW-WR " );
-         _log->HexDump( 3, cp, nb );
-      }
-      cp += nb;
-      tb += nb;
-      nWr = gmax( nWr-nb, 0 );
+   off = 0;
+   for ( ; nWr && ( (nb=out.WriteOut( fd(), off, nWr )) > 0 ); ) {
+      off += nb;
+      nWr  = gmax( nWr-nb, 0 );
    }
    setBlocking();
-   if ( !tb )
+   if ( !off )
       return;
 
    // 2) Re-set
 
-   nL = wSz - tb;
+   nL = wSz - off;
    if ( nL )
-      _out.Move( tb, nL );
+      out.Move( off, nL );
    else
-      _out.Reset();
-   st._qSiz    =  _out.bufSz();
+      out.Reset();
+   st._qSiz    =  out.bufSz();
    st._qSizMax = gmax( st._qSiz, st._qSizMax );
 }
 

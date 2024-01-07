@@ -28,13 +28,13 @@
 *     26 APR 2022 jcs  Build 53: MDDirectStats
 *      1 SEP 2022 jcs  Build 56: TapeChannel
 *     24 OCT 2022 jcs  Build 58: No extern "C" wrapping librtEdge.h : Cockpit.hpp
+*      5 JAN 2024 jcs  Build 67: Buffer.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_INTERNAL_H
 #define __EDGLIB_INTERNAL_H
 
-#define _MAX_BUF_SIZ   10*K*K // 10 MB
 
 /////////////////////////////////
 // 64-bit

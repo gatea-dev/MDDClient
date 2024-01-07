@@ -36,8 +36,9 @@
 *      3 JUN 2023 jcs  Build 63: quant/FFT.hpp; rtEdge_hexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     31 OCT 2023 jcs  Build 66: No mo quant
+*      5 JAN 2024 jcs  Build 67: rtEdgePubAttr._bCircularBuffer
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -1199,6 +1200,8 @@ typedef struct {
    char             _bInteractive;
    /** \brief 1 if connectionless (UDP) publisher; 0 if connected (TCP) */
    char             _bConnectionless;
+   /** \brief 1 for Circular outbound buffer; 0 for normal */
+   char             _bCircularBuffer;
    /** \brief If _bConnectionless, bind this local port; 0 = ephemeral */
    int              _udpPort;
    /** \brief Callback when subscription channel connects or disconnects */
