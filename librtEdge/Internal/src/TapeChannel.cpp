@@ -27,10 +27,8 @@ static const char *t_ALL  = "*";
 static const char *t_SEP  = "|";
 static const char *_undef = "Undefined";
 static const char *_pIdx  = ".idx";
-static int _thSz          = sizeof( GLrecTapeHdr );
 static int _mSz8          = sizeof( GLrecTapeMsg );
 static int _mSz4          = _mSz8 - 4;
-static int _deSz          = sizeof( GLrecDictEntry );
 static int _ixSz          = sizeof( u_int64_t );
 static struct timeval _zT = { 0, 0 };
 static struct timeval _eT = { INFINITEs, 0 };
@@ -623,7 +621,7 @@ int TapeChannel::_LoadSchema()
    char           *bp, *cp;
    rtFIELD        *fdb, f;
    rtBUF          &b = f._val._buf;
-   int             i, nd, ni, nr, dSz, iSz;
+   int             i, nd, dSz;
    string          s;
 
    // Pre-condition(s)
@@ -631,19 +629,12 @@ int TapeChannel::_LoadSchema()
    if ( !_hdr || !_vwHdr->siz() )
       return 0;
    /*
-    * Header / Sizes
-    */
-   bp   = _vwHdr->data();
-   cp   = bp;
-   cp  += _thSz;
-   nd   = h._numDictEntry();
-   ni   = h._numSecIdxT();
-   nr   = h._numRec();
-   dSz  = nd * _deSz;
-   iSz  = ni * _ixSz;
-   /*
     * Schema
     */
+   bp  = _vwHdr->data();
+   cp  = bp + h._DbHdrSize( 0, 0, 0 );
+   nd  = h._numDictEntry();
+   dSz = nd * sizeof( GLrecDictEntry );
    ::memset( &d, 0, sizeof( d ) );
    de  = (GLrecDictEntry *)cp;
    fdb = new rtFIELD[nd];

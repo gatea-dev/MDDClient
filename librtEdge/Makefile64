@@ -67,8 +67,6 @@ EXE_LIBS  = -L./lib -lrtEdge$(BITS) $(LFLAGS) # -lstdc++
 ## Us
 
 OBJS = \
-	TapeChannel.o \
-	TapeHeader.o \
 	EDG_API.o \
 	Buffer.o \
 	Cockpit.o \
@@ -83,8 +81,10 @@ OBJS = \
 	Mutex.o \
 	OS_cpu.o \
 	OS_disk.o \
-	Socket.o \
 	Pump.o \
+	Socket.o \
+	TapeChannel.o \
+	TapeHeader.o \
 	Thread.o \
 	EDG_version.o
 
