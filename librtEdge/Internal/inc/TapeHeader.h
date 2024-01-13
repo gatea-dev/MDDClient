@@ -70,6 +70,8 @@ public:
 	struct timeval  _curTime();
 	double          _dCpu(); 
 	int             _numDictEntry(); 
+	struct timeval  _curIdxTm();
+	int             _curIdx(); 
 	int             _secPerIdxT(); 
 	int             _numSecIdxT(); 
 	int             _secPerIdxR(); 

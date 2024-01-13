@@ -14,7 +14,7 @@
 #ifndef __TAPE_CHANNEL_H
 #define __TAPE_CHANNEL_H
 #include <EDG_Internal.h>
-// #include <TapeHeader.h>
+#include <TapeHeader.h>
 
 #define MAX_FLD 128*K
 
@@ -52,8 +52,8 @@ private:
 	string           _idxFile;
 	FieldMap         _schema;
 	FieldMapByName   _schemaByName;
-	rtBuf64          _tape;
-	GLrecTapeHdr    *_hdr;
+	GLmmap          *_vwHdr;
+	TapeHeader      *_hdr;
 	GLrpyDailyIdxVw *_idx;
 	TapeRecords      _rdb;
 	TapeRecDb        _tdb;
@@ -77,7 +77,7 @@ public:
 	// Access
 public:
 	EdgChannel     &edg();
-	GLrecTapeHdr   &hdr();
+	TapeHeader     &hdr();
 	mddWire_Context mdd();
 	const char     *pTape();
 	const char     *pIdxFile();
@@ -118,9 +118,6 @@ private:
 	u_int64_t      _get64( u_char * );
 	u_int64_t      _tapeOffset( struct timeval );
 	int            _SecIdx( struct timeval, GLrecTapeRec * );
-	u_int64_t      _DbHdrSize( int, int, int );
-	u_int64_t      _DailyIdxSize();
-	int            _RecSiz();
 	void           _BuildFieldMap();
 	void           _ClearFieldMap();
 
@@ -204,20 +201,19 @@ private:
 /////////////////////////////////////////
 // View on Daily Index
 /////////////////////////////////////////
-class GLrpyDailyIdxVw : public string
+class GLrpyDailyIdxVw : public GLmmap
 {
 private:
-	GLrecTapeHdr &_hdr;
-	rtBuf64       _tape;
-	u_int64_t     _off;
-	u_int64_t     _daySz;
-	u_int64_t     _fileSz;
-	Sentinel     *_ss;
-	u_int64_t    *_tapeIdxDb;
+	TapeHeader &_hdr;
+	u_int64_t   _off;
+	u_int64_t   _daySz;
+	u_int64_t   _fileSz;
+	Sentinel   *_ss;
+	u_int64_t  *_tapeIdxDb;
 
 	// Constructor
 public:
-	GLrpyDailyIdxVw( GLrecTapeHdr &, char *, u_int64_t );
+	GLrpyDailyIdxVw( TapeHeader &, char * );
 	~GLrpyDailyIdxVw();
 
 	// Access / Operations
@@ -225,7 +221,6 @@ public:
 	Sentinel  &sentinel();
 	u_int64_t *tapeIdxDb();
 	Bool       forth();
-	bool       isValid() { return( _tape._data != (char *)0 ); }
 private:
 	Bool       _Set();
 

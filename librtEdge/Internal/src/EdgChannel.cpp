@@ -26,7 +26,7 @@
 *     19 MAY 2022 jcs  Build 54: Schema : rtVALUE used as _maxLen
 *     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
-*      5 JAN 2024 jcs  Build 67: Buffer.h
+*     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -639,11 +639,11 @@ bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
          return true;
       case ioctl_tapeStartTime:
          if ( _tape && i64 )
-            *i64 = _tape->hdr()._tCreate;
+            *i64 = _tape->hdr()._tCreate();
          return( _tape && i64 );
       case ioctl_tapeEndTime:
          if ( _tape && i64 )
-            *i64 = _tape->hdr()._curTime.tv_sec;
+            *i64 = _tape->hdr()._curTime().tv_sec;
          return( _tape && i64 );
       default:
          break;

@@ -59,7 +59,7 @@ TODO : Move SplineMaker / apps/Options into quant
  *   - Buffer.cpp / CircularBuffer
  *   - rtEdgePubAttr._bCircularBuffer
  *
- * -# Multi-OS Tape:
+ * -# OS-Agnostic Tape
  *    - TapeHeader.h
  *
  *

@@ -264,6 +264,36 @@ int TapeHeader::_numDictEntry()
    return _hdr->_numDictEntry;
 }
 
+struct timeval TapeHeader::_curIdxTm()
+{
+   struct timeval      rc;
+   Win64Hdr::Timeval   wt;
+   Linux64Hdr::Timeval lt;
+
+   ::memset( &rc, 0, sizeof( rc ) );
+   if ( _hdr4 ) {
+      wt         = _hdr4->_curIdxTm;
+      rc.tv_sec  = wt.tv_sec;
+      rc.tv_usec = wt.tv_usec;
+   }
+   else if ( _hdr8 ) {
+      lt         = _hdr8->_curIdxTm;
+      rc.tv_sec  = lt.tv_sec;
+      rc.tv_usec = lt.tv_usec;
+   }
+   else if ( _hdr )
+      rc = _hdr->_curIdxTm;
+   return rc;
+}
+
+
+int TapeHeader::_curIdx()
+{
+   if ( _hdr4 ) return _hdr4->_curIdx;
+   if ( _hdr8 ) return _hdr8->_curIdx;
+   return _hdr->_curIdx;
+}
+
 int TapeHeader::_secPerIdxT()
 {
    if ( _hdr4 ) return _hdr4->_secPerIdxT;
