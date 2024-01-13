@@ -13,17 +13,17 @@
   <PropertyGroup Label="Globals">
     <SccProjectName />
     <SccLocalPath />
-    <ProjectGuid>{8E816AC9-1EFB-599A-ECAB-843E7BBD4196}</ProjectGuid>
+    <ProjectGuid>{53004E18-3BEE-1DB4-9DD7-E7B377822F93}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
@@ -40,10 +40,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\lib64\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\bin64\LVCAdmin\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\Release64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\Debug64\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\bin64\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\Debug64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
   </PropertyGroup>
@@ -51,38 +51,34 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>
-         ..\inc;
-         ..\Internal\inc;
-         ..\..\libmddWire\inc;
-         ..\..\libmddWire\expat\xmltok;
-         ..\..\libmddWire\expat\xmlparse;
-         %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_STATIC;ADDIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\inc;..\..\libmddWire\inc;AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\..\Release64\librtEdgeMD64.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>.\..\Release64\LVCAdmin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Release64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Release64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Release64\</ProgramDataBaseFileName>
-      <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wsock32.lib;..\..\libmddWire\lib64\libmddWire64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\..\lib64/librtEdgeMD64.lib</OutputFile>
+      <AdditionalDependencies>
+         ..\lib64\librtEdge64.lib;
+         ..\..\libmddWire\lib64\libmddWire64.lib;
+         pdh.lib;wsock32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
+      <OutputFile>.\..\bin64\LVCAdmin/LVCAdmin.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ProgramDatabaseFile>.\..\lib64/librtEdgeMD64.pdb</ProgramDatabaseFile>
-      <ImportLibrary>.\..\lib64/librtEdgeMD64.lib</ImportLibrary>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ProgramDatabaseFile>.\..\bin64\LVCAdmin/LVCAdmin.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TypeLibraryName>.\..\lib64/librtEdgeMD64.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\LVCAdmin/LVCAdmin.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -94,39 +90,35 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>
-         ..\inc;
-         ..\Internal\inc;
-         ..\..\libmddWire\inc;
-         ..\..\libmddWire\expat\xmltok;
-         ..\..\libmddWire\expat\xmlparse;
-         %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_STATIC;ADDIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\inc;..\..\libmddWire\inc;AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\..\Debug64\librtEdgeMD64.pch</PrecompiledHeaderOutputFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>.\..\Debug64\LVCAdmin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\Debug64\</AssemblerListingLocation>
       <ObjectFileName>.\..\Debug64\</ObjectFileName>
       <ProgramDataBaseFileName>.\..\Debug64\</ProgramDataBaseFileName>
-      <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wsock32.lib;..\..\libmddWire\lib64\libmddWire64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>lib/librtEdgeMD64.lib</OutputFile>
+      <AdditionalDependencies>
+         ..\Debug64\librtEdge64.lib;
+         ..\..\libmddWire\Debug64\libmddWire64.lib;
+         pdh.lib;wsock32.lib;%(AdditionalDependencies)
+      </AdditionalDependencies>
+      <OutputFile>.\..\bin64\LVCAdmin.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\..\Debug64\librtEdgeMD64.pdb</ProgramDatabaseFile>
-      <ImportLibrary>.\..\Debug64\librtEdgeMD64.lib</ImportLibrary>
+      <ProgramDatabaseFile>.\..\bin64\LVCAdmin.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
     </Link>
     <Midl>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MkTypLibCompatible>true</MkTypLibCompatible>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <TypeLibraryName>.\..\Debug64\librtEdgeMD64.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin64\LVCAdmin.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -136,26 +128,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Internal\src\EDG_API.cpp" />
-    <ClCompile Include="..\Internal\src\Buffer.cpp" />
-    <ClCompile Include="..\Internal\src\Cockpit.cpp" />
-    <ClCompile Include="..\Internal\src\RecCache.cpp" />
-    <ClCompile Include="..\Internal\src\EdgChannel.cpp" />
-    <ClCompile Include="..\Internal\src\EDG_GLchtDb.cpp" />
-    <ClCompile Include="..\Internal\src\EDG_GLlvcDb.cpp" />
-    <ClCompile Include="..\Internal\src\EDG_GLmd5.cpp" />
-    <ClCompile Include="..\Internal\src\EDG_GLmmap.cpp" />
-    <ClCompile Include="..\Internal\src\Logger.cpp" />
-    <ClCompile Include="..\Internal\src\Mutex.cpp" />
-    <ClCompile Include="..\Internal\src\OS_cpu.cpp" /> 
-    <ClCompile Include="..\Internal\src\OS_disk.cpp" />
-    <ClCompile Include="..\Internal\src\PubChannel.cpp" />
-    <ClCompile Include="..\Internal\src\Pump.cpp" />
-    <ClCompile Include="..\Internal\src\Socket.cpp" />
-    <ClCompile Include="..\Internal\src\TapeChannel.cpp" />
-    <ClCompile Include="..\Internal\src\TapeHeader.cpp" />
-    <ClCompile Include="..\Internal\src\Thread.cpp" />
-    <ClCompile Include="..\Internal\src\EDG_version.cpp" />
+    <ClCompile Include="..\cpp\LVCAdmin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

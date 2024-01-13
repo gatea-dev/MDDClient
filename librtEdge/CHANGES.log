@@ -25,7 +25,6 @@ Features To Add
 ---------------
 TODO : Move SplineMaker / apps/Options into quant
 
--# TapeHeader.h
 -# Surface.hpp
 -# rtFld_vector : AddVector( string[] )
 */
@@ -59,6 +58,9 @@ TODO : Move SplineMaker / apps/Options into quant
  * -# High Updating publisher overflow:
  *   - Buffer.cpp / CircularBuffer
  *   - rtEdgePubAttr._bCircularBuffer
+ *
+ * -# Multi-OS Tape:
+ *    - TapeHeader.h
  *
  *
  * ### Build 66 23-10-26

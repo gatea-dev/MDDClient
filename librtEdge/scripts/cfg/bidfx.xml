@@ -1,0 +1,604 @@
+<SplineMaker RunInForeground="true">
+   <Subscriber Service  = "velocity" 
+               Username = "Spline-BidFX" 
+               Server   = "gatea.com:9998"
+      <Curve Name="AUD.USD" FieldID="22">
+        <Knot Ticker="AUDUSD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="AUDUSD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="AUDUSD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="AUDUSD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="AUDUSD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="AUDUSD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="AUDUSD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="AUDUSD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="AUDUSD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="AUDUSD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="AUDUSD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="AUDUSD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="AUDUSD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="AUDUSD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="AUDUSD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="AUDUSD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="AUDUSD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="AUDUSD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="AUDUSD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="AUDUSD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="AUDUSD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="AUDUSD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="AUDUSD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.CHF" FieldID="22">
+        <Knot Ticker="EURCHF 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURCHF 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURCHF 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURCHF 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURCHF 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURCHF 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURCHF 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURCHF 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURCHF 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURCHF 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURCHF 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURCHF 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURCHF 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURCHF 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURCHF 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURCHF 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURCHF 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURCHF 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURCHF 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURCHF 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURCHF 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURCHF 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURCHF 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.DKK" FieldID="22">
+        <Knot Ticker="EURDKK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURDKK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURDKK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURDKK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURDKK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURDKK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURDKK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURDKK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURDKK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURDKK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURDKK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURDKK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURDKK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURDKK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURDKK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURDKK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURDKK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURDKK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURDKK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURDKK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURDKK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURDKK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURDKK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.GBP" FieldID="22">
+        <Knot Ticker="EURGBP 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURGBP 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURGBP 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURGBP 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURGBP 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURGBP 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURGBP 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURGBP 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURGBP 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURGBP 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURGBP 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURGBP 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURGBP 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURGBP 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURGBP 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURGBP 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURGBP 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURGBP 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURGBP 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURGBP 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURGBP 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURGBP 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURGBP 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.NOK" FieldID="22">
+        <Knot Ticker="EURNOK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURNOK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURNOK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURNOK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURNOK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURNOK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURNOK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURNOK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURNOK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURNOK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURNOK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURNOK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURNOK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURNOK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURNOK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURNOK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURNOK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURNOK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURNOK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURNOK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURNOK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURNOK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURNOK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.SEK" FieldID="22">
+        <Knot Ticker="EURSEK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURSEK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURSEK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURSEK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURSEK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURSEK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURSEK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURSEK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURSEK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURSEK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURSEK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURSEK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURSEK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURSEK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURSEK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURSEK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURSEK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURSEK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURSEK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURSEK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURSEK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURSEK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURSEK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.USD" FieldID="22">
+        <Knot Ticker="EURUSD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="EURUSD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="EURUSD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="EURUSD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="EURUSD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="EURUSD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="EURUSD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="EURUSD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="EURUSD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="EURUSD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="EURUSD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="EURUSD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="EURUSD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="EURUSD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="EURUSD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="EURUSD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="EURUSD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="EURUSD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="EURUSD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="EURUSD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="EURUSD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="EURUSD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="EURUSD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="GBP.USD" FieldID="22">
+        <Knot Ticker="GBPUSD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="GBPUSD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="GBPUSD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="GBPUSD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="GBPUSD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="GBPUSD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="GBPUSD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="GBPUSD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="GBPUSD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="GBPUSD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="GBPUSD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="GBPUSD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="GBPUSD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="GBPUSD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="GBPUSD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="GBPUSD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="GBPUSD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="GBPUSD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="GBPUSD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="GBPUSD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="GBPUSD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="GBPUSD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="GBPUSD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="ILS.USD" FieldID="22">
+        <Knot Ticker="ILSUSD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="ILSUSD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="ILSUSD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="ILSUSD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="ILSUSD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="ILSUSD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="ILSUSD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="ILSUSD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="ILSUSD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="ILSUSD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="ILSUSD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="ILSUSD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="ILSUSD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="ILSUSD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="ILSUSD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="ILSUSD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="ILSUSD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="ILSUSD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="ILSUSD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="ILSUSD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="ILSUSD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="ILSUSD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="ILSUSD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="NZD.USD" FieldID="22">
+        <Knot Ticker="NZDUSD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="NZDUSD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="NZDUSD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="NZDUSD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="NZDUSD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="NZDUSD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="NZDUSD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="NZDUSD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="NZDUSD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="NZDUSD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="NZDUSD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="NZDUSD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="NZDUSD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="NZDUSD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="NZDUSD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="NZDUSD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="NZDUSD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="NZDUSD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="NZDUSD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="NZDUSD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="NZDUSD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="NZDUSD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="NZDUSD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CAD" FieldID="22">
+        <Knot Ticker="USDCAD 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDCAD 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDCAD 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDCAD 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDCAD 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDCAD 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDCAD 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDCAD 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDCAD 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDCAD 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDCAD 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDCAD 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDCAD 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDCAD 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDCAD 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDCAD 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDCAD 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDCAD 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDCAD 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDCAD 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDCAD 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDCAD 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDCAD 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CHF" FieldID="22">
+        <Knot Ticker="USDCHF 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDCHF 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDCHF 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDCHF 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDCHF 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDCHF 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDCHF 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDCHF 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDCHF 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDCHF 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDCHF 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDCHF 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDCHF 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDCHF 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDCHF 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDCHF 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDCHF 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDCHF 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDCHF 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDCHF 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDCHF 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDCHF 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDCHF 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CZK" FieldID="22">
+        <Knot Ticker="USDCZK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDCZK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDCZK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDCZK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDCZK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDCZK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDCZK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDCZK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDCZK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDCZK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDCZK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDCZK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDCZK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDCZK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDCZK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDCZK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDCZK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDCZK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDCZK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDCZK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDCZK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDCZK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDCZK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.DKK" FieldID="22">
+        <Knot Ticker="USDDKK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDDKK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDDKK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDDKK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDDKK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDDKK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDDKK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDDKK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDDKK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDDKK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDDKK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDDKK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDDKK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDDKK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDDKK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDDKK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDDKK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDDKK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDDKK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDDKK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDDKK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDDKK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDDKK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.HUF" FieldID="22">
+        <Knot Ticker="USDHUF 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDHUF 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDHUF 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDHUF 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDHUF 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDHUF 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDHUF 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDHUF 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDHUF 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDHUF 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDHUF 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDHUF 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDHUF 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDHUF 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDHUF 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDHUF 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDHUF 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDHUF 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDHUF 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDHUF 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDHUF 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDHUF 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDHUF 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.JPY" FieldID="22">
+        <Knot Ticker="USDJPY 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDJPY 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDJPY 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDJPY 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDJPY 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDJPY 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDJPY 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDJPY 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDJPY 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDJPY 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDJPY 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDJPY 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDJPY 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDJPY 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDJPY 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDJPY 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDJPY 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDJPY 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDJPY 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDJPY 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDJPY 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDJPY 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDJPY 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.MXN" FieldID="22">
+        <Knot Ticker="USDMXN 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDMXN 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDMXN 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDMXN 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDMXN 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDMXN 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDMXN 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDMXN 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDMXN 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDMXN 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDMXN 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDMXN 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDMXN 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDMXN 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDMXN 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDMXN 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDMXN 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDMXN 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDMXN 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDMXN 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDMXN 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDMXN 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDMXN 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.NOK" FieldID="22">
+        <Knot Ticker="USDNOK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDNOK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDNOK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDNOK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDNOK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDNOK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDNOK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDNOK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDNOK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDNOK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDNOK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDNOK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDNOK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDNOK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDNOK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDNOK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDNOK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDNOK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDNOK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDNOK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDNOK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDNOK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDNOK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.PLN" FieldID="22">
+        <Knot Ticker="USDPLN 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDPLN 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDPLN 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDPLN 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDPLN 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDPLN 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDPLN 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDPLN 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDPLN 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDPLN 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDPLN 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDPLN 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDPLN 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDPLN 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDPLN 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDPLN 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDPLN 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDPLN 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDPLN 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDPLN 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDPLN 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDPLN 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDPLN 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.SEK" FieldID="22">
+        <Knot Ticker="USDSEK 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDSEK 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDSEK 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDSEK 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDSEK 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDSEK 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDSEK 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDSEK 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDSEK 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDSEK 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDSEK 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDSEK 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDSEK 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDSEK 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDSEK 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDSEK 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDSEK 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDSEK 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDSEK 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDSEK 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDSEK 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDSEK 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDSEK 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.ZAR" FieldID="22">
+        <Knot Ticker="USDZAR 1M DBFX CURNCY"  Interval="1" />
+        <Knot Ticker="USDZAR 2M DBFX CURNCY"  Interval="2" />
+        <Knot Ticker="USDZAR 3M DBFX CURNCY"  Interval="3" />
+        <Knot Ticker="USDZAR 4M DBFX CURNCY"  Interval="4" />
+        <Knot Ticker="USDZAR 5M DBFX CURNCY"  Interval="5" />
+        <Knot Ticker="USDZAR 6M DBFX CURNCY"  Interval="6" />
+        <Knot Ticker="USDZAR 7M DBFX CURNCY"  Interval="7" />
+        <Knot Ticker="USDZAR 8M DBFX CURNCY"  Interval="8" />
+        <Knot Ticker="USDZAR 9M DBFX CURNCY"  Interval="9" />
+        <Knot Ticker="USDZAR 10M DBFX CURNCY"  Interval="10" />
+        <Knot Ticker="USDZAR 11M DBFX CURNCY"  Interval="11" />
+        <Knot Ticker="USDZAR 1Y DBFX CURNCY"  Interval="12" />
+        <Knot Ticker="USDZAR 15M DBFX CURNCY"  Interval="15" />
+        <Knot Ticker="USDZAR 18M DBFX CURNCY"  Interval="18" />
+        <Knot Ticker="USDZAR 2Y DBFX CURNCY"  Interval="24" />
+        <Knot Ticker="USDZAR 3Y DBFX CURNCY"  Interval="36" />
+        <Knot Ticker="USDZAR 4Y DBFX CURNCY"  Interval="48" />
+        <Knot Ticker="USDZAR 5Y DBFX CURNCY"  Interval="60" />
+        <Knot Ticker="USDZAR 6Y DBFX CURNCY"  Interval="72" />
+        <Knot Ticker="USDZAR 7Y DBFX CURNCY"  Interval="84" />
+        <Knot Ticker="USDZAR 8Y DBFX CURNCY"  Interval="96" />
+        <Knot Ticker="USDZAR 9Y DBFX CURNCY"  Interval="108" />
+        <Knot Ticker="USDZAR 10Y DBFX CURNCY"  Interval="120" />
+      </Curve>
+
+   </Subscriber>
+
+   <Publisher FID_X    = "0"
+          org_FID_X    = "-8001"
+              FID_Y    = "-8002"
+              FID_INC  = "6"
+              FID_KNOT = "-8101"
+              Service  = "splinemaker"
+              Server   = "localhost:9980" >
+      <Spline Name="AUD.USD"    Increment="1.0"       Curve="AUD.USD" />
+      <Spline Name="EUR.CHF"    Increment="1.0"       Curve="EUR.CHF" />
+      <Spline Name="EUR.DKK"    Increment="1.0"       Curve="EUR.DKK" />
+      <Spline Name="EUR.GBP"    Increment="1.0"       Curve="EUR.GBP" />
+      <Spline Name="EUR.NOK"    Increment="1.0"       Curve="EUR.NOK" />
+      <Spline Name="EUR.SEK"    Increment="1.0"       Curve="EUR.SEK" />
+      <Spline Name="EUR.USD"    Increment="1.0"       Curve="EUR.USD" />
+      <Spline Name="GBP.USD"    Increment="1.0"       Curve="GBP.USD" />
+      <Spline Name="ILS.USD"    Increment="1.0"       Curve="ILS.USD" />
+      <Spline Name="NZD.USD"    Increment="1.0"       Curve="NZD.USD" />
+      <Spline Name="USD.CAD"    Increment="1.0"       Curve="USD.CAD" />
+      <Spline Name="USD.CHF"    Increment="1.0"       Curve="USD.CHF" />
+      <Spline Name="USD.CZK"    Increment="1.0"       Curve="USD.CZK" />
+      <Spline Name="USD.DKK"    Increment="1.0"       Curve="USD.DKK" />
+      <Spline Name="USD.HUF"    Increment="1.0"       Curve="USD.HUF" />
+      <Spline Name="USD.JPY"    Increment="1.0"       Curve="USD.JPY" />
+      <Spline Name="USD.MXN"    Increment="1.0"       Curve="USD.MXN" />
+      <Spline Name="USD.NOK"    Increment="1.0"       Curve="USD.NOK" />
+      <Spline Name="USD.PLN"    Increment="1.0"       Curve="USD.PLN" />
+      <Spline Name="USD.SEK"    Increment="1.0"       Curve="USD.SEK" />
+      <Spline Name="USD.ZAR"    Increment="1.0"       Curve="USD.ZAR" />
+      <Spline Name="AUD.USD.D"  Increment="0.032876"  Curve="AUD.USD" />
+      <Spline Name="EUR.CHF.D"  Increment="0.032876"  Curve="EUR.CHF" />
+      <Spline Name="EUR.DKK.D"  Increment="0.032876"  Curve="EUR.DKK" />
+      <Spline Name="EUR.GBP.D"  Increment="0.032876"  Curve="EUR.GBP" />
+      <Spline Name="EUR.NOK.D"  Increment="0.032876"  Curve="EUR.NOK" />
+      <Spline Name="EUR.SEK.D"  Increment="0.032876"  Curve="EUR.SEK" />
+      <Spline Name="EUR.USD.D"  Increment="0.032876"  Curve="EUR.USD" />
+      <Spline Name="GBP.USD.D"  Increment="0.032876"  Curve="GBP.USD" />
+      <Spline Name="ILS.USD.D"  Increment="0.032876"  Curve="ILS.USD" />
+      <Spline Name="NZD.USD.D"  Increment="0.032876"  Curve="NZD.USD" />
+      <Spline Name="USD.CAD.D"  Increment="0.032876"  Curve="USD.CAD" />
+      <Spline Name="USD.CHF.D"  Increment="0.032876"  Curve="USD.CHF" />
+      <Spline Name="USD.CZK.D"  Increment="0.032876"  Curve="USD.CZK" />
+      <Spline Name="USD.DKK.D"  Increment="0.032876"  Curve="USD.DKK" />
+      <Spline Name="USD.HUF.D"  Increment="0.032876"  Curve="USD.HUF" />
+      <Spline Name="USD.JPY.D"  Increment="0.032876"  Curve="USD.JPY" />
+      <Spline Name="USD.MXN.D"  Increment="0.032876"  Curve="USD.MXN" />
+      <Spline Name="USD.NOK.D"  Increment="0.032876"  Curve="USD.NOK" />
+      <Spline Name="USD.PLN.D"  Increment="0.032876"  Curve="USD.PLN" />
+      <Spline Name="USD.SEK.D"  Increment="0.032876"  Curve="USD.SEK" />
+      <Spline Name="USD.ZAR.D"  Increment="0.032876"  Curve="USD.ZAR" />
+   </Publisher>
+
+</SplineMaker>

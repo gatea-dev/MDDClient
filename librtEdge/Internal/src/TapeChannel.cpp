@@ -8,8 +8,9 @@
 *     23 SEP 2022 jcs  GetField()
 *     10 OCT 2022 jcs  Multiple tickers
 *     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
+*     12 JAN 2024 jcs  Build 67: TapeHeader.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -742,7 +743,7 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
       /*
        * Requires valid a) dbIdx and b) Timestamp
        */
-      if ( !InRange( 0, msg->_dbIdx, h._numRec ) )
+      if ( !InRange( 0, msg->_dbIdx, (u_int32_t)h._numRec ) )
          return 0;
       if ( !InRange( ss._tStart, msg->_tv_sec, h._curTime.tv_sec ) )
          return 0;

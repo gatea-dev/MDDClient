@@ -13,13 +13,16 @@
 *      3 JUL 2016 jcs  Build 33: GLasciiFile
 *     12 OCT 2017 jcs  Build 36: OFF_T siz(); _w32XxSz / _w32FileMapping()
 *      7 NOV 2017 jcs  Build 38: pFile()
+*     12 JAN 2024 jcs  Build 67: TapeHeader.h
 *
-*  (c) 1994-2017 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd. 
 ******************************************************************************/
 #ifndef __EDGLIB_GLMMAP_H
 #define __EDGLIB_GLMMAP_H
-#include <EDG_Internal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <string>
 
 // Gatea library macros ...
 
@@ -51,6 +54,7 @@ extern int getpagesize();
 #define OFF_T  u_int64_t
 #endif // !defined(OFF_T)
 
+using namespace std;
 
 #ifdef _LARGEFILE64_SOURCE
 #define STAT                  stat64
@@ -67,9 +71,12 @@ extern int getpagesize();
 #endif // _LARGEFILE64_SOURCE
 
 #define SIZE_T                size_t
+#if !defined(Bool)
 #define Bool                  bool
 #define True                  true
 #define False                 false
+#define K                     1024
+#endif // !defined(Bool)
 
 ///////////////////////////////////////////
 // Memory mapped file

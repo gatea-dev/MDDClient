@@ -10,9 +10,10 @@
 *     10 SEP 2016 jcs  Build  4: GLrecTapeHdr._bMDDirect
 *     10 DEC 2017 jcs  Build  7: _USE_UPA; _channelID; SIG_005 : No htonl()
 *     20 FEB 2018 jcs  Build 10: GLrecDailyHdr
-*      2 JUN 2022 jcs  Build 55: No mo _BLD
+*      3 MAR 2020 jcs  Build 17: REC_SIG_005 : Sentinel._bPwrite
+*     12 JAN 2024 jcs  Build 67: TapeHeader.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __REC_DB_H
 #define __REC_DB_H
@@ -74,7 +75,8 @@ public:
 class Sentinel
 {
 public:
-   char _version[80];
+   char _version[79];
+   bool _bWrite;        // >= REG_SIG_005
    char _signature[16];
    long _tStart;
 
@@ -213,15 +215,15 @@ public:
 class GLrecTapeMsg
 {
 public:
-   int      _msgLen;
-   int      _dbIdx;
-   int      _tv_sec;
-   int      _tv_usec;
-   int      _nUpd;
-   u_char   _nFldMod;   // Number of fields modified
-   u_char   _bLast4;    // _last is 4 bytes
-   u_char   _last[8];   // 4 bytes if _bLast4
-// char   _data[_msgLen-sizeof(GLrecMsgHdr)];
+   u_int32_t _msgLen;
+   u_int32_t _dbIdx;
+   u_int32_t _tv_sec;
+   u_int32_t _tv_usec;
+   u_int32_t _nUpd;
+   u_char    _nFldMod;   // Number of fields modified
+   u_char    _bLast4;    // _last is 4 bytes
+   u_char    _last[8];   // 4 bytes if _bLast4
+// char      _data[_msgLen-sizeof(GLrecMsgHdr)];
 };
 
 #pragma pack (pop)              // Byte Alignment

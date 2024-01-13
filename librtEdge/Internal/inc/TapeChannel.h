@@ -7,13 +7,14 @@
 *      1 SEP 2022 jcs  Created (from EdgChannel)
 *     23 SEP 2022 jcs  GetField()
 *     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
+*     12 JAN 2024 jcs  TapeHeader.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __TAPE_CHANNEL_H
 #define __TAPE_CHANNEL_H
 #include <EDG_Internal.h>
-#include <EDG_GLrecDb.h>
+// #include <TapeHeader.h>
 
 #define MAX_FLD 128*K
 

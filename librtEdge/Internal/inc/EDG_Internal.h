@@ -28,7 +28,7 @@
 *     26 APR 2022 jcs  Build 53: MDDirectStats
 *      1 SEP 2022 jcs  Build 56: TapeChannel
 *     24 OCT 2022 jcs  Build 58: No extern "C" wrapping librtEdge.h : Cockpit.hpp
-*      5 JAN 2024 jcs  Build 67: Buffer.h
+*     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -147,6 +147,11 @@
 #define dNow                 Logger::dblNow
 #define _tvNow               Logger::tvNow
 #define HOME                 "\033[1;1H\033[K"
+#if !defined(Bool)
+#define Bool                  bool
+#define True                  true
+#define False                 false
+#endif // !defined(Bool)
 
 #define chop( b )                           \
    do {                                     \
