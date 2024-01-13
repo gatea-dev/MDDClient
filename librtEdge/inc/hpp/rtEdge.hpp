@@ -29,8 +29,9 @@
 *      3 JUN 2023 jcs  Build 63: HexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     31 OCT 2023 jcs  Build 66: No mo DoubleXY
+*     13 JAN 2024 jcs  Build 67: IsFile()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_rtEdge_H
 #define __RTEDGE_rtEdge_H
@@ -524,6 +525,23 @@ public:
 	static bool Is64Bit()
 	{
 	   return ::rtEdge_Is64bit() ? true : false;
+	}
+
+	/**
+	 * \brief Returns true if argument is a file
+	 *
+	 * \param svr - Host or filenme
+	 * \return true if svr if file
+	 */
+	bool IsFile( const char *svr )
+	{
+	   rtBuf64 b;
+	   bool    rtn;
+
+	   b   = MapFile( svr, false );
+	   rtn = ( b._data && b._dLen );
+	   UnmapFile( b );
+	   return rtn;
 	}
 
 

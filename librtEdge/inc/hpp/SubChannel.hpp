@@ -262,13 +262,7 @@ public:
 private:
 	bool _IsTape( const char *svr )
 	{
-	   rtBuf64 b;
-	   bool    rtn;
-
-	   b   = MapFile( svr, false );
-	   rtn = ( b._data && b._dLen );
-	   UnmapFile( b );
-	   return rtn;
+	   return IsFile( svr );
 	}
 
 	const char *_StartTape( const char *tape )

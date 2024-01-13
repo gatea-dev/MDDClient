@@ -38,7 +38,7 @@ class Schema;
 typedef hash_map<int, rtFIELD>    FieldMap;
 typedef hash_map<string, rtFIELD> FieldMapByName;
 typedef hash_map<string, int>     TapeRecords;
-typedef vector<GLrecTapeRec *>    TapeRecDb;
+typedef vector<TapeRecHdr *>      TapeRecDb;
 typedef hash_map<int, int>        TapeWatchList;
 typedef hash_map<int, string *>   DeadTickers;
 typedef vector<u_int64_t>         Offsets;
@@ -104,22 +104,24 @@ public:
 
 	// Helpers
 private:
-	bool           _InTimeRange( GLrecTapeMsg & );
-	bool           _IsWatched( GLrecTapeMsg & );
-	int            _LoadSchema();
-	bool           _ParseFieldList( mddBuf );
-	int            _PumpDead();
-	void           _PumpStatus( GLrecTapeMsg *, const char *, rtEdgeType ty=edg_recovering, u_int64_t off=0 );
-	int            _PumpSlice( u_int64_t, int );
-	int            _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool, bool & );
-	void           _PumpComplete( GLrecTapeMsg *, u_int64_t );
-	string         _Key( const char *, const char * );
-	int            _get32( u_char * );
-	u_int64_t      _get64( u_char * );
-	u_int64_t      _tapeOffset( struct timeval );
-	int            _SecIdx( struct timeval, GLrecTapeRec * );
-	void           _BuildFieldMap();
-	void           _ClearFieldMap();
+	bool        _LoadHdr();
+	TapeRecHdr *_GetRecHdr( int );
+	bool        _InTimeRange( GLrecTapeMsg & );
+	bool        _IsWatched( GLrecTapeMsg & );
+	int         _LoadSchema();
+	bool        _ParseFieldList( mddBuf );
+	int         _PumpDead();
+	void        _PumpStatus( GLrecTapeMsg *, const char *, rtEdgeType ty=edg_recovering, u_int64_t off=0 );
+	int         _PumpSlice( u_int64_t, int );
+	int         _PumpOneMsg( GLrecTapeMsg &, mddBuf, bool, bool & );
+	void        _PumpComplete( GLrecTapeMsg *, u_int64_t );
+	string      _Key( const char *, const char * );
+	int         _get32( u_char * );
+	u_int64_t   _get64( u_char * );
+	u_int64_t   _tapeOffset( struct timeval );
+	int         _SecIdx( struct timeval, GLrecTapeRec * );
+	void        _BuildFieldMap();
+	void        _ClearFieldMap();
 
 };  // class TapeChannel
 

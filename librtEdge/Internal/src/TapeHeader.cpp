@@ -78,7 +78,7 @@ Bool TapeHeader::Map()
    hSz = h->_hdrSiz;
    mSz = _sizeofLong;
    tSz = h->_sizeofLong;
-   b2  = _vw.map( 0, hSz );
+   b2  = ( hSz > _vw.siz() ) ?  _vw.map( 0, hSz ) : b1;
    if ( !_vw.isValid() )
       return false;
 

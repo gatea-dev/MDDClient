@@ -17,8 +17,9 @@
 *     16 AUG 2022 jcs  Build 55: stdout formatting buggies
 *     22 OCT 2022 jcs  Build 58: MyVector
 *     11 JUL 2023 jcs  Build 64: -h <hostOnly>
+*     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
@@ -655,7 +656,7 @@ int main( int argc, char **argv )
    FILE       *fp;
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
    char       *cp, *rp, sTkr[K];
-   bool        bCfg, aOK, bBin, bStr, bVec, bTape, bQry;
+   bool        bCfg, aOK, bBin, bStr, bVec, bTape, bQry, bPort;
    void       *arg;
    string      s;
    u_int64_t   s0;
@@ -747,9 +748,11 @@ int main( int argc, char **argv )
       if ( !aOK )
          break; // for-i
       if ( !::strcmp( argv[i], "-h" ) ) {
-         svrS  = argv[++i];
-         svrS += ::strstr( svrS.data(), ":" ) ? "" : _DFLT_PORT;
-         svr   = svrS.data();
+         svrS   = argv[++i];
+         bPort  = !ch.IsFile( svrS.data() );
+         bPort &= !::strstr( svrS.data(), ":" );
+         svrS  += bPort ? _DFLT_PORT : "";
+         svr    = svrS.data();
       }
       else if ( !::strcmp( argv[i], "-u" ) )
          usr = argv[++i];

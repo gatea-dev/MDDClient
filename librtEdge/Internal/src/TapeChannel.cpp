@@ -36,7 +36,6 @@ static struct timeval _zT = { 0, 0 };
 static struct timeval _eT = { INFINITEs, 0 };
 
 static rtBUF     _zBUF      = { (char *)0, 0 };
-static u_int64_t _sSz       = sizeof( Sentinel );
 static u_int64_t _iSz       = sizeof( u_int64_t );
 
 ////////////////////////////////////////////
@@ -105,6 +104,8 @@ TapeChannel::~TapeChannel()
    Unload();
    ::mddFieldList_Free( _fl );
    ::mddSub_Destroy( _mdd );
+   for ( size_t ii=0; ii<_tdb.size(); delete _tdb[ii], ii++ );
+   _tdb.clear();
 
    Locker lck( _sliceMtx );
 
@@ -200,10 +201,10 @@ MDDResult TapeChannel::Query()
    nr = v.size();
    rr = new MDDRecDef[nr];
    for ( i=0; i<nr; i++ ) {
-      rr[i]._pSvc     = v[i]->_svc;
-      rr[i]._pTkr     = v[i]->_tkr;
+      rr[i]._pSvc     = v[i]->_svc();
+      rr[i]._pTkr     = v[i]->_tkr();
       rr[i]._fid      = 0;
-      rr[i]._interval = v[i]->_nMsg;
+      rr[i]._interval = v[i]->_nMsg();
    }
    q._recs = rr;
    q._nRec = (int)i;
@@ -315,10 +316,10 @@ int TapeChannel::Unsubscribe( const char *svc, const char *tkr )
 
 bool TapeChannel::Load()
 {
-   GLrecTapeRec *rec;
-   string        s;
-   char         *bp, *cp, *pi;
-   int           i, nr, rSz;
+   TapeRecHdr *rec;
+   string      s;
+   char       *bp, *cp, *pi;
+   int         i, nr, rSz;
 
    // Pre-condition(s)
 
@@ -331,17 +332,20 @@ bool TapeChannel::Load()
       Unload();
       return false;
    }
-   _hdr = new TapeHeader( *_vwHdr );
-
+   if ( !_LoadHdr() )
+      return false;
+   /*
+    * Map the whole thing in : TODO - Allow for real-time pumping??
+    */
+   bp  = _vwHdr->map( 0, hdr()._fileSiz() );
+   if ( !_LoadHdr() )
+      return false;
    /*
     * Header
     */
-   TapeHeader &h = hdr();
-
-   bp  = _vwHdr->data();
-   nr  = h._numRec();
-   rSz = h._RecSiz();
-   if ( !h._bMDDirect() ) {
+   nr  = hdr()._numRec();
+   rSz = hdr()._RecSiz();
+   if ( !hdr()._bMDDirect() ) {
       Unload();
       _err  = "Invalid tape file ";
       _err += pTape();
@@ -352,7 +356,7 @@ bool TapeChannel::Load()
     */
    if ( !_idx ) {
       pi   = (char *)_idxFile.data();
-      _idx = new GLrpyDailyIdxVw( h, pi );
+      _idx = new GLrpyDailyIdxVw( hdr(), pi );
       if ( !_idx->isValid() ) {
          delete _idx;   
          _idx = (GLrpyDailyIdxVw *)0;
@@ -363,13 +367,13 @@ bool TapeChannel::Load()
     */
    cp  = bp;
    cp += _LoadSchema();
-   cp += h._numSecIdxT() * _ixSz;  // Offset Indices
+   cp += hdr()._numSecIdxT() * _ixSz;  // Offset Indices
    /*
     * Records Dictionary
     */
    for ( i=0; i<nr; i++,cp+=rSz ) {
-      rec     = (GLrecTapeRec *)cp;
-      s       = _Key( rec->_svc, rec->_tkr );
+      rec     = _GetRecHdr( i );
+      s       = _Key( rec->_svc(), rec->_tkr() );
       _rdb[s] = i;
       _tdb.push_back( rec );
    }
@@ -440,7 +444,7 @@ int TapeChannel::Pump()
 
 int TapeChannel::PumpTicker( int ix )
 {
-   GLrecTapeRec *rec;
+   TapeRecHdr   *rec;
    GLrecTapeMsg *msg;
    char         *bp, *cp, sts[K];
    mddBuf        m;
@@ -458,10 +462,9 @@ int TapeChannel::PumpTicker( int ix )
 
    // One Ticker
 
-   bp   = _vwHdr->data();
    rec  = _tdb[ix];
-   off  = rec->_loc;
-   nMsg = rec->_nMsg;
+   off  = rec->_loc();
+   nMsg = rec->_nMsg();
    msg  = (GLrecTapeMsg *)0;
    /*
     * Remap if too big
@@ -469,9 +472,11 @@ int TapeChannel::PumpTicker( int ix )
    if ( off > _vwHdr->siz() ) {
       Unload();
       Load();
+      rec = _tdb[ix];
    }
    _PumpDead();
    bPmp = true;
+   bp   = _vwHdr->data();
    for ( i=0,n=0; bPmp && _bRun && off; i++ ) {
       cp      = bp+off;
       msg     = (GLrecTapeMsg *)cp;
@@ -551,6 +556,48 @@ void TapeChannel::Unload()
 ////////////////////////////////////
 // Helpers
 ////////////////////////////////////
+bool TapeChannel::_LoadHdr()
+{
+   if ( _hdr ) 
+      delete _hdr;
+   _hdr = new TapeHeader( *_vwHdr );
+   if ( !hdr().Map() ) {
+      delete _hdr;      
+      _hdr  = (TapeHeader *)0;
+      _err  = "Can not map header ";
+      _err += pTape();
+      Unload();
+   }
+   return _hdr ? true : false;
+}    
+
+TapeRecHdr *TapeChannel::_GetRecHdr( int dbIdx )
+{
+   TapeHeader &h = hdr();
+   TapeRecHdr *rec;
+   char       *bp, *cp;
+   u_int64_t   rSz, hSz;
+
+   // Already Built?
+
+   if ( ( dbIdx < (int)_tdb.size() ) && (rec=_tdb[dbIdx]) )
+      return rec;
+
+   // Calcs
+
+   hSz = h._DbHdrSize( h._numDictEntry(), h._numSecIdxT(), 0 );
+   rSz = h._RecSiz();
+
+   // No range boundary protection
+
+   bp  = _vwHdr->data();
+   cp  = bp;
+   cp += hSz;
+   cp += ( rSz * dbIdx );
+   rec = new TapeRecHdr( h, cp );
+   return rec;
+}
+
 bool TapeChannel::_InTimeRange( GLrecTapeMsg &m )
 {
    return _slice ? _slice->InTimeRange( m ) : true;
@@ -698,16 +745,18 @@ void TapeChannel::_PumpStatus( GLrecTapeMsg *msg,
                                rtEdgeType    ty,
                                u_int64_t     off )
 {
-   rtEdgeData d;
-   int        ix;
+   TapeRecHdr *rec;
+   rtEdgeData  d;
+   int         ix;
 
    // Fill in rtEdgeData and dispatch
 
    ::memset( &d, 0, sizeof( d ) );
    ix          = msg ? msg->_dbIdx : 0;
+   rec         = _tdb[ix];
    d._tMsg     = Logger::Time2dbl( Logger::tvNow() );
-   d._pSvc     = _tdb[ix]->_svc;
-   d._pTkr     = _tdb[ix]->_tkr;
+   d._pSvc     = rec->_svc();
+   d._pTkr     = rec->_tkr();
    d._pErr     = sts;
    d._ty       = ty;
    d._TapePos  = off;
@@ -773,6 +822,7 @@ int TapeChannel::_PumpSlice( u_int64_t off0, int nMsg )
 
 int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev, bool &bPmp )
 {
+   TapeRecHdr    *rec;
    rtEdgeData     d;
    struct timeval tv;
    int            ix, n;
@@ -800,9 +850,10 @@ int TapeChannel::_PumpOneMsg( GLrecTapeMsg &msg, mddBuf m, bool bRev, bool &bPmp
    // Fill in rtEdgeData and dispatch
 
    ix          = msg._dbIdx;
+   rec         = _tdb[ix];
    d._tMsg     = Logger::Time2dbl( tv );
-   d._pSvc     = _tdb[ix]->_svc;
-   d._pTkr     = _tdb[ix]->_tkr;
+   d._pSvc     = rec->_svc();
+   d._pTkr     = rec->_tkr();
    d._pErr     = "OK";
    d._ty       = edg_update;
    d._flds     = (rtFIELD *)_fl._flds;
@@ -1290,7 +1341,7 @@ Bool GLrpyDailyIdxVw::_Set()
    cp  = data();
    cp += _off;
    _ss = (Sentinel *)cp;
-   cp += _sSz;
+   cp += _hdr._sSz();
 
    // Tape Index
 
