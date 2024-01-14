@@ -95,7 +95,7 @@ PUBSUB_OBJS  = config.o PubSub.o
 PIPE_OBJS    = config.o Pipe.o
 
 #all:	librtEdge$(BITS) test ByteClient FileSvr Publish Subscribe etc move_objs
-all:	librtEdge$(BITS) Publish Subscribe LVCDump etc move_objs
+all:	librtEdge$(BITS) Publish Subscribe ChartDump LVCDump etc move_objs
 
 #etc:	Correlate PubSub TradeLog CrossMkt
 etc:	
@@ -138,7 +138,7 @@ ByteClient: clear ByteClient.o
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
 
-CDBTest: clear CDBTest.o
+ChartDump: clear ChartDump.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj
