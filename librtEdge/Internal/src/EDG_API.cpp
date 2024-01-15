@@ -28,8 +28,9 @@
 *      8 MAR 2023 jcs  Build 62: _lvcMtx; static rtEdge_ioctl's
 *      3 JUN 2023 jcs  Build 63: rtEdge_hexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
+*     14 JAN 2024 jcs  Build 67: No mo OFF_T
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 #include <OS_cpu.h>
@@ -1731,9 +1732,9 @@ int rtEdge_MemSize()
 
 rtBuf64 rtEdge_MapFile( char *pFile, char bCopy )
 {
-   GLmmap *m;
-   rtBuf64 r;
-   OFF_T   fSz;
+   GLmmap   *m;
+   rtBuf64   r;
+   u_int64_t fSz;
 
    // Pre-condition
 

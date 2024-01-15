@@ -10,10 +10,11 @@
 *     10 SEP 2014 jcs  Build 28: Shutdown(); RTEDGE_PRIVATE
 *     20 MAR 2016 jcs  Build 32: EDG_Internal.h
 *      3 JUL 2016 jcs  Build 33: GLasciiFile
-*     12 OCT 2017 jcs  Build 36: OFF_T siz(); _w32XxSz / _w32FileMapping()
+*     12 OCT 2017 jcs  Build 36: u_int64_t siz(); _w32XxSz / _w32FileMapping()
 *      7 NOV 2017 jcs  Build 38: pFile()
+*     14 JAN 2024 jcs  Build 67: No mo OFF_T
 *
-*  (c) 1994-2017 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -54,11 +55,11 @@ static int GetErrno()
 // Constructor / Destructor
 ////////////////////////////////////////////
 GLmmap::GLmmap( MMAP_FD fd,
-                OFF_T   len,
+                u_int64_t   len,
                 int     prot, 
                 int     flags, 
                 char   *addr, 
-                OFF_T   off ) :
+                u_int64_t   off ) :
    _file(),
    _fd( fd ),
    _hMap( (MMAP_FD)0 ),
@@ -83,11 +84,11 @@ GLmmap::GLmmap( MMAP_FD fd,
 }
 
 GLmmap::GLmmap( char  *fname, 
-                OFF_T  len, 
+                u_int64_t  len, 
                 int    prot, 
                 int    flags, 
                 char  *addr, 
-                OFF_T  off ) :
+                u_int64_t  off ) :
    _file( fname ),
    _fd( INVALID_HANDLE_VALUE ),
    _hMap( (MMAP_FD)0 ),
@@ -108,7 +109,7 @@ GLmmap::GLmmap( char  *fname,
    const char *openFlags;
    Bool        bRd = ( ( _prot & PROT_READ  ) == PROT_READ  );
    Bool        bWr = ( ( _prot & PROT_WRITE ) == PROT_WRITE );
-   OFF_T       i, nWr;
+   u_int64_t       i, nWr;
 
    // Object ID
 
@@ -143,7 +144,7 @@ GLmmap::GLmmap( char  *fname,
 
    ::memset( buf, 0, pgSz );
    for ( i=0; i<_len; ) {
-      nWr = gmin( (OFF_T)pgSz, _len-i );
+      nWr = gmin( (u_int64_t)pgSz, _len-i );
       if ( Write( buf, nWr, fp ) != (int)nWr )
          return;
       i += nWr;
@@ -159,7 +160,7 @@ GLmmap::GLmmap( char  *fname,
    map( off, len, addr );
 }
 
-GLmmap::GLmmap( char *fname, char *addr, OFF_T off, OFF_T len ) :
+GLmmap::GLmmap( char *fname, char *addr, u_int64_t off, u_int64_t len ) :
    _file( fname ),
    _fd( INVALID_HANDLE_VALUE ),
    _hMap( (MMAP_FD)0 ),
@@ -177,7 +178,7 @@ GLmmap::GLmmap( char *fname, char *addr, OFF_T off, OFF_T len ) :
    _w32HiSz( 0 )
 {
    FPHANDLE fp;
-   OFF_T    stSz;
+   u_int64_t    stSz;
 
    // Object ID
 
@@ -275,12 +276,12 @@ Bool GLmmap::isValid()
    return( _base != (char *)MAP_FAILED );
 }
 
-OFF_T GLmmap::siz()
+u_int64_t GLmmap::siz()
 {
    return _len;
 }
 
-OFF_T GLmmap::offset()
+u_int64_t GLmmap::offset()
 {
    return _off;
 }
@@ -294,7 +295,7 @@ int GLmmap::error()
 ////////////////////////////////////////////
 // Operations
 ////////////////////////////////////////////
-char *GLmmap::map( OFF_T off, OFF_T len, char *addr )
+char *GLmmap::map( u_int64_t off, u_int64_t len, char *addr )
 {
    int nPad;
    int pgSz = GetPageSize();
@@ -312,7 +313,7 @@ char *GLmmap::map( OFF_T off, OFF_T len, char *addr )
 #ifdef WIN32
    DWORD dwFlags;
    DWORD dwHi, dwLo;
-   OFF_T oh;
+   u_int64_t oh;
 
    oh      = ( _mOff >> 32 );
    dwHi    = (DWORD)( oh    & 0x00000000ffffffffL );
@@ -369,7 +370,7 @@ void GLmmap::unmap()
    _off  = 0;
 }
 
-Bool GLmmap::_w32FileMapping( OFF_T len )
+Bool GLmmap::_w32FileMapping( u_int64_t len )
 {
 #ifdef WIN32
    DWORD iLo, iHi;
@@ -514,9 +515,9 @@ int GLmmap::Grow( void *p, int siz, FPHANDLE hFile )
    return rtn;
 }
 
-OFF_T GLmmap::Seek( FPHANDLE hFile, OFF_T off, Bool bCur )
+u_int64_t GLmmap::Seek( FPHANDLE hFile, u_int64_t off, Bool bCur )
 {
-   OFF_T rtn;
+   u_int64_t rtn;
 
 #ifdef WIN32
    LONG  dLo, dHi;
@@ -529,7 +530,7 @@ OFF_T GLmmap::Seek( FPHANDLE hFile, OFF_T off, Bool bCur )
                             dLo,
                             &dHi,
                             bCur ? FILE_CURRENT : FILE_BEGIN );
-   rtn  = ( (OFF_T)dHi << 32 ) + dRtn;
+   rtn  = ( (u_int64_t)dHi << 32 ) + dRtn;
 #else
    rtn  = ::FSEEK( hFile,
                    off,
@@ -538,25 +539,25 @@ OFF_T GLmmap::Seek( FPHANDLE hFile, OFF_T off, Bool bCur )
    return rtn;
 }
 
-OFF_T GLmmap::SeekEnd( FPHANDLE hFile )
+u_int64_t GLmmap::SeekEnd( FPHANDLE hFile )
 {
-   OFF_T rtn;
+   u_int64_t rtn;
 
 #ifdef WIN32
    LONG dLo, dHi;
 
    dHi = 0;
    dLo = ::SetFilePointer( hFile, 0, &dHi, FILE_END );
-   rtn = ( (OFF_T)dHi << 32 ) + dLo;
+   rtn = ( (u_int64_t)dHi << 32 ) + dLo;
 #else
-   rtn  = ::FSEEK( hFile, (OFF_T)0, SEEK_END );
+   rtn  = ::FSEEK( hFile, (u_int64_t)0, SEEK_END );
 #endif // WIN32
    return rtn;
 }
 
-OFF_T GLmmap::Tell( FPHANDLE hFile )
+u_int64_t GLmmap::Tell( FPHANDLE hFile )
 {
-   OFF_T rtn;
+   u_int64_t rtn;
 
 #ifdef WIN32
    rtn = Seek( hFile, 0, True ); // bCur
@@ -566,10 +567,10 @@ OFF_T GLmmap::Tell( FPHANDLE hFile )
    return rtn;
 }
 
-OFF_T GLmmap::Stat( FPHANDLE hFile )
+u_int64_t GLmmap::Stat( FPHANDLE hFile )
 {
    struct STAT st;
-   OFF_T       fSz;
+   u_int64_t       fSz;
 
    fSz = 0;
 #ifdef WIN32
@@ -577,7 +578,7 @@ OFF_T GLmmap::Stat( FPHANDLE hFile )
 
    dLo = ::GetFileSize( hFile, &dHi );
    if ( dLo != INVALID_FILE_SIZE )
-      fSz = ( (OFF_T)dHi << 32 ) + dLo;
+      fSz = ( (u_int64_t)dHi << 32 ) + dLo;
 #else
    if ( !::FSTAT( GLfileno( hFile ), &st ) )
       fSz = st.st_size;
@@ -626,8 +627,8 @@ int GLmmap::GetPageSize()
 // Constructor / Destructor
 ////////////////////////////////////////////
 GLmmapView::GLmmapView( FPHANDLE fp,
-                        OFF_T    len,
-                        OFF_T    offset,
+                        u_int64_t    len,
+                        u_int64_t    offset,
                         Bool     bWrite ) :
    GLmmap( GLfileno( fp ),
            len,
@@ -707,7 +708,7 @@ int GLasciiFile::num()
    return _num;
 }
 
-OFF_T GLasciiFile::rp()
+u_int64_t GLasciiFile::rp()
 {
    return _rp;
 }
@@ -722,7 +723,7 @@ char *GLasciiFile::gets( char *buf, int max )
 {
    char *cp;
    int   i;
-   OFF_T sz;
+   u_int64_t sz;
 
    // Pre-condition(s)
 
@@ -735,17 +736,17 @@ char *GLasciiFile::gets( char *buf, int max )
 
    max--;
    sz = _mm->siz();
-   for ( i=0; ( _rp<(OFF_T)sz ) && ( i<max ) && _IsAscii( cp[_rp] ); )
+   for ( i=0; ( _rp<(u_int64_t)sz ) && ( i<max ) && _IsAscii( cp[_rp] ); )
       buf[i++] = cp[_rp++];
    buf[i] = '\0';
-   while ( ( _rp<(OFF_T)sz ) && !IsAscii( cp[_rp] ) )
+   while ( ( _rp<(u_int64_t)sz ) && !IsAscii( cp[_rp] ) )
       _rp++;
    return i ? buf : (char *)0;
 }
 
-void GLasciiFile::rpSet( OFF_T rp )
+void GLasciiFile::rpSet( u_int64_t rp )
 {
-   _rp = WithinRange( 0, rp, (OFF_T)_mm->siz() );
+   _rp = WithinRange( 0, rp, (u_int64_t)_mm->siz() );
 }
 
 int GLasciiFile::GetAll()

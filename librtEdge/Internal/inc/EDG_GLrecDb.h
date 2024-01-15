@@ -47,6 +47,10 @@ typedef enum {
 #define _VAL_TOTAL        _VAL_MAX   + 1
 #define _VAL_NUM          ( _VAL_TOTAL + 1 )
 
+#ifdef WIN32
+typedef unsigned int u_int32_t;
+#endif // WIN32
+
 ////////////////////////
 //
 // Indexed Tape Hdr

@@ -230,13 +230,13 @@ struct timeval TapeHeader::_curTime()
    ::memset( &rc, 0, sizeof( rc ) );
    if ( _hdr4 ) {
       wt         = _hdr4->_curTime;
-      rc.tv_sec  = wt.tv_sec;
-      rc.tv_usec = wt.tv_usec;
+      rc.tv_sec  = (time_t)wt.tv_sec;
+      rc.tv_usec = (long)wt.tv_usec;
    }
    else if ( _hdr8 ) {
       lt         = _hdr8->_curTime;
-      rc.tv_sec  = lt.tv_sec;
-      rc.tv_usec = lt.tv_usec;
+      rc.tv_sec  = (long)lt.tv_sec;
+      rc.tv_usec = (long)lt.tv_usec;
    }
    else if ( _hdr )
       rc = _hdr->_curTime;
@@ -273,13 +273,13 @@ struct timeval TapeHeader::_curIdxTm()
    ::memset( &rc, 0, sizeof( rc ) );
    if ( _hdr4 ) {
       wt         = _hdr4->_curIdxTm;
-      rc.tv_sec  = wt.tv_sec;
-      rc.tv_usec = wt.tv_usec;
+      rc.tv_sec  = (time_t)wt.tv_sec;
+      rc.tv_usec = (long)wt.tv_usec;
    }
    else if ( _hdr8 ) {
       lt         = _hdr8->_curIdxTm;
-      rc.tv_sec  = lt.tv_sec;
-      rc.tv_usec = lt.tv_usec;
+      rc.tv_sec  = (long)lt.tv_sec;
+      rc.tv_usec = (long)lt.tv_usec;
    }
    else if ( _hdr )
       rc = _hdr->_curIdxTm;
@@ -332,7 +332,7 @@ int TapeHeader::_maxRec()
 long TapeHeader::_tStart()
 {
    if ( _hdr4 ) return _hdr4->_sentinel._tStart;
-   if ( _hdr8 ) return _hdr8->_sentinel._tStart;
+   if ( _hdr8 ) return (long)_hdr8->_sentinel._tStart;
    return _hdr->_sentinel._tStart;
 }
 
@@ -360,15 +360,15 @@ GLrecUpdStats TapeHeader::_tapeStats()
    ::memset( &rc, 0, sizeof( rc ) );
    if ( _hdr4 ) {
       wt         = _hdr4->_tapeStats._tMsg;
-      tv.tv_sec  = wt.tv_sec;
-      tv.tv_usec = wt.tv_usec;
+      tv.tv_sec  = (time_t)wt.tv_sec;
+      tv.tv_usec = (long)wt.tv_usec;
       rc._nMsg   = _hdr4->_tapeStats._nMsg;
       rc._nByte  = _hdr4->_tapeStats._nByte;
    } 
    if ( _hdr8 ) {
       lt         = _hdr8->_tapeStats._tMsg;
-      tv.tv_sec  = lt.tv_sec;
-      tv.tv_usec = lt.tv_usec;
+      tv.tv_sec  = (long)lt.tv_sec;
+      tv.tv_usec = (long)lt.tv_usec;
       rc._nMsg   = _hdr8->_tapeStats._nMsg;
       rc._nByte  = _hdr8->_tapeStats._nByte;
    }
@@ -387,8 +387,8 @@ GLrecChanStats TapeHeader::_chanStats()
    ::memset( &rc, 0, sizeof( rc ) );
    if ( _hdr4 ) {
       wt         = _hdr4->_chanStats._tMsg;
-      tv.tv_sec  = wt.tv_sec;
-      tv.tv_usec = wt.tv_usec;
+      tv.tv_sec  = (time_t)wt.tv_sec;
+      tv.tv_usec = (long)wt.tv_usec;
       rc._nMsg   = _hdr4->_chanStats._nMsg;
       rc._nByte  = _hdr4->_chanStats._nByte;
       ::memcpy( rc._dstConn,  _hdr4->_chanStats._dstConn,  sizeof( rc._dstConn ) );
@@ -398,8 +398,8 @@ GLrecChanStats TapeHeader::_chanStats()
    } 
    if ( _hdr8 ) {
       lt         = _hdr8->_chanStats._tMsg;
-      tv.tv_sec  = lt.tv_sec;
-      tv.tv_usec = lt.tv_usec;
+      tv.tv_sec  = (long)lt.tv_sec;
+      tv.tv_usec = (long)lt.tv_usec;
       rc._nMsg   = _hdr8->_chanStats._nMsg;
       rc._nByte  = _hdr8->_chanStats._nByte;
       ::memcpy( rc._dstConn,  _hdr8->_chanStats._dstConn,  sizeof( rc._dstConn ) );
@@ -423,7 +423,7 @@ Sentinel TapeHeader::_sentinel()
    } 
    if ( _hdr8 ) {
       ::memcpy( &rc, &_hdr8->_sentinel, sizeof( rc ) );
-      rc._tStart = _hdr8->_sentinel._tStart;
+      rc._tStart = (long)_hdr8->_sentinel._tStart;
    }
    if ( _hdr ) 
       rc = _hdr->_sentinel;
@@ -466,12 +466,12 @@ struct timeval TapeRecHdr::_tMsg()
    rc.tv_sec  = 0;
    rc.tv_usec = 0;
    if ( _hdr4 ) {
-      rc.tv_sec  = _hdr4->_tMsg.tv_sec;
-      rc.tv_usec = _hdr4->_tMsg.tv_usec;
+      rc.tv_sec  = (time_t)_hdr4->_tMsg.tv_sec;
+      rc.tv_usec = (long)_hdr4->_tMsg.tv_usec;
    }
    else if ( _hdr8 ) {
-      rc.tv_sec  = _hdr8->_tMsg.tv_sec;
-      rc.tv_usec = _hdr8->_tMsg.tv_usec;
+      rc.tv_sec  = (long)_hdr8->_tMsg.tv_sec;
+      rc.tv_usec = (long)_hdr8->_tMsg.tv_usec;
    }
    else if ( _hdr )
       rc = _hdr->_tMsg;

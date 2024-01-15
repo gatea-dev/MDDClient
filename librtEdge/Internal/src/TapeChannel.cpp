@@ -1115,7 +1115,7 @@ bool TapeSlice::IsSampled()
 
 bool TapeSlice::InTimeRange( GLrecTapeMsg &m )
 {
-   struct timeval tv = { m._tv_sec, m._tv_usec };
+   struct timeval tv = { (time_t)m._tv_sec, (long)m._tv_usec };
    double         dt;
 
    dt = Logger::Time2dbl( tv );
