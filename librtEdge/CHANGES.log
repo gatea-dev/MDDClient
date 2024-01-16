@@ -51,7 +51,9 @@ TODO : Move SplineMaker / apps/Options into quant
  *
  * -# rtEdgeData.GetField() : volatile w/ code
  *
- * -# libMDDirect.py : GetField( bDeepCopy )
+ * -# libMDDirect.py : 
+ *    - GetField( bDeepCopy )
+ *    - rtEdgeData.UserArg()
  *
  * -# rtEdgeField.TypeFromMsg() / TypeFromSchema()
  *

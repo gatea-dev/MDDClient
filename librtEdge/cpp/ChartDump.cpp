@@ -67,6 +67,7 @@ int main( int argc, char **argv )
       s += "       [ -s  <Service> ] \\ \n";
       s += "       [ -t  <Ticker : CSV or * for all> ] \\ \n";
       s += "       [ -f  <Field ID> ] \\ \n";
+      s += "       [ -r  Dump all Records ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -db : %s\n", svr );

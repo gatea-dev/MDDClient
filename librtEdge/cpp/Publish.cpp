@@ -356,7 +356,10 @@ public:
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
       fid        = 6;
-      u.AddField(  fid++, w._rtl );
+      if ( w._rtl % 2 )
+         u.AddField(  fid++, w._rtl );
+      else
+         u.AddEmptyField(  fid++ );
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
       dtTm       = unix2rtDateTime( tv );

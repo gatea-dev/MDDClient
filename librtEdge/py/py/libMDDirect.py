@@ -24,8 +24,9 @@
 #     27 SEP 2023 jcs  Tape debug
 #     16 OCT 2023 jcs  MemFree()
 #      6 DEC 2023 jcs  GetField( bDeepCopy )
+#     16 JAN 2024 jcs  rtEdgeData.UserArg()
 #
-#  (c) 1994-2023, Gatea Ltd.
+#  (c) 1994-2024, Gatea Ltd.
 #################################################################
 import gc, math, sys, time, threading
 
@@ -362,14 +363,15 @@ class rtEdgeSubscriber( threading.Thread ):
    #
    # @param svc - Service Name (e.g., bloomberg)
    # @param tkr - Ticker Name (e.g., AAPL US EQUITY)
-   # @param uid - Optional unique user ID
+   # @param arg - Optional user data returned in rtEdgeData.UserArg()
    # @return Unique non-zero stream ID on success
    # 
    # @see Unsubscribe()
    # @see OnData()
+   # @see rtEdgeData.UserArg()
    ########################
-   def Subscribe( self, svc, tkr, uid ):
-      return MDDirect.Open( self._cxt, svc, tkr, uid )
+   def Subscribe( self, svc, tkr, arg ):
+      return MDDirect.Open( self._cxt, svc, tkr, arg )
 
    ########################
    # Closes a subscription stream for the ( svc, tkr ) data stream that was 
@@ -390,14 +392,14 @@ class rtEdgeSubscriber( threading.Thread ):
    #
    # @param svc - Service Name (e.g., factset)
    # @param bds - BDS Name (e.g., NYSE)
-   # @param uid - Optional unique user ID
+   # @param arg - Optional user data returned in rtEdgeData.UserArg()
    # @return Unique non-zero stream ID on success
    # 
    # @see CloseBDS()
    # @see OnSymbol()
    ########################
-   def OpenBDS( self, svc, bds, uid ):
-      return MDDirect.OpenBDS( self._cxt, svc, bds, uid )
+   def OpenBDS( self, svc, bds, arg ):
+      return MDDirect.OpenBDS( self._cxt, svc, bds, arg )
 
    ########################
    # Closes a BDS stream that we opened via OpenBDS().  Market data 
@@ -555,7 +557,7 @@ class rtEdgeSubscriber( threading.Thread ):
             sts       = ''
             nAgg      = blob[4]
             flds      = blob[5:]
-            self.OnData( msg._SetData( svc, tkr, flds ) )
+            self.OnData( msg._SetData( svc, tkr, uoid, flds ) )
          elif mt == MDDirectEnum.EVT_BYSTR:
             msg._tUpd = blob[0]
             uoid      = blob[1]
@@ -571,14 +573,14 @@ class rtEdgeSubscriber( threading.Thread ):
             svc       = blob[2]
             tkr       = blob[3]
             sts       = blob[4]
-            self.OnDead( msg._SetError( svc, tkr, sts ), sts )
+            self.OnDead( msg._SetError( svc, tkr, uoid, sts ), sts )
          elif mt == MDDirectEnum.EVT_RECOV:
             msg._tUpd = blob[0]
             uoid      = blob[1]
             svc       = blob[2]
             tkr       = blob[3]
             sts       = blob[4]
-            self.OnRecovering( msg._SetData( svc, tkr, [] ), sts )
+            self.OnRecovering( msg._SetData( svc, tkr, uoid, [] ), sts )
          elif mt == MDDirectEnum.EVT_DONE:
             tUpd = blob[0]
             uoid = blob[1]
@@ -729,7 +731,7 @@ class LVC:
       svc        = blob[2]
       tkr        = blob[3]
       flds       = blob[4:]
-      return msg._SetData( svc, tkr, flds, True )
+      return msg._SetData( svc, tkr, flds, None, True )
 ## \endcond
 
 
@@ -931,11 +933,45 @@ class rtEdgeData:
       self._tDead  = 0.0
       self._svc    = ''
       self._tkr    = ''
+      self._arg    = None
       self._flds   = []
       self._byFid  = {}
       self._itr    = -1
       self._err    = ""
       self._fld    = rtEdgeField()
+
+   ########################
+   # Return Service Name
+   #
+   # @return Service Name
+   ########################
+   def Service( self ):
+      return self._svc
+
+   ########################
+   # Return Ticker Name
+   #
+   # @return Ticker Name
+   ########################
+   def Ticker( self ):
+      return self._tkr
+
+   ########################
+   # Return user-supplied argument
+   #
+   # @return User-supplied argument
+   # @see rtEdgeSubscriber.Subscribe()
+   ########################
+   def UserArg( self ):
+      return self._arg
+
+   ########################
+   # Return Message (Update) Time in UnixTime
+   #
+   # @return Message (Update) Time in UnixTime
+   ########################
+   def MsgTime( self ):
+      return self._tUpd
 
    ########################
    # Returns number of fields in the message
@@ -1110,13 +1146,15 @@ class rtEdgeData:
    #
    # @param svc : Service name (bloomberg)
    # @param tkr : Ticker Name (AAPL US Equity)
+   # @param arg : Optional User-supplied argument
    # @param flds : [ [ fid1, val1 ], [ fid2, val2 ], ... ]
    # @param bLVC : True last update; False for all fields
    # @return self
    #################################
-   def _SetData( self, svc, tkr, flds, bLVC=True ):
+   def _SetData( self, svc, tkr, arg, flds, bLVC=True ):
       self._svc   = svc
       self._tkr   = tkr
+      self._arg   = arg
       self._itr   = -1
       self._err   = ''
       bdb         = { fid: (val, ty) for fid, val, ty in flds }
@@ -1125,37 +1163,19 @@ class rtEdgeData:
 ##      self._flds  = [ list( fld ) for fld in flds ] if bLVC else flds
       return self
 
-   def _SetData_OBSOLETE( self, svc, tkr, flds, bLVC=True ):
-      self._svc  = svc
-      self._tkr  = tkr
-      self._itr  = -1
-      self._err  = ''
-      self._flds = []
-      idb        = {}
-      if bLVC:
-         for ( fid, val, ty ) in flds:
-            idb[fid] = ( val, ty )
-         fids = idb.keys()
-         fids.sort()
-         for fid in fids:
-            val         = idb[fid]
-            self._flds += [ [ fid, val[0], val[1] ] ]
-      else:
-         self._flds  = flds
-      self._byFid = idb
-      return self
-
    #################################
    # Set the message error contents
    #
    # @param svc : Service name (bloomberg)
    # @param tkr : Ticker Name (AAPL US Equity)
+   # @param arg : Optional User-supplied argument
    # @param err : Error Message
    # @return self
    #################################
-   def _SetError( self, svc, tkr, err ):
+   def _SetError( self, svc, tkr, arg, err ):
       self._svc   = svc
       self._tkr   = tkr
+      self._arg   = arg
       self._flds  = []
       self._byFid = {}
       self._itr   = -1
