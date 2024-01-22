@@ -1,6 +1,6 @@
 <OptionsCurve>
   <fg> false </fg>
-  <db> /RAMDISK//LVC//RUT3K.lvc </db>
+  <db> /RAMDISK//LVC//options.lvc </db>
   <dbDate> 20230921 </dbDate>
   <svr> localhost:9015 </svr>
   <svc> options.curve </svc>

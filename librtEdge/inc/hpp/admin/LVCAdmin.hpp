@@ -13,8 +13,9 @@
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *     26 OCT 2022 jcs  Build 58: CockpitMap
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
+*     22 JAN 2024 jcs  Build 67: Cockpit._cMtx
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __LVCAdmin_H
 #define __LVCAdmin_H
@@ -175,6 +176,8 @@ public:
 	                   LVC        &lvc,
 	                   int         lockWaitSec=5 )
 	{
+	   Locker lck( _cMtx );
+
 	   // Pre-condition(s)
 
 	   if ( _cxt )
@@ -362,6 +365,9 @@ private:
 	      cp += sprintf( cp, "/>\n" );
 	      s  += buf;
 	   }
+
+	   Locker lck( _cMtx );
+
 	   Cockpit::Start( pAdmin() );  // TODO : LVC
 	   ::Cockpit_Send( cxt(), s.data() );
 	}

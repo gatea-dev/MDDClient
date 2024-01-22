@@ -13,9 +13,7 @@
 
 Performance
 -----------
--# Publish : 33 mikes to the wire on 2.9 GHz Linux
 
--# Buffer.SetCircQ() : Instead of Move()
 
 Known Bugs
 ----------
@@ -23,7 +21,8 @@ Known Bugs
 
 Features To Add
 ---------------
-TODO : Move SplineMaker / apps/Options into quant
+
+-# TODO : Move SplineMaker / apps/Options into quant
 
 -# Surface.hpp
 -# rtFld_vector : AddVector( string[] )
@@ -63,6 +62,9 @@ TODO : Move SplineMaker / apps/Options into quant
  *
  * -# OS-Agnostic Tape
  *    - TapeHeader.h
+ *
+ * -# Thread-safe LVCAdmin / Cockpit:
+ *    - Cockpit._cMtx
  *
  *
  * ### Build 66 23-10-26

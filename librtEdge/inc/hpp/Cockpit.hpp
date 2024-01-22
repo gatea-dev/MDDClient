@@ -7,8 +7,9 @@
 *     24 AUG 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: protected, not private
 *     26 OCT 2022 jcs  Build 58: CxtMap
+*     22 JAN 2024 jcs  Build 67: Cockpit._cMtx
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Cockpit_H
 #define __RTEDGE_Cockpit_H
@@ -282,6 +283,7 @@ public:
 	Cockpit() :
 	   _hosts(),
 	   _cxt( (Cockpit_Context)0 ),
+	   _cMtx(),
 	   _bIdleCbk( false )
 	{
 	   // Initialize us
@@ -368,6 +370,8 @@ public:
 	 */
 	const char *Start( const char *hosts )
 	{
+	   Locker lck( _cMtx );
+
 	   // Pre-condition(s)
 
 	   if ( _cxt )
@@ -396,6 +400,8 @@ public:
 	 */
 	virtual void Stop()
 	{
+	   Locker lck( _cMtx );
+
 	   if ( _cxt )
 	      ::Cockpit_Destroy( _cxt );
 	   _cockpits.Remove( _cxt );
@@ -470,6 +476,7 @@ protected:
 	std::string     _hosts;
 	CockpitAttr     _attr;
 	Cockpit_Context _cxt;
+	Mutex           _cMtx;
 	bool            _bIdleCbk;
 
 
