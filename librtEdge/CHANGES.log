@@ -21,6 +21,8 @@ Known Bugs
 
 Features To Add
 ---------------
+-# LVCAdmin.AddInterestList( const char *svc, const char **tkrs, LVC & );
+   - SnapAll() : Compare 
 
 -# TODO : Move SplineMaker / apps/Options into quant
 
@@ -44,7 +46,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 67 24-01-xx
+ * ### Build 67 24-01-14
  *
  * -# Pump.cpp : RegisterWindowsMessage( 'RTEDGE_PRIVATE::EventPump' )
  *
