@@ -11,7 +11,7 @@
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *     26 OCT 2022 jcs  Build 58: CockpitMap
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
-*     26 JAN 2024 jcs  Build 68: Cockpit._cMtx; AddInterestList(); ADD-BDS
+*     26 JAN 2024 jcs  Build 68: Cockpit._cMtx; AddFilteredTickers(); ADD-BDS
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -287,10 +287,10 @@ public:
 	 * \see AddTickers()
 	 * \see LVC::SnapAll_safe()
 	 */
-	int AddInterestList( LVC         &lvc,
-	                     const char  *svc, 
-	                     const char **tkrs,
-	                     const char  *schema="" )
+	int AddFilteredTickers( LVC         &lvc,
+	                        const char  *svc, 
+	                        const char **tkrs,
+	                        const char  *schema="" )
 	{
 	   LVCAll       dst( lvc, lvc.GetSchema( false ) );
 	   LVCAll      &all = lvc.ViewAll_safe( dst );

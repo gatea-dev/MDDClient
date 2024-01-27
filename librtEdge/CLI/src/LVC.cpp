@@ -13,7 +13,7 @@
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     18 MAY 2023 jcs  Build 63: cpp().GetSchema( false )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
-*     26 JAN 2024 jcs  Build 68: AddInerestList()
+*     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
 *
 *  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
@@ -278,9 +278,9 @@ void LVCAdmin::AddTickerToSchema( String ^svc, String ^tkr, String ^schema )
    _lvc->AddTicker( pSvc, pTkr, pSch );
 }
 
-int LVCAdmin::AddInterestList( LVC                  ^lvc,
-                               String               ^svc,
-                               cli::array<String ^> ^tkrs )
+int LVCAdmin::AddFilteredTickers( LVC                  ^lvc,
+                                  String               ^svc,
+                                  cli::array<String ^> ^tkrs )
 {
    const char  *pSvc, *pSch;
    const char **pTkrs;
@@ -302,7 +302,7 @@ int LVCAdmin::AddInterestList( LVC                  ^lvc,
    pTkrs = (const char **)bp;
    for ( i=0; i<nl; pTkrs[i] = (const char *)_pStr( tkrs[i] ), i++ );
    pTkrs[i] = (const char *)0; 
-   rc = _lvc->AddInterestList( lvc->cpp(), pSvc, pTkrs );
+   rc = _lvc->AddFilteredTickers( lvc->cpp(), pSvc, pTkrs );
    delete[] bp;
    return rc;
 }

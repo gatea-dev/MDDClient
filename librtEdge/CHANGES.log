@@ -21,9 +21,6 @@ Known Bugs
 
 Features To Add
 ---------------
--# LVCAdmin.AddInterestList( const char *svc, const char **tkrs, LVC & );
-   - SnapAll() : Compare 
-
 -# TODO : Move SplineMaker / apps/Options into quant
 
 -# Surface.hpp
@@ -48,7 +45,7 @@ Features To Add
  *
  * ### Build 68 24-01-xx
  *
- * -# LVCAdmin.AddInerestList()
+ * -# LVCAdmin.AddFilteredTickers()
  *
  * -# Thread-safe LVCAdmin / Cockpit:
  *    - Cockpit._cMtx

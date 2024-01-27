@@ -14,7 +14,7 @@
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     20 MAY 2023 jcs  Build 63: GetSchema( bool )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
-*     26 JAN 2024 jcs  Build 68: AddInerestList()
+*     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
 *
 *  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
@@ -369,9 +369,9 @@ public:
 	 * \see AddTickers()
 	 * \see LVC::SnapAll_safe()
 	 */
-	int AddInterestList( LVC                  ^lvc,
-	                     String               ^svc,
-	                     cli::array<String ^> ^tkrs );
+	int AddFilteredTickers( LVC                  ^lvc,
+	                        String               ^svc,
+	                        cli::array<String ^> ^tkrs );
 
 	/**
 	 * \brief Add list of ( Service, Ticker ) to specific Schema in LVC

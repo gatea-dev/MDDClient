@@ -212,7 +212,7 @@ int main( int argc, char **argv )
       if ( db ) {
          LVC lvc( db );
 
-         na = adm.AddInterestList( lvc, svc, tkrs, schema );
+         na = adm.AddFilteredTickers( lvc, svc, tkrs, schema );
          ::fprintf( stdout, "%ld of %ld Adding ...\n", na, nt );
          nt = na;
       }
