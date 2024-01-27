@@ -46,6 +46,14 @@ Features To Add
  * ## Change Log
  *
  *
+ * ### Build 68 24-01-xx
+ *
+ * -# LVCAdmin.AddInerestList()
+ *
+ * -# Thread-safe LVCAdmin / Cockpit:
+ *    - Cockpit._cMtx
+ *
+ *
  * ### Build 67 24-01-14
  *
  * -# Pump.cpp : RegisterWindowsMessage( 'RTEDGE_PRIVATE::EventPump' )
@@ -64,9 +72,6 @@ Features To Add
  *
  * -# OS-Agnostic Tape
  *    - TapeHeader.h
- *
- * -# Thread-safe LVCAdmin / Cockpit:
- *    - Cockpit._cMtx
  *
  *
  * ### Build 66 23-10-26

@@ -14,8 +14,9 @@
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     20 MAY 2023 jcs  Build 63: GetSchema( bool )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
+*     26 JAN 2024 jcs  Build 68: AddInerestList()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -352,6 +353,25 @@ public:
 	{
 	   AddTickersToSchema( svc, tkrs, "" );
 	}
+
+	/**
+	 * \brief Add list of ( Service, Ticker ) to LVC that are not there
+	 *
+	 * This method calls AddTickers() after calling LVC::SnapAll() to
+	 * determine which tickers are not in the cache
+	 *
+	 * This method automatically calls Start() to connect
+	 *
+	 * \param lvc - LVC to SnapAll()
+	 * \param svc - Service Name
+	 * \param tkrs - Array of tickers to add
+	 * \return Number of tickers added
+	 * \see AddTickers()
+	 * \see LVC::SnapAll_safe()
+	 */
+	int AddInterestList( LVC                  ^lvc,
+	                     String               ^svc,
+	                     cli::array<String ^> ^tkrs );
 
 	/**
 	 * \brief Add list of ( Service, Ticker ) to specific Schema in LVC

@@ -3,8 +3,6 @@
 *  LVCAdmin.hpp
 *     LVCAdmin Cockpit Channel
 *
-*  TODO : BDS, REFRESH
-*
 *  REVISION HISTORY:
 *     25 SEP 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: LVC
@@ -13,7 +11,7 @@
 *     17 MAY 2022 jcs  Build 54: RefreshTickers() / RefreshAll()
 *     26 OCT 2022 jcs  Build 58: CockpitMap
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
-*     22 JAN 2024 jcs  Build 67: Cockpit._cMtx
+*     26 JAN 2024 jcs  Build 68: Cockpit._cMtx; AddInterestList(); ADD-BDS
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -23,15 +21,15 @@
 #include <hpp/Cockpit.hpp>
 
 typedef enum {
-   lvcAdm_undefined = 0,
-   lvcAdm_ACK       = 1,
-   lvcAdm_NAK       = 2
+	lvcAdm_undefined = 0,
+	lvcAdm_ACK       = 1,
+	lvcAdm_NAK       = 2
 } LVCAdminMsgType;
 
 // DTD
 
 static const char *_dtdADD     = "ADD";
-static const char *_dtdBDS     = "BDS";
+static const char *_dtdBDS     = "ADD-BDS";
 static const char *_dtdREFR    = "REFRESH";
 static const char *_dtdREFRALL = "REFRESH-ALL";
 static const char *_dtdDEL     = "DEL";
@@ -39,6 +37,8 @@ static const char *_dtdACK     = "ACK";
 static const char *_dtdNAK     = "NAK";
 static const char *_attrSchema = "Schema";
 static const char *_tkrALL     = "*";
+
+typedef hash_set<std::string>  StringSet;
 
 namespace RTEDGE
 {
@@ -195,7 +195,7 @@ public:
 	   _attr._connCbk     = _connCbk;
 	   _attr._dataCbk     = _dataCbk;
 	   _cxt               = ::Cockpit_Initialize( _attr );
-//	   _msg               = new Message( _cxt );
+//      _msg               = new Message( _cxt );
 	   _cockpits.Add( _cxt, this );
 	   SetIdleCallback( _bIdleCbk );
 	   return ::Cockpit_Start( _cxt );
@@ -270,6 +270,69 @@ public:
 	{
 	   _DoTickers( _dtdADD, svc, tkrs, schema );
 	}
+
+	/**
+	 * \brief Add list of ( Service, Ticker ) to LVC that are not there
+	 *
+	 * This method calls AddTickers() after calling LVC::SnapAll() to 
+	 * determine which tickers are not in the cache
+	 *
+	 * This method automatically calls Start() to connect
+	 *
+	 * \param lvc - LVC to SnapAll()
+	 * \param svc - Service Name
+	 * \param tkrs - NULL-terminated list of tickers
+	 * \param schema - (Optional) Schema Name
+	 * \return Number of tickers added
+	 * \see AddTickers()
+	 * \see LVC::SnapAll_safe()
+	 */
+	int AddInterestList( LVC         &lvc,
+	                     const char  *svc, 
+	                     const char **tkrs,
+	                     const char  *schema="" )
+	{
+	   LVCAll       dst( lvc, lvc.GetSchema( false ) );
+	   LVCAll      &all = lvc.ViewAll_safe( dst );
+	   Messages    &mdb = all.msgs();
+	   StringSet    ldb;
+	   std::string  s;
+	   const char **fltr;
+	   size_t       sz;
+	   int          i, ns, nf;
+
+	   // Pre-conditions
+
+	   if ( !tkrs || !tkrs[0] )
+	      return 0;
+
+	   // 1) Walk LVC all : Build hash_set
+
+	   for ( size_t ii=0; ii<mdb.size(); ii++ ) {
+	      if ( ::strcmp( mdb[ii]->Service(), svc ) )
+	         continue; // for-ii
+	      ldb.insert( std::string( mdb[ii]->Ticker() ) );
+	   }
+
+	   // 2) Filtered Ticker List
+
+	   for ( ns=0; tkrs[ns]; ns++ );
+	   sz   = ns * sizeof( const char * );
+	   fltr = (const char **)new char[sz];
+	   for ( i=0,nf=0; i<ns; i++ ) {
+	      s = tkrs[i];
+	      if ( ldb.find( s ) == ldb.end() )
+	         fltr[nf++] = tkrs[i];
+	   }
+	   fltr[nf] = '\0';
+
+	   // 2) Filter
+
+	   AddTickers( svc, fltr, schema );
+	   delete[] fltr;
+	   return nf;
+	}
+
 
 	/**
 	 * \brief Remove ( Service, Ticker ) from LVC

@@ -7,8 +7,9 @@
 *     . . .
 *     14 JUN 2022 jcs  Build 55: LVCAdmin.cpp
 *     24 AUG 2023 jcs  Build 64: Named Schemas
+*     26 JAN 2024 jcs  Build 68: -db / AddInterestList()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -98,13 +99,13 @@ public:
 //////////////////////////
 int main( int argc, char **argv )
 {
-   Strings     tkrs;
+   Strings     tdb;
    std::string s;
    char        sTkr[K], *cp, *rp;
-   bool        aOK, bCfg;
-   size_t      n, nt;
+   bool        bAdd, aOK, bCfg;
+   size_t      n, nt, na;
    FILE       *fp;
-   const char *cmd, *svr, *svc, *tkr, *schema;
+   const char *db, *cmd, *svr, *svc, *tkr, *schema;
 
    /////////////////////
    // Quickie checks
@@ -113,6 +114,7 @@ int main( int argc, char **argv )
       printf( "%s\n", LVCAdminID() );
       return 0;
    }
+   db     = NULL;
    cmd    = "ADD";
    svr    = "localhost:8775";
    svc    = "bloomberg"; 
@@ -121,6 +123,7 @@ int main( int argc, char **argv )
    bCfg   = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
+      s += "       [ -db <LVC d/b for AddInterestList()> ] \\ \n";
       s += "       [ -c  <ADD | DEL> ] \\ \n";
       s += "       [ -h  <LVC Admin host:port> ] \\ \n";
       s += "       [ -s  <Service> ] \\ \n";
@@ -128,6 +131,7 @@ int main( int argc, char **argv )
       s += "       [ -x  <Schema Name> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
+      printf( "      -db      : <empty>\n" );
       printf( "      -c       : %s\n", cmd );
       printf( "      -h       : %s\n", svr );
       printf( "      -s       : %s\n", svc );
@@ -143,7 +147,9 @@ int main( int argc, char **argv )
       aOK = ( i+1 < argc );
       if ( !aOK )
          break; // for-i
-      if ( !::strcmp( argv[i], "-c" ) )
+      if ( !::strcmp( argv[i], "-db" ) )
+         db = argv[++i];
+      else if ( !::strcmp( argv[i], "-c" ) )
          cmd = argv[++i];
       else if ( !::strcmp( argv[i], "-h" ) )
          svr = argv[++i];
@@ -154,6 +160,7 @@ int main( int argc, char **argv )
       else if ( !::strcmp( argv[i], "-x" ) )
          schema = argv[++i];
    }
+   bAdd = ( ::strcmp( cmd, "DEL" ) != 0 );
 
    ////////////////
    // Tickers 
@@ -175,7 +182,7 @@ int main( int argc, char **argv )
          }
          cp[1] = '\0';
          if ( strlen( sTkr ) )
-            tkrs.push_back( std::string( sTkr ) );
+            tdb.push_back( std::string( sTkr ) );
       }
       ::fclose( fp );
    }
@@ -183,9 +190,9 @@ int main( int argc, char **argv )
       s   = tkr;
       tkr = ::strtok_r( (char *)s.data(), ",", &rp );
       for ( ; tkr && strlen( tkr ); tkr=::strtok_r( NULL, ",", &rp ) )
-         tkrs.push_back( std::string( tkr ) );
+         tdb.push_back( std::string( tkr ) );
    }
-   if ( !(nt=tkrs.size()) ) {
+   if ( !(nt=tdb.size()) ) {
       ::fprintf( stdout, "No ticker specified; Exitting ...\n" );
       ::fflush( stdout );
    }
@@ -193,22 +200,34 @@ int main( int argc, char **argv )
    ////////////////
    // Run until ACK'ed
    ////////////////
-   MyAdmin lvc( svr );
-   bool    bAdd = ( ::strcmp( cmd, "DEL" ) != 0 );
+   MyAdmin      adm( svr );
+   const char **tkrs;
+   size_t       sz;
 
-   for ( n=0; n<nt; n++ ) {
-      tkr = tkrs[n].data();
-      if ( bAdd )
-         lvc.AddTicker( svc, tkr, schema );
+   sz   = nt * sizeof( const char * );
+   tkrs = (const char **)new char[sz];
+   for ( n=0; n<nt; tkrs[n] = tdb[n].data(), n++ );
+   tkrs[nt] = '\0';
+   if ( bAdd ) {
+      if ( db ) {
+         LVC lvc( db );
+
+         na = adm.AddInterestList( lvc, svc, tkrs, schema );
+         ::fprintf( stdout, "%ld of %ld Adding ...\n", na, nt );
+         nt = na;
+      }
       else
-         lvc.DelTicker( svc, tkr );
+         adm.AddTickers( svc, tkrs, schema );
    }
+   else
+      adm.DelTickers( svc, tkrs );
+   delete tkrs;
    /*
     * Wait up to 5 secs for all ACK's
     */
-   for ( n=0; ( lvc._nAck < nt ) && n<50; rtEdge::Sleep( 0.100 ), n++ );
-   ::fprintf( stdout, "%ld of %ld ACK's received\n", lvc._nAck, nt );
-   lvc.Stop();
+   for ( n=0; ( adm._nAck < nt ) && n<50; rtEdge::Sleep( 0.100 ), n++ );
+   ::fprintf( stdout, "%ld of %ld ACK's received\n", adm._nAck, nt );
+   adm.Stop();
    ::fprintf( stdout, "Done!!\n" );
    ::fflush( stdout );
    return 1;

@@ -13,8 +13,9 @@
 *      8 MAR 2023 jcs  Build 62: XxxxAll_safe()
 *     18 MAY 2023 jcs  Build 63: cpp().GetSchema( false )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
+*     26 JAN 2024 jcs  Build 68: AddInerestList()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
@@ -275,6 +276,35 @@ void LVCAdmin::AddTickerToSchema( String ^svc, String ^tkr, String ^schema )
    pTkr = (const char *)_pStr( tkr );
    pSch = (const char *)_pStr( schema );
    _lvc->AddTicker( pSvc, pTkr, pSch );
+}
+
+int LVCAdmin::AddInterestList( LVC                  ^lvc,
+                               String               ^svc,
+                               cli::array<String ^> ^tkrs )
+{
+   const char  *pSvc, *pSch;
+   const char **pTkrs;
+   char        *bp;
+   size_t       sz;
+   int          i, nl, rc;
+
+   // Pre-condition
+
+   if ( !(nl=tkrs->Length) )
+      return 0;
+
+   // Safe to continue
+
+   pSvc  = (const char *)_pStr( svc );
+   pSch  = (const char *)_pStr( schema );
+   sz    = ( nl+4 ) * sizeof( const char * );
+   bp    = new char[sz];
+   pTkrs = (const char **)bp;
+   for ( i=0; i<nl; pTkrs[i] = (const char *)_pStr( tkrs[i] ), i++ );
+   pTkrs[i] = (const char *)0; 
+   rc = _lvc->AddInterestList( lvc->cpp(), pSvc, pTkrs );
+   delete[] bp;
+   return rc;
 }
 
 void LVCAdmin::AddTickersToSchema( String               ^svc, 
