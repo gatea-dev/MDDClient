@@ -282,7 +282,7 @@ int LVCAdmin::AddFilteredTickers( LVC                  ^lvc,
                                   String               ^svc,
                                   cli::array<String ^> ^tkrs )
 {
-   const char  *pSvc, *pSch;
+   const char  *pSvc;
    const char **pTkrs;
    char        *bp;
    size_t       sz;
@@ -296,7 +296,6 @@ int LVCAdmin::AddFilteredTickers( LVC                  ^lvc,
    // Safe to continue
 
    pSvc  = (const char *)_pStr( svc );
-   pSch  = (const char *)_pStr( schema );
    sz    = ( nl+4 ) * sizeof( const char * );
    bp    = new char[sz];
    pTkrs = (const char **)bp;
