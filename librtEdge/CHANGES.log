@@ -43,12 +43,17 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 68 24-01-xx
+ * ### Build 68 24-02-xx
  *
  * -# LVCAdmin.AddFilteredTickers()
  *
  * -# Thread-safe LVCAdmin / Cockpit:
  *    - Cockpit._cMtx
+ *
+ * -# Update.PublishRaw()
+ *    - rtPreBuiltBUF._bHasHdr
+ *    - PubChannel.PublishRaw()
+ *    - Update.PublishRaw()
  *
  *
  * ### Build 67 24-01-14

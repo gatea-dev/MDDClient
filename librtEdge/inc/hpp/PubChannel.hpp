@@ -20,6 +20,7 @@
 *     22 OCT 2022 jcs  Build 58: ByteStream.Service(); CxtMap
 *     24 OCT 2023 jcs  Build 65: _EmptyBDS
 *      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
+*     21 FEB 2024 jcs  Build 68: PublishRaw()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -534,12 +535,11 @@ public:
 	   return nb;
 	}
 
-
 	/**
-	 * \brief Publish a single update with a pre-built payload
+	 * \brief Publish update with a pre-built payload requiring MsgHdr
 	 *
 	 * \param d - Filled in rtEdgeData struct to publish
-	 * \param b - Pre-built payload
+	 * \param b - Pre-built payload requiring MsgHdr
 	 * \param dt - Payload data type
 	 * \return  Number of bytes published; 0 if overflow
 	 */
@@ -550,6 +550,28 @@ public:
 
 	   pb._payload  = b;
 	   pb._dataType = dt;
+	   pb._bHasHdr  = 0;
+	   ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, &pb );
+	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) )
+	      OnOverflow();
+	   return rtn;
+	}
+
+	/**
+	 * \brief Publish update with a pre-built payload containing MsgHdr 
+	 *
+	 * \param d - Filled in rtEdgeData struct to publish
+	 * \param b - Pre-built payload containing MsgHdr
+	 * \return  Number of bytes published; 0 if overflow
+	 */
+	int PublishRaw( rtEdgeData d, rtBUF b )
+	{
+	   rtPreBuiltBUF pb;
+	   int           rtn;
+
+	   pb._payload  = b;
+	   pb._dataType = mddDt_undef;
+	   pb._bHasHdr  = 1;
 	   ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, &pb );
 	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) )
 	      OnOverflow();

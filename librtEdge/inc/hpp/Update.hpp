@@ -20,8 +20,9 @@
 *     27 DEC 2022 jcs  Build 61: AddFieldList() : Handle vector
 *     30 SEP 2023 jcs  Build 65: AddSurface( DoubleGrid & )
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
+*     21 FEB 2024 jcs  Build 68: PublishRaw()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Update_H
 #define __RTEDGE_Update_H
@@ -731,7 +732,7 @@ public:
 	}
 
 	/**
-	 * \brief Publish pre-formatted data payload
+	 * \brief Publish pre-formatted data payload requiring header
 	 *
 	 * \param b - Pre-formatted data payload
 	 * \param dt - Payload data type
@@ -742,6 +743,21 @@ public:
 	   int rtn;
 
 	   rtn = _pub.Publish( _d, b, dt );
+	   _Clear();
+	   return rtn;
+	}
+
+	/**
+	 * \brief Publish pre-formatted raw payload, containing header
+	 *
+	 * \param b - Pre-formatted data payload
+	 * \return Length of published update in bytes
+	 */
+	int PublishRaw( rtBUF b )
+	{
+	   int rtn;
+
+	   rtn = _pub.PublishRaw( _d, b );
 	   _Clear();
 	   return rtn;
 	}

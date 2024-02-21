@@ -28,6 +28,7 @@
 *     12 FEB 2020 jcs  Build 42: Socket._tHbeat
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      5 JAN 2024 jcs  Build 67: CircularBuffer
+*     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -158,7 +159,7 @@ int PubChannel::Publish( rtEdgeData &d )
    mddFieldList     fl;
    struct timeval   tv;
    PubRec          *pub;
-   bool             bImg;
+   bool             bImg, bHdr;
    int              nf, rtn, strID;
 
    // Pre-condition(s)
@@ -193,19 +194,26 @@ int PubChannel::Publish( rtEdgeData &d )
 
    // OK to fill in mddBufHdr
 
-   h       = _InitHdr( mt );
-   h._iTag = strID;
-   h._svc  = _SetBuf( d._pSvc );
-   h._tkr  = _SetBuf( d._pTkr );
-   h._RTL  = pub->_nUpd;
-   h._dt   = mddDt_FieldList;
+   bHdr = ( !_preBuilt || !_preBuilt->_bHasHdr );
+   if ( bHdr ) {
+      h       = _InitHdr( mt );
+      h._iTag = strID;
+      h._svc  = _SetBuf( d._pSvc );
+      h._tkr  = _SetBuf( d._pTkr );
+      h._RTL  = pub->_nUpd;
+      h._dt   = mddDt_FieldList;
+   }
 
    // Fields, then build
 
    if ( _preBuilt ) {
-      h._dt     = _preBuilt->_dataType;
-      pb        = _preBuilt->_payload;
-      b         = ::mddPub_BuildRawMsg( _mdd, h, pb, &_bldBuf );
+      pb = _preBuilt->_payload;
+      if ( bHdr ) {
+         h._dt = _preBuilt->_dataType;
+         b     = ::mddPub_BuildRawMsg( _mdd, h, pb, &_bldBuf );
+      }
+      else
+         b = pb;
       _preBuilt = (rtPreBuiltBUF *)0;
    }
    else {

@@ -37,6 +37,7 @@
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     31 OCT 2023 jcs  Build 66: No mo quant
 *      5 JAN 2024 jcs  Build 67: rtEdgePubAttr._bCircularBuffer
+*     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -555,6 +556,8 @@ typedef struct {
    rtBUF       _payload;
    /** \brief Data Type - mddDt_FieldList or mddDt_FixedMsg */ 
    mddDataType _dataType;
+   /** \brief 1 if _payload contains header; 0 if it needs it */
+   char        _bHasHdr;
 } rtPreBuiltBUF;
 
 /**
