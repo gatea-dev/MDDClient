@@ -12,8 +12,9 @@
 *      6 MAR 2018 jcs  Build 40: _fcn / _arg
 *      7 SEP 2020 jcs  Build 44: SetName()
 *      8 JAN 2022 jcs  Build 51: bool _ready
+*     27 FEB 2024 jcs  Build 68: _affinity
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_THREAD_H
 #define __EDGLIB_THREAD_H
@@ -39,6 +40,7 @@ protected:
 	pthread_t       _tid;
 	HANDLE          _hThr;
 	Pump            _pump;
+	int             _affinity;
 	volatile bool   _ready;
 
 	// Constructor / Destructor

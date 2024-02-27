@@ -12,8 +12,9 @@
 *      6 MAR 2018 jcs  Build 40: _fcn / _arg
 *      7 SEP 2020 jcs  Build 44: SetName()
 *      8 JAN 2022 jcs  Build 51: bool _ready
+*     27 FEB 2024 jcs  Build 68: _affinity
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -36,6 +37,7 @@ Thread::Thread() :
    _tid( (pthread_t)0 ),
    _hThr( (HANDLE)0 ),
    _pump(),
+   _affinity( 0 ),
    _ready( false )
 {
    Start();
@@ -48,6 +50,7 @@ Thread::Thread( rtEdgeThreadFcn fcn, void *arg ) :
    _tid( (pthread_t)0 ),
    _hThr( (HANDLE)0 ),
    _pump(),
+   _affinity( 0 ),
    _ready( false )
 {
    Start();
@@ -92,9 +95,10 @@ int Thread::SetThreadProcessor( int cpu )
 #ifdef WIN32
    DWORD  tMsk, rMsk;
 
-   rMsk  = 0;
-   tMsk  = ( 1 << cpu );
-   rMsk  = ::SetThreadAffinityMask( _hThr, tMsk );
+   rMsk      = 0;
+   tMsk      = ( 1 << cpu );
+   rMsk      = ::SetThreadAffinityMask( _hThr, tMsk );
+   _affinity = rMsk ? tMsk : 0;
 #elif !defined(old_linux) && !defined(__svr4__)
 #include <sched.h>
    u_int     cSz;
@@ -117,11 +121,7 @@ int Thread::GetThreadProcessor()
 {
    int    rtn;
 #ifdef WIN32
-   DWORD  msk;
-
-   msk  = ::SetThreadAffinityMask( _hThr, 0 );
-   ::SetThreadAffinityMask( _hThr, msk );
-   rtn = (int)msk;
+   rtn = _affinity;
 #elif !defined(old_linux) && !defined(__svr4__)
 #include <sched.h>
    u_int     cSz;

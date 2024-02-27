@@ -55,6 +55,8 @@ Features To Add
  *    - PubChannel.PublishRaw()
  *    - Update.PublishRaw()
  *
+ * -# WIN64 Affinity : Thread._affinity
+ *
  *
  * ### Build 67 24-01-14
  *
