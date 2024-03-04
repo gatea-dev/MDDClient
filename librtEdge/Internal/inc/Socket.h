@@ -21,6 +21,7 @@
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      6 SEP 2022 jcs  Build 56: _bOverflow
 *      5 JAN 2024 jcs  Build 67: Buffer.h
+*      4 MAR 2024 jcs  Build 69: Buffered IO
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -85,6 +86,7 @@ protected:
 	string             _overflow;
 	int                _tHbeat;
 	int                _SO_RCVBUF;
+	int                _bufIO;
 	Mold64Pkt          _udp;
 
 	// Constructor / Destructor

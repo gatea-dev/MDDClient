@@ -43,7 +43,13 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 68 24-02-xx
+ * ### Build 69 24-03-xx
+ *
+ * -# ioctl_setBufferedIO / ioctl_getBufferedIO
+ *    - Channel.SetBufferedIO() / GetBufferedIO() 
+ *
+ *
+ * ### Build 68 24-02-27
  *
  * -# LVCAdmin.AddFilteredTickers()
  *

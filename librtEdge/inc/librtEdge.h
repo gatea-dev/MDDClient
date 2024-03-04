@@ -38,6 +38,7 @@
 *     31 OCT 2023 jcs  Build 66: No mo quant
 *      5 JAN 2024 jcs  Build 67: rtEdgePubAttr._bCircularBuffer
 *     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
+*      4 MAR 2024 jcs  Build 69: bufferedIO
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -486,7 +487,23 @@ typedef enum {
     *
     * \param (void *)val - Pointer to integer to receive current queue size.
     */
-   ioctl_getTxMaxSize      = 36
+   ioctl_getTxMaxSize      = 36,
+   /**
+    * \brief Sets max outbound buffered IO size
+    *
+    * This must be called AFTER you all rtEdge_Init() / rtEdge_PubInit().
+    *
+    * \param (void *)val - Pointer to integer with buffered IO size
+    */
+   ioctl_setBufferedIO     = 37,
+   /**
+    * \brief Gets max outbound buffered IO size
+    *
+    * This must be called AFTER you all rtEdge_Init() / rtEdge_PubInit().
+    *
+    * \param (void *)val - Pointer to integer to receive buffered IO size.
+    */
+   ioctl_getBufferedIO     = 38
 } rtEdgeIoctl;
 
 /**

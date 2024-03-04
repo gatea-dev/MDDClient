@@ -28,6 +28,7 @@
 *      6 SEP 2022 jcs  Build 56: Buffer.Grow() bug; ioctl_getTxMaxSize
 *      3 JUN 2023 jcs  Build 63: HexDump(), not HexLog()
 *      5 JAN 2024 jcs  Build 67: Buffer.h
+*      4 MAR 2024 jcs  Build 69: BufferedIO
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -80,7 +81,8 @@ Socket::Socket( const char *pHosts, bool bConnectionless, bool bCircBuf ) :
    _ovrFloMtx(),
    _overflow(),
    _tHbeat( 3600 ),
-   _SO_RCVBUF( 0 )
+   _SO_RCVBUF( 0 ),
+   _bufIO( 0 )
 {
    char       *cp, *hp, *pp, *rp;
    const char *_sep0 = ",";
@@ -360,9 +362,9 @@ bool Socket::Write( const char *pData, int dLen )
    Buffer          &out = oBuf();
    Locker           l( _mtx );
    struct sockaddr *sa;
-   bool             bOK;
+   bool             bOK, flush;
    char            *pkt, buf[K];
-   int              wSz, pSz;
+   int              wSz, pSz, bSz0, bSz1;
 
    // Unbuffered if _bConnectionless
 
@@ -378,8 +380,16 @@ bool Socket::Write( const char *pData, int dLen )
       return bOK;
    }
 
-   if ( (bOK=out.Push( (char *)pData, dLen )) )
-      OnWrite();
+   // Buffered IO
+
+   bSz0 = bSz1 = out.bufSz();
+   if ( (bOK=out.Push( (char *)pData, dLen )) ) {
+      bSz1  += dLen;
+      flush  = !_bufIO;
+      flush |= ( ( bSz0 < _bufIO ) && ( bSz1 > _bufIO ) );
+      if ( flush )
+         OnWrite();
+   }
    else {
       Locker lck( _ovrFloMtx );
 
@@ -494,6 +504,12 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
          return true;
       case ioctl_getThreadId:
          *i64 = thr().tid();
+         return true;
+      case ioctl_setBufferedIO:
+         _bufIO = *p32;
+         return true;
+      case ioctl_getBufferedIO:
+         *p32 = _bufIO;
          return true;
       default:
          break;

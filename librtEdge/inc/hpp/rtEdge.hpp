@@ -30,6 +30,7 @@
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     31 OCT 2023 jcs  Build 66: No mo DoubleXY
 *     13 JAN 2024 jcs  Build 67: IsFile()
+*      4 MAR 2024 jcs  Build 69: XxxBufferedIO()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -876,7 +877,7 @@ public:
 	}
 
 	/**
-	 * \brief Sets the max queue size on outbound channel to Edge2
+	 * \brief Sets the max queue size on outbound channel to Edge3
 	 *
 	 * \param bufSiz - Max queue size
 	 * \return  GetTxBufSize()
@@ -891,7 +892,7 @@ public:
 	 * \brief Gets current outbound channel queue size.   Max queue
 	 * size had been set via SetTxBufSize()
 	 *
-	 * \return Current queue size on outbound channel to Edge2
+	 * \return Current queue size on outbound channel to Edge3
 	 */
 	int GetTxBufSize()
 	{
@@ -1104,6 +1105,34 @@ public:
 	   if ( _cxt )
 	      ::rtEdge_ioctl( _cxt, ioctl_setHeartbeat, (VOID_PTR)_tHbeat );
 	}
+
+	/**
+	 * \brief Sets the bufferedIO size on outbound channel to Edge3
+	 *
+	 * \param bufSiz - Max queue size
+	 * \return  GetTxBufSize()
+	 */
+	int SetBufferedIO( int bufSiz )
+	{
+	   ::rtEdge_ioctl( _cxt, ioctl_setBufferedIO, &bufSiz );
+	   return GetBufferedIO();
+	}
+
+	/**
+	 * \brief Gets current outbound buffered IO queue size which has
+	 * been set via SetBufferedIO()
+	 *
+	 * \return Current buffered IO size on outbound channel to Edge3
+	 */
+	int GetBufferedIO()
+	{
+	   int bufSiz;
+
+	   bufSiz = 0;
+	   ::rtEdge_ioctl( _cxt, ioctl_getBufferedIO, &bufSiz );
+	   return bufSiz;
+	}
+
 
 
 	////////////////////////////////////
