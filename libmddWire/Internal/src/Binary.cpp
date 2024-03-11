@@ -16,8 +16,9 @@
 *      1 NOV 2022 jcs  Build 16: _GetVector() / _SetVector(); _wireMult()
 *     25 DEC 2022 jcs  Build 17: Signed mddFld_vector
 *     23 AUG 2023 jcs  Build 18: Set( float ) rounding error
+*     11 MAR 2024 jcs  Build 19: Negative unpacked doubles ; Take v._rXX as is
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 
@@ -700,13 +701,19 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          cp += Set( cp, v._buf );
          break;
       case mddFld_int32:
+#ifdef FUCKED_NO_NEGATIVE
          bNeg = ( v._i32 & _NEG32 ) == _NEG32;
          i32  = ( v._i32 & _MSK32 );
+#endif // FUCKED_NO_NEGATIVE
+         i32 = v._i32;
          _COPY_SET( i32, cp );
          break;
       case mddFld_double:
          bNeg = ( v._r64 < 0.0 );
+#ifdef FUCKED_NO_NEGATIVE
          r64  = bNeg ? -v._r64 : v._r64;
+#endif // FUCKED_NO_NEGATIVE
+         r64  = v._r64;
          r64 *= _d_mul;
          i64  = (u_int64_t)r64;
          _COPY_SET( i64, cp );
@@ -725,7 +732,10 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          break;
       case mddFld_float:
          bNeg = ( v._r32 < 0.0 );
+#ifdef FUCKED_NO_NEGATIVE
          r32  = bNeg ? -v._r32 : v._r32;
+#endif // FUCKED_NO_NEGATIVE
+         r32  = v._r32;
          r32 *= _f_mul;
          i32  = (u_int)r32;
          _COPY_SET( i32, cp );
@@ -737,8 +747,11 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( v._i16, cp );
          break;
       case mddFld_int64:
+#ifdef FUCKED_NO_NEGATIVE
          bNeg = ( v._i64 & _NEG64 ) == _NEG64;
          i64  = ( v._i64 & _MSK64 );
+#endif // FUCKED_NO_NEGATIVE
+         i64 = v._i64;
          _COPY_SET( i64, cp );
          break;
       case mddFld_real:

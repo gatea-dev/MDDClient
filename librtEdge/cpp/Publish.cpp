@@ -345,9 +345,10 @@ public:
       Update        &u   = upd();
       const char    *svc = pPubName();
       rtDateTime     dtTm;
-      int            i, fid;
+      int            i, fid, i32;
       u_int64_t      i64;
       double         r64;
+      float          r32;
       DoubleList     vdb;
       struct timeval tv;
 
@@ -356,6 +357,7 @@ public:
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
       fid        = 6;
+/*
       if ( w._rtl % 2 )
          u.AddField(  fid++, w._rtl );
       else
@@ -365,17 +367,45 @@ public:
       dtTm       = unix2rtDateTime( tv );
       i64        = 7723845300000;
       i64        = 4503595332403200;
-      r64        = 123456789.987654321 /* + w._rtl */;
+      r64        = 123456789.987654321;
       u.AddField(  fid++, r64 );
       r64        = 6120.987654321 + w._rtl;
       u.AddField(  fid++, r64 );
+ */
       r64        = 3.14159265358979323846;
       u.AddField(  fid++, r64 );
+      u.AddField(  fid++, -r64 );
+      r32        = 2.718281828459045;
+      u.AddField(  fid++, r32 );
+      u.AddField(  fid++, -r32 );
+      r64        = 0.00001234;
+      u.AddField(  fid++, r64 );
+      u.AddField(  fid++, -r64 );
+      i64        = 4503595332403200;
+      u.AddField(  fid++, i64 );
+      u.AddField(  fid++, -i64 );
+      i64        = 2147483647;
+      u.AddField(  fid++, i64 );
+      u.AddField(  fid++, -i64 );
+      i64       += 10;
+      u.AddField(  fid++, i64 );
+      u.AddField(  fid++, -i64 );
+      i64        = 64;
+      u.AddField(  fid++, i64 );
+      u.AddField(  fid++, -i64 );
+      i32        = 2147483647;
+      u.AddField(  fid++, i32 );
+      u.AddField(  fid++, -i32 );
+      i32        = 32;
+      u.AddField(  fid++, i32 );
+      u.AddField(  fid++, -i32 );
+/*
       u.AddField(  fid++, i64 );
       u.AddField(  fid++, dtTm );
       u.AddFieldAsUnixTime(  fid++, dtTm );
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
+ */
 /*
       u.AddField(  2147483647, "2147483647" );
       u.AddField( -2147483647, "-2147483647" );

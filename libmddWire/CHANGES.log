@@ -12,11 +12,12 @@
 /*
 Known Bugs
 ----------
+-# Unpacked : Negative values fucked
 
 
 Features To Add
 ---------------
--#) mddReal into production:
+-# mddReal into production:
    - 64-bit mddReal.value
    - mddWire_realToDouble() / mddWire_double2Real()
    - ::int64_t mddValue._i64 / u_int64_t mddValue._u64
@@ -29,6 +30,13 @@ Features To Add
  * to marshall and demarshall MD-Direct real-time data to and from the wire.
  *
  * ## Change Log
+ * 
+ * 
+ * ### Build 19 24-03-11
+ * 
+ * -# Negative unpacked values don't work
+ *    - Binary::_Set_unpacked() : Take v._r64, v._r32, v._i64, v._i32 as-is
+ * 
  * 
  * 
  * ### Build 18 23-08-23

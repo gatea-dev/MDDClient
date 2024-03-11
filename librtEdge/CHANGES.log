@@ -48,6 +48,9 @@ Features To Add
  * -# ioctl_setBufferedIO / ioctl_getBufferedIO
  *    - Channel.SetBufferedIO() / GetBufferedIO() 
  *
+ * -# libmddWire Build 19 : Negative unpacked values don't work
+ *    - Binary::_Set_unpacked() : Take v._r64, v._r32, v._i64, v._i32 as-is 
+ *
  *
  * ### Build 68 24-02-27
  *

@@ -12,8 +12,9 @@
 *      3 NOV 2022 jcs  Build 60: Native vector field type
 *     23 JUN 2023 jcs  Build 63: -reuse
 *     25 OCT 2023 jcs  Build 66: -timeout / -bds
+*     11 MAR 2024 jcs  Build 69: Negative unpacked
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.Collections;
@@ -144,6 +145,7 @@ class PublishCLI : rtEdgePublisher
    {
       rtEdgePubUpdate u;
       double          r64;
+      float           r32;
       long            i64;
       int             fid;
 
@@ -165,14 +167,21 @@ class PublishCLI : rtEdgePublisher
       u.AddFieldAsDateTime( fid++, DateTime.Now );
       i64        = 7723845300000;
       u.AddFieldAsInt64(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, -i64 );
       i64        = 4503595332403200;
       u.AddFieldAsInt64(  fid++, i64 );
       r64        = 123456789.987654321 /* + w._rtl */;
       u.AddFieldAsDouble(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, -r64 );
       r64        = 6120.987654321;
       u.AddFieldAsDouble(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, -r64 );
+      r32        = 6120.987654321;
+      u.AddFieldAsFloat(  fid++, r32 );
+      u.AddFieldAsFloat(  fid++, -r32 );
       r64        = 3.14159265358979323846;
       u.AddFieldAsDouble(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, -r64 );
       u.AddFieldAsUnixTime(  fid++, DateTime.Now );
 /*
       u.AddFieldAsString(  2147483647, "2147483647" );
