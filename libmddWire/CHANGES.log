@@ -35,9 +35,12 @@ Features To Add
  * 
  * -# Negative unpacked values don't work
  *    - Binary::_Set_unpacked() : Take v._r64, v._r32, v._i64, v._i32 as-is
- * 
- * -# Linux : Binary::_Get_unpacked
- *    - v._r64 = _d_d.v * (int64_t)i64
+ *
+ * -# Linux64 : Binary::_Get_unpacked
+ *    - v._r64 = _d_div * (int64_t)i64
+ *    
+ * -# No negative float, WIN64 / Linux64 : Binary::_Get_unpacked
+ *    - v._r32 = _f_div * (int)i32
  * 
  * 
  * ### Build 18 23-08-23
