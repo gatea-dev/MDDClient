@@ -628,7 +628,7 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
          break;
       case mddFld_double:
          _COPY_GET( i64, cp );
-         v._r64 = _d_div * i64;
+         v._r64 = _d_div * (int64_t)i64;
          if ( bNeg )
             v._r64 = -v._r64;
          break;
@@ -643,7 +643,7 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
          break;
       case mddFld_float:
          _COPY_GET( i32, cp );
-         v._r32  = _f_div * i32;
+         v._r32  = _f_div * (int)i32;
          if ( bNeg )
             v._r32 = -v._r32;
          break;

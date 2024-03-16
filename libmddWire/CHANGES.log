@@ -12,7 +12,6 @@
 /*
 Known Bugs
 ----------
--# Unpacked : Negative values fucked
 
 
 Features To Add
@@ -32,11 +31,13 @@ Features To Add
  * ## Change Log
  * 
  * 
- * ### Build 19 24-03-11
+ * ### Build 19 24-03-16
  * 
  * -# Negative unpacked values don't work
  *    - Binary::_Set_unpacked() : Take v._r64, v._r32, v._i64, v._i32 as-is
  * 
+ * -# Linux : Binary::_Get_unpacked
+ *    - v._r64 = _d_d.v * (int64_t)i64
  * 
  * 
  * ### Build 18 23-08-23
