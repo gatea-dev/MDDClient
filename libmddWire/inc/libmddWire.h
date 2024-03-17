@@ -17,8 +17,9 @@
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     24 OCT 2022 jcs  Build 15: bld.hpp
 *      1 NOV 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize; 64-bit mddReal
+*     16 MAR 2024 jcs  Build 20: mddWire_RealToDouble() / mddWire_DoubleToReal()
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 /** 
  * \mainpage libmddWire API Reference Manual
@@ -61,6 +62,8 @@ typedef __int64        u_int64_t;
 #define UNPACKED_BINFLD      0x40
 /** \brief Nanosecond */
 #define _NANO                1000000000
+/** \brief Max mddReal Precision - 14 significant digits */
+#define _MAX_REAL_HINT       14
 
 /* Data Structures */
 
@@ -194,7 +197,18 @@ typedef struct {
 typedef struct {
    /** \brief Real data value */
    u_int64_t value;
-   /** \brief Multiplier for value - Fractions, 0.0001, etc. */
+   /**
+    * \brief Multiplier for value
+    *
+    * Hint | Multiplier
+    * --- | ---
+    * 0 | 1.0
+    * 1 | 0.1
+    * 2 | 0.01
+    * 3 | 0.001
+    * . . . | . . .
+    * 10 | 0.000000001
+    */
    u_char    hint;
    /** \brief 1 if mddReal contains blank value */
    u_char    isBlank;
@@ -714,6 +728,26 @@ mddField *mddWire_GetFldDefByName( mddWire_Context cxt, const char *fielddName )
  */
 mddBuf mddWire_ConvertFieldList( mddWire_Context cxt, mddConvertBuf buf );
 
+/* Real Conversion */
+
+/**
+ * \brief Convert mddReal to double w/ precision
+ *
+ * \param r - mddReal to convert
+ * \return Converted double
+ */
+double mddWire_RealToDouble( mddReal r );
+
+/**
+ * \brief Convert double to mddReal
+ *
+ * \param d - double to convert
+ * \param hint - Precision from mddReal
+ * \return Converted mddReal
+ * \see mddReal
+ */
+mddReal mddWire_DoubleToReal( double d, int hint );
+
 /* Library Management */
 
 /**
@@ -1052,6 +1086,9 @@ char *strtok_r( char *str, const char *delim, char **notUsed );
             sprintf( buf, mdd_PRId64, v._i64 );                     \
             break;                                                  \
          case mddFld_real:                                          \
+            r64 = mddWire_RealToDouble( v._real );                  \
+            sprintf( buf, "%.6f", r64 );                            \
+            break;                                                  \
          case mddFld_bytestream:                                    \
             strcpy( buf, "TBD" );                                   \
             break;                                                  \

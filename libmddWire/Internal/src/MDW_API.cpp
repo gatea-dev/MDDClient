@@ -8,8 +8,9 @@
 *     12 SEP 2015 jcs  Build 10: namespace MDDWIRE_PRIVATE
 *     12 OCT 2015 jcs  Build 11: MDW_SLEEP()
 *      1 NOV 2022 jcs  Build 16: mddFld_vector; mddWire_vectorSize
+*     16 MAR 2024 jcs  Build 20: mddWire_RealToDouble() / mddWire_DoubleToReal()
 *
-*  (c) 1994-2022, Gatea Ltd. 
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -370,6 +371,83 @@ mddBuf mddWire_ConvertFieldList( mddWire_Context cxt, mddConvertBuf c )
    rb          = pub ? pub->ConvertFieldList( m, pro, bb, bFldNm ) : _bz;
    bb._dLen    = rb._dLen;
    return rb;
+}
+
+
+//////////////////////////////
+// Real Conversion
+//////////////////////////////
+static double _r_mul[] = { 1.0,
+                           10.0,
+                           100.0,
+                           1000.0,
+                           10000.0,
+                           100000.0,
+                           1000000.0,
+                           10000000.0,
+                           100000000.0,
+                           1000000000.0,
+                           10000000000.0,
+                           100000000000.0,
+                           1000000000000.0,
+                           10000000000000.0,
+                           100000000000000.0,
+                         };
+
+static double _d_mul[] = { 1.0,
+                           0.1,
+                           0.01,
+                           0.001,
+                           0.0001,
+                           0.00001,
+                           0.000001,
+                           0.0000001,
+                           0.00000001,
+                           0.000000001,
+                           0.0000000001,
+                           0.00000000001,
+                           0.000000000001,
+                           0.0000000000001,
+                           0.00000000000001,
+                         };
+
+double mddWire_RealToDouble( mddReal r )
+{
+   double  d;
+   int64_t i64;
+   int     hint;
+
+   // Pre-condition
+
+   if ( r.isBlank )
+      return 0.0;
+
+   // Support negative numbers
+
+   hint = WithinRange( 0, r.hint, _MAX_REAL_HINT );
+   i64  = (int64_t)r.value;
+   d    = _d_mul[hint] * i64;
+   return d;
+}
+
+mddReal mddWire_DoubleToReal( double d, int hint )
+{
+   mddReal r;
+   double  r64;
+   int64_t i64;
+
+   // 1) Support negative values
+
+   hint = WithinRange( 0, hint, _MAX_REAL_HINT );
+   r64  = d * _r_mul[hint];
+   i64  = (int64_t)r64;
+
+   // 2) Stuff it in
+
+   r.value   = i64;
+   r.hint    = hint;
+   r.isBlank = 0;
+   return r;
 }
 
 

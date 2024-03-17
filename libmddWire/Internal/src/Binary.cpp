@@ -17,6 +17,7 @@
 *     25 DEC 2022 jcs  Build 17: Signed mddFld_vector
 *     23 AUG 2023 jcs  Build 18: Set( float ) rounding error
 *     11 MAR 2024 jcs  Build 19: Negative unpacked doubles ; Take v._rXX as is
+*     16 MAR 2024 jcs  Build 20: _Set_unpacked() : No mo bNeg
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -655,12 +656,6 @@ int Binary::_Get_unpacked( u_char *bp, mddField &f, bool bNeg )
          break;
       case mddFld_int64:
          _COPY_GET( v._i64, cp );
-/*
- * TODO : ::int64_t instead of u_int64_t??
- *
-         if ( bNeg )
-            v._i64 = -v._i64;
- */
          break;
       case mddFld_real:
          _COPY_GET( r.value, cp );
@@ -701,18 +696,13 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          cp += Set( cp, v._buf );
          break;
       case mddFld_int32:
-#ifdef FUCKED_NO_NEGATIVE
-         bNeg = ( v._i32 & _NEG32 ) == _NEG32;
-         i32  = ( v._i32 & _MSK32 );
-#endif // FUCKED_NO_NEGATIVE
          i32 = v._i32;
          _COPY_SET( i32, cp );
          break;
       case mddFld_double:
+#ifdef FUCKED_AND_OBSOLETE
          bNeg = ( v._r64 < 0.0 );
-#ifdef FUCKED_NO_NEGATIVE
-         r64  = bNeg ? -v._r64 : v._r64;
-#endif // FUCKED_NO_NEGATIVE
+#endif // FUCKED_AND_OBSOLETE
          r64  = v._r64;
          r64 *= _d_mul;
          i64  = (u_int64_t)r64;
@@ -731,10 +721,9 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( i32, cp );
          break;
       case mddFld_float:
+#ifdef FUCKED_AND_OBSOLETE
          bNeg = ( v._r32 < 0.0 );
-#ifdef FUCKED_NO_NEGATIVE
-         r32  = bNeg ? -v._r32 : v._r32;
-#endif // FUCKED_NO_NEGATIVE
+#endif // FUCKED_AND_OBSOLETE
          r32  = v._r32;
          r32 *= _f_mul;
          i32  = (u_int)r32;
@@ -747,10 +736,6 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( v._i16, cp );
          break;
       case mddFld_int64:
-#ifdef FUCKED_NO_NEGATIVE
-         bNeg = ( v._i64 & _NEG64 ) == _NEG64;
-         i64  = ( v._i64 & _MSK64 );
-#endif // FUCKED_NO_NEGATIVE
          i64 = v._i64;
          _COPY_SET( i64, cp );
          break;
@@ -769,7 +754,9 @@ int Binary::_Set_unpacked( u_char *bp, mddField f )
          _COPY_SET( v._i64, cp );
          break;
    }
+#ifdef FUCKED_AND_OBSOLETE
    *bp |= bNeg ? _NEG8 : 0;
+#endif // FUCKED_AND_OBSOLETE
    return( cp-bp );
 }
 

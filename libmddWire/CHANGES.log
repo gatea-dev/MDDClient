@@ -18,7 +18,6 @@ Features To Add
 ---------------
 -# mddReal into production:
    - 64-bit mddReal.value
-   - mddWire_realToDouble() / mddWire_double2Real()
    - ::int64_t mddValue._i64 / u_int64_t mddValue._u64
  */
 
@@ -31,14 +30,21 @@ Features To Add
  * ## Change Log
  * 
  * 
+ * ### Build 20 24-03-16
+ * 
+ * -# Real
+ *    - mddWire_RealToDouble() / mddWire_DoubleToReal()
+ * 
+ * 
+ * 
  * ### Build 19 24-03-16
  * 
  * -# Negative unpacked values don't work
  *    - Binary::_Set_unpacked() : Take v._r64, v._r32, v._i64, v._i32 as-is
- *
+ * 
  * -# Linux64 : Binary::_Get_unpacked
  *    - v._r64 = _d_div * (int64_t)i64
- *    
+ *
  * -# No negative float, WIN64 / Linux64 : Binary::_Get_unpacked
  *    - v._r32 = _f_div * (int)i32
  * 
