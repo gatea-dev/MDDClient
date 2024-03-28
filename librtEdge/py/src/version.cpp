@@ -31,7 +31,7 @@ char *MDDirectID()
       cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s ", GL64, _PYMDD_LIB_BLD );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       cp    += sprintf( cp, "\n" );
-      cp    += sprintf( cp, ::Py_GetVersion() );
+      cp    += sprintf( cp, "%s", ::Py_GetVersion() );
       s      = bp;
       sccsid = (char *)s.data();
    }

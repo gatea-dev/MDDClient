@@ -23,6 +23,7 @@
 #     17 SEP 2022 jcs  Build 56: SplineMaker
 #     31 OCT 2023 jcs  Build 66: QUANT_ROOT
 #     12 JAN 2024 jcs  Build 67: Buffer.cpp; TapeHeader.cpp
+#     28 MAR 2024 jcs  Build 70: Python 3.11 build warnings
 #
 # (c) 1994-2024, Gatea Ltd.
 #######################################################
@@ -32,6 +33,8 @@
 WARN       = -Wall
 WARN      += -Wno-write-strings
 WARN      += -Wno-unused-but-set-variable
+WARN      += -Wno-misleading-indentation
+WARN      += -fpermissive
 
 ## Linux
 

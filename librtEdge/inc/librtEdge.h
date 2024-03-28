@@ -540,7 +540,7 @@ typedef enum {
    /** \brief Nanos since Epoch; Value in rtVALUE::_i64 */
    rtFld_unixTime   = mddFld_unixTime,
    /** \brief Vector of doubles; Size = mddWire_vectorSize() */
-   rtFld_vector      = mddFld_vector,
+   rtFld_vector     = mddFld_vector,
 
 } rtFldType;
 

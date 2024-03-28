@@ -23,8 +23,9 @@
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
 *     18 SEP 2023 jcs  Build 65: GetAsDate() : Month -= 1
 *     26 OCT 2023 jcs  Build 66: Dump() vector : dLen * 32
+*     18 MAR 2024 jcs  Build 70: mddWire_RealToDouble()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Field_H
 #define __RTEDGE_Field_H
@@ -445,7 +446,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         i8 = (u_char)GetAsDouble();
 	         break;
 	   }
 	   return i8;
@@ -483,7 +486,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         i16 = (u_short)GetAsDouble();
 	         break;
 	   }
 	   return i16;
@@ -521,7 +526,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         i32 = (int)GetAsDouble();
 	         break;
 	   }
 	   return i32;
@@ -559,7 +566,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         i64 = (u_int64_t)GetAsDouble();
 	         break;
 	   }
 	   return i64;
@@ -597,7 +606,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         r32 = GetAsDouble();
 	         break;
 	   }
 	   return r32;
@@ -637,7 +648,9 @@ public:
 	      case rtFld_date:
 	      case rtFld_time:
 	      case rtFld_timeSec:
+	         break;
 	      case rtFld_real:
+	         r64 = ::mddWire_RealToDouble( v._real );
 	         break;
 	   }
 	   return r64;

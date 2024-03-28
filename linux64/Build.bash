@@ -45,7 +45,7 @@ do
       ./linux64/Build.bash
       mv ./build/bin64/MDDirect27.so ${GHOME}/bin64
       ./linux64/Build.bash 3
-      mv ./build/bin64/MDDirect36.*.so ${GHOME}/bin64
+      mv ./build/bin64/MDDirect3*.*.so ${GHOME}/bin64
       cd ..
    fi
 done

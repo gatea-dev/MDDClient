@@ -12,6 +12,7 @@
 *     26 OCT 2022 jcs  Build 58: CockpitMap
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *     26 JAN 2024 jcs  Build 68: Cockpit._cMtx; AddFilteredTickers(); ADD-BDS
+*     28 MAR 2024 jcs  Build 70: Python 3.11 delint
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -324,7 +325,7 @@ public:
 	      if ( ldb.find( s ) == ldb.end() )
 	         fltr[nf++] = tkrs[i];
 	   }
-	   fltr[nf] = '\0';
+	   fltr[nf] = NULL;
 
 	   // 2) Filter
 

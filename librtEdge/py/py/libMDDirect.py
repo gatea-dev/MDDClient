@@ -25,6 +25,7 @@
 #     16 OCT 2023 jcs  MemFree()
 #      6 DEC 2023 jcs  GetField( bDeepCopy )
 #     16 JAN 2024 jcs  rtEdgeData.UserArg()
+#     28 MAR 2024 jcs  MDDirect311
 #
 #  (c) 1994-2024, Gatea Ltd.
 #################################################################
@@ -36,17 +37,22 @@ def Log( msg ):
    sys.stdout.write( msg + '\n' )
    sys.stdout.flush()
 
+## Newest to oldest
+
 try:
-   import MDDirect27 as MDDirect
+   import MDDirect311 as MDDirect
 except:
    try: 
-      import MDDirect36 as MDDirect
+      import MDDirect39 as MDDirect
    except: 
       try: 
-         import MDDirect39 as MDDirect
+         import MDDirect36 as MDDirect
       except: 
-         Log( 'MDDirect not found; Exitting ...' )
-         sys.exit()
+         try: 
+            import MDDirect27 as MDDirect
+         except: 
+            Log( 'MDDirect not found; Exitting ...' )
+            sys.exit()
 pass
 
 ## \endcond

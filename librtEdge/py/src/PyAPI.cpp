@@ -16,8 +16,9 @@
 *     29 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema; OpenBDS()
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*     27 MAR 2024 jcs  Build 13: 3.11
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -1093,10 +1094,32 @@ static PyMethodDef EdgeMethods[] =
 };
 
 #if PY_MAJOR_VERSION >= 3
-#if PY_MINOR_VERSION >= 9
+/*
+ * Python 3.x
+ */
+#if PY_MINOR_VERSION >= 11
+/*
+ * Python 3.11
+ */
+static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
+                                  "MDDirect311",
+                                  "MD-Direct for Python 3.11",
+                                  -1,
+                                  EdgeMethods
+                                };
+
+PyMODINIT_FUNC PyInit_MDDirect311( void )
+{
+   return ::PyModule_Create( &_mddModule );
+} 
+
+#elif PY_MINOR_VERSION >= 9
+/*
+ * Python 3.9
+ */
 static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
                                   "MDDirect39",
-                                  "MD-Direct for Python 3.x",
+                                  "MD-Direct for Python 3.9",
                                   -1,
                                   EdgeMethods
                                 };
@@ -1104,11 +1127,15 @@ static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
 PyMODINIT_FUNC PyInit_MDDirect39( void )
 {
    return ::PyModule_Create( &_mddModule );
-} 
+}
+ 
 #else
+/*
+ * Python 3.6
+ */
 static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
                                   "MDDirect36",
-                                  "MD-Direct for Python 3.x",
+                                  "MD-Direct for Python 3.6",
                                   -1,
                                   EdgeMethods
                                 };
@@ -1117,8 +1144,13 @@ PyMODINIT_FUNC PyInit_MDDirect36( void )
 {
    return ::PyModule_Create( &_mddModule );
 } 
+
 #endif // PY_MINOR_VERSION >= 9
+
 #else
+/*
+ * Python 2.7
+ */
 PyMODINIT_FUNC initMDDirect27( void )
 {
    _pMethods = EdgeMethods;

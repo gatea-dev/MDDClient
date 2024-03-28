@@ -21,6 +21,7 @@
 *     30 SEP 2023 jcs  Build 65: AddSurface( DoubleGrid & )
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
+*     18 MAR 2024 jcs  Build 70: AddField( int, double, int precision=10 )
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -379,12 +380,18 @@ public:
 	}
 
 	/**
-	 * \brief Add double field to update
+	 * \brief Add double field to update with precision
+	 * 
+	 * Rules:
+	 *  - The precision argument is only used in unpacked mode
+	 *  - If default precision (10), then field is put on wire as rtFld_double
+	 *  - If unpacked and precision != 10, the field is put on wire as rtFld_real
 	 * 
 	 * \param fid - Field ID
 	 * \param r64 - Field value as double
+	 * \param precision - Number of significant digits; Default is 10
 	 */
-	void AddField( int fid, double r64 )
+	void AddField( int fid, double r64, int precision=10 )
 	{
 	   rtFIELD  f;
 	   rtVALUE &v = f._val;
@@ -396,10 +403,16 @@ public:
 	      else
 	         AddField( fid, (u_int64_t)r64 );
 	   }
-	   else {
+	   else if ( precision == 10 ) {
 	      f._type = rtFld_double;
 	      f._fid  = fid;
 	      v._r64  = r64;
+	      _Add( f );
+	   }
+	   else {
+	      f._type = rtFld_real;
+	      f._fid  = fid;
+	      v._real = ::mddWire_DoubleToReal( r64, precision );
 	      _Add( f );
 	   }
 	}

@@ -43,7 +43,21 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 69 24-03-xx
+ * ### Build 70 24-03-xx
+ *
+ * -# libmddWire Build 20 : mddFld_real:
+ *    - mddWire_RealToDouble() / mddWire_DoubleToReal()
+ *
+ * -# Update.AddField( int, double, int sigFig=10 )
+ *    - sigFig != 10 : mddReal
+ *
+ * -# Field.hpp : Handle mddFld_real
+ *    - CLI : Update.AddFieldAsReal() 
+ *
+ * -# ZB : Python311 on Linux64
+ *
+ *
+ * ### Build 69 24-03-11
  *
  * -# ioctl_setBufferedIO / ioctl_getBufferedIO
  *    - Channel.SetBufferedIO() / GetBufferedIO() 

@@ -12,11 +12,16 @@
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *     30 JUN 2023 jcs  Build 63: StringDoor
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
+*     18 MAR 2024 jcs  Build 70: AddFieldAsDouble( ..., int precision )
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Update.h>
+
+// 10 sig Fig for unpacked double 
+
+#define _DFLT_DBL_PRECISION 10
 
 using namespace librtEdgePRIVATE;
 
@@ -237,7 +242,12 @@ void rtEdgePubUpdate::AddFieldAsFloat( int fid, float r32 )
 
 void rtEdgePubUpdate::AddFieldAsDouble( int fid, double r64 )
 {
-   _upd.AddField( fid, r64 );
+   AddFieldAsDouble( fid, r64, _DFLT_DBL_PRECISION );
+}
+
+void rtEdgePubUpdate::AddFieldAsDouble( int fid, double r64, int precision )
+{
+   _upd.AddField( fid, r64, precision );
 }
 
 void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
@@ -347,10 +357,15 @@ void rtEdgePubUpdate::AddFieldAsFloat( String ^pFld, float r32 )
 
 void rtEdgePubUpdate::AddFieldAsDouble( String ^pFld, double r64 )
 {
+   AddFieldAsDouble( pFld, r64, _DFLT_DBL_PRECISION );
+}
+
+void rtEdgePubUpdate::AddFieldAsDouble( String ^pFld, double r64, int precision )
+{
    int fid;
 
    if ( (fid=_pub->GetFid( pFld )) )
-      AddFieldAsDouble( fid, r64 );
+      AddFieldAsDouble( fid, r64, precision );
 }
 
 void rtEdgePubUpdate::AddFieldAsByteStream( String ^pFld, ByteStreamFld ^bStr )

@@ -3,10 +3,13 @@ from distutils.core import setup, Extension
 
 ## Makefile-ish
 
-PY3 = ( sys.version_info.major >= 3 ) 
-if PY3: PYLIB = 'MDDirect36'
-else:   PYLIB = 'MDDirect27'
+PY3    = ( sys.version_info.major >= 3 ) 
+PY3_11 = PY3 and ( sys.version_info.minor >= 11 ) 
+if PY3_11: PYLIB = 'MDDirect311'
+elif PY3:  PYLIB = 'MDDirect36'
+else:      PYLIB = 'MDDirect27'
 
+WARNS    = [ '-Wno-misleading-indentation' ]
 INC_DIR  = [ './inc', './inc/stats' ]
 LIB_DIR  = [ '/usr/lib64' ]
 LIBS     = [ 'expat' ]
@@ -29,6 +32,7 @@ MDDirect = Extension( PYLIB,
                        include_dirs       = INC_DIR,
                        library_dirs       = LIB_DIR,
                        libraries          = LIBS,
+                       extra_compile_args = WARNS,
                        sources            = SRCS )
 
 setup( name        = PYLIB, 

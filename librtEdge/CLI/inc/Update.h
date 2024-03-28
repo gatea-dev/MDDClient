@@ -14,8 +14,9 @@
 *     10 NOV 2022 jcs  Build 61: AddFieldAsVector( DateTime )
 *     30 JUN 2023 jcs  Build 63: StringDoor
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
+*     18 MAR 2024 jcs  Build 70: AddFieldAsDouble( ..., int precision )
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -280,12 +281,25 @@ public:
 	void AddFieldAsFloat( int fid, float r32 );
 
 	/**
-	 * \brief Add float field to update
+	 * \brief Add double field to update
 	 *
 	 * \param fid - Field ID
 	 * \param r64 - Field value as double
 	 */
 	void AddFieldAsDouble( int fid, double r64 );
+
+	/**
+	 * \brief Add double field to update with precision
+	 *
+	 * Rules: 
+	 *  - The precision argument is only used in unpacked mode
+	 *  - Else, the double goes on wire with default precision (10 sigFig)
+	 *      
+	 * \param fid - Field ID
+	 * \param r64 - Field value as double 
+	 * \param precision - Number of significant digits; Default is 10
+	 */     
+	void AddFieldAsDouble( int fid, double r64, int precision );
 
 	/**
 	 * \brief Add ByteStreamFld field to update
@@ -413,12 +427,25 @@ public:
 	void AddFieldAsFloat( String ^pFld, float r32 );
 
 	/**
-	 * \brief Add float field to update
+	 * \brief Add double field to update
 	 *
 	 * \param pFld - Field Name
 	 * \param r64 - Field value as double
 	 */
 	void AddFieldAsDouble( String ^pFld, double r64 );
+
+	/**
+	 * \brief Add double field to update with precision
+	 *
+	 * Rules: 
+	 *  - The precision argument is only used in unpacked mode
+	 *  - Else, the double goes on wire with default precision (10 sigFig)
+	 *
+	 * \param pFld - Field Name
+	 * \param r64 - Field value as double 
+	 * \param precision - Number of significant digits; Default is 10
+	 */     
+	void AddFieldAsDouble( String ^pFld, double r64, int precision );
 
 	/**
 	 * \brief Add ByteStreamFld field to update

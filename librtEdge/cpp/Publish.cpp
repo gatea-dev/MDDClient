@@ -16,8 +16,9 @@
 *     14 SEP 2023 jcs  Build 64: -dead
 *     31 OCT 2023 jcs  Build 66: ../quant
 *      7 JAN 2023 jcs  Build 67: -nPub; -circBuf
+*     18 MAR 2024 jcs  Build 70: mddFld_real
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 // #include <quant.hpp>
@@ -372,10 +373,12 @@ public:
       r64        = 6120.987654321 + w._rtl;
       u.AddField(  fid++, r64 );
  */
-      r64        = 3.14159265358979323846;
+      r64        = M_PI;
       u.AddField(  fid++, r64 );
+      u.AddField(  fid++, r64, 4 );
       u.AddField(  fid++, -r64 );
-      r32        = 2.718281828459045;
+      u.AddField(  fid++, -r64, 3 );
+      r32        = M_E;
       u.AddField(  fid++, r32 );
       u.AddField(  fid++, -r32 );
       r64        = 0.00001234;

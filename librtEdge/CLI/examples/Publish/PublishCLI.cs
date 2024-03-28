@@ -147,7 +147,7 @@ class PublishCLI : rtEdgePublisher
       double          r64;
       float           r32;
       long            i64;
-      int             fid;
+      int             fid, i32;
 
       // RTL; Time (int); Time (double); DateTime, String
 
@@ -161,28 +161,37 @@ class PublishCLI : rtEdgePublisher
       else
          u   = new rtEdgePubUpdate( this, tkr, arg, bImg );
       fid = 6;
+      r64        = 3.14159265358979323846;
+      u.AddFieldAsDouble(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, -r64 );
+      r32        = 2.718281828459045F;
+      u.AddFieldAsFloat(  fid++, r32 );
+      u.AddFieldAsFloat(  fid++, -r32 );
+      r64        = 0.00001234;
+      u.AddFieldAsDouble(  fid++, r64 );
+      u.AddFieldAsDouble(  fid++, -r64 );
+      i64        = 4503595332403200;
+      u.AddFieldAsInt64(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, -i64 );
+      i64        = 2147483647;
+      u.AddFieldAsInt64(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, -i64 );
+      i64       += 10;
+      u.AddFieldAsInt64(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, -i64 );
+      i64        = 64;
+      u.AddFieldAsInt64(  fid++, i64 );
+      u.AddFieldAsInt64(  fid++, -i64 );
+      i32        = 2147483647;
+      u.AddFieldAsInt32(  fid++, i32 );
+      u.AddFieldAsInt32(  fid++, -i32 );
+      i32        = 32;
+      u.AddFieldAsInt32(  fid++, i32 );
+      u.AddFieldAsInt32(  fid++, -i32 );
       u.AddFieldAsInt32( fid++, _rtl );
       u.AddFieldAsInt32( fid++, (int)rtEdge.TimeSec() );
       u.AddFieldAsDouble( fid++, rtEdge.TimeNs() );
       u.AddFieldAsDateTime( fid++, DateTime.Now );
-      i64        = 7723845300000;
-      u.AddFieldAsInt64(  fid++, i64 );
-      u.AddFieldAsInt64(  fid++, -i64 );
-      i64        = 4503595332403200;
-      u.AddFieldAsInt64(  fid++, i64 );
-      r64        = 123456789.987654321 /* + w._rtl */;
-      u.AddFieldAsDouble(  fid++, r64 );
-      u.AddFieldAsDouble(  fid++, -r64 );
-      r64        = 6120.987654321;
-      u.AddFieldAsDouble(  fid++, r64 );
-      u.AddFieldAsDouble(  fid++, -r64 );
-      r32        = 6120.987654321;
-      u.AddFieldAsFloat(  fid++, r32 );
-      u.AddFieldAsFloat(  fid++, -r32 );
-      r64        = 3.14159265358979323846;
-      u.AddFieldAsDouble(  fid++, r64 );
-      u.AddFieldAsDouble(  fid++, -r64 );
-      u.AddFieldAsUnixTime(  fid++, DateTime.Now );
 /*
       u.AddFieldAsString(  2147483647, "2147483647" );
       u.AddFieldAsString( -2147483647, "-2147483647" );
