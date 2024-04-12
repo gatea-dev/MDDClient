@@ -1,0 +1,74 @@
+
+MDDirect in Python : README
+===========================
+
+1) librtEdge C Extension in Python
+==================================
+The librtEdge library is a C/C++ library for accessing services from the 
+Gatea MDDirect platform, including:
+   + Streaming data from rtEdgeCache3 data distributor
+   + Snapped data from the Last Value Cache (LVC)
+
+The library is wrapped as a C extension to Python via the following:
+   + Linux64 : MDDirectXY.so loadable module
+   + WIN64   : MDDirectXY.pyd loadable module
+where XY is Python interpreter version : 2.7, 3.6, etc.
+
+2) MDDirect Services in Python
+==============================
+The WIN64 .pyd and Linux64 .so C extensions are packaged with the libMDDirect.py 
+file, which contains helpful classes for accessing MDDirect services via the C 
+extension, including:
+
++ class rtEdgeSubscriber : Streaming subscription channel to 
+   - Real-time data from rtEdgeCache3 or 
+   - Recorded data from tape
+
++ class LVC : Snapshot data from Last Value Cache (LVC)
+
++ class rtEdgeData : Snapped or streaming data from rtEdgeSubscriber or LVC
+
++ class rtEdgeField : A single field from rtEdgeData
+
+The objective is to have the same 'look and feel' as the MDDirect .NET API. 
+
+
+3) Sample Code : SnapLVC.py
+===========================
+SnapLVC.py uses libMDDirect.py to snap data from the LVC.  
+
+You specify the following command-line arguments:
+   ./SnapLVC.py <LVCFile> <Service> <Tickers> <tSnap>
+where,
+   LVCFile : Filename of Last Value Cache
+   Service : Service name to snap (e.g., bloomberg)
+   Tickers : Comma-separated list of tickers, or filename, or __ALL__ for SnapAll()
+   tSnap   : Snap interval; Default is 1 sec
+
+4) Running : Config
+===================
+****** You must set PYTHONPATH to <this_directory>\lib *******
+
+The ./scripts directory has bash (Linux) and batch (Windows) scripts to set
+PYTHONPATH and fire up the examples.
+
+The following builds of the MDDirect C extension are available:
+
+OS | Py Ver | Module
+--- | --- | ---
+WIN64 | 2.7 | lib/MDDirect27.pyd
+WIN64 | 3.6 | lib/MDDirect36.pyd
+WIN64 | 3.9 | lib/MDDirect39.pyd
+Linux64 | 2.7 | lib/MDDirect27.so
+Linux64 | 3.6 | lib//MDDirect36.cpython-36m-x86_64-linux-gnu.so
+Linux64 | 3.11 | lib//MDDirect311.cpython-311-x86_64-linux-gnu.so
+
+libMDDirect.py handles the correct import of the MDDirectxy module based on 
+the version of the Python interpreter you are using. As such, your code written 
+exclusively to libbMDDirect.py will remain portable across Python interpreters
+
+libMDDirect.Version() shows Python and MDDirect version and build info.
+
+Feel free to modify to your liking.
+
+Questions : johns@gatea.com

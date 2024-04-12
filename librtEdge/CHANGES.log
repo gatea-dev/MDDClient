@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 70 24-03-xx
+ * ### Build 70 24-04-xx
  *
  * -# libmddWire Build 20 : mddFld_real:
  *    - mddWire_RealToDouble() / mddWire_DoubleToReal()
@@ -54,7 +54,9 @@ Features To Add
  * -# Field.hpp : Handle mddFld_real
  *    - CLI : Update.AddFieldAsReal() 
  *
- * -# ZB : Python311 on Linux64
+ * -# ZB : 
+ *   - Python311 on linux64
+ *   - Python311 on win64
  *
  *
  * ### Build 69 24-03-11
