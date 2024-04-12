@@ -64,7 +64,7 @@
          ..\..\..\libmddWire\expat\xmltok;
          ..\..\..\libmddWire\expat\xmlparse;
          ..\..\..\librtEdge\inc;
-         ..\..\..\..\OpenSource\Python3.11\win64\include;
+         ..\..\..\..\OpenSource\Python311\win64\include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
          _MDD_PYTHON3;WIN32;_DEBUG;_USRDLL;
@@ -74,7 +74,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>
-         ..\..\..\..\OpenSource\Python3.11\win64\libs;
+         ..\..\..\..\OpenSource\Python311\win64\libs;
       </AdditionalLibraryDirectories>
       <AdditionalDependencies>
          ..\..\..\libmddWire\lib64\libmddWireMD64.lib;
@@ -98,7 +98,7 @@
          ..\..\..\libmddWire\expat\xmltok;
          ..\..\..\libmddWire\expat\xmlparse;
          ..\..\..\librtEdge\inc;
-         ..\..\..\..\OpenSource\Python3.11\win64\include;
+         ..\..\..\..\OpenSource\Python311\win64\include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
          _MDD_PYTHON3;WIN32;NDEBUG;_USRDLL;
@@ -110,7 +110,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>
-         ..\..\..\..\OpenSource\Python3.11\win64\libs;
+         ..\..\..\..\OpenSource\Python311\win64\libs;
       </AdditionalLibraryDirectories>
       <AdditionalDependencies>
          ..\..\..\libmddWire\lib64\libmddWireMD64.lib;
