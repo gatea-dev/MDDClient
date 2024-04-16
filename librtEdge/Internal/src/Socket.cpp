@@ -359,7 +359,7 @@ bool Socket::Disconnect( const char *reason )
 
 bool Socket::Write( const char *pData, int dLen )
 {
-assert( _mtx.tid() );
+// assert( _mtx.tid() );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
    Locker           l( _mtx );
