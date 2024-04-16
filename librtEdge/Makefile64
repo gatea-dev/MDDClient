@@ -230,7 +230,7 @@ clear:
 	clear
 
 clean:
-	/bin/rm -f ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
+	/bin/rm -fv ./*.o ./obj/*.o ./$(BIN_DIR)/* ./lib/*$(BITS).a ./core*
 
 %.o:  Internal/src/%.cpp
 	$(CPP) $(CPPFLAGS) $<

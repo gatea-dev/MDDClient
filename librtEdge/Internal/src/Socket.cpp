@@ -29,6 +29,7 @@
 *      3 JUN 2023 jcs  Build 63: HexDump(), not HexLog()
 *      5 JAN 2024 jcs  Build 67: Buffer.h
 *      4 MAR 2024 jcs  Build 69: BufferedIO
+*     16 APR 2024 jcs  Build 71: _SendPing() : Lock _mtx
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -358,6 +359,7 @@ bool Socket::Disconnect( const char *reason )
 
 bool Socket::Write( const char *pData, int dLen )
 {
+assert( _mtx.tid() );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
    Locker           l( _mtx );
@@ -646,6 +648,7 @@ void Socket::_CheckHeartbeat( u_int tLastMsg )
 
 void Socket::_SetHeartbeat()
 {
+   Locker    lck( _mtx );
    mddMsgHdr h;
    mddBuf    b;
    char      buf[K];
@@ -663,6 +666,7 @@ void Socket::_SetHeartbeat()
 
 void Socket::_SendPing()
 {
+   Locker lck( _mtx );
    mddBuf b;
 
    b = ::mddWire_Ping( _mdd );

@@ -363,9 +363,11 @@ public:
          u.AddField(  fid++, w._rtl );
       else
          u.AddEmptyField(  fid++ );
+ */
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
       dtTm       = unix2rtDateTime( tv );
+/*
       i64        = 7723845300000;
       i64        = 4503595332403200;
       r64        = 123456789.987654321;
@@ -402,18 +404,11 @@ public:
       i32        = 32;
       u.AddField(  fid++, i32 );
       u.AddField(  fid++, -i32 );
-/*
-      u.AddField(  fid++, i64 );
       u.AddField(  fid++, dtTm );
       u.AddFieldAsUnixTime(  fid++, dtTm );
+/*
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
- */
-/*
-      u.AddField(  2147483647, "2147483647" );
-      u.AddField( -2147483647, "-2147483647" );
-      u.AddField( 16260000, "16260000" );
-      u.AddField( 536870911, "536870911" );
  */
       if ( _vecSz && _bVecFld ) {
          for ( i=0; i<_vecSz; vdb.push_back( ::drand48() * 100.0 ), i++ );
