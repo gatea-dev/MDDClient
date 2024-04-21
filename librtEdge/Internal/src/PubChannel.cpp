@@ -29,7 +29,7 @@
 *      5 MAY 2022 jcs  Build 53: _bPub
 *      5 JAN 2024 jcs  Build 67: CircularBuffer
 *     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
-*     16 APR 2024 jcs  Build 71: OnConnect() : Lock _mtx
+*     21 APR 2024 jcs  Build 71: OnConnect() / Ioctl() : Lock _mtx
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/

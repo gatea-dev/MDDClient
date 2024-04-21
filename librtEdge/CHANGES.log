@@ -43,11 +43,12 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 71 24-04-16
+ * ### Build 71 24-04-21
  *
  * -# RX buffer overflow in Edge3 due to TREP Bridge:
  *    - Socket._SendPing() / _SetHeartbeat() : Lock _mtx
  *    - PubChannel.OnConnect() : Lock _mtx
+ *    - Socket.Disconnect() / Write() / Ioctl() : Lock _mtx
  *
  *
  * ### Build 70 24-04-12

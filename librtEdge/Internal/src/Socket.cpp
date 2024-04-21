@@ -29,7 +29,7 @@
 *      3 JUN 2023 jcs  Build 63: HexDump(), not HexLog()
 *      5 JAN 2024 jcs  Build 67: Buffer.h
 *      4 MAR 2024 jcs  Build 69: BufferedIO
-*     16 APR 2024 jcs  Build 71: _SendPing() : Lock _mtx
+*     21 APR 2024 jcs  Build 71: _SendPing() / Write() : Lock _mtx
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -338,6 +338,7 @@ const char *Socket::Connect()
 
 bool Socket::Disconnect( const char *reason )
 {
+   Locker           lck( _mtx );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
 
@@ -360,6 +361,7 @@ bool Socket::Disconnect( const char *reason )
 bool Socket::Write( const char *pData, int dLen )
 {
 // assert( _mtx.tid() );
+   Locker           lck( _mtx );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
    Locker           l( _mtx );
@@ -410,6 +412,7 @@ bool Socket::Write( const char *pData, int dLen )
 ////////////////////////////////////////////
 bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
 {
+   Locker            lck( _mtx );
    rtEdgeChanStats  &st  = stats();
    Buffer           &out = oBuf();
    rtEdgeChanStats **rtn;
