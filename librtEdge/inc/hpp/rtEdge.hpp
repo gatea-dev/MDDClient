@@ -31,6 +31,7 @@
 *     31 OCT 2023 jcs  Build 66: No mo DoubleXY
 *     13 JAN 2024 jcs  Build 67: IsFile()
 *      4 MAR 2024 jcs  Build 69: XxxBufferedIO()
+*     24 APR 2024 jcs  Build 71: unix2rtDateTime() crash : WIN64
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -339,13 +340,13 @@ public:
 	static rtDateTime unix2rtDateTime( struct timeval tv )
 	{
 	   struct tm *tm, lt;
-	   time_t    *t;
+	   time_t     t;
 	   rtDateTime dtTm;
 	   rtDate    &rd = dtTm._date;
 	   rtTime    &rt = dtTm._time;
 
-	   t          = (time_t *)&tv.tv_sec;
-	   tm         = ::localtime_r( t, &lt );
+	   t          = tv.tv_sec;
+	   tm         = ::localtime_r( &t, &lt );
 	   rd._year   = tm->tm_year + 1900;
 	   rd._month  = tm->tm_mon;
 	   rd._mday   = tm->tm_mday;
