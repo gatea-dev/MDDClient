@@ -52,6 +52,8 @@ Features To Add
  *
  * -# rtEdge.unix2rtDateTime() crash : WIN64
  *
+ * -# libMDDirect.rtEdgeSchema.GetFieldType()
+ *
  *
  * ### Build 70 24-04-12
  *

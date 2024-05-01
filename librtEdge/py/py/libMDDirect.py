@@ -26,6 +26,7 @@
 #      6 DEC 2023 jcs  GetField( bDeepCopy )
 #     16 JAN 2024 jcs  rtEdgeData.UserArg()
 #     28 MAR 2024 jcs  MDDirect311
+#     30 APR 2024 jcs  LVC _SetData() arg mismatch
 #
 #  (c) 1994-2024, Gatea Ltd.
 #################################################################
@@ -72,24 +73,13 @@ pass
 # Python Ver | Win64 | Linux64
 # --- | --- | ---
 # 2.7 | MDDirect27.pyd | MDDirect27.so
+# 3.6 | MDDirect36.pyd | MDDirect36.so
 # 3.9 | MDDirect39.pyd | MDDirect39.so
+# 3.11 | MDDirect311.pyd | MDDirect311.so
 # 
-# You import the module depending on the version of your Python interpreter
-# as follows: 
-# \code
-#   import sys
+# The libMDDirect.py module 'hunts' for and transparently loades the proper 
+# C extension library based on the version of Python you are running. 
 #
-#   try:
-#      import MDDirect27 as MDDirect
-#   except:
-#      try:
-#         import MDDirect39 as MDDirect
-#      except:
-#         sys.stdout.write( 'MDDirect not found; Exitting ...\n' )
-#         sys.exit()
-#
-#    sys.stdout.write( MDDirect.Version() )
-# \endcode
 # 
 # ### MDDirect Services in Python
 #
@@ -121,6 +111,14 @@ pass
 #################################
 def Version():
    return MDDirect.Version()
+
+#################################
+# Returns CPU usage of this process
+#
+# @return CPU usage of this process
+#################################
+def CPU():
+   return MDDirect.CPU()
 
 #################################
 # Returns process memory size in KB
@@ -242,6 +240,7 @@ class rtEdgeSubscriber( threading.Thread ):
       self._tid    = None
       self._cxt    = None
       self._schema = None
+      self._bThrMD = False
       self._msg    = rtEdgeData()
       self._ready  = threading.Event()
 
@@ -252,6 +251,14 @@ class rtEdgeSubscriber( threading.Thread ):
    ########################
    def Version( self ):
       return MDDirect.Version()
+
+   ########################
+   # Returns True if dispatching from this thread
+   #
+   # @return True if dispatching from this thread
+   ########################
+   def IsOurThread( self ):
+      return self._bThrMD
 
    ########################
    # Connect and Start session to MD-Direct rtEdgeCache3 server
@@ -551,7 +558,9 @@ class rtEdgeSubscriber( threading.Thread ):
       #
       msg = self._msg
       while self._run:
+         self._bThrMD = False
          rd = MDDirect.Read( self._cxt, 0.25 )
+         self._bThrMD = True
          if not rd:
             continue ## while-run
          ( mt, blob ) = rd
@@ -598,8 +607,9 @@ class rtEdgeSubscriber( threading.Thread ):
             tkr  = blob
             self.OnSymbol( tkr )
          elif mt == MDDirectEnum.EVT_SVC:
-            kv = blob.split('|')
-            self.OnService( kv[1], kv[0].strip() )
+            kv  = blob.split('|')
+            bUP = ( kv[0].strip() == 'UP' )
+            self.OnService( kv[1], bUP )
          elif mt == MDDirectEnum.EVT_CONN:
             ( ty, pMsg )  = blob.split('|')
             self.OnConnect( pMsg, ty.strip() )
@@ -640,6 +650,7 @@ class LVC:
    # Returns Field ID from Field Name in Schema
    #
    # @param name : Field Name
+   # @return Field ID from Field Name in Schema
    # @see rtEdgeSchema.GetFieldID()
    ########################
    def GetFieldID( self, name ):
@@ -652,6 +663,7 @@ class LVC:
    # Returns Field Name from ID in Schema
    #
    # @param fid : Field FID
+   # @return Field Name from ID in Schema
    # @see rtEdgeSchema.GetFieldName()
    ########################
    def GetFieldName( self, fid ):
@@ -737,7 +749,7 @@ class LVC:
       svc        = blob[2]
       tkr        = blob[3]
       flds       = blob[4:]
-      return msg._SetData( svc, tkr, flds, None, True )
+      return msg._SetData( svc, tkr, None, flds, True )
 ## \endcond
 
 
@@ -1036,6 +1048,12 @@ class rtEdgeData:
       return rc
 
    ########################
+   # Reset the iterator
+   ########################
+   def reset( self ):
+      self._itr = -1
+
+   ########################
    # Advances the iterator to the next field, returning field()
    #
    # @return field()
@@ -1222,21 +1240,10 @@ class rtEdgeField:
    # Constructor
    #################################
    def __init__( self ):
-      self._fid       = 0
-      self._val       = None
-      self._type      = MDDirectEnum._MDDPY_STR
-      self._name      = _UNDEF
-      self._TypeNames = { MDDirectEnum._MDDPY_INT    : '(int) ',
-                          MDDirectEnum._MDDPY_INT64  : '(i64) ',
-                          MDDirectEnum._MDDPY_DBL    : '(dbl) ',
-                          MDDirectEnum._MDDPY_STR    : '(str) ',
-                          MDDirectEnum._MDDPY_DT     : '(dat) ',
-                          MDDirectEnum._MDDPY_TM     : '(tim) ',
-                          MDDirectEnum._MDDPY_TMSEC  : '(tms) ',
-                          MDDirectEnum._MDDPY_UNXTM  : '(unx) ',
-                          MDDirectEnum._MDDPY_NONE   : '(NaN) ',
-                          MDDirectEnum._MDDPY_VECTOR : '(vec) '
-                        }
+      self._fid  = 0
+      self._val  = None
+      self._type = MDDirectEnum._MDDPY_STR
+      self._name = _UNDEF
 
    #################################
    # Returns Field ID
@@ -1274,11 +1281,7 @@ class rtEdgeField:
    # @return string-ified Field Type from the following set:
    #################################
    def TypeName( self ):
-      ty  = self._type
-      tdb = self._TypeNames
-      try:    rc = tdb[ty]
-      except: rc = '(%03d)' % ty
-      return rc
+      return GetTypeSuffix( self._type ) + ' '
 
    #################################
    # Returns Field Type from the following set:
@@ -1407,6 +1410,7 @@ class rtEdgeField:
 # --- | ---
 # _byFid  | { fid1 : name1, fid2 : name2, ... }
 # _byName | { name1 : fid1, name2 : fid2, ... }
+# _types  | { fid1 : type1, fid2 : type2, ... }
 #
 class rtEdgeSchema:
    #################################
@@ -1417,16 +1421,19 @@ class rtEdgeSchema:
    def __init__( self, schema ):
       fdb = {}
       ndb = {}
+      tdb = {}
       if schema:
          for kv in schema:
-            fid       = kv[0] 
-            name      = kv[1]
+            fid     = kv[0] 
+            name    = kv[1]
             try:    type = kv[2]
             except: type = None
             fdb[fid]  = name
             ndb[name] = fid
+            tdb[fid]  = type
       self._byFid  = fdb
       self._byName = ndb
+      self._types  = tdb
 
    #################################
    # Return number of fields in the Schema
@@ -1482,6 +1489,41 @@ class rtEdgeSchema:
       except: name = fid
       return name
 
+   ########################
+   # Returns Field Type from ID in Schema
+   #
+   # @param fid : Field FID
+   # @return Field Type from ID in Schema
+   ########################
+   def GetFieldType( self, fid ):
+      tdb = self._types
+      if fid in tdb:
+         return tdb[fid]
+      return MDDirectEnum._MDDPY_NONE
+
+   ########################
+   # Returns Field Type from ID in Schema
+   #
+   # @param fid : Field FID
+   # @return Field Type from ID in Schema
+   ########################
+   def GetFieldType( self, fid ):
+      tdb = self._types
+      if fid in tdb:
+         return tdb[fid]
+      return MDDirectEnum._MDDPY_NONE
+
+   ########################
+   # Returns Field Type Suffix from ID
+   #
+   # @param fid : Field FID
+   # @return Field Type Suffix
+   ########################
+   def GetFieldTypeSfx( self, fid ):
+      ty = self.GetFieldType( fid )
+      return GetTypeSuffix( ty )
+
+
 ## \cond
 ######################################
 #                                    #
@@ -1513,6 +1555,7 @@ class MDDirectEnum:
    #
    # Field Types
    #
+   _MDDPY_UNDEF  =  0
    _MDDPY_INT    =  1
    _MDDPY_DBL    =  2
    _MDDPY_STR    =  3
@@ -1523,4 +1566,42 @@ class MDDirectEnum:
    _MDDPY_UNXTM  =  8
    _MDDPY_NONE   =  9
    _MDDPY_VECTOR = 10
+   #
+   # Type Names /  Suffixes
+   #
+   _TypeNames = { _MDDPY_UNDEF  : 'undef',
+                  _MDDPY_INT    : 'int',
+                  _MDDPY_INT64  : 'int64',
+                  _MDDPY_DBL    : 'double',
+                  _MDDPY_STR    : 'string',
+                  _MDDPY_DT     : 'date',
+                  _MDDPY_TM     : 'time',
+                  _MDDPY_TMSEC  : 'time-sec',
+                  _MDDPY_UNXTM  : 'unixTime',
+                  _MDDPY_NONE   : 'NaN',
+                  _MDDPY_VECTOR : 'vector'
+                }
+   _TypeSfxs =  { _MDDPY_UNDEF  : '(n/a)',
+                  _MDDPY_INT    : '(int)',
+                  _MDDPY_INT64  : '(i64)',
+                  _MDDPY_DBL    : '(dbl)',
+                  _MDDPY_STR    : '(str)',
+                  _MDDPY_DT     : '(dat)',
+                  _MDDPY_TM     : '(tim)',
+                  _MDDPY_TMSEC  : '(tms)',
+                  _MDDPY_UNXTM  : '(unx)',
+                  _MDDPY_NONE   : '(NaN)',
+                  _MDDPY_VECTOR : '(vec)'
+                }
+
+def GetTypeSuffix( ty ):
+   try:    rc = MDDirectEnum._TypeSfxs[ty]   
+   except: rc = '(%03d)' % ty
+   return rc
+
+def GetTypeName( ty ):
+   try:    rc = MDDirectEnum._TypeNames[ty]   
+   except: rc = 'string'
+   return rc
+
 ## \endcond
