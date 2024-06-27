@@ -22,8 +22,9 @@
 *      3 DEC 2020 jcs  Build 47: TapeSlice
 *     29 MAR 2022 jcs  Build 52: ioctl_unpacked
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
+*     26 JUN 2024 jcs  Build 72: FIDSet in EDG_Internal.h
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_CHANNEL_H
 #define __EDGLIB_CHANNEL_H
@@ -31,9 +32,6 @@
 #include <EDG_GLrecDb.h>
 
 #define MAX_FLD 128*K
-
-typedef vector<int>    FIDs;
-typedef hash_set<int>  FIDSet;
 
 namespace RTEDGE_PRIVATE
 {

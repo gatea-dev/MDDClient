@@ -39,6 +39,7 @@
 *      5 JAN 2024 jcs  Build 67: rtEdgePubAttr._bCircularBuffer
 *     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
 *      4 MAR 2024 jcs  Build 69: bufferedIO
+*     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -1778,26 +1779,34 @@ LVC_Context LVC_Initialize( const char *pFile );
 int LVC_GetSchema( LVC_Context cxt, LVCData *data );
 
 /**
- * \brief Set query response field list filter.
+ * \brief Set query response field list and/or service list filter.
  *
- * Use this to improve query performance if you know you only want 
- * to view certain fields but the LVC might contain many more.  For 
- * example, you may only want to see TRDPRC_1, BID and ASK yet the 
- * LVC might be cache-ing over 100 fields per record.  You may 
- * call LVC_SetFilter() to configure the library to only return these 
- * 3 fields.
+ * Use this to improve query performance if you know you only want to view 
+ * certain fields and/or services, but the LVC might contain many more.  
+ *
+ * Examples:
+ * Requirement | Filter  
+ * --- | ---  
+ * BID, ASK, TRDPRC_1 from all services | SetFilter( "BID,ASK,TRDPRC_1", NULL )
+ * BID, ASK, TRDPRC_1 from bloomberg | SetFilter( "BID,ASK,TRDPRC_1", [ "bloomberg", NULL ] )
+ * All fields from bloomberg | SetFilter( "", [ "bloomberg", NULL ] )
  *
  * The filter is used on the following APIs:
- * + LVC_Snapshot()
- * + LVC_View()
- * + LVC_SnapAll()
- * + LVC_ViewAll()
+ * API | Field Filter | Service Filter
+ * --- | --- | ---
+ * LVC_Snapshot() | Y | N
+ * LVC_View() | Y | N
+ * LVC_SnapAll() | Y | Y
+ * LVC_ViewAll() | Y | Y
+ *
+ * To clear filter, pass in NULL for both flds and svcs
  *
  * \param cxt - LVC Context from LVC_Initialize()
- * \param pFlds - Comma-separated list of field names or ID's 
- * \return Number of fields in filter
+ * \param flds - Comma-separated list of field names or ID's 
+ * \param svc - NULL-terminated array of allowable service names
+ * \return Number of fields and servivces in filter
  */
-int LVC_SetFilter( LVC_Context cxt, const char *pFlds );
+int LVC_SetFilter( LVC_Context cxt, const char *flds, const char **svcs );
 
 /**
  * \brief Configure your LVC view to be volatile (Copy Type = 0) or 

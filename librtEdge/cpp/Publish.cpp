@@ -17,11 +17,14 @@
 *     31 OCT 2023 jcs  Build 66: ../quant
 *      7 JAN 2023 jcs  Build 67: -nPub; -circBuf
 *     18 MAR 2024 jcs  Build 70: mddFld_real
+*     15 MAY 2024 jcs  Build 71: SeqNum / logUpd; LOG; koList
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
-// #include <quant.hpp>
+#include <stdarg.h>
+#include <set>
+
 
 #if !defined(M_PI)
 #define M_E            2.7182818284590452354   /* e */
@@ -60,6 +63,28 @@ const char *PublishID()
    sccsid = s.data();
    return sccsid+4;
 }
+
+/////////////////////////////////////
+// Version
+/////////////////////////////////////
+static char logBuf[K*K];
+
+static void LOG( char *fmt, ... )
+{
+   va_list ap;
+   string  dtTm;
+   char   *cp;
+
+   va_start( ap,fmt );
+   cp  = logBuf;
+   cp += sprintf( cp, "[%s] ", rtEdge::pDateTimeMs( dtTm ) );
+   cp += vsprintf( cp, fmt, ap );
+//   cp += sprintf( cp, "\n" );
+   va_end( ap );
+   ::fwrite( logBuf, 1, cp-logBuf, stdout );
+   ::fflush( stdout );
+}
+
 
 ////////////////////
 //
@@ -192,6 +217,9 @@ class MyChannel;
 typedef map<string, Watch *>    WatchList;
 typedef map<string, MyVector *> WatchListV;
 typedef vector<MyChannel *>     MyChannels;
+typedef set<string>             KOList;
+
+static bool _bLogUpd = true;
 
 class MyChannel : public PubChannel
 {
@@ -206,6 +234,7 @@ private:
    int          _qTxKb;
    string       _togl;
    string       _dead;
+   KOList       _KO;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
@@ -224,7 +253,8 @@ public:
               bool        bFull, 
               int         qTxKb, 
               const char *togl,
-              const char *dead ) :
+              const char *dead,
+              KOList     &KO ) :
       PubChannel( svc ),
       _vecSz( vecSz ),
       _vecPrec( vecPrec ),
@@ -233,6 +263,7 @@ public:
       _qTxKb( WithinRange( 1, qTxKb, 256*K ) ),
       _togl( togl ),
       _dead( dead ),
+      _KO( KO ),
       _wl(),
       _wlV(),
       _mtx(),
@@ -302,9 +333,8 @@ public:
          nb += v->PubVector( upd() );
       }
       nt = _wl.size() + _wlV.size();
-      if ( nt )
-         ::fprintf( stdout, "Publish %ld tkrs ( %s ); %ld bytes\n", nt, svc, nb );
-      ::fflush( stdout );
+      if ( nt && _bLogUpd )
+         LOG( "Publish %ld tkrs ( %s ); %ld bytes\n", nt, svc, nb );
       return nt;
    }
 
@@ -323,20 +353,21 @@ public:
       int            fid;
 
       if ( w._bImg )
-         ::fprintf( stdout, "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
+         LOG( "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
-      fid        = 6;
       tv.tv_sec  = TimeSec();
       tv.tv_usec = 0;
       dtTm       = unix2rtDateTime( tv );
+      u.AddField( 3, w.tkr() );
+      fid        = 6;
       u.AddField( fid++, -19630411 );
       u.AddField( fid++, -M_PI );
 /*
-      u.AddField( fid++, dtTm );
-      u.AddField( fid++, w._rtl++ );
       u.AddField( fid++, M_PI );
+      u.AddField( fid++, dtTm );
  */
+      u.AddField( fid++, w._rtl++ );
       return u.Publish();
    }
 
@@ -354,7 +385,7 @@ public:
       struct timeval tv;
 
       if ( w._bImg )
-         ::fprintf( stdout, "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
+         LOG( "IMG [%d] : ( %s,%s )\n", w._StreamID, svc, w.tkr() );
       u.Init( w.tkr(), w._StreamID, w._bImg );
       w._bImg    = false;
       fid        = 6;
@@ -436,8 +467,7 @@ public:
       if ( nl > 0 ) {
          bFinal = ( _nLnk <= ( (lnk+1)*_NUM_LINK ) );
          u.PubChainLink( chain, arg, lnk, bFinal, ldb, nl );
-         ::fprintf( stdout, "IMAGEc %d#%s\n", lnk, chain ); 
-         ::fflush( stdout );
+         LOG( "IMAGEc %d#%s\n", lnk, chain ); 
       }
    }
 
@@ -449,23 +479,25 @@ public:
    virtual void OnConnect( const char *msg, bool bUP )
    {
       const char *pUp = bUP ? "UP" : "DOWN";
+      char        bp[K], *cp;
       int         qSz;
 
-      ::fprintf( stdout, "CONN %s : %s", pUp, msg );
+      cp  = bp;
+      cp += sprintf( cp,  "CONN %s : %s", pUp, msg );
       if ( bUP ) {
          SetTxBufSize( _qTxKb*K );
          qSz = GetTxMaxBufSize();
-         ::fprintf( stdout, "; TX Queue=%dK", qSz/K );
+         cp += sprintf( cp, "; TX Queue=%dK", qSz/K );
       }
-      ::fprintf( stdout, "\n" );
-      ::fflush( stdout );
+      cp += sprintf( cp, "\n" );
+      LOG( bp );
    }
 
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
       Locker      lck( _mtx );
       Update     &u = upd();
-      string      tmp( tkr );
+      string      tmp( tkr ), s( tkr );
       Watch      *w;
       MyVector   *v;
       const char *err;
@@ -477,28 +509,30 @@ public:
       ric    = ::strtok( NULL, "#" );
       bChn   = _chn && ric;
       err    = _dead.data();
-      ::fprintf( stdout, "OPEN [%6d] ( %s,%s )\n", StreamID, pPubName(), tkr ); 
-      ::fflush( stdout );
+      LOG( "OPEN [%6d] ( %s,%s )\n", StreamID, pPubName(), tkr ); 
       if ( !::strcmp( tkr, _togl.data() ) ) { 
          _XON = !_XON;
          sprintf( buf, "XON toggled = %s", _XON ? "true" : "false" );
          err = buf;
-         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
-         ::fflush( stdout );
+         LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          u.Init( tkr, StreamID );
          u.PubError( err );
          return;
       }
       if ( !_XON ) {
          err = "XOFF";
-         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
-         ::fflush( stdout );
+         LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          u.Init( tkr, StreamID );
          u.PubError( err );
       }
       else if ( _dead.length() ) {
-         ::fprintf( stdout, "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
-         ::fflush( stdout );
+         LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
+         u.Init( tkr, StreamID );
+         u.PubError( err );
+      }
+      else if ( _KO.find( s ) != _KO.end() ) {
+         err = "KO List";
+         LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          u.Init( tkr, StreamID );
          u.PubError( err );
       }
@@ -521,8 +555,7 @@ public:
       WatchListV::iterator vt;
       string               s( tkr );
 
-      ::fprintf( stdout, "CLOSE ( %s,%s )\n", pPubName(), tkr );
-      ::fflush( stdout );
+      LOG( "CLOSE ( %s,%s )\n", pPubName(), tkr );
       if ( (it=_wl.find( s )) != _wl.end() ) {
          _wl.erase( it );
          delete (*it).second;
@@ -535,8 +568,7 @@ public:
 
    virtual void OnSymListQuery( int nSym )
    {
-      ::fprintf( stdout, "OnSymListQuery( %d )\n", nSym );
-      ::fflush( stdout );
+      LOG( "OnSymListQuery( %d )\n", nSym );
    }
 
    virtual void OnRefreshImage( const char *tkr, int StreamID )
@@ -546,8 +578,7 @@ public:
       Watch              *w;
       string         s( tkr );
 
-      ::fprintf( stdout, "OnRefreshImage( %s )\n", tkr );
-      ::fflush( stdout );
+      LOG( "OnRefreshImage( %s )\n", tkr );
       if ( (it=_wl.find( s )) != _wl.end() ) {
          w = (*it).second;
          PubTkr( *w );
@@ -560,10 +591,8 @@ public:
       const char *tkr = tuple[1];
       const char *usr = tuple[2];
       const char *loc = tuple[3];
-      const char *fmt = "OnPermQuery( %s,%s,%s,%s ) : %d\n";
 
-      ::fprintf( stdout, fmt, svc, tkr, usr, loc, reqID );
-      ::fflush( stdout );
+      LOG( "OnPermQuery( %s,%s,%s,%s ) : %d\n", svc, tkr, usr, loc, reqID );
    }
 
 
@@ -591,11 +620,13 @@ int main( int argc, char **argv )
 {
    const char *svr, *svc, *pChn, *ty, *dead, *togl;
    const char *lnks[_MAX_CHAIN];
-   char       *cp, *rp, sSvr[K], sSvc[K];
+   char       *cp, *rp, *pKO, sSvr[K], sSvc[K];
    double      tPub, tRun, d0, dn;
    int         i, nl, hBeat, vecSz, vPrec, nPub, txQ;
    bool        bCfg, bPack, bFldV, bCirc, bFull, aOK;
    string      s;
+   KOList      koList;
+   FILE       *fp;
    rtBuf64     chn;
 
    /////////////////////////////
@@ -641,7 +672,9 @@ int main( int argc, char **argv )
       s += "  [           2) Connect at <host:port>, <host:port+1>, ... ] \\ \n";
       s += "  [ -circBuf <true for circular buffer; false for normal> ] \\ \n";
       s += "  [ -full    <true for full payload; false for small> ] \\ \n";
+      s += "  [ -logUpd  <true log updates> ] \\ \n";
       s += "  [ -txQ     <TX queue size in Kb> ] \\ \n";
+      s += "  [ -ko      <KO List Filename> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
@@ -658,7 +691,9 @@ int main( int argc, char **argv )
       printf( "      -nPub    : %d\n", nPub );
       printf( "      -circBuf : %s\n", bCirc ? "YES" : "NO" );
       printf( "      -full    : %s\n", bFull ? "YES" : "NO" );
+      printf( "      -logUpd  : %s\n", _bLogUpd ? "YES" : "NO" );
       printf( "      -txQ     : %dK\n", txQ );
+      printf( "      -ko      : <empty>\n" );
       return 0;
    }
 
@@ -699,8 +734,31 @@ int main( int argc, char **argv )
          bCirc = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-full" ) )
          bFull = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-logUpd" ) )
+         _bLogUpd = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-txQ" ) )
          txQ   = atoi( argv[++i] );
+      else if ( !::strcmp( argv[i], "-ko" ) ) {
+         pKO = argv[++i];
+         if ( (fp=::fopen( pKO, "r" )) ) {
+            while( ::fgets( sSvr, K, fp ) ) {
+               cp  = sSvr;
+               cp += ( strlen( sSvr ) - 1 );
+               for ( ; cp > sSvr; ) {
+                  if ( ( *cp == '\r' ) || ( *cp == '\n' ) ||
+                       ( *cp == '\t' ) || ( *cp == ' ' ) ) {
+                     cp--;
+                     continue; // for-i
+                  }
+                  break; // for-cp
+               }
+               cp[1] = '\0';
+               if ( strlen( sSvr ) )
+                  koList.insert( string( sSvr ) );
+            }
+            ::fclose( fp );
+         }
+      }
    }
 
    MyChannels pubs;
@@ -708,7 +766,7 @@ int main( int argc, char **argv )
 
    strcpy( sSvc, svc );
    for ( i=0; i<nPub; i++ ) {
-      pub = new MyChannel( sSvc, vecSz, vPrec, bFldV, bFull, txQ, togl, dead );
+      pub = new MyChannel( sSvc, vecSz, vPrec, bFldV, bFull, txQ, togl, dead, koList );
       pubs.push_back( pub );
       sprintf( sSvc, "%s.%d", svc, i+1 );
    }
@@ -730,13 +788,15 @@ int main( int argc, char **argv )
    for ( i=0; i<nPub; pubs[i++]->SetCircularBuffer( bCirc ) );
    for ( i=0; i<nPub; pubs[i++]->SetUnPacked( !bPack ) );
    for ( i=0; i<nPub; pubs[i++]->SetChain( lnks, nl ) );
-   ::fprintf( stdout, "%s\n", pub->Version() );
-   ::fprintf( stdout, "%sPACKED\n", pub->IsUnPacked() ? "UN" : "" );
-   ::fprintf( stdout, "%s BUFFER\n", bCirc ? "Circular" : "Normal" );
-   ::fprintf( stdout, "%s PAYLOAD\n", bFull ? "Full" : "Small" );
+   LOG( "%s\n", pub->Version() );
+   LOG( "%sPACKED\n", pub->IsUnPacked() ? "UN" : "" );
+   LOG( "%s BUFFER\n", bCirc ? "Circular" : "Normal" );
+   LOG( "%s PAYLOAD\n", bFull ? "Full" : "Small" );
+   if ( koList.size() )
+      LOG( "%ld KO List\n", koList.size() );
    if ( vecSz ) {
       ty = bFldV ? "FIELD" : "BYTESTREAM";
-      ::fprintf( stdout, "%d VECTOR as %s\n", vecSz, ty );
+      LOG( "%d VECTOR as %s\n", vecSz, ty );
    }
    for ( i=0; i<nPub; i++ ) {
       string hp( svr );
@@ -750,11 +810,10 @@ int main( int argc, char **argv )
 #ifdef TODO_PERMS_BUT_NOT_NOW
       pubs[i]->SetPerms( true );
 #endif // TODO_PERMS_BUT_NOT_NOW
-      ::fprintf( stdout, "%s@%s\n", svc, pubs[i]->Start( sSvr ) );
+      LOG( "%s@%s\n", svc, pubs[i]->Start( sSvr ) );
 //      pubs[i]->SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
    }
-   ::fprintf( stdout, "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
-   ::fflush( stdout );
+   LOG( "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
    for ( d0=dn=pub->TimeNs(); ( dn-d0 ) < tRun; ) {
       for ( i=0; i<nPub; pubs[i++]->Sleep( tPub ) );
       for ( i=0; i<nPub; pubs[i++]->PublishAll() );
@@ -763,8 +822,8 @@ int main( int argc, char **argv )
 
    // Clean up
 
-   ::fprintf( stdout, "Cleaning up ...\n" ); ::fflush( stdout );
+   LOG( "Cleaning up ...\n" );
    for ( i=0; i<nPub; pubs[i++]->Stop() );
-   printf( "Done!!\n " );
+   LOG( "Done!!\n " );
    return 1;
 }

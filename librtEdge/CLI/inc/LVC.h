@@ -15,8 +15,9 @@
 *     20 MAY 2023 jcs  Build 63: GetSchema( bool )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
+*     26 JUN 2024 jcs  Build 72: SetFilter( flds, svcs )
 *
-*  (c) 1994-2024, Gatea, Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -129,9 +130,8 @@ public:
 	 */
 	~LVC();
 
-
 	////////////////////////////////////
-	// Access
+	// Access - Schema
 	////////////////////////////////////
 public:
 #ifndef DOXYGEN_OMIT
@@ -145,11 +145,6 @@ public:
 	 */  
 	rtEdgeSchema ^schema();
 
-
-	////////////////////////////////////
-	// Cache Query
-	////////////////////////////////////
-public:
 	/** 
 	 * \brief Return reference to LVC current schema
 	 *   
@@ -165,6 +160,48 @@ public:
 	 */  
 	rtEdgeSchema ^GetSchema( bool bQry );
 
+	////////////////////////////////////
+	// Filter
+	////////////////////////////////////
+	/**
+	 * \brief Set query response field list and/or service list filter.
+	 *
+	 * Use this to improve query performance if you know you only want to view
+	 * certain fields and/or services, but the LVC might contain many more.
+	 *
+	 * Examples:
+	 * Requirement | Filter
+	 * --- | ---
+	 * BID, ASK, TRDPRC_1 from all services | SetFilter( "BID,ASK,TRDPRC_1", NULL )
+	 * BID, ASK, TRDPRC_1 from bloomberg | SetFilter( "BID,ASK,TRDPRC_1", [ "bloomberg", NULL ] )
+	 * All fields from bloomberg | SetFilter( "", [ "bloomberg", NULL ] )
+	 *
+	 * The filter is used on the following APIs:
+	 * API | Field Filter | Service Filter
+	 * --- | --- | ---
+	 * LVC_Snapshot() | Y | N
+	 * LVC_View() | Y | N
+	 * LVC_SnapAll() | Y | Y
+	 * LVC_ViewAll() | Y | Y
+	 *
+	 * \param flds - Comma-separated list of field names or ID's
+	 * \param svcs - NULL-terminated array of allowable service names
+	 * \return Number of fields and services in filter
+	 * \see ClearFilter()
+	 */
+        int SetFilter( String ^flds, cli::array<String ^> ^svcs );
+
+	/**
+	 * \brief Clear response filter set via SetFilter()
+	 *
+	 * \see SetFilter()
+	 */
+        void ClearFilter();
+
+
+	////////////////////////////////////
+	// Cache Query
+	////////////////////////////////////
 	/** 
 	 * \brief Query LVC for current values of a single market data record
 	 *   

@@ -29,6 +29,7 @@
 *      3 JUN 2023 jcs  Build 63: rtEdge_hexDump()
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     14 JAN 2024 jcs  Build 67: No mo OFF_T
+*     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -889,25 +890,12 @@ int LVC_GetSchema( LVC_Context cxt, LVCData *rtn )
    return 0;
 }
 
-int LVC_SetFilter( LVC_Context cxt, const char *pFids )
+int LVC_SetFilter( LVC_Context cxt, const char *flds, const char **svcs )
 {
    LVCDef *lvc;
-   Logger *lf;
-
-   // Pre-condition
-
-   if ( !pFids )
-      return 0;
-
-   // Logging; Find GLlvcDb
-
-   if ( (lf=Socket::_log) )
-      lf->logT( 3, "LVC_SetFilter( %s )\n", pFids );
-
-   // LVCDef object
 
    lvc = _GetLVC( cxt );
-   return lvc ? lvc->SetFilter( pFids ) : 0;
+   return lvc ? lvc->SetFilter( flds, svcs ) : 0;
 }
 
 void LVC_SetCopyType( LVC_Context cxt, char bFull )
@@ -1031,16 +1019,18 @@ LVCDataAll LVC_SnapAll( LVC_Context cxt )
    char            *bp, *pSvc, *pTkr, *rp;
 
    tkrs = sz ? new LVCData[sz] : rtn._tkrs;
-   for ( i=0,it=rdb.begin(); it!=rdb.end(); it++,i++ ) {
-      s        = (*it).first.data();
-      bp       = (char *)s.data();
-      pSvc     = ::strtok_r( bp, LVC_SVCSEP, &rp );
-      pTkr     = ::strtok_r( NULL, LVC_SVCSEP, &rp );
-      d2       = dNow();
-      d        = lvc.GetItem_safe( pSvc, pTkr, False );
-      d3       = dNow();
-      d._dSnap = ( d3-d2 );
-      tkrs[i]  = d;
+   for ( i=0,it=rdb.begin(); it!=rdb.end(); it++ ) {
+      s    = (*it).first.data();
+      bp   = (char *)s.data();
+      pSvc = ::strtok_r( bp, LVC_SVCSEP, &rp );
+      pTkr = ::strtok_r( NULL, LVC_SVCSEP, &rp );
+      if ( !lvc.CanAddItem( pSvc, pTkr ) )
+         continue; // for-i
+      d2        = dNow();
+      d         = lvc.GetItem_safe( pSvc, pTkr, False );
+      d3        = dNow();
+      d._dSnap  = ( d3-d2 );
+      tkrs[i++] = d;
    }
    d1           = dNow();
    rtn._tkrs    = tkrs;

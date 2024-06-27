@@ -8,6 +8,7 @@
 *     23 SEP 2022 jcs  GetField()
 *     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
 *     12 JAN 2024 jcs  TapeHeader.h
+*     26 JUN 2024 jcs  Build 72: FIDSet in EDG_Internal.h
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -17,9 +18,6 @@
 #include <TapeHeader.h>
 
 #define MAX_FLD 128*K
-
-typedef vector<int>    FIDs;
-typedef hash_set<int>  FIDSet;
 
 namespace RTEDGE_PRIVATE
 {

@@ -10,8 +10,9 @@
 *     15 JAN 2018 jcs  Build 39: Leak - 
 *     29 SEP 2018 jcs  Build 41: public field()
 *     19 MAY 2022 jcs  Build 54: rtVALUE._i32 is _maxLen
+*     27 JUN 2024 jcs  Build 72: GetDef( const char * ) : Name, then FID
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Schema_H
 #define __RTEDGE_Schema_H
@@ -279,10 +280,13 @@ public:
 	   FldDefByNameMap::iterator it;
 	   std::string               s( pFld );
 	   FieldDef                 *def;
+	   int                       fid;
 
 	   def = (FieldDef *)0;
 	   if ( (it=v.find( s )) != v.end() )
 	      def = (*it).second;
+	   else if ( (fid=atoi( pFld )) )
+	      def = GetDef( fid );
 	   return def;
 	}
 

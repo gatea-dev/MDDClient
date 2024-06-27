@@ -6,8 +6,9 @@
 *     14 NOV 2014 jcs  Created.
 *      9 FEB 2020 jcs  Build 42: GetDef()
 *     23 OCT 2022 jcs  Build 58: Formatting
+*     27 JUN 2024 jcs  Build 72: GetDef( const char * ) : Name, then FID
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -119,7 +120,7 @@ public:
 	rtEdgeField ^GetDef( int fid );
 
 	/**
-	 * \brief Returns field ID from field name
+	 * \brief Returns field ID from field name (first) or field ID (if non-zero)
 	 *
 	 * \param fld - Field name
 	 * \return Field ID for name

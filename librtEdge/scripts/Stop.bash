@@ -2,4 +2,4 @@
 
 ## Configurable
 
-pkill -e -u ${USER} SplineMaker
+pkill -e -u ${USER} Publish

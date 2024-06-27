@@ -10,8 +10,9 @@
 *      2 JUN 2022 jcs  Build 55: Single-field dump
 *      9 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *     18 MAY 2023 jcs  Build 63: -schema
+*     26 JUN 2024 jcs  Build 71: -colPerf
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 using System;
 using System.Collections.Generic;
@@ -39,11 +40,12 @@ public class FieldL
 /////////////////////////////////////
 public class TestCfg
 {
-    public bool bSafe   { get; set; }
-    public bool bShare  { get; set; }
-    public bool bSchema { get; set; }
-    public bool bQuery  { get; set; }
-    public bool bLiam   { get; set; }
+    public bool bSafe    { get; set; }
+    public bool bShare   { get; set; }
+    public bool bSchema  { get; set; }
+    public bool bQuery   { get; set; }
+    public bool bLiam    { get; set; }
+    public bool bColPerf { get; set; }
 }
 
 
@@ -525,6 +527,7 @@ class LVCDumpCLI
       cfg.bSchema  = false;
       cfg.bQuery   = false;
       cfg.bLiam    = false;
+      cfg.bColPerf = false;
       if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
          s  = "Usage: %s \\ \n";
          s += "       [ -db      <LVC d/b file> ] \\ \n";
@@ -540,6 +543,7 @@ class LVCDumpCLI
          s += "       [ -schema  <GetSchema reference before ViewAll> ] \\ \n";
          s += "       [ -schemaQ <GetSchema query before ViewAll> ] \\ \n";
          s += "       [ -schemaL <GetSchema query and List before ViewAll> ] \\ \n";
+         s += "       [ -colPerf <Compare -f column native vs string > ] \\ \n";
          Console.WriteLine( s );
          Console.Write( "   Defaults:\n" );
          Console.Write( "      -db      : {0}\n", svr );
@@ -554,6 +558,7 @@ class LVCDumpCLI
          Console.Write( "      -schema  : {0}\n", cfg.bSchema );
          Console.Write( "      -schemaQ : {0}\n", cfg.bQuery );
          Console.Write( "      -schemaL : {0}\n", cfg.bLiam );
+         Console.Write( "      -colPerf : {0}\n", cfg.bColPerf );
          return 0;
       }
 
@@ -593,6 +598,8 @@ class LVCDumpCLI
             cfg.bQuery  |= cfg.bLiam;
             cfg.bSchema |= cfg.bLiam;
          }
+         else if ( args[i] == "-schemaL" ) 
+            cfg.bColPerf = _IsTrue( args[++i] );
       }
       tkrs = ReadLines( tkr );
       if ( tkrs == null )

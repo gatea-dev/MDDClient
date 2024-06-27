@@ -29,6 +29,7 @@
 *      1 SEP 2022 jcs  Build 56: TapeChannel
 *     24 OCT 2022 jcs  Build 58: No extern "C" wrapping librtEdge.h : Cockpit.hpp
 *     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
+*     26 JUN 2024 jcs  Build 72: FIDs / FIDSet
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -249,7 +250,11 @@ protected:
 } // namespace RTEDGE_PRIVATE
 
 typedef hash_map<int, int>      FidMap;
-typedef hash_map<string, int>   RecMap;
+typedef hash_map<string, int>   Str2IntMap;
+typedef Str2IntMap              RecMap;
+typedef vector<int>             FIDs;
+typedef hash_set<int>           FIDSet;
+typedef hash_set<string>        StringSet;
 
 #include <Mutex.h>
 #include <Logger.h>

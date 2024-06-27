@@ -11,8 +11,9 @@
 *     14 JAN 2018 jcs  Build 39: _FreeSchema() / _mtx
 *      8 MAR 2023 jcs  Build 62: Re-entrant SnanpAll( LVCAll * )
 *     14 AUG 2023 jcs  Build 65: _nameMap
+*     26 JUN 2024 jcs  Build 72: SetFilter( flds, svcs )
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_LVC_H
 #define __RTEDGE_LVC_H
@@ -310,7 +311,6 @@ public:
 	   return _qryMtx;
 	}
 
-
 	////////////////////////////////////
 	// Access - Schema
 	////////////////////////////////////
@@ -333,6 +333,50 @@ public:
 	   return _schema;
 	}
 
+	////////////////////////////////////
+	// Mutator - Filter
+	////////////////////////////////////
+public:
+	/**
+	 * \brief Set query response field list and/or service list filter.
+	 *
+	 * Use this to improve query performance if you know you only want to view
+	 * certain fields and/or services, but the LVC might contain many more.
+	 *
+	 * Examples:
+	 * Requirement | Filter
+	 * --- | ---
+	 * BID, ASK, TRDPRC_1 from all services | SetFilter( "BID,ASK,TRDPRC_1", NULL )
+	 * BID, ASK, TRDPRC_1 from bloomberg | SetFilter( "BID,ASK,TRDPRC_1", [ "bloomberg", NULL ] )
+	 * All fields from bloomberg | SetFilter( "", [ "bloomberg", NULL ] )
+	 *
+	 * The filter is used on the following APIs:
+	 * API | Field Filter | Service Filter
+	 * --- | --- | ---
+	 * LVC_Snapshot() | Y | N
+	 * LVC_View() | Y | N
+	 * LVC_SnapAll() | Y | Y
+	 * LVC_ViewAll() | Y | Y
+	 *
+	 * \param flds - Comma-separated list of field names or ID's
+	 * \param svc - NULL-terminated array of allowable service names
+	 * \return Number of fields and services in filter
+	 * \see ClearFilter()
+	 */
+	int SetFilter( const char *flds, const char **svcs=NULL )
+	{
+	   return ::LVC_SetFilter( _cxt, flds, svcs );
+	}
+
+	/** 
+	 * \brief Clear response filter set via SetFilter()
+	 *   
+	 * \see SetFilter()
+	 */  
+	void ClearFilter()
+	{
+	   SetFilter( (const char *)0,  (const char **)0 );
+	}
 
 	////////////////////////////////////
 	// Query - Single Ticker

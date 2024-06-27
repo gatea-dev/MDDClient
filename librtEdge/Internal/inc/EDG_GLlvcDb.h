@@ -20,8 +20,9 @@
 *     20 JAN 2018 jcs  Build 39: mtx()
 *     17 MAY 2022 jcs  Build 54: GLlvcDbItem._bActive
 *     13 MAR 2023 jcs  Build 62: GetItem_safe()
+*     26 JUN 2024 jcs  Build 72: _svcFltr / _schemaByName
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_LVC_DB_H
 #define __EDGLIB_LVC_DB_H
@@ -146,8 +147,10 @@ class GLlvcDb : public RTEDGE_PRIVATE::GLmmap
 protected:
 	LVCDef     &_def;
 	FidMap      _fidOffs;
-	FidMap      _fidFltr;
+	FIDSet      _fidFltr;
+	StringSet   _svcFltr;
 	SchemaByFid _schemaByFid;
+	Str2IntMap  _schemaByName;
 	SchemaList  _schema;
 	RecMap      _recs;
 	string      _name;
@@ -174,9 +177,10 @@ public:
 	int          FieldLen( int );
 	int          FieldOffset( int );
 	bool         CanAddField( int );
+	bool         CanAddItem( const char *, const char * );
 	LVCData      GetItem( const char *, const char *, Bool );
 	LVCData      GetItem_safe( const char *, const char *, Bool );
-	int          SetFilter( const char * );
+	int          SetFilter( const char *, const char **svcs=NULL );
 	Bool         IsBinary();
 	Mutex       &mtx();
 	int          _uSz();
@@ -190,7 +194,6 @@ public:
 private:
 	void    Load();
 	rtFIELD GetField( GLlvcFldHdr &, char *, int, Bool, char * );
-	void    SetFieldAttr_OBSOLETE( rtFIELD & );
 	string  MapKey( const char *, const char * );
 
 }; // class GLlvcDb
@@ -216,7 +219,7 @@ public:
 public:
 	GLlvcDb &lvc();
 	char    *pFile();
-	int      SetFilter( const char * );
+	int      SetFilter( const char *, const char **svcs=NULL );
 	void     SetCopyType( bool );
 
 }; // class LVCDef

@@ -21,8 +21,9 @@
 *      3 JUN 2022 jcs  Build 55: LVCData._recXxxSiz
 *     29 OCT 2022 jcs  Build 60: rtFld_vector
 *     13 MAR 2023 jcs  Build 62: GetItem_safe()
+*     26 JUN 2024 jcs  Build 72: _svcFltr / _schemaByName
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -46,7 +47,9 @@ GLlvcDb::GLlvcDb( LVCDef &ld, bool bLock, DWORD waitMillis ) :
    _def( ld ),
    _fidOffs(),
    _fidFltr(),
+   _svcFltr(),
    _schemaByFid(),
+   _schemaByName(),
    _schema(),
    _recs(),
    _name( ld.pFile() ),
@@ -89,17 +92,21 @@ GLlvcDb::GLlvcDb( LVCDef &ld, bool bLock, DWORD waitMillis ) :
       }
    }
 
-   // Build fid map
+   // Build fid map(s)
 
    SchemaByFid &sdb = _schemaByFid;
+   Str2IntMap  &ndb = _schemaByName;
+   string       s;
 
    for ( i=0,off=0; i<nFld; i++ ) {
       def      = fdb()[i];
+      s        = def._name;
       fid      = def._fid;
       fLen     = def._len;
       odb[fid] = off;
       off     += fLen;
       sdb[fid] = def;
+      ndb[s]   = fid;
       _schema.push_back( def );
    }
 
@@ -116,6 +123,7 @@ GLlvcDb::~GLlvcDb()
    v.clear();
    _fidOffs.clear();
    _fidFltr.clear();
+   _svcFltr.clear();
    _recs.clear();
    GLmmap::Shutdown();
    if ( _lock ) {
@@ -180,13 +188,23 @@ int GLlvcDb::FieldOffset( int fid )
 
 bool GLlvcDb::CanAddField( int fid )
 {
-   FidMap          &odb = _fidFltr;
-   FidMap::iterator it;
+   FIDSet          &odb = _fidFltr;
+   FIDSet::iterator it;
    bool             bRtn;
 
    bRtn  = ( odb.size() == 0 );
    bRtn |= ( (it=odb.find( fid )) != odb.end() );
    return bRtn;
+}
+
+bool GLlvcDb::CanAddItem( const char *svc, const char *tkr_notUsed )
+{
+   string      s( svc );
+   Str2IntMap &ndb = _schemaByName; 
+
+   if ( ndb.size() )
+      return( ndb.find( s ) != ndb.end() );
+   return true;
 }
 
 LVCData GLlvcDb::GetItem( const char *svc, const char *tkr, Bool bShallow )
@@ -283,26 +301,41 @@ LVCData GLlvcDb::GetItem_safe( const char *pSvc,
    return d;
 }
 
-
-int GLlvcDb::SetFilter( const char *pFids )
+int GLlvcDb::SetFilter( const char *flds, const char **svcs )
 {
-   string           s( pFids );
-   FidMap          &odb = _fidFltr;
-   FidMap::iterator it;
-   char            *bp, *cp, *rp;
-   int              fid;
-   const char      *_csv  = ",";
+   FIDSet              &fdb   = _fidFltr;
+   StringSet           &sdb   = _svcFltr;
+   Str2IntMap          &ndb   = _schemaByName; 
+   const char          *pFlds = flds ? flds : "";
+   Str2IntMap::iterator nt;
+   string               s( pFlds ), ss;
+   char                *bp, *cp, *rp;
+   int                  i, fid;
+   const char          *_csv  = ",";
 
    // Clear out; Walk 'em all adding once
 
-   odb.clear();
+   fdb.clear();
+   sdb.clear();
    bp = (char *)s.data();
    for ( cp=::strtok_r( bp,_csv,&rp ); cp; cp=::strtok_r( NULL,_csv,&rp ) ) {
-      fid = atoi( cp );
-      if ( fid && ( odb.find( fid ) == odb.end() ) )
-         odb[fid] = fid;
+      if ( !(fid=atoi( cp )) ) {
+         ss = cp;
+         if ( (nt=ndb.find( ss )) != ndb.end() )
+            fid = (*nt).second;
+      }
+      if ( fid && ( fdb.find( fid ) == fdb.end() ) )
+         fdb.insert( fid );
    }
-   return odb.size();
+
+   // Services
+
+   for ( i=0; svcs && svcs[i]; i++ ) {
+      ss = svcs[i];
+      if ( sdb.find( ss ) == sdb.end() )
+         sdb.insert( string( ss ) );
+   } 
+   return fdb.size() + sdb.size();
 }
 
 Bool GLlvcDb::IsBinary()
@@ -459,22 +492,6 @@ rtFIELD GLlvcDb::GetField( GLlvcFldHdr &h,
    return f;
 }
 
-void GLlvcDb::SetFieldAttr_OBSOLETE( rtFIELD &f )
-{
-   SchemaByFid          &sdb = _schemaByFid;
-   SchemaByFid::iterator it;
-   GLlvcFldDef           def;
-
-   f._name = "Undefined";
-   f._type = rtFld_undef;
-   if ( (it=sdb.find( f._fid )) != sdb.end() ) {
-      def     = (*it).second;
-//      f._name = def._name;
-      f._name = (*it).second._name;
-      f._type = (rtFldType)def._type;
-   }
-}  
-
 string GLlvcDb::MapKey( const char *pSvc, const char *pTkr )
 {
    string s;
@@ -526,10 +543,9 @@ char *LVCDef::pFile()
    return (char *)_file.data();
 }
 
-int LVCDef::SetFilter( const char *pFlds )
+int LVCDef::SetFilter( const char *flds, const char **svcs )
 {
-   // TODO
-   return 0;
+   return lvc().SetFilter( flds, svcs );
 }
 
 void LVCDef::SetCopyType( bool bFullCopy )

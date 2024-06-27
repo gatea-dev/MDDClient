@@ -21,6 +21,7 @@
 *     24 OCT 2023 jcs  Build 65: _EmptyBDS
 *      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
+*     26 JUN 2024 jcs  Build 72: Default : binary / unpacked / circQ
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -52,8 +53,12 @@ static char *_EmptyBDS = (char *)"Empty BDS";
  * \class PubChannel
  * \brief Publication channel to rtEdgeCache3
  *
- * Use the Update class to build and publish an update on 
- * this channel. 
+ * Use the Update class to build and publish an update on this channel. 
+ *
+ * From Build 72 (June 2024) and above, the following are defaults:
+ * - SetBinary( true ) 
+ * - SetCircularBuffer( true ) 
+ * - SetUnPacked( true ) 
  */
 
 class PubChannel : public Channel
@@ -77,12 +82,12 @@ public:
 	   _authReq(),
 	   _authRsp(),
 	   _schema(),
-	   _bBinary( false ),
+	   _bBinary( true ),
 	   _bPerms( false ),
 	   _bUserMsgTy( false ),
 	   _bRandom( false ),
-	   _bUnPacked( false ),
-	   _bCircularBuffer( false ),
+	   _bUnPacked( true ),
+	   _bCircularBuffer( true ),
 	   _hopCnt( 0 ),
 	   _upd( (Update *)0 )
 	{

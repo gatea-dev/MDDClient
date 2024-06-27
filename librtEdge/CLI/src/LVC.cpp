@@ -14,8 +14,9 @@
 *     18 MAY 2023 jcs  Build 63: cpp().GetSchema( false )
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
+*     26 JUN 2024 jcs  Build 72: SetFilter( flds, svcs )
 *
-*  (c) 1994-2024, Gatea, Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <LVC.h>
@@ -91,17 +92,13 @@ LVC::~LVC()
 
 
 ////////////////////////////////////
-// Access
+// Access - Schema
 ////////////////////////////////////
 rtEdgeSchema ^LVC::schema()
 {
    return _schema;
 }
 
-
-////////////////////////////////////
-// Cache Query
-////////////////////////////////////
 rtEdgeSchema ^LVC::GetSchema()
 {
    return GetSchema( false );
@@ -113,6 +110,33 @@ rtEdgeSchema ^LVC::GetSchema( bool bQry )
    return schema();
 }
 
+////////////////////////////////////
+// Filter
+////////////////////////////////////
+int LVC::SetFilter( String ^flds, cli::array<String ^> ^svcs )
+{
+   const char               *pFlds;
+   const char              **pSvcs;
+   std::vector<const char *> svcsV;
+   int                       i, n;
+
+   n = ( svcs != nullptr ) ? svcs->Length : 0;
+   for ( i=0; i<n; svcsV.push_back( _pStr( svcs[i] ) ), i++ );
+   pFlds = ( flds != nullptr ) ?  _pStr( flds ) : NULL;
+   pSvcs = svcsV.size()        ?  svcsV.data()  : NULL;
+   return cpp().SetFilter( pFlds, pSvcs );
+}
+
+void LVC::ClearFilter()
+{
+   cpp().ClearFilter();
+}
+
+
+
+////////////////////////////////////
+// Cache Query
+////////////////////////////////////
 LVCData ^LVC::Snap( String ^svc, String ^tkr )
 {
    const char      *pSvc, *pTkr;

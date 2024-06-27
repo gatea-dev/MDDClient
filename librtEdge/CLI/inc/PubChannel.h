@@ -17,6 +17,7 @@
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *     26 OCT 2023 jcs  Build 65: BDSSymbolList
 *      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
+*     26 JUN 2024 jcs  Build 72: Default : binary / unpacked / circQ
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -145,6 +146,11 @@ namespace librtEdge
  * + OnSchema()
  * + OnOverflow()
  * + OnIdle()
+ *
+ * From Build 72 (June 2024) and above, the following are defaults:
+ * - SetBinary( true )
+ * - SetCircularBuffer( true )
+ * - SetUnPacked( true )
  *
  * \include rtEdgePublisher_override.h
  */

@@ -23,8 +23,9 @@
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( String ^ )
 *      6 DEC 2023 jcs  Build 67: volatile GetField()
+*     26 JUN 2024 jcs  Build 72: Nullable<xxx> GetColumnAsXxx()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -801,34 +802,84 @@ public:
 	 */
 	LVCData ^data();
 
-
 	////////////////////////////////////
-	// Access - Column-centric
+	// Access - Full Column
 	////////////////////////////////////
 	/**
 	 * \brief Query all rows for field, returning values as string
 	 *
-	 * \param fid Field ID to query
+	 * \param fid - Field ID to query
 	 * \return Column of field values as string array
 	 */
 	cli::array<String ^> ^GetColumnAsString( int fid );
 
 	/**
-	 * \brief Query all rows for field, returning values as int
+	 * \brief Query all rows for field, returning values as 64-bit int
 	 *
-	 * \param fid Field ID to query
-	 * \return Column of field values as int array
+	 * \param fid - Field ID to query
+	 * \return Column of field values as 64-bit int array
 	 */
-	cli::array<int> ^GetColumnAsInt32( int fid );
+	cli::array<Nullable<long long>> ^GetColumnAsInt64( int fid );
+
+	/**
+	 * \brief Query all rows for field, returning values as 32-bit int
+	 *
+	 * \param fid - Field ID to query
+	 * \return Column of field values as 32-bit int array
+	 */
+	cli::array<Nullable<int>> ^GetColumnAsInt32( int fid );
 
 	/**
 	 * \brief Query all rows for field, returning values as double
 	 *
-	 * \param fid Field ID to query
+	 * \param fid - Field ID to query
 	 * \return Column of field values as double array
 	 */
-	cli::array<double> ^GetColumnAsDouble( int fid );
+	cli::array<Nullable<double>> ^GetColumnAsDouble( int fid );
 
+	////////////////////////////////////
+	// Access - Column Page
+	////////////////////////////////////
+	/**
+	 * \brief Query a page of rows for field, returning values as string
+	 *
+	 * \param fid - Field ID to query
+	 * \param pos - Starting position
+	 * \param count - Number of row values to return; 0 for all from pos
+	 * \return Column of field values as string array, up to count starting at pos; null if requested page out of range
+	 */
+	cli::array<String ^> ^GetColumnPageAsString( int fid, u_int pos, u_int count );
+
+	/**
+	 * \brief Query a page of rows for field, returning values as 64-bit int
+	 *
+	 * \param fid - Field ID to query
+	 * \param pos - Starting position
+	 * \param count - Number of row values to return; 0 for all from pos
+	 * \return Column of field values as 64-bit int array, up to count starting at pos; null if requested page out of range
+	 */
+	cli::array<Nullable<long long>> ^GetColumnPageAsInt64( int fid, u_int pos, u_int count );
+
+	/**
+	 * \brief Query a page of rows for field, returning values as 32-bit int
+	 *
+	 * \param fid - Field ID to query
+	 * \param pos - Starting position
+	 * \param count - Number of row values to return; 0 for all from pos
+	 * \return Column of field values as 32-bit int array, up to count starting at pos; null if requested page out of range
+	 */
+	cli::array<Nullable<int>> ^GetColumnPageAsInt32( int fid, u_int pos, u_int count );
+
+	/**
+	 * \brief Query a page of rows for field, returning values as double
+	 *
+	 * \param fid - Field ID to query
+	 * \param pos - Starting position
+	 * \param count - Number of row values to return; 0 for all from pos
+	 * \return Column of field values as double array, up to count starting at pos
+	 * \return Column of field values as double array, up to count starting at pos; null if requested page out of range
+	 */
+	cli::array<Nullable<double>> ^GetColumnPageAsDouble( int fid, u_int pos, u_int count );
 
 	/////////////////////////////////
 	//  Operations

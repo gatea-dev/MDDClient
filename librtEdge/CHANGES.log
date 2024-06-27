@@ -43,6 +43,22 @@ Features To Add
  * ## Change Log
  *
  *
+ * ### Build 72 24-06-xx
+ *
+ * -# LVC SnapAll performance - LVC.SetFilter() :
+ *    - LVC_SetFilter( flds, svcs )
+ *    - Allow field ID name in filter : RTEDGE_PRIVATE.GLlvcDb._schemaByName
+ *
+ * -# Default Publisher : binary / unpacked
+ *    - inc/hpp/PubChannel.hpp : New default member assignment  
+ *
+ * -# LVCDataAll CLI usability / performance improvements:
+ *    - Nullable GetColumnAsXxx()
+ *    - GetColumnPageAsXxx()
+ *
+ * -# Schema.GetDef( const char * ) : Name or ID
+ *
+ *
  * ### Build 71 24-04-24
  *
  * -# RX buffer overflow in Edge3 due to TREP Bridge:

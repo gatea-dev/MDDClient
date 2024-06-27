@@ -11,8 +11,9 @@
 *      8 MAR 2023 jcs  Build 62: LVCDataAll.Set( ..., bool )
 *     12 AUG 2023 jcs  Build 64: Copy constructor : All _fdb on _heap
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( String ^ ) 
+*     26 JUN 2024 jcs  Build 72: Nullable<xxx> GetColumnAsXxx()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Data.h>
@@ -442,16 +443,15 @@ LVCData ^LVCDataAll::data()
 
 
 ////////////////////////////////////
-// Access - Column-centric
+// Access - Full Column
 ////////////////////////////////////
 cli::array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
 {
-   RTEDGE::Messages &mdb = _all->msgs();
-   RTEDGE::Field    *fld;
-   cli::array<String ^>  ^col;
-   LVCData           f;
-   const char       *val;
-   u_int             i, nt;
+   RTEDGE::Messages     &mdb = _all->msgs();
+   RTEDGE::Field        *fld;
+   cli::array<String ^> ^col;
+   LVCData               f;
+   u_int                 i, nt;
 
    // Pre-condition
 
@@ -462,20 +462,20 @@ cli::array<String ^> ^LVCDataAll::GetColumnAsString( int fid )
 
    col = gcnew cli::array<String ^>( nt );
    for ( i=0; i<nt; i++ ) {
-      fld    = mdb[i]->GetField( fid );
-      val    = fld ? fld->GetAsString() : "";
-      col[i] = gcnew String( val );
+      col[i] = nullptr;
+      if ( (fld=mdb[i]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = gcnew String( fld->GetAsString() );
    }
    return col;
 }
 
-cli::array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
+cli::array<Nullable<long long>> ^LVCDataAll::GetColumnAsInt64( int fid )
 {
-   RTEDGE::Messages &mdb = _all->msgs();
-   RTEDGE::Field    *fld;
-   cli::array<int>       ^col;
-   LVCData           f;
-   u_int             i, nt;
+   RTEDGE::Messages                &mdb = _all->msgs();
+   RTEDGE::Field                   *fld;
+   cli::array<Nullable<long long>> ^col;
+   LVCData                          f;
+   u_int                            i, nt;
 
    // Pre-condition
 
@@ -484,21 +484,22 @@ cli::array<int> ^LVCDataAll::GetColumnAsInt32( int fid )
 
    // Rock on ...
 
-   col = gcnew cli::array<int>( nt );
+   col = gcnew cli::array<Nullable<long long>>( nt );
    for ( i=0; i<nt; i++ ) {
-      fld    = mdb[i]->GetField( fid );
-      col[i] = fld ? fld->GetAsInt32() : 0;
+      col[i] = Nullable<long long>();
+      if ( (fld=mdb[i]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<long long>( fld->GetAsInt64() );
    }
    return col;
 }
 
-cli::array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
+cli::array<Nullable<int>> ^LVCDataAll::GetColumnAsInt32( int fid )
 {
-   RTEDGE::Messages &mdb = _all->msgs();
-   RTEDGE::Field    *fld;
-   cli::array<double>    ^col;
-   LVCData           f;
-   u_int             i, nt;
+   RTEDGE::Messages          &mdb = _all->msgs();
+   RTEDGE::Field             *fld;
+   cli::array<Nullable<int>> ^col;
+   LVCData                    f;
+   u_int                      i, nt;
 
    // Pre-condition
 
@@ -507,10 +508,155 @@ cli::array<double> ^LVCDataAll::GetColumnAsDouble( int fid )
 
    // Rock on ...
 
-   col = gcnew cli::array<double>( nt );
+   col = gcnew cli::array<Nullable<int>>( nt );
    for ( i=0; i<nt; i++ ) {
-      fld    = mdb[i]->GetField( fid );
-      col[i] = fld ? fld->GetAsDouble() : 0.0;
+      col[i] = Nullable<int>();
+      if ( (fld=mdb[i]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<int>( fld->GetAsInt32() );
+   }
+   return col;
+}
+
+cli::array<Nullable<double>> ^LVCDataAll::GetColumnAsDouble( int fid )
+{
+   RTEDGE::Messages             &mdb = _all->msgs();
+   RTEDGE::Field                *fld;
+   cli::array<Nullable<double>> ^col;
+   LVCData                       f;
+   u_int                         i, nt;
+
+   // Pre-condition
+
+   if ( !(nt=_nTkr) )
+      return nullptr;
+
+   // Rock on ...
+
+   col = gcnew cli::array<Nullable<double>>( nt );
+   for ( i=0; i<nt; i++ ) {
+      col[i] = Nullable<double>();
+      if ( (fld=mdb[i]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<double>( fld->GetAsDouble() );
+   }
+   return col;
+}
+
+////////////////////////////////////
+// Access - Column Page
+////////////////////////////////////
+cli::array<String ^> ^LVCDataAll::GetColumnPageAsString( int fid, 
+                                                         u_int pos, 
+                                                         u_int cnt )
+{
+   RTEDGE::Messages     &mdb = _all->msgs();
+   RTEDGE::Field        *fld;
+   cli::array<String ^> ^col;
+   LVCData               f;
+   u_int                 i, nt, nr, pos1;
+
+   // Pre-condition(s)
+
+   if ( !(nt=_nTkr) || ( pos >= nt ) || ( pos < 0 ) )
+      return nullptr;
+
+   // Rock on ...
+
+   cnt  = ( cnt == 0 ) ? nt : cnt; 
+   pos1 = gmin( nt, pos+cnt );
+   nr   = pos1 - pos;
+   col  = gcnew cli::array<String ^>( nr );
+   for ( i=0; i<nr; i++ ) {
+      col[i] = nullptr;
+      if ( (fld=mdb[i+pos]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = gcnew String( fld->GetAsString() );
+   }
+   return col;
+}
+
+cli::array<Nullable<long long>> ^LVCDataAll::GetColumnPageAsInt64( int fid,
+                                                                   u_int pos,
+                                                                   u_int cnt )
+{
+   RTEDGE::Messages                &mdb = _all->msgs();
+   RTEDGE::Field                   *fld;
+   cli::array<Nullable<long long>> ^col;
+   LVCData                          f;
+   u_int                            i, nt, nr, pos1;
+
+   // Pre-condition(s)
+
+   if ( !(nt=_nTkr) || ( pos >= nt ) || ( pos < 0 ) )
+      return nullptr;
+
+   // Rock on ...
+
+   cnt  = ( cnt == 0 ) ? nt : cnt; 
+   pos1 = gmin( nt, pos+cnt );
+   nr   = pos1 - pos;
+   col  = gcnew cli::array<Nullable<long long>>( nr );
+   for ( i=0; i<nr; i++ ) {
+      col[i] = Nullable<long long>();
+      if ( (fld=mdb[i+pos]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<long long>( fld->GetAsInt64() );
+   }
+   return col;
+}
+
+cli::array<Nullable<int>> ^LVCDataAll::GetColumnPageAsInt32( int fid,
+                                                             u_int pos,
+                                                             u_int cnt )
+{
+   RTEDGE::Messages          &mdb = _all->msgs();
+   RTEDGE::Field             *fld;
+   cli::array<Nullable<int>> ^col;
+   LVCData                    f;
+   u_int                      i, nt, nr, pos1;
+
+   // Pre-condition
+
+   if ( !(nt=_nTkr) || ( pos >= nt ) || ( pos < 0 ) )
+      return nullptr;
+
+   // Rock on ...
+
+   cnt  = ( cnt == 0 ) ? nt : cnt; 
+   pos1 = gmin( nt, pos+cnt );
+   nr   = pos1 - pos;
+   col  = gcnew cli::array<Nullable<int>>( nr );
+   for ( i=0; i<nr; i++ ) {
+      col[i] = Nullable<int>();
+      if ( (fld=mdb[i+pos]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<int>( fld->GetAsInt32() );
+   }
+   return col;
+}
+
+cli::array<Nullable<double>> ^LVCDataAll::GetColumnPageAsDouble( int fid,
+                                                                 u_int pos,
+                                                                 u_int cnt )
+{
+   RTEDGE::Messages             &mdb = _all->msgs();
+   RTEDGE::Field                *fld;
+   cli::array<Nullable<double>> ^col;
+   LVCData                       f;
+   u_int                         i, nt, nr, pos1;
+
+   // Pre-condition
+
+   if ( !(nt=_nTkr) || ( pos >= nt ) || ( pos < 0 ) )
+      return nullptr;
+
+   // Rock on ...
+
+   cnt  = ( cnt == 0 ) ? nt : cnt;
+   pos1 = gmin( nt, pos+cnt );
+   nr   = pos1 - pos;
+   col  = gcnew cli::array<Nullable<double>>( nr );
+   for ( i=0; i<nr; i++ ) {
+      if ( (fld=mdb[i+pos]->GetField( fid )) && !fld->IsEmpty() )
+         col[i] = Nullable<double>( fld->GetAsDouble() );
+      else
+         col[i] = Nullable<double>();
    }
    return col;
 }
