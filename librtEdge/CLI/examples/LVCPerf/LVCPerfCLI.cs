@@ -26,8 +26,8 @@ public class TestStat
    public double tLibSnap { get; set; }
    public double tSnap    { get; set; }
    public double tPull    { get; set; }
-   public int    NumTkr   { get; set; }
-   public int    NumFld   { get; set; }
+   public uint   NumTkr   { get; set; }
+   public uint   NumFld   { get; set; }
 
    ////////////////
    // Constructor
@@ -38,8 +38,8 @@ public class TestStat
       this.tLibSnap = 0.0;
       this.tSnap    = 0.0;
       this.tPull    = 0.0;
-      this.NumTkr   = 0.0;
-      this.NumFld   = 0.0;
+      this.NumTkr   = 0;
+      this.NumFld   = 0;
    }
 
    ////////////////
@@ -110,9 +110,9 @@ public class TestCfg
       if ( this.svcs == null )
          rc = "All ";
       else
-         rc = String.join( ";", this.svcs );
+         rc = String.Join( ";", this.svcs );
       rc += " (";
-      if ( this.bSvcFltr == null )
+      if ( !this.bSvcFltr )
          rc = "Un";
       rc += "Filtered),";
       /*
@@ -123,7 +123,7 @@ public class TestCfg
       else
          rc += this.flds.Replace( ",", ";" );
       rc += " (";
-      if ( this.bFldFltr == null )
+      if ( !this.bFldFltr )
          rc = "Un";
       rc += "Filtered),";
       /*
@@ -136,34 +136,33 @@ public class TestCfg
    /////////////////
    // Field Value
    /////////////////
-   public var GetValue( rtEdgeField f )
+   public object GetValue( rtEdgeField f )
    {
-      var       rc;
       rtFldType ty;
 
       // Just Dump
 
       if ( !this.bFldType )
-         return f.GetAsString();
+         return f.GetAsString( false );
 
       // By Type
 
       ty = f.TypeFromMsg();
       switch( ty ) {
-         case rtFldType.rtFld_int:     rc = f.GetAsInt32(); break;
-         case rtFldType.rtFld_double:  rc = f.GetAsDouble(); break;
+         case rtFldType.rtFld_int:     return f.GetAsInt32();
+         case rtFldType.rtFld_double:  return f.GetAsDouble();
          case rtFldType.rtFld_date:
          case rtFldType.rtFld_time:
-         case rtFldType.rtFld_timeSec: rc  = f.GetAsInt64(); break;
-//            case rtFldType.rtFld_timeSec: dtTm = f.GetAsDateTime(); break;
-         case rtFldType.rtFld_float:   rc  = f.GetAsFloat(); break;
-         case rtFldType.rtFld_int8:    rc  = f.GetAsInt8(); break;
-         case rtFldType.rtFld_int16:   rc  = f.GetAsInt16(); break;
-         case rtFldType.rtFld_int64:   rc  = f.GetAsInt64(); break;
+         case rtFldType.rtFld_timeSec: return f.GetAsInt64();
+//            case rtFldType.rtFld_timeSec: dtTm = f.GetAsDateTime();
+         case rtFldType.rtFld_float:   return f.GetAsFloat();
+         case rtFldType.rtFld_int8:    return f.GetAsInt8();
+         case rtFldType.rtFld_int16:   return f.GetAsInt16();
+         case rtFldType.rtFld_int64:   return f.GetAsInt64();
          case rtFldType.rtFld_string:
-         case default:                 rc = f.GetAsString( false ); break;
+         default:                      return f.GetAsString( false );
       }
-      return rc;
+      return null;
    }
 
 } // class TestCfg
@@ -186,37 +185,36 @@ class LVCPerfCLI
       rtEdgeField     fld;
       rtEdgeField[]   flds;
       TestStat        st;
-      double          d0,  la;
+      double          d0;
       HashSet<String> svcSet;
       String[]        svcFltr;
       String          fldFltr;
       int             i, j, nf;
-      var             val;
 
       /*
        * 1) Set Filter
        */
       svcSet = new HashSet<String>();
       if ( cfg.svcs != null )
-         for ( i=0; i<cfg.svcs.Count; svcSet.Add( cfg.svcs[i] ), i++ );
+         for ( i=0; i<cfg.svcs.Length; svcSet.Add( cfg.svcs[i] ), i++ );
       svcFltr = ( cfg.bSvcFltr && ( cfg.svcs != null ) ) ? cfg.svcs : null;
       fldFltr = ( cfg.bFldFltr && ( cfg.flds != null ) ) ? cfg.flds : null;
-      lvc.SetFilter( svcFltr, fldFltr );
+      lvc.SetFilter( fldFltr, svcFltr );
       /*
        * 2) SnapAll()
        */
       st          = new TestStat( cfg );
-      d0          = lvc.TimeNs();
+      d0          = rtEdge.TimeNs();
       la          = lvc.ViewAll();
-      st.tSnap    = ( lvc.TimeNs() - d0 );
+      st.tSnap    = ( rtEdge.TimeNs() - d0 );
       st.tLibSnap = la._dSnap;
       st.NumTkr   = la._nTkr;
       st.NumFld   = 0;
-      for ( i=0; i<la._nTkr; st.NumFld += la._tkrs[i++]._nFld );
+      for ( i=0; i<(int)la._nTkr; st.NumFld += la._tkrs[i++]._nFld );
       /*
        * 3) Walk / Dump
        */
-      d0       = lvc.TimeNs();
+      d0       = rtEdge.TimeNs();
       for ( i=0; i<la._nTkr; i++ ) {
          ld = la._tkrs[i];
          if ( ( svcFltr == null ) && !svcSet.Contains( ld._pSvc ) )
@@ -224,9 +222,9 @@ class LVCPerfCLI
          /*
           * All, else specifics
           */
-         if ( (nf=cfg.fids.Count) == 0 ) {
+         if ( (nf=cfg.fids.Length) == 0 ) {
             flds = ld._flds;
-            for ( j=0; j<flds.Count; cfg.GetValue( flds[j++] ) );
+            for ( j=0; j<flds.Length; cfg.GetValue( flds[j++] ) );
          }
          else {
             for ( j=0; j<nf; j++ ) {
@@ -236,7 +234,7 @@ class LVCPerfCLI
          }
          
       }
-      st.tPull = ( lvc.TimeNs() - d0 );
+      st.tPull = ( rtEdge.TimeNs() - d0 );
       return st;
    }
 
@@ -245,10 +243,10 @@ class LVCPerfCLI
    ////////////////////////////////
    public static int Main( String[] args ) 
    {
-      String  svr;
+      String  svr, s;
       TestCfg cfg;
       bool    aOK;
-      int     i, ns, nf, argc;
+      int     i, nf, argc;
 
       /////////////////////
       // Quickie checks
@@ -305,15 +303,15 @@ class LVCPerfCLI
          return 0;
       }
       if ( cfg.flds != null ) {
-         flds = cfg.flds.Split( "," );
-         for ( i=0; i<flds.Count; i++ ) {
+         flds = cfg.flds.Split( ',' );
+         for ( i=0; i<flds.Length; i++ ) {
             if ( (def=sch.GetDef( flds[i] )) != null )
                tmp.Add( def.Fid() );
          }
       }
       if ( (nf=tmp.Count) != 0 ) {
          cfg.fids = new int[nf];
-         for ( i=0; i<nf; fids[i] = tmp[i], i++ );
+         for ( i=0; i<nf; cfg.fids[i] = tmp[i], i++ );
       }
       /*
        * 2) Tests : Original, etc.
