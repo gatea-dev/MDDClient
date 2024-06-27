@@ -200,10 +200,10 @@ bool GLlvcDb::CanAddField( int fid )
 bool GLlvcDb::CanAddItem( const char *svc, const char *tkr_notUsed )
 {
    string      s( svc );
-   Str2IntMap &ndb = _schemaByName; 
+   StringSet  &sdb = _svcFltr;
 
-   if ( ndb.size() )
-      return( ndb.find( s ) != ndb.end() );
+   if ( sdb.size() )
+      return( sdb.find( s ) != sdb.end() );
    return true;
 }
 
