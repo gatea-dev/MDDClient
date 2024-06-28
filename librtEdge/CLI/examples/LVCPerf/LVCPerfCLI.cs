@@ -158,9 +158,9 @@ public class TestCfg
          case rtFldType.rtFld_int16:   return f.GetAsInt16();
          case rtFldType.rtFld_int64:   return f.GetAsInt64();
          case rtFldType.rtFld_string:
-         default:                      return f.GetAsString( false );
+         default:                      break;
       }
-      return null;
+      return f.GetAsString( false );
    }
 
 } // class TestCfg
@@ -188,10 +188,12 @@ class LVCPerfCLI
       String[]        svcFltr;
       String          fldFltr;
       int             i, j, nf;
+      int[]           fids;
 
       /*
        * 1) Set Filter
        */
+      fids   = cfg.fids;
       svcSet = new HashSet<String>();
       if ( cfg.svcs != null )
          for ( i=0; i<cfg.svcs.Length; svcSet.Add( cfg.svcs[i] ), i++ );
@@ -220,7 +222,8 @@ class LVCPerfCLI
          /*
           * All, else specifics
           */
-         if ( (nf=cfg.fids.Length) == 0 ) {
+         nf = ( fids != null ) ? fids.Length : 0;
+         if ( nf != 0 ) {
             flds = ld._flds;
             for ( j=0; j<flds.Length; cfg.GetValue( flds[j++] ) );
          }

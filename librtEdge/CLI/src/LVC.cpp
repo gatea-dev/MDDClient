@@ -122,6 +122,7 @@ int LVC::SetFilter( String ^flds, cli::array<String ^> ^svcs )
 
    n = ( svcs != nullptr ) ? svcs->Length : 0;
    for ( i=0; i<n; svcsV.push_back( _pStr( svcs[i] ) ), i++ );
+   svcsV.push_back( (const char *)0 );
    pFlds = ( flds != nullptr ) ?  _pStr( flds ) : NULL;
    pSvcs = svcsV.size()        ?  svcsV.data()  : NULL;
    return cpp().SetFilter( pFlds, pSvcs );
