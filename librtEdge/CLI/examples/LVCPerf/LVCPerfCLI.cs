@@ -314,7 +314,8 @@ class LVCPerfCLI
       /*
        * 2) Tests : Original, etc.
        */
-      Console.WriteLine( "Shutting down ..." );
+      Console.Write( "Services,Fields,FldType," );
+      Console.WriteLine( "tLibSnap,tSnap,tPull,NumTkr,NumFld" );
       sdb.Add( RunIt( lvc, cfg ) );
       cfg.bSvcFltr = true;
       sdb.Add( RunIt( lvc, cfg ) );
@@ -326,8 +327,6 @@ class LVCPerfCLI
       /*
        * 3) Clean-up
        */
-      Console.Write( "Services,Fields,FldType," );
-      Console.WriteLine( "tLibSnap,tSnap,tPull,NumTkr,NumFld" );
       for ( i=0; i<sdb.Count; Console.Write( sdb[i].Dump() ), i++ );
       Console.WriteLine( "Shutting down ..." );
       lvc.Destroy();
