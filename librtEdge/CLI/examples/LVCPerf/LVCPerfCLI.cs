@@ -21,9 +21,9 @@ using librtEdge;
 public class TestStat
 {
    public String Descr    { get; set; }
-   public double tLibSnap { get; set; }
-   public double tSnap    { get; set; }
-   public double tPull    { get; set; }
+   public uint   tLibSnap { get; set; }
+   public uint   tSnap    { get; set; }
+   public uint   tPull    { get; set; }
    public uint   NumTkr   { get; set; }
    public uint   NumFld   { get; set; }
 
@@ -33,9 +33,9 @@ public class TestStat
    public TestStat( TestCfg cfg )
    {
       this.Descr    = cfg.Descr();
-      this.tLibSnap = 0.0;
-      this.tSnap    = 0.0;
-      this.tPull    = 0.0;
+      this.tLibSnap = 0;
+      this.tSnap    = 0;
+      this.tPull    = 0;
       this.NumTkr   = 0;
       this.NumFld   = 0;
    }
@@ -48,12 +48,11 @@ public class TestStat
       String rc;
 
       rc  = this.Descr;
+      rc += this.tLibSnap.ToString();
       rc += ",";
-      rc += this.tLibSnap.ToString( "F3" );
+      rc += this.tSnap.ToString();
       rc += ",";
-      rc += this.tSnap.ToString( "F3" );
-      rc += ",";
-      rc += this.tPull.ToString( "F3" );
+      rc += this.tPull.ToString();
       rc += ",";
       rc += this.NumTkr.ToString();
       rc += ",";
@@ -178,17 +177,18 @@ class LVCPerfCLI
    ////////////////////////////////
    public static TestStat RunIt( LVC lvc, TestCfg cfg )
    {
-      LVCDataAll      la;
-      LVCData         ld;
-      rtEdgeField     fld;
-      rtEdgeField[]   flds;
-      TestStat        st;
-      double          d0;
-      HashSet<String> svcSet;
-      String[]        svcFltr;
-      String          fldFltr;
-      int             i, j, nf;
-      int[]           fids;
+      LVCDataAll           la;
+      LVCData              ld;
+      rtEdgeField          fld;
+      rtEdgeField[]        flds;
+      TestStat             st;
+      double               d0;
+      HashSet<String>      svcSet;
+      Dictionary<int, object> fdb;
+      String[]             svcFltr;
+      String               fldFltr;
+      int                  i, j, nf;
+      int[]                fids;
 
       /*
        * 1) Set Filter
@@ -206,8 +206,8 @@ class LVCPerfCLI
       st          = new TestStat( cfg );
       d0          = rtEdge.TimeNs();
       la          = lvc.ViewAll();
-      st.tSnap    = ( rtEdge.TimeNs() - d0 );
-      st.tLibSnap = la._dSnap;
+      st.tSnap    = (uint)( 1000.0 * ( rtEdge.TimeNs() - d0 ) );
+      st.tLibSnap = (uint)( 1000.0 * la._dSnap );
       st.NumTkr   = la._nTkr;
       st.NumFld   = 0;
       for ( i=0; i<(int)la._nTkr; st.NumFld += la._tkrs[i++]._nFld );
@@ -222,20 +222,23 @@ class LVCPerfCLI
          /*
           * All, else specifics
           */
-         nf = ( fids != null ) ? fids.Length : 0;
+         fdb = new Dictionary<int, object>();
+         nf  = ( fids != null ) ? fids.Length : 0;
          if ( nf != 0 ) {
             flds = ld._flds;
-            for ( j=0; j<flds.Length; cfg.GetValue( flds[j++] ) );
+            for ( j=0; j<flds.Length; j++ ) {
+               if ( (fld=flds[j]) != null )
+                  fdb.Add( fld.Fid(), cfg.GetValue( fld ) );
+            }
          }
          else {
             for ( j=0; j<nf; j++ ) {
                if ( (fld=ld.GetField( cfg.fids[j] )) != null )
-                  cfg.GetValue( fld );
+                  fdb.Add( fld.Fid(), cfg.GetValue( fld ) );
             }
          }
-         
       }
-      st.tPull = ( rtEdge.TimeNs() - d0 );
+      st.tPull = (uint)( 1000.0 * ( rtEdge.TimeNs() - d0 ) );
       return st;
    }
 
@@ -247,7 +250,7 @@ class LVCPerfCLI
       String  svr, s;
       TestCfg cfg;
       bool    aOK;
-      int     i, nf, argc;
+      int     i, j, k, nf, argc;
 
       /////////////////////
       // Quickie checks
@@ -320,13 +323,18 @@ class LVCPerfCLI
       Console.Write( "Services,Fields,FldType," );
       Console.WriteLine( "tSnap-C,tSnap-C#,tPull,NumTkr,NumFld" );
       sdb.Add( RunIt( lvc, cfg ) );
-      cfg.bSvcFltr = true;
+      cfg.bFldType = true;
       sdb.Add( RunIt( lvc, cfg ) );
-      cfg.bSvcFltr = false;
-      cfg.bFldFltr = true;
-      sdb.Add( RunIt( lvc, cfg ) );
-      cfg.bSvcFltr = true;
-      sdb.Add( RunIt( lvc, cfg ) );
+      for ( i=0; i<2; i++ ) {
+         cfg.bSvcFltr = ( i == 0 );
+         for ( j=0; j<2; j++ ) {
+            cfg.bFldFltr = ( j == 0 );
+            for ( k=0; k<2; k++ ) {
+               cfg.bFldType = ( k == 0 );
+               sdb.Add( RunIt( lvc, cfg ) );
+            }
+         }
+      }
       /*
        * 3) Clean-up
        */
