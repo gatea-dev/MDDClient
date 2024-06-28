@@ -10,8 +10,6 @@
 ******************************************************************************/
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 using librtEdge;
 
 
@@ -108,23 +106,23 @@ public class TestCfg
        */
       rc = "";
       if ( this.svcs == null )
-         rc = "All ";
+         rc = "All";
       else
          rc = String.Join( ";", this.svcs );
       rc += " (";
       if ( !this.bSvcFltr )
-         rc = "Un";
+         rc += "Un";
       rc += "Filtered),";
       /*
        * Fields
        */
       if ( this.flds == null )
-         rc += "All ";
+         rc += "All";
       else
          rc += this.flds.Replace( ",", ";" );
       rc += " (";
       if ( !this.bFldFltr )
-         rc = "Un";
+         rc += "Un";
       rc += "Filtered),";
       /*
        * Field Type
