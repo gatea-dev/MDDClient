@@ -15,6 +15,7 @@
 *     30 JUN 2023 jcs  Build 63: StringDoor
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *     18 MAR 2024 jcs  Build 70: AddFieldAsDouble( ..., int precision )
+*     28 JUN 2024 jcs  Build 72: Nullable GetAsXxx()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -246,7 +247,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i8 - Field value as 8-bit char
 	 */
-	void AddFieldAsInt8( int fid, u_char i8 );
+	void AddFieldAsInt8( int fid, Nullable<u_char> i8 );
 
 	/**
 	 * \brief Add 16-bit int field to update
@@ -254,7 +255,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i16 - Field value as 16-bit short int
 	 */
-	void AddFieldAsInt16( int fid, u_short i16 );
+	void AddFieldAsInt16( int fid, Nullable<u_short> i16 );
 
 	/**
 	 * \brief Add 32-bit int field to update
@@ -262,7 +263,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i32 - Field value as 32-bit int
 	 */
-	void AddFieldAsInt32( int fid, int i32 );
+	void AddFieldAsInt32( int fid, Nullable<int> i32 );
 
 	/**
 	 * \brief Add 64-bit long field to update
@@ -270,7 +271,7 @@ public:
 	 * \param fid - Field ID
 	 * \param i64 - Field value as 64-bit int
 	 */
-	void AddFieldAsInt64( int fid, long long i64 );
+	void AddFieldAsInt64( int fid, Nullable<long long> i64 );
 
 	/**
 	 * \brief Add float field to update
@@ -278,7 +279,7 @@ public:
 	 * \param fid - Field ID
 	 * \param r32 - Field value as double
 	 */
-	void AddFieldAsFloat( int fid, float r32 );
+	void AddFieldAsFloat( int fid, Nullable<float> r32 );
 
 	/**
 	 * \brief Add double field to update
@@ -286,7 +287,7 @@ public:
 	 * \param fid - Field ID
 	 * \param r64 - Field value as double
 	 */
-	void AddFieldAsDouble( int fid, double r64 );
+	void AddFieldAsDouble( int fid, Nullable<double> r64 );
 
 	/**
 	 * \brief Add double field to update with precision
@@ -299,7 +300,7 @@ public:
 	 * \param r64 - Field value as double 
 	 * \param precision - Number of significant digits; Default is 10
 	 */     
-	void AddFieldAsDouble( int fid, double r64, int precision );
+	void AddFieldAsDouble( int fid, Nullable<double> r64, int precision );
 
 	/**
 	 * \brief Add ByteStreamFld field to update

@@ -16,8 +16,9 @@
 *     10 NOV 2022 jcs  Build 61: DateTime in vector
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
 *     20 DEC 2023 jcs  Build 67: TypeFromXxx()
+*     28 JUN 2024 jcs  Build 72: Nullable GetAsXxx()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Field.h>
@@ -165,34 +166,34 @@ rtFldType rtEdgeField::TypeFromSchema()
    return (rtFldType)_fld->TypeFromSchema();
 }
 
-u_char rtEdgeField::GetAsInt8()
+Nullable<u_char> rtEdgeField::GetAsInt8()
 {
-   return _fld->GetAsInt8();
+   return IsEmpty() ? Nullable<u_char>() : _fld->GetAsInt8();
 }
 
-u_short rtEdgeField::GetAsInt16()
+Nullable<u_short> rtEdgeField::GetAsInt16()
 {
-   return _fld->GetAsInt16();
+   return IsEmpty() ? Nullable<u_short>() : _fld->GetAsInt16();
 }
 
-int rtEdgeField::GetAsInt32()
+Nullable<int> rtEdgeField::GetAsInt32()
 {
-   return _fld->GetAsInt32();
+   return IsEmpty() ? Nullable<int>() : _fld->GetAsInt32();
 }
 
-long long rtEdgeField::GetAsInt64()
+Nullable<long long> rtEdgeField::GetAsInt64()
 {
-   return _fld->GetAsInt64();
+   return IsEmpty() ? Nullable<long long>() : _fld->GetAsInt64();
 }
 
-float rtEdgeField::GetAsFloat()
+Nullable<float> rtEdgeField::GetAsFloat()
 {
-   return _fld->GetAsFloat();
+   return IsEmpty() ? Nullable<float>() : _fld->GetAsFloat();
 }
 
-double rtEdgeField::GetAsDouble()
+Nullable<double> rtEdgeField::GetAsDouble()
 {
-   return _fld->GetAsDouble();
+   return IsEmpty() ? Nullable<double>() : _fld->GetAsDouble();
 }
 
 String ^rtEdgeField::GetAsString( bool bShowType )
@@ -287,6 +288,8 @@ DateTime ^rtEdgeField::GetAsDateTime()
    RTEDGE::rtDate    &rDt   = rDtTm._date;
    RTEDGE::rtTime    &rTm   = rDtTm._time;
 
+   if ( IsEmpty() )
+      return nullptr;
    dt  = gcnew DateTime( _WithinRange( 0, rDt._year, 9999 ),
                          _WithinRange( 1, rDt._month + 1, 12 ),
                          _WithinRange( 1, rDt._mday, 31 ),

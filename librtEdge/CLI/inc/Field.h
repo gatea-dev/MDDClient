@@ -15,8 +15,9 @@
 *     10 NOV 2022 jcs  Build 61: DateTime in vector
 *     14 AUG 2023 jcs  Build 64: IsEmpty()
 *     20 DEC 2023 jcs  Build 67: TypeFromXxx()
+*     28 JUN 2024 jcs  Build 72: Nullable GetAsXxx()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -224,9 +225,9 @@ public:
 	 * or _string_value and is preferred when you know the field is a 
 	 * 8-bit int.
 	 *
-	 * \return Field Value as 8-bit int
+	 * \return Field Value as 8-bit int or null if IsEmpty()
 	 */
-	u_char GetAsInt8();
+	Nullable<u_char> GetAsInt8();
 
 	/**
 	 * \brief Returns field value as 16-bit int
@@ -235,9 +236,9 @@ public:
 	 * or _string_value and is preferred when you know the field is a 
 	 * 16-bit int.
 	 *
-	 * \return Field Value as 16-bit int
+	 * \return Field Value as 16-bit int or null if IsEmpty()
 	 */
-	u_short GetAsInt16();
+	Nullable<u_short> GetAsInt16();
 
 	/**
 	 * \brief Returns field value as 32-bit int
@@ -246,9 +247,9 @@ public:
 	 * or _string_value and is preferred when you know the field is a 
 	 * 32-bit int.
 	 *
-	 * \return Field Value as 32-bit int
+	 * \return Field Value as 32-bit int or null if IsEmpty()
 	 */
-	int GetAsInt32();
+	Nullable<int> GetAsInt32();
 
 	/**
 	 * \brief Returns field value as 64-bit long
@@ -259,7 +260,7 @@ public:
 	 *
 	 * \return Field Value as 64-bit long
 	 */
-	long long GetAsInt64();
+	Nullable<long long> GetAsInt64();
 
 	/**
 	 * \brief Returns field value as float
@@ -268,9 +269,9 @@ public:
 	 * or _string_value and is preferred when you know the field is a 
 	 * float.
 	 *
-	 * \return Field Value as float
+	 * \return Field Value as float or null if IsEmpty()
 	 */
-	float GetAsFloat();
+	Nullable<float> GetAsFloat();
 
 	/**
 	 * \brief Returns field value as double
@@ -279,9 +280,9 @@ public:
 	 * or _string_value and is preferred when you know the field is a 
 	 * double.
 	 *
-	 * \return Field Value as double
+	 * \return Field Value as double or null if IsEmpty()
 	 */
-	double GetAsDouble();
+	Nullable<double> GetAsDouble();
 
 	/**
 	 * \brief Returns field value as String
@@ -303,13 +304,13 @@ public:
 
 	/** \brief Returns field value as vector of doubles
 	 *
-	 * \return Field value as vector of doubles
+	 * \return Field value as vector of doubles or null if IsEmpty()
 	 */
 	cli::array<double> ^GetAsVector();
 
 	/** \brief Returns field value as vector of DateTime's
 	 *
-	 * \return Field value as vector of DateTime's
+	 * \return Field value as vector of DateTime's or null if IsEmpty()
 	 */
 	cli::array<DateTime ^> ^GetAsDateTimeVector();
 
@@ -322,7 +323,7 @@ public:
 
 	/** \brief Returns field value as System::DateTime
 	 *
-	 * \return Field value as System::DateTime
+	 * \return Field value as System::DateTime or null if IsEmpty()
 	 */
 	DateTime ^GetAsDateTime();
 

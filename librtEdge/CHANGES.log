@@ -53,7 +53,8 @@ Features To Add
  *    - inc/hpp/PubChannel.hpp : New default member assignment  
  *
  * -# LVCDataAll CLI usability / performance improvements:
- *    - Nullable GetColumnAsXxx()
+ *    - Nullable rtEdgeField.GetAsXxx()
+ *    - Nullable LVCDataAll.GetColumnAsXxx()
  *    - GetColumnPageAsXxx()
  *
  * -# Schema.GetDef( const char * ) : Name or ID

@@ -318,7 +318,7 @@ class LVCPerfCLI
        * 2) Tests : Original, etc.
        */
       Console.Write( "Services,Fields,FldType," );
-      Console.WriteLine( "tLibSnap,tSnap,tPull,NumTkr,NumFld" );
+      Console.WriteLine( "tSnap-C,tSnap-C#,tPull,NumTkr,NumFld" );
       sdb.Add( RunIt( lvc, cfg ) );
       cfg.bSvcFltr = true;
       sdb.Add( RunIt( lvc, cfg ) );

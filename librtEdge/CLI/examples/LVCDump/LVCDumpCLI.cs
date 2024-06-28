@@ -10,7 +10,7 @@
 *      2 JUN 2022 jcs  Build 55: Single-field dump
 *      9 MAR 2023 jcs  Build 62: MEM; -threads; No <ENTER>
 *     18 MAY 2023 jcs  Build 63: -schema
-*     26 JUN 2024 jcs  Build 71: -colPerf
+*     26 JUN 2024 jcs  Build 72: Nullable<>
 *
 *  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
@@ -57,7 +57,7 @@ public class TestCfg
 public class DataRecord
 {
     public string Ticker { get; set; }
-    public double Mid { get; set; }
+    public double? Mid { get; set; }
     public DateTime LastUpdated { get; set; }
 
 }
@@ -202,10 +202,10 @@ class LVCDumpCLI
       rtEdgeField f;
 //      DateTime    dtTm;;
       String      s;
-      double      r64;
-      float       r32;
-      int         i32;
-      long        i64;
+      double?     r64;
+      float?      r32;
+      int?        i32;
+      long?       i64;
       int         i, nf, fid;
 
       nf = ld._flds.Length;

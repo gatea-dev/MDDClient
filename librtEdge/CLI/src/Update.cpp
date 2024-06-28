@@ -13,6 +13,7 @@
 *     30 JUN 2023 jcs  Build 63: StringDoor
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *     18 MAR 2024 jcs  Build 70: AddFieldAsDouble( ..., int precision )
+*     28 JUN 2024 jcs  Build 72: Nullable GetAsXxx()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -212,42 +213,65 @@ void rtEdgePubUpdate::AddEmptyField( int fid )
 
 void rtEdgePubUpdate::AddFieldAsString( int fid, String ^str )
 {
-   _upd.AddField( fid, (char *)_pStr( str ) );
+   if ( str != nullptr )
+      _upd.AddField( fid, (char *)_pStr( str ) );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt8( int fid, u_char i8 )
+void rtEdgePubUpdate::AddFieldAsInt8( int fid, Nullable<u_char> i8 )
 {
-   _upd.AddField( fid, i8 );
+   if ( i8.HasValue )
+      _upd.AddField( fid, i8.Value );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt16( int fid, u_short i16 )
+void rtEdgePubUpdate::AddFieldAsInt16( int fid, Nullable<u_short> i16 )
 {
-   _upd.AddField( fid, i16 );
+   if ( i16.HasValue )
+      _upd.AddField( fid, i16.Value );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt32( int fid, int i32 )
+void rtEdgePubUpdate::AddFieldAsInt32( int fid, Nullable<int> i32 )
 {
-   _upd.AddField( fid, i32 );
+   if ( i32.HasValue )
+      _upd.AddField( fid, i32.Value );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsInt64( int fid, long long i64 )
+void rtEdgePubUpdate::AddFieldAsInt64( int fid, Nullable<long long> i64 )
 {
-   _upd.AddField( fid, i64 );
+   if ( i64.HasValue )
+      _upd.AddField( fid, i64.Value );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsFloat( int fid, float r32 )
+void rtEdgePubUpdate::AddFieldAsFloat( int fid, Nullable<float> r32 )
 {
-   _upd.AddField( fid, r32 );
+   if ( r32.HasValue )
+      _upd.AddField( fid, r32.Value );
+   else
+      AddEmptyField( fid );
 }
 
-void rtEdgePubUpdate::AddFieldAsDouble( int fid, double r64 )
+void rtEdgePubUpdate::AddFieldAsDouble( int fid, Nullable<double> r64 )
 {
    AddFieldAsDouble( fid, r64, _DFLT_DBL_PRECISION );
 }
 
-void rtEdgePubUpdate::AddFieldAsDouble( int fid, double r64, int precision )
+void rtEdgePubUpdate::AddFieldAsDouble( int              fid, 
+                                        Nullable<double> r64, 
+                                        int              precision )
 {
-   _upd.AddField( fid, r64, precision );
+   if ( r64.HasValue )
+      _upd.AddField( fid, r64.Value, precision );
+   else
+      AddEmptyField( fid );
 }
 
 void rtEdgePubUpdate::AddFieldAsByteStream( int fid, ByteStreamFld ^bStr )
