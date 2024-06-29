@@ -250,7 +250,7 @@ public:
 	 *
 	 * This method may be called simultaneously by multiple threads.
 	 *
-	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \param dst : User-supplied LVCDataAll instance to hold LVC Values
 	 * \return dst
 	 */  
 	LVCDataAll ^SnapAll_safe( LVCDataAll ^dst );
@@ -260,7 +260,7 @@ public:
 	 *
 	 * This method may be called simultaneously by multiple threads.
 	 *
-	 * \param dst : User-supplied LVCAll instance to hold LVC Values
+	 * \param dst : User-supplied LVCDataAll instance to hold LVC Values
 	 * \return dst
 	 */  
 	LVCDataAll ^ViewAll_safe( LVCDataAll ^dst );
@@ -287,10 +287,10 @@ public:
 	 * This method is not re-entrant and unsafe
 	 *
 	 * \param svc - Service to snap
-	 * \return Current contents of svc in LVC Cache in LVCAll struct
+	 * \return Current contents of svc in LVC Cache in LVCDataAll struct
 	 * \see SnapServices()
 	 */
-	LVCAll ^SnapService( String ^svc )
+	LVCDataAll ^SnapService( String ^svc )
 	{
 	   cli::array<String ^> ^svcs;
 
@@ -305,13 +305,13 @@ public:
 	 * This method is not re-entrant and unsafe
 	 *
 	 * \param svcs - List of services to snap
-	 * \return Current contents of svcs in LVC Cache in LVCAll struct
+	 * \return Current contents of svcs in LVC Cache in LVCDataAll struct
 	 * \see SetFilter()
 	 * \see SnapAll()
 	 */
-	LVCAll ^SnapServices( cli::array<String ^> ^svcs )
+	LVCDataAll ^SnapServices( cli::array<String ^> ^svcs )
 	{
-	   SetFilter( nullptr, sdb );
+	   SetFilter( nullptr, svcs );
 	   return SnapAll();
 	}
 
@@ -321,11 +321,11 @@ public:
 	 * This method is not re-entrant and unsafe
 	 *
 	 * \param flds - CSV list of field IDs or names to snap
-	 * \return Current contents of flds in LVC Cache in LVCAll struct
+	 * \return Current contents of flds in LVC Cache in LVCDataAll struct
 	 * \see SetFilter()
 	 * \see SnapAll()
 	 */
-	LVCAll ^SnapFields( String ^flds )
+	LVCDataAll ^SnapFields( String ^flds )
 	{
 	   SetFilter( flds, nullptr );
 	   return SnapAll();
@@ -342,7 +342,7 @@ public:
 	 * \see SetFilter()
 	 * \see SnapAll()
 	 */
-	LVCAll ^SnapFieldsFromService( String ^flds, String ^svc )
+	LVCDataAll ^SnapFieldsFromService( String ^flds, String ^svc )
 	{
 	   cli::array<String ^> ^svcs;
 
