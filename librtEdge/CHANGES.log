@@ -45,9 +45,10 @@ Features To Add
  *
  * ### Build 72 24-06-xx
  *
- * -# LVC SnapAll performance - LVC.SetFilter() :
+ * -# LVC SnapAll performance :
  *    - LVC_SetFilter( flds, svcs )
  *    - Allow field ID name in filter : RTEDGE_PRIVATE.GLlvcDb._schemaByName
+ *    - LVC.SnapService() / SnapServices() / SnapFields()
  *
  * -# Default Publisher : binary / unpacked
  *    - inc/hpp/PubChannel.hpp : New default member assignment  
