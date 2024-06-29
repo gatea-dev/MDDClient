@@ -340,8 +340,12 @@ class LVCPerfCLI
       RunIt( lvc, cfg ); // 'Warp up' LVC datafile
       for ( i=0; i<2; i++ ) {
          cfg.bSvcFltr = ( i != 0 );
+         if ( cfg.bSvcFltr && ( cfg.svcs == null ) )
+            continue; // for-i
          for ( j=0; j<2; j++ ) {
             cfg.bFldFltr = ( j != 0 );
+            if ( cfg.bFldFltr && ( cfg.flds == null ) )
+               continue; // for-i
             for ( k=0; k<2; k++ ) {
                cfg.bFldType = ( k != 0 );
                sdb.Add( RunIt( lvc, cfg ) );
