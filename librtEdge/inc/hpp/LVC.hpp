@@ -490,6 +490,87 @@ public:
 	   _all->reset();
 	}
 
+	////////////////////////////////////
+	// Query - Filtered
+	////////////////////////////////////
+	/**
+	 * \brief Query LVC for specific service
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param svc - Service to snap
+	 * \return Current contents of svc in LVC Cache in LVCAll struct
+	 * \see SnapServices()
+	 */
+	LVCAll &SnapService( std::string &svc )
+	{
+	   Strings sdb;
+
+	   sdb.push_back( svc );
+	   return SnapServices( sdb );
+	}
+
+	/**
+	 * \brief Query LVC for specific services
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param svcs - List of services to snap
+	 * \return Current contents of svcs in LVC Cache in LVCAll struct
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll &SnapServices( Strings &svcs )
+	{
+	   std::vector<const char *> svcsV;
+	   size_t                    i, n;
+
+	   n = svcs.size();
+	   for ( i=0; i<n; svcsV.push_back( svcs[i].data() ), i++ );
+	   svcsV.push_back( (const char *)0 );
+	   SetFilter( (const char *)0, svcsV.data() );
+	   return SnapAll();
+	}
+
+	/**
+	 * \brief Query LVC for specific fields
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param flds - CSV list of field IDs or names to snap
+	 * \return Current contents of flds in LVC Cache in LVCAll struct
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll &SnapFields( std::string &flds )
+	{
+	   SetFilter( flds.data(), (const char **)0 );
+	   return SnapAll();
+	}
+
+	/**
+	 * \brief Query LVC for specific fields from single service
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param flds - CSV list of field IDs or names to snap
+	 * \param svc - Service to snap
+	 * \return Current contents of flds from svc in LVC Cache
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll &SnapFieldsFromService( std::string &flds, std::string &svc )
+	{
+	   std::vector<const char *> svcsV;
+
+	   svcsV.push_back( svc.data() );
+	   svcsV.push_back( (const char *)0 );
+	   SetFilter( flds.data(), svcsV.data() );
+	   return SnapAll();
+	   SetFilter( flds.data(), (const char **)0 );
+	   return SnapAll();
+	}
+
 	////////////////////////
 	// Helpers
 	////////////////////////

@@ -24,6 +24,7 @@ public class TestStat
    public uint   tLibSnap { get; set; }
    public uint   tSnap    { get; set; }
    public uint   tPull    { get; set; }
+   public uint   tAll     { get; set; }
    public uint   NumTkr   { get; set; }
    public uint   NumFld   { get; set; }
 
@@ -36,6 +37,7 @@ public class TestStat
       this.tLibSnap = 0;
       this.tSnap    = 0;
       this.tPull    = 0;
+      this.tAll    = 0;
       this.NumTkr   = 0;
       this.NumFld   = 0;
    }
@@ -53,6 +55,8 @@ public class TestStat
       rc += this.tSnap.ToString();
       rc += ",";
       rc += this.tPull.ToString();
+      rc += ",";
+      rc += this.tAll.ToString();
       rc += ",";
       rc += this.NumTkr.ToString();
       rc += ",";
@@ -98,31 +102,39 @@ public class TestCfg
    {
       String rc;
 
-      // Services,Fields,FldType,
+      // Services,Fields,Filter,FldType,
 
       /*
        * Services
        */
       rc = "";
-      if ( this.svcs == null )
-         rc = "All";
+      if ( this.svcs == null ) {
+         rc           += "All";
+         this.bSvcFltr = false;
+      }
       else
          rc = String.Join( ";", this.svcs );
-      rc += " (";
-      if ( !this.bSvcFltr )
-         rc += "Un";
-      rc += "Filtered),";
+      rc += ",";
       /*
        * Fields
        */
-      if ( this.flds == null )
-         rc += "All";
+      if ( this.flds == null ) {
+         rc           += "All";
+         this.bFldFltr = false;
+      }
       else
          rc += this.flds.Replace( ",", ";" );
-      rc += " (";
-      if ( !this.bFldFltr )
-         rc += "Un";
-      rc += "Filtered),";
+      rc += ",";
+      /*
+       * Filter
+       */
+      if ( this.bSvcFltr || this.bFldFltr ) {
+         rc += this.bSvcFltr ? "SVC " : "";
+         rc += this.bFldFltr ? "FLD" : "";
+      }
+      else
+         rc += "None";
+      rc += ",";
       /*
        * Field Type
        */
@@ -177,18 +189,18 @@ class LVCPerfCLI
    ////////////////////////////////
    public static TestStat RunIt( LVC lvc, TestCfg cfg )
    {
-      LVCDataAll           la;
-      LVCData              ld;
-      rtEdgeField          fld;
-      rtEdgeField[]        flds;
-      TestStat             st;
-      double               d0;
-      HashSet<String>      svcSet;
+      LVCDataAll              la;
+      LVCData                 ld;
+      rtEdgeField             fld;
+      rtEdgeField[]           flds;
+      TestStat                st;
+      double                  d0, d1, d2;
+      HashSet<String>         svcSet;
       Dictionary<int, object> fdb;
-      String[]             svcFltr;
-      String               fldFltr;
-      int                  i, j, nf;
-      int[]                fids;
+      String[]                svcFltr;
+      String                  fldFltr;
+      int                     i, j, nf;
+      int[]                   fids;
 
       /*
        * 1) Set Filter
@@ -206,7 +218,8 @@ class LVCPerfCLI
       st          = new TestStat( cfg );
       d0          = rtEdge.TimeNs();
       la          = lvc.ViewAll();
-      st.tSnap    = (uint)( 1000.0 * ( rtEdge.TimeNs() - d0 ) );
+      d1          = rtEdge.TimeNs();
+      st.tSnap    = (uint)( 1000.0 * ( d1 - d0 ) );
       st.tLibSnap = (uint)( 1000.0 * la._dSnap );
       st.NumTkr   = la._nTkr;
       st.NumFld   = 0;
@@ -214,7 +227,7 @@ class LVCPerfCLI
       /*
        * 3) Walk / Dump
        */
-      d0       = rtEdge.TimeNs();
+      d1       = rtEdge.TimeNs();
       for ( i=0; i<la._nTkr; i++ ) {
          ld = la._tkrs[i];
          if ( ( svcFltr == null ) && !svcSet.Contains( ld._pSvc ) )
@@ -238,7 +251,9 @@ class LVCPerfCLI
             }
          }
       }
-      st.tPull = (uint)( 1000.0 * ( rtEdge.TimeNs() - d0 ) );
+      d2       = rtEdge.TimeNs();
+      st.tPull = (uint)( 1000.0 * ( d2 - d1 ) );
+      st.tAll  = (uint)( 1000.0 * ( d2 - d0 ) );
       return st;
    }
 
@@ -320,17 +335,15 @@ class LVCPerfCLI
       /*
        * 2) Tests : Original, etc.
        */
-      Console.Write( "Services,Fields,FldType," );
-      Console.WriteLine( "tSnap-C,tSnap-C#,tPull,NumTkr,NumFld" );
-      sdb.Add( RunIt( lvc, cfg ) );
-      cfg.bFldType = true;
-      sdb.Add( RunIt( lvc, cfg ) );
+      Console.Write( "Services,Fields,Filter,FldType," );
+      Console.WriteLine( "tSnap-C,tSnap-C#,tPull,tAll,NumTkr,NumFld" );
+      RunIt( lvc, cfg ); // 'Warp up' LVC datafile
       for ( i=0; i<2; i++ ) {
-         cfg.bSvcFltr = ( i == 0 );
+         cfg.bSvcFltr = ( i != 0 );
          for ( j=0; j<2; j++ ) {
-            cfg.bFldFltr = ( j == 0 );
+            cfg.bFldFltr = ( j != 0 );
             for ( k=0; k<2; k++ ) {
-               cfg.bFldType = ( k == 0 );
+               cfg.bFldType = ( k != 0 );
                sdb.Add( RunIt( lvc, cfg ) );
             }
          }

@@ -160,6 +160,7 @@ public:
 	 */  
 	rtEdgeSchema ^GetSchema( bool bQry );
 
+
 	////////////////////////////////////
 	// Filter
 	////////////////////////////////////
@@ -200,7 +201,7 @@ public:
 
 
 	////////////////////////////////////
-	// Cache Query
+	// Query - All
 	////////////////////////////////////
 	/** 
 	 * \brief Query LVC for current values of a single market data record
@@ -275,6 +276,81 @@ public:
 
 	/** \brief Backwards compatibility */
 	void Destroy();
+
+
+	////////////////////////////////////
+	// Query - Filtered
+	////////////////////////////////////
+	/**
+	 * \brief Query LVC for specific service
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param svc - Service to snap
+	 * \return Current contents of svc in LVC Cache in LVCAll struct
+	 * \see SnapServices()
+	 */
+	LVCAll ^SnapService( String ^svc )
+	{
+	   cli::array<String ^> ^svcs;
+
+	   svcs    = gcnew cli::array<String ^>( 1 );
+	   svcs[0] = svc;
+	   return SnapServices( svcs );
+	}
+
+	/**
+	 * \brief Query LVC for specific services
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param svcs - List of services to snap
+	 * \return Current contents of svcs in LVC Cache in LVCAll struct
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll ^SnapServices( cli::array<String ^> ^svcs )
+	{
+	   SetFilter( nullptr, sdb );
+	   return SnapAll();
+	}
+
+	/**
+	 * \brief Query LVC for specific fields
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param flds - CSV list of field IDs or names to snap
+	 * \return Current contents of flds in LVC Cache in LVCAll struct
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll ^SnapFields( String ^flds )
+	{
+	   SetFilter( flds, nullptr );
+	   return SnapAll();
+	}
+
+	/**
+	 * \brief Query LVC for specific fields from single service
+	 *
+	 * This method is not re-entrant and unsafe
+	 *
+	 * \param flds - CSV list of field IDs or names to snap
+	 * \param svc - Service to snap
+	 * \return Current contents of flds from svc in LVC Cache
+	 * \see SetFilter()
+	 * \see SnapAll()
+	 */
+	LVCAll ^SnapFieldsFromService( String ^flds, String ^svc )
+	{
+	   cli::array<String ^> ^svcs;
+
+	   svcs    = gcnew cli::array<String ^>( 1 );
+	   svcs[0] = svc;
+	   SetFilter( flds, svcs );
+	   return SnapAll();
+	}
 
 };  // class LVC
 
