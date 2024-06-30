@@ -79,24 +79,6 @@ public:
 	}
 
 	/** 
-	 * \brief Returns LVCData by name
-	 *
-	 * \param svc - Service Name
-	 * \param tkr - Ticker Name
-	 * \return Message by name if found; NULL if not
-	 */
-	Message *GetRecord( const char *svc, const char *tkr )
-	{
-	   Message *rc;
-	   int      ix;
-
-	   rc = (Message *)0;
-	   if ( GetRecordIndex( svc, tkr, ix ) ) 
-	      rc  = _msgs[ix];
-	   return rc;
-	}
-
-	/** 
 	 * \brief Returns LVCData index by name
 	 *
 	 * \param svc - Service Name
@@ -189,7 +171,7 @@ public:
 	      ld  = &la._tkrs[i];
 	      msg->Set( ld, _schema.Get() );
 	      _msgs.push_back( msg );
-	      s           = ld->_pTkr;
+	      s           = _Key( msg->Service(), msg->Ticker() );
 	      _nameMap[s] = i;
 	   }
 	   return *this;

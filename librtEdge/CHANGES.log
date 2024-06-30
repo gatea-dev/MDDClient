@@ -43,7 +43,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 72 24-06-xx
+ * ### Build 72 24-06-30
  *
  * -# LVC SnapAll performance :
  *    - LVC_SetFilter( flds, svcs )
@@ -59,6 +59,8 @@ Features To Add
  *    - GetColumnPageAsXxx()
  *
  * -# Schema.GetDef( const char * ) : Name or ID
+ *
+ * -# LVC.GetRecord() : OBSOLETE
  *
  *
  * ### Build 71 24-04-24

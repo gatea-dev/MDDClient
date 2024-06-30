@@ -11,15 +11,11 @@
 *     19 MAY 2023 jcs  Build 63: -schema
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( svc, tkr )
 *     26 SEP 2023 jcs  Build 65: NumUpd,NumFld header - DUH!!
+*     30 JUN 2024 jcs  Build 72: -t working
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
-#if defined(_DEBUG)
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#endif // defined(_DEBUG)
 
 using namespace RTEDGE;
 
@@ -410,16 +406,9 @@ int main( int argc, char **argv )
       }
    }
    else { 
-      LVCAll &all = lvc.ViewAll();
-
       for ( size_t i=0; i<tkrs.size(); i++ ) {
          tkr = tkrs[i].data();
-/*
- * 23-08-14 jcs : Use LVCDataAll.GetRecord()
- *
-         if ( (msg=lvc.View( svc, tkr )) )
- */
-         if ( (msg=all.GetRecord( svc, tkr )) )
+         if ( (msg=lvc.Snap( svc, tkr )) )
             _DumpOne( msg, fids );
          else
             ::fprintf( stdout, "(%s,%s) NOT FOUND\n", svc, tkr );
@@ -427,9 +416,5 @@ int main( int argc, char **argv )
    }
    ::fprintf( stdout, "Done!!\n " );
    ::fflush( stdout );
-#if defined(_DEBUG)
-   _CrtSetReportMode( _CRT_WARN, CRTDBG_MODE_DEBUG );
-   _CrtDumpMemoryLeaks();
-#endif // defined(_DEBUG)
    return 1;
 }
