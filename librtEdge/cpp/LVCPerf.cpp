@@ -227,7 +227,6 @@ static TestStat *RunIt( LVC &lvc, TestStat *st )
    LVCAll       la( lvc, lvc.GetSchema() );
    Messages    &mdb  = la.msgs();
    TestCfg     &cfg  = st->_cfg;
-   FidSet      &fids = cfg.fids;
    Message     *ld;
    Field       *fldP, fld;
    mddField    *flds;
@@ -278,7 +277,7 @@ static TestStat *RunIt( LVC &lvc, TestStat *st )
        */
       FieldDict fdb;
 
-      if ( !(nf=fids.size()) ) {
+      if ( !(nf=cfg.fids.size()) ) {
          flds = (mddField *)ld->Fields();
          nf   = (size_t)ld->NumFields();
          for ( j=0; j<nf; j++ ) {
@@ -379,7 +378,7 @@ int main( int argc, char **argv )
          continue; // for-i
       for ( j=0; j<2; j++ ) {
          cfg.bFldFltr = ( j != 0 );
-         if ( cfg.bFldFltr && cfg.flds.size() )
+         if ( cfg.bFldFltr && !cfg.fids.size() )
             continue; // for-i
          for ( k=0; k<2; k++ ) {
             cfg.bFldType = ( k != 0 );
