@@ -21,7 +21,7 @@ Known Bugs
 
 Features To Add
 ---------------
--# TODO : Move SplineMaker / apps/Options into quant
+-# Move SplineMaker / apps/Options into quant
 
 -# Surface.hpp
 -# rtFld_vector : AddVector( string[] )
@@ -61,6 +61,8 @@ Features To Add
  * -# Schema.GetDef( const char * ) : Name or ID
  *
  * -# LVC.GetRecord() : OBSOLETE
+ *
+ * -# LVCAll.SnapAll_safe() / ViewAll_safe()
  *
  *
  * ### Build 71 24-04-24

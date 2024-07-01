@@ -16,7 +16,7 @@ using namespace RTEDGE;
 /////////////////////////////////////
 // Version
 /////////////////////////////////////
-const char *LVCDumpID()
+const char *LVCPerfID()
 {
    static std::string s;
    const char   *sccsid;
@@ -27,7 +27,7 @@ const char *LVCDumpID()
       char bp[K], *cp;
 
       cp  = bp;
-      cp += sprintf( cp, "@(#)LVCDump Build %s ", _MDD_LIB_BLD );
+      cp += sprintf( cp, "@(#)LVCPerf Build %s ", _MDD_LIB_BLD );
       cp += sprintf( cp, "%s %s Gatea Ltd.\n", __DATE__, __TIME__ );
       cp += sprintf( cp, rtEdge::Version() );
       s   = bp;
@@ -233,6 +233,7 @@ static TestStat *RunIt( LVC &lvc, TestStat *st )
    double       d0, d1, d2;
    Services     svcs;
    StringSet    svcSet;
+   FieldDict    fdb;
    std::string  s;
    const char **svcFltr;
    const char  *fldFltr;
@@ -275,8 +276,7 @@ static TestStat *RunIt( LVC &lvc, TestStat *st )
       /*
        * All, else specifics
        */
-      FieldDict fdb;
-
+      fdb.clear();
       if ( !(nf=cfg.fids.size()) ) {
          flds = (mddField *)ld->Fields();
          nf   = (size_t)ld->NumFields();
@@ -299,7 +299,9 @@ static TestStat *RunIt( LVC &lvc, TestStat *st )
    st->tPull = (int)( 1000.0 * ( d2 - d1 ) );
    st->tAll  = (int)( 1000.0 * ( d2 - d0 ) );
    return st;
-}
+
+} // RunIt()
+
 
 //////////////////////////
 // main()
@@ -316,7 +318,7 @@ int main( int argc, char **argv )
    // Quickie checks
    /////////////////////
    if ( argc > 1 && !::strcmp( argv[1], "--version" ) ) {
-      printf( "%s\n", LVCDumpID() );
+      printf( "%s\n", LVCPerfID() );
       return 0;
    }
    svr = "./cache.lvc";

@@ -37,6 +37,10 @@
 namespace librtEdge 
 {
 
+// Forwards
+
+ref class LVC;
+
 ////////////////////////////////////////////////
 //
 //       c l a s s   r t E d g e D a t a
@@ -753,6 +757,31 @@ public:
 	{
 	   bool get() { return _all ? _all->IsBinary() : false; }
 	}
+
+	////////////////////////////////////
+	// Thread-safe  Access
+	////////////////////////////////////
+public:
+	/**  
+	 * \brief Query LVC for current values for ALL tickers
+	 *    
+	 * This method may be called simultaneously by multiple threads. 
+	 *    
+	 * \param lvc - LVC instance to snap from
+	 * \return this
+	 */   
+	LVCDataAll ^SnapAll_safe( LVC ^lvc );
+
+	/**  
+	 * \brief Query LVC for current values for ALL tickers
+	 *    
+	 * This method may be called simultaneously by multiple threads. 
+	 *    
+	 * \param lvc - LVC instance to snap from
+	 * \return this
+	 * \see SnapAll_aafe()
+	 */   
+	LVCDataAll ^ViewAll_safe( LVC ^lvc );
 
 
 	////////////////////////////////////

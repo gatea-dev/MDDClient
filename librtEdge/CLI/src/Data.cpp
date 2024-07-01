@@ -17,6 +17,7 @@
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Data.h>
+#include <LVC.h>
 
 namespace librtEdge 
 {
@@ -389,6 +390,21 @@ LVCDataAll::~LVCDataAll()
    Clear();
    rtEdge::_DecObj();
 }
+
+
+////////////////////////////////////
+// Thread-safe  Access
+////////////////////////////////////
+LVCDataAll ^LVCDataAll::SnapAll_safe( LVC ^lvc )
+{
+   return lvc->SnapAll_safe( this ); 
+}
+
+LVCDataAll ^LVCDataAll::ViewAll_safe( LVC ^lvc )
+{
+   return lvc->ViewAll_safe( this ); 
+}
+
 
 
 ////////////////////////////////////
