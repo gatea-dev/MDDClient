@@ -98,7 +98,7 @@ PUBSUB_OBJS  = config.o PubSub.o
 PIPE_OBJS    = config.o Pipe.o
 
 #all:	librtEdge$(BITS) test ByteClient FileSvr Publish Subscribe etc move_objs
-all:	librtEdge$(BITS) Publish Subscribe ChartDump LVCDump etc move_objs
+all:	librtEdge$(BITS) Publish Subscribe ChartDump LVCDump LVCPerf etc move_objs
 
 #etc:	Correlate PubSub TradeLog CrossMkt
 etc:	
@@ -166,6 +166,11 @@ FileSvr: clear FileSvr.o
 	mv *.o ./obj
 
 LVCDump: clear LVCDump.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+LVCPerf: clear LVCPerf.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj

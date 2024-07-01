@@ -34,7 +34,7 @@ do
    make -f Makefile64
    if [ -f ./cpp/LVCDump.cpp ]; then
       EDG_VER=55
-      for TOOL in ChartDump LVCAdmin LVCDump Publish SplineMaker Subscribe
+      for TOOL in ChartDump LVCAdmin LVCDump LVCPerf Publish SplineMaker Subscribe
       do
          make -f Makefile64 ${TOOL}
          mv bin64/${TOOL} ${GHOME}/bin64/${TOOL}.Debug.${EDG_VER}
