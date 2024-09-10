@@ -40,6 +40,7 @@
 *     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
 *      4 MAR 2024 jcs  Build 69: bufferedIO
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
+*      9 SEP 2024 jcs  Build 73: LVCStatMon.hpp
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -2293,6 +2294,7 @@ _CPP_END
 #include <hpp/Update.hpp>
 #include <hpp/XmlParser.hpp>
 #include <hpp/admin/LVCAdmin.hpp>
+#include <hpp/admin/LVCStatMon.hpp>
 #include <hpp/struct/Vector.hpp>
 #endif /* __cplusplus */
 

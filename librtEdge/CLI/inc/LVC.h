@@ -16,6 +16,7 @@
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
 *     26 JUN 2024 jcs  Build 72: SetFilter( flds, svcs )
+*      9 SEP 2024 jcs  Build 73: LVCStatMon
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -190,14 +191,14 @@ public:
 	 * \return Number of fields and services in filter
 	 * \see ClearFilter()
 	 */
-        int SetFilter( String ^flds, cli::array<String ^> ^svcs );
+	int SetFilter( String ^flds, cli::array<String ^> ^svcs );
 
 	/**
 	 * \brief Clear response filter set via SetFilter()
 	 *
 	 * \see SetFilter()
 	 */
-        void ClearFilter();
+	void ClearFilter();
 
 
 	////////////////////////////////////
@@ -362,7 +363,7 @@ public:
 //
 ////////////////////////////////////////////////
 /**
- * \class LVC
+ * \class LVCAdmin
  * \brief Admin channel to LVC
  */
 public ref class LVCAdmin : public rtEdge,
@@ -740,5 +741,111 @@ private:
 	void BuildIdxDb();
 
 };  // class LVCVolatile
+
+
+////////////////////////////////////////////////
+//
+//      c l a s s   L V C S t a t M o n
+//
+////////////////////////////////////////////////
+/**
+ * \class LVCStatMon
+ * \brief LVC Stats File Monitor
+ */
+public ref class LVCStatMon : public rtEdge
+{
+protected: 
+	RTEDGE::LVCStatMon *_lvc;
+
+	/////////////////////////////////
+	// Constructor / Destructor
+	/////////////////////////////////
+public:
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param statFile - LVC Stats File to Monitor
+	 */
+	LVCStatMon( String ^statFile );
+
+	/** \brief Destructor.  Cleans up internally.  */
+	~LVCStatMon();
+
+	////////////////////////////////////
+	// Access
+	////////////////////////////////////
+public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::LVCStatMon &cpp() { return *_lvc; }
+#endif // DOXYGEN_OMIT
+
+	/**  
+	 * \brief Return true if valid file 
+	 *    
+	 * \return Return true if valid file 
+	 */   
+	bool IsValidFile() { return cpp().IsValidFile(); }
+
+	/**  
+	 * \brief Snap Stats
+	 *    
+	 * \return rtEdgCacheStats
+	 */   
+	rtEdgeChanStats ^Snap();
+
+	/**  
+	 * \brief Return LVC Start Time
+	 *
+	 * \return LVC Start Time
+	 */
+	double tStart() { return cpp().tStart(); }
+
+	/**
+	 * \brief Return Executable Name
+	 *
+	 * \return File Remaining in Kb
+	 */
+	String ^ExeName() { return gcnew String( cpp().ExeName() ); }
+
+	/**
+	 * \brief Return LVC Build Num
+	 *
+	 * \return LVC Build Num
+	 */
+	String ^BuildNum() { return gcnew String( cpp().BuildNum() ); }
+
+	/**
+	 * \brief Return File Remaining in Kb
+	 *
+	 * \return File Remaining in Kb
+	 */
+	int FileLeftKb() { return cpp().FileLeftKb(); }
+
+	/**
+	 * \brief Return File Size in Kb
+	 *
+	 * \return File Size in Kb
+	 */
+	int FileSizeKb() { return cpp().FileSizeKb(); }
+
+	/**
+	 * \brief Return File Remaining in Pct { 0 ... 100.0 }
+	 *
+	 * \return File Remaining in Pct { 0 ... 100.0 }
+	 */
+	double FileLeftPct() { return cpp().FileLeftPct(); }
+
+	/**
+	 * \brief Calc and Return Msg/Sec
+	 *
+	 * \brief numSec - Nubmer of seconds
+	 * \return Msg/Sec over last numSec
+	 */
+	int UpdPerSec( int numSec ) { return cpp().UpdPerSec( numSec ); }
+
+	/** \brief Backwards compatibility */
+	void Destroy();
+
+};  // class LVCStatMon
 
 } // namespace librtEdge

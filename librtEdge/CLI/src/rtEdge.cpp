@@ -13,8 +13,9 @@
 *     23 SEP 2022 jcs  Build 56: FromUnixTime() : DateTime Reference
 *     23 OCT 2022 jcs  Build 58: cli::array<>
 *      9 MAR 2023 jcs  Build 62: GetCurrentThreadID()
+*      9 SEP 2024 jcs  Build 73: Channel.cpp()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <rtEdge.h>
@@ -326,72 +327,72 @@ Channel::~Channel()
 /////////////////////////////////
 bool Channel::IsValid()
 {
-   return _chan->IsValid();
+   return cpp().IsValid();
 }
 
 void Channel::Ioctl( rtEdgeIoctl cmd, IntPtr val )
 {
-   _chan->Ioctl( (::rtEdgeIoctl)cmd, (void *)val );
+   cpp().Ioctl( (::rtEdgeIoctl)cmd, (void *)val );
 }
 
 rtEdgeChanStats ^Channel::GetStats()
 {
-   return gcnew rtEdgeChanStats( _chan->GetStats() );
+   return gcnew rtEdgeChanStats( cpp().GetStats() );
 }
 
 int Channel::SetRxBufSize( int bufSiz )
 {
-   return _chan->SetRxBufSize( bufSiz );
+   return cpp().SetRxBufSize( bufSiz );
 }
 
 int Channel::GetRxBufSize()
 {
-   return _chan->GetRxBufSize();
+   return cpp().GetRxBufSize();
 }
 
 int Channel::SetTxBufSize( int bufSiz )
 {
-   return _chan->SetTxBufSize( bufSiz );
+   return cpp().SetTxBufSize( bufSiz );
 }
 
 int Channel::GetTxBufSize()
 {
-   return _chan->GetTxBufSize();
+   return cpp().GetTxBufSize();
 }
 
 int Channel::SetThreadProcessor( int cpu )
 {
-   return _chan->SetThreadProcessor( cpu );
+   return cpp().SetThreadProcessor( cpu );
 }
 
 int Channel::GetThreadProcessor()
 {
-   return _chan->GetThreadProcessor();
+   return cpp().GetThreadProcessor();
 }
 
 long Channel::GetThreadID()
 {
-   return (long)_chan->GetThreadID();
+   return (long)cpp().GetThreadID();
 }
 
 bool Channel::IsBinary()
 {
-   return _chan->IsBinary();
+   return cpp().IsBinary();
 }
 
 bool Channel::IsMF()
 {
-   return _chan->IsMF();
+   return cpp().IsMF();
 }
 
 String ^Channel::DstConnName()
 {
-   return gcnew String( _chan->DstConnName() );
+   return gcnew String( cpp().DstConnName() );
 }
 
 bool Channel::SetMDDirectMon( String ^file, String ^exe, String ^bld )
 {
-   return _chan->SetMDDirectMon( _pStr( file ), _pStr( exe ), _pStr( bld ) );
+   return cpp().SetMDDirectMon( _pStr( file ), _pStr( exe ), _pStr( bld ) );
 }
 
 } // namespace librtEdge

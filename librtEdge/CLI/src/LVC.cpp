@@ -15,6 +15,7 @@
 *      4 SEP 2023 jcs  Build 64: Named Schema; DelTickers()
 *     26 JAN 2024 jcs  Build 68: AddFilteredTickers()
 *     26 JUN 2024 jcs  Build 72: SetFilter( flds, svcs )
+*      9 SEP 2024 jcs  Build 73: LVCStatMon
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -576,6 +577,48 @@ void LVCVolatile::BuildIdxDb()
       key        = ld->_pSvc + "|" + ld->_pTkr;
       _idxs[key] = idx;
    }
+}
+
+
+////////////////////////////////////////////////
+//
+//       c l a s s   L V C S t a t M o n
+//
+////////////////////////////////////////////////
+
+/////////////////////////////////
+// Constructor / Destructor
+/////////////////////////////////
+LVCStatMon::LVCStatMon( String ^file ) :
+   _lvc( new RTEDGE::LVCStatMon( _pStr( file ) ) )
+{
+}
+
+LVCStatMon::~LVCStatMon()
+{
+   Destroy();
+}
+
+////////////////////////////////////
+// Access
+////////////////////////////////////
+rtEdgeChanStats ^LVCStatMon::Snap() 
+{
+   ::rtEdgeChanStats st;
+
+   return gcnew rtEdgeChanStats( cpp().Snap( st ) );
+}
+
+////////////////////////////////////
+// Backwards Compatibility
+////////////////////////////////////
+void LVCStatMon::Destroy()
+{
+   // Once
+
+   if ( _lvc )
+      delete _lvc;
+   _lvc = (RTEDGE::LVCStatMon *)0;
 }
 
 } // namespace librtEdge

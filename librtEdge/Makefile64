@@ -24,6 +24,7 @@
 #     31 OCT 2023 jcs  Build 66: QUANT_ROOT
 #     12 JAN 2024 jcs  Build 67: Buffer.cpp; TapeHeader.cpp
 #     28 MAR 2024 jcs  Build 70: Python 3.11 build warnings
+#      9 SEP 2024 jcs  Build 73: LVCMon
 #
 # (c) 1994-2024, Gatea Ltd.
 #######################################################
@@ -176,6 +177,11 @@ LVCPerf: clear LVCPerf.o
 	mv *.o ./obj
 
 LVCAdmin: clear LVCAdmin.o
+	$(CPP) -o $@ $@.o $(EXE_LIBS)
+	mv $@ $(BIN_DIR)
+	mv *.o ./obj
+
+LVCMon: clear LVCMon.o
 	$(CPP) -o $@ $@.o $(EXE_LIBS)
 	mv $@ $(BIN_DIR)
 	mv *.o ./obj

@@ -18,8 +18,9 @@
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *      9 MAR 2023 jcs  Build 62: GetCurrentThreadID()
 *     30 JUN 2023 jcs  Build 63: StringDoor
+*      9 SEP 2024 jcs  Build 73: Channel.cpp()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
 #pragma once
 
@@ -375,6 +376,14 @@ protected:
 protected:
 	Channel();
 	~Channel();
+
+	////////////////////////////////////
+	// Access
+	////////////////////////////////////
+public:
+#ifndef DOXYGEN_OMIT
+	RTEDGE::Channel &cpp() { return *_chan; }
+#endif // DOXYGEN_OMIT
 
 	/////////////////////////////////
 	// librtEdge Operations 

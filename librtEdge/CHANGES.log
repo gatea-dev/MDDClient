@@ -21,6 +21,8 @@ Known Bugs
 
 Features To Add
 ---------------
+-# Ability to query rtEdgeChanStats (Arkadiusz from Liam's group) 
+
 -# Move SplineMaker / apps/Options into quant
 
 -# Surface.hpp
@@ -41,6 +43,13 @@ Features To Add
  * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
  *
  * ## Change Log
+ *
+ *
+ * ### Build 73 24-09-xx
+ *
+ * -# Arkadiusz Gajewski request
+ *    - hpp/admin/LVCStatMon.hpp
+ *    - cpp/LVCMon.cpp
  *
  *
  * ### Build 72 24-06-30
