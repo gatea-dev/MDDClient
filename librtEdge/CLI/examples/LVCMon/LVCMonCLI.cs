@@ -39,7 +39,7 @@ class LVCMonCLI
          num  = 15;
          upd  = "15,30,60,300,900";
          if ( ( argc == 0 ) || ( args[0] == "--config" ) ) {
-            s  = "Usage: " + args[0] + " \\ \n";
+            s  = "Usage: \\ \n";
             s += "       [ -f <LVC stats file> ] \\ \n";
             s += "       [ -r <Stat Sample Rate> ] \\ \n";
             s += "       [ -n <Num Snaps> ] \\ \n";
@@ -88,8 +88,8 @@ class LVCMonCLI
             }
          }
          mon = new LVCStatMon( file );
-         Console.WriteLine( "BUILD : %s", mon.BuildNum() );
-         Console.WriteLine( "EXE   : %s", mon.ExeName() );
+         Console.WriteLine( "BUILD : {0}", mon.BuildNum() );
+         Console.WriteLine( "EXE   : {0}", mon.ExeName() );
          s = "NumMsg,NumByte,";
          for ( i=0; i<idb.Count; i++ ) {
             M  = idb[i] / 60;
