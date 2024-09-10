@@ -20,7 +20,7 @@ rem ### 2) MDDClient
 FOR %%X in (libmddWire librtEdge) DO (
    echo Build %%X
    Call :BuildStuff64 %%X
-   FOR %%Y in (Subscribe Publish ChartDump LVCDump LVCPerf SplineMaker) DO (
+   FOR %%Y in (Subscribe Publish ChartDump LVCDump LVCMon LVCPerf SplineMaker) DO (
       if exist %%X\cpp\%%Y.cpp (
          Call :BuildStuff2 %%X %%Y
          copy %%X\bin64\%%Y\%%Y.exe .\bin64
