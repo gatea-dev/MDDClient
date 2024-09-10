@@ -1804,7 +1804,7 @@ int LVC_GetSchema( LVC_Context cxt, LVCData *data );
  *
  * \param cxt - LVC Context from LVC_Initialize()
  * \param flds - Comma-separated list of field names or ID's 
- * \param svc - NULL-terminated array of allowable service names
+ * \param svcs - NULL-terminated array of allowable service names
  * \return Number of fields and servivces in filter
  */
 int LVC_SetFilter( LVC_Context cxt, const char *flds, const char **svcs );

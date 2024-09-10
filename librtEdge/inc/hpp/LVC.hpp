@@ -341,7 +341,7 @@ public:
 	 * LVC_ViewAll() | Y | Y
 	 *
 	 * \param flds - Comma-separated list of field names or ID's
-	 * \param svc - NULL-terminated array of allowable service names
+	 * \param svcs - NULL-terminated array of allowable service names
 	 * \return Number of fields and services in filter
 	 * \see ClearFilter()
 	 */
