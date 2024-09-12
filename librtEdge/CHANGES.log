@@ -51,6 +51,9 @@ Features To Add
  *    - hpp/admin/LVCStatMon.hpp
  *    - cpp/LVCMon.cpp
  *
+ * -# Gracefully handle shit message:
+ *    - ::mddSub_ParseHdr() 0 return = Disconnect 
+ *
  *
  * ### Build 72 24-06-30
  *

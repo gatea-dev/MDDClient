@@ -30,6 +30,12 @@ Features To Add
  * ## Change Log
  * 
  * 
+ * ### Build 21 24-09-12
+ * 
+ * -# Crap Data on Channel
+ *    - Subscribe::_Binary_ParseHdr() : Gracefully handle 0-len message; No assert()
+ * 
+ * 
  * ### Build 20 24-03-16
  * 
  * -# Real

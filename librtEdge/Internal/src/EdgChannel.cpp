@@ -27,6 +27,7 @@
 *     10 JUN 2022 jcs  Build 55: PumpTicker() : Reload if off > _tape._data
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
 *     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
+*     12 SEP 2024 jcs  Build 71: Handle !::mddSub_ParseHdr()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -43,6 +44,7 @@ using namespace RTEDGE_PRIVATE;
 
 static rtBUF       _zBUF  = { (char *)0, 0 };
 static const char *_undef = "Undefined";
+static const char *_err0  = "Invalid message : 0-length header";
 
 ////////////////////////////////////////////
 // Constructor / Destructor
@@ -366,7 +368,11 @@ int EdgChannel::ParseOnly( rtEdgeData &d )
 
    // 2) ... then parse
 
-   nh  = ::mddSub_ParseHdr( cxt, inp, &h );
+   if ( (nh=::mddSub_ParseHdr( cxt, inp, &h )) <= 0 ) {
+      OnDisconnect( _err0 );
+      Disconnect( _err0 );
+      return 0;
+   }
    nb  = ::mddSub_ParseMsg( cxt, inp, &w );
    fl  = w._flds;
 assert( fl._nFld <= d._nFld );
@@ -730,11 +736,13 @@ void EdgChannel::OnRead()
       b._dLen = sz - i;
       b._hdr  = (mddMsgHdr *)0;
       h       = _InitHdr( mddMt_undef );
-      nb      = ::mddSub_ParseHdr( _mdd, b, &h );
+      if ( (nb=::mddSub_ParseHdr( _mdd, b, &h )) <= 0 ) {
+         OnDisconnect( _err0 );
+         Disconnect( _err0 );
+         return;
+      }
       b._dLen = nb;
       b._hdr  = &h;
-      if ( !nb )
-         break; // for-i
       nMsg  += 1;
       if ( _log && _log->CanLog( 2 ) ) {
          Locker lck( _log->mtx() );

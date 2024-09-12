@@ -14,8 +14,9 @@
 *     29 MAR 2022 jcs  Build 13: Binary._bPackFlds
 *     23 MAY 2022 jcs  Build 14: mddFld_unixTime
 *     28 OCT 2022 jcs  Build 16: mddFld_vector
+*     12 SEP 2024 jcs  Build 21: _Binary_ParseHdr() : Gracefully handle bad msg
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <MDW_Internal.h>
 #include <GLedgDTD.h>
@@ -703,7 +704,13 @@ int Subscribe::_Binary_ParseHdr( mddMsgBuf b, mddBinHdr &h )
 mSz = h._len;
    if ( b._dLen < h._len )
       return 0;
+/*
+ * 24-09-12 jcs  Build 21: Pass her up : GLmdXmlSink handles this ...
+ *
 assert( mSz > 0 );
+ */
+   if ( mSz <= 0 )
+      return 0;
    h._hdrLen = bin.Get( cp, h );
    cp       += h._hdrLen; 
    return( cp-bp );
