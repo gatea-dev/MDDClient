@@ -710,7 +710,7 @@ mSz = h._len;
 assert( mSz > 0 );
  */
    if ( mSz <= 0 )
-      return 0;
+      return -1;
    h._hdrLen = bin.Get( cp, h );
    cp       += h._hdrLen; 
    return( cp-bp );

@@ -368,11 +368,13 @@ int EdgChannel::ParseOnly( rtEdgeData &d )
 
    // 2) ... then parse
 
-   if ( (nh=::mddSub_ParseHdr( cxt, inp, &h )) <= 0 ) {
+   if ( (nh=::mddSub_ParseHdr( cxt, inp, &h )) < 0 ) {
       OnDisconnect( _err0 );
       Disconnect( _err0 );
       return 0;
    }
+   if ( !nh )
+      return 0;
    nb  = ::mddSub_ParseMsg( cxt, inp, &w );
    fl  = w._flds;
 assert( fl._nFld <= d._nFld );
@@ -736,11 +738,13 @@ void EdgChannel::OnRead()
       b._dLen = sz - i;
       b._hdr  = (mddMsgHdr *)0;
       h       = _InitHdr( mddMt_undef );
-      if ( (nb=::mddSub_ParseHdr( _mdd, b, &h )) <= 0 ) {
+      if ( (nb=::mddSub_ParseHdr( _mdd, b, &h )) < 0 ) {
          OnDisconnect( _err0 );
          Disconnect( _err0 );
          return;
       }
+      if ( !nb )
+         break; // for-i
       b._dLen = nb;
       b._hdr  = &h;
       nMsg  += 1;
