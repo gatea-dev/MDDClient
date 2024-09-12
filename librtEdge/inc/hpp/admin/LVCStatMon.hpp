@@ -24,7 +24,7 @@ typedef struct timeval GLtimeval;
 /////////////////////////////////////////
 // Sink channel stats
 /////////////////////////////////////////
-class GLmdSinkStats
+class LVCChanStats
 {
 public:
 	u_int64_t _nMsg;      // Num msgs read
@@ -47,7 +47,7 @@ public:
 	char      _bUp;
 	char      _pad[7];
 
-}; // class GLmdSinkStats
+}; // class LVCChanStats
 
 /////////////////////////////////
 // GLmdStatsHdr
@@ -71,8 +71,8 @@ public:
 class GLlvcStats : public GLmdStatsHdr
 {
 public:
-	GLmdSinkStats _snk;
-	GLmdSinkStats _src; // Not Used : Required for FeedMon
+	LVCChanStats _snk;
+	LVCChanStats _src; // Not Used : Required for FeedMon
 
 }; // class GLlvcStats
 
@@ -158,7 +158,7 @@ public:
 	 */
 	rtEdgeChanStats *Snap( rtEdgeChanStats &rc )
 	{
-	   GLmdSinkStats &ls = _lvc->_snk;
+	   LVCChanStats &ls = _lvc->_snk;
 
 	   ::memset( &rc, 0, sizeof( rc ) );
 	   rc._nMsg      = ls._nMsg;
