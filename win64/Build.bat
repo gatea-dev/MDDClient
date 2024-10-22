@@ -8,7 +8,10 @@ rem ###########################
 rem ### 1) Environment
 
 cls
-set VS=VS2017.64
+IF [%VS%] == [] (
+   set VS=VS2017.64
+)
+ECHO Using %VS%
 set BLD_TYPE=Release
 call win64\Clean.bat
 if not exist bin64 (
