@@ -22,7 +22,7 @@
 *      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     26 JUN 2024 jcs  Build 72: Default : binary / unpacked / circQ
-*      7 NOV 2024 jcs  Build 74: ioctl_setRawLog
+*     22 DEC 2024 jcs  Build 74: ioctl_setRawLog; Remove from _pubChans AFTER Stop()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -720,6 +720,17 @@ public:
 	 * as DOWN.
 	 */
 	virtual void Stop()
+	{
+	   rtEdge_Context ourCxt;
+
+	   // Allow for OnConnect( false ) to be captured
+
+	   ourCxt = _cxt;
+	   Channel::Stop();
+	   _pubChans.Remove( ourCxt );
+	}
+
+	virtual void Stop_OBSOLETE()
 	{
 	   _pubChans.Remove( _cxt );
 	   Channel::Stop();
