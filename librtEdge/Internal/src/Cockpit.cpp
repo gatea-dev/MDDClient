@@ -95,20 +95,28 @@ void Cockpit::DetachLVC( bool bForced )
 
 
 ////////////////////////////////////////////
+// Socket Interface
+////////////////////////////////////////////
+void Cockpit::ConnCbk( const char *msg, bool bUP )
+{
+   rtEdgeState state = bUP ? edg_up : edg_down;
+
+   if ( _attr._connCbk )
+      (*_attr._connCbk)( _cxt, msg, state );
+}
+
+
+////////////////////////////////////////////
 // Thread Notifications
 ////////////////////////////////////////////
 void Cockpit::OnConnect( const char *pc )
 {
-   if ( _attr._connCbk )
-      (*_attr._connCbk)( _cxt, pc, edg_up );
+   ConnCbk( pc, true );
 }
 
 void Cockpit::OnDisconnect( const char *reason )
 {
-   // Notify interested parties ...
-
-   if ( _attr._connCbk )
-      (*_attr._connCbk)( _cxt, reason, edg_down );
+   ConnCbk( reason, false );
 }
 
 void Cockpit::OnRead()

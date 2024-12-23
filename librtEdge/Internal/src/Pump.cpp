@@ -12,8 +12,9 @@
 *     11 SEP 2023 jcs  Build 32: _className
 *     17 OCT 2023 jcs  Build 65: poll() only; WIN64 working
 *     13 NOV 2023 jcs  Build 66: RTEDGE_PRIVATE::EventPump
+*     22 DEC 2024 jcs  Build 74: Socket.ConnCbk()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -332,8 +333,10 @@ void Pump::_Destroy()
       tmp = _sox;
    }
    for ( it=tmp.begin(); it!=tmp.end(); it++ ) {
-      if ( (sock=(*it).second) )
+      if ( (sock=(*it).second) ) {
          sock->Disconnect( "Pump.Destroy()" );
+         sock->ConnCbk( "Pump.Destroy()", false );
+      }
    }
 
    // WIN32-specific

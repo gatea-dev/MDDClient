@@ -6,8 +6,9 @@
 *  REVISION HISTORY:
 *     22 AUG 2017 jcs  Created.
 *     21 JAN 2018 jcs  Build 39: _LVC
+*     22 DEC 2024 jcs  Build 74: ConnCbk()
 *
-*  (c) 1994-2018 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __MDD_COCKPIT_H
 #define __MDD_COCKPIT_H
@@ -52,6 +53,10 @@ public:
 	// LVC Destruction
 public:
 	void DetachLVC( bool bForced=false );
+
+	// Socket Interface
+public:
+	virtual void ConnCbk( const char *, bool );
 
 	// Thread Notifications
 protected:

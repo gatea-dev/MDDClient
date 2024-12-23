@@ -41,6 +41,7 @@
 *      4 MAR 2024 jcs  Build 69: bufferedIO
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
 *      9 SEP 2024 jcs  Build 73: LVCStatMon.hpp
+*      7 NOV 2024 jcs  Build 74: ioctl_setRawLog
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -505,7 +506,13 @@ typedef enum {
     *
     * \param (void *)val - Pointer to integer to receive buffered IO size.
     */
-   ioctl_getBufferedIO     = 38
+   ioctl_getBufferedIO     = 38,
+   /**
+    * \brief Set raw publication logfile
+    *
+    * \param (void *)val - Raw log filename
+    */
+   ioctl_setRawLog         = 39
 } rtEdgeIoctl;
 
 /**

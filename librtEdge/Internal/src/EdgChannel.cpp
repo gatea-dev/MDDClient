@@ -28,6 +28,7 @@
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
 *     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
 *     12 SEP 2024 jcs  Build 71: Handle !::mddSub_ParseHdr()
+*     22 DEC 2024 jcs  Build 74: ConnCbk()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -535,8 +536,7 @@ int EdgChannel::Dispatch( int maxUpd, double dWait )
                (*_attr._dataCbk)( _cxt, rd._d );
             break;
          case EVT_CONN:
-            if ( _attr._connCbk )
-               (*_attr._connCbk)( _cxt, rd._msg, rd._state );
+            ConnCbk( rd._msg, ( rd._state == edg_up ) );
             break;
          case EVT_SVC:
             if ( _attr._svcCbk )
@@ -609,6 +609,14 @@ int EdgChannel::Read( double dWait, rtEdgeRead &rd )
 ////////////////////////////////////////////
 // Socket Interface
 ////////////////////////////////////////////
+void EdgChannel::ConnCbk( const char *msg, bool bUP )
+{       
+   rtEdgeState state = bUP ? edg_up : edg_down;
+        
+   if ( _attr._connCbk )
+      (*_attr._connCbk)( _cxt, msg, state );
+}       
+
 bool EdgChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
 {
    bool       bArg, *pbArg;
@@ -680,7 +688,7 @@ void EdgChannel::OnConnect( const char *pc )
          _Q.AddAndNotify( u );
       }
       else
-         (*_attr._connCbk)( _cxt, pc, edg_up );
+         ConnCbk( pc, true );
    }
 }
 
@@ -711,7 +719,7 @@ void EdgChannel::OnDisconnect( const char *reason )
          _Q.AddAndNotify( u );
       }
       else
-         (*_attr._connCbk)( _cxt, reason, edg_down );
+         ConnCbk( reason, false );
    }
 }
 

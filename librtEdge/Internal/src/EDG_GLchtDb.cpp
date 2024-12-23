@@ -9,8 +9,9 @@
 *     20 MAR 2016 jcs  Build 32: Linux compatibility in libmddWire
 *     10 SEP 2020 jcs  Build 44: MDDResult
 *      9 MAR 2023 jcs  Build 62: GLchtDbItem._idx; u_int64_t _fileSiz
+*     22 DEC 2024 jcs  Build 74: Socket.ConnCbk()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -166,6 +167,7 @@ CDBData GLchtDb::GetItem( const char *pSvc,
 
 void GLchtDb::AddTicker( const char *pSvc, const char *pTkr, int fid )
 {
+#ifdef OBSOLETE_Socket_ConnCbk
    const char *ph  = _admin.c_str();
    const char *sep = "|";
    string      toks( pTkr );
@@ -185,10 +187,12 @@ void GLchtDb::AddTicker( const char *pSvc, const char *pTkr, int fid )
       s.Write( buf, strlen( buf ) );
    }
    SLEEP( 0.25 ); // 250 mS to flush the socket
+#endif // OBSOLETE_Socket_ConnCbk
 }
 
 void GLchtDb::DelTicker( const char *pSvc, const char *pTkr, int fid )
 {
+#ifdef OBSOLETE_Socket_ConnCbk
    const char *ph  = _admin.c_str();
    const char *sep = "|";
    string      toks( pTkr );
@@ -210,6 +214,7 @@ void GLchtDb::DelTicker( const char *pSvc, const char *pTkr, int fid )
       s.Write( buf, strlen( buf ) );
    }
    SLEEP( 0.25 ); // 250 mS to flush the socket
+#endif // OBSOLETE_Socket_ConnCbk
 }
 
 

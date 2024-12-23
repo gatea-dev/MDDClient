@@ -18,6 +18,7 @@
 *     22 OCT 2022 jcs  Build 58: MyVector
 *     11 JUL 2023 jcs  Build 64: -h <hostOnly>
 *     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
+*     20 DEC 2024 jcs  Build 74: -chain
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -621,6 +622,49 @@ private:
 }; // class MyChannel
 
 
+/////////////////////////////////////
+//
+//   c l a s s   M y C h a i n
+//
+/////////////////////////////////////
+class MyChain : public Chain
+{
+protected:
+   MyChannel &_ch;
+
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+public:
+   MyChain( MyChannel &ch, const char *svc, const char *tkr ) :
+      Chain( svc, tkr, ( ch._csvFids.size() == 0 ) ),
+      _ch( ch )
+   { ; }
+
+   ////////////////////////////////
+   // Asynchronous Callbacks
+   ////////////////////////////////
+public:
+   virtual void OnChainLink( const char *name, int nLnk, Strings &lnks )
+   {
+      for ( size_t i=0; IsListOnly() && i<lnks.size(); i++ )
+         ::fprintf( stdout, "Chain.OnLink( %s ) : %s\n", name, lnks[i].data() );
+      ::fflush( stdout );
+   }
+
+   virtual void OnChainData( const char *name, int pos, int nUpd, Message &msg )
+   {
+      if ( !IsListOnly() )
+         _ch.OnData( msg ); 
+   }
+
+   virtual void OnChainListComplete( Strings &lst )
+   {
+   }
+
+}; // class MyChain
+
+
 
 //////////////////////////
 // main()
@@ -630,24 +674,6 @@ static bool _IsTrue( const char *p )
    return( !::strcmp( p, "YES" ) || !::strcmp( p, "true" ) );
 }
 
-#ifdef _VALIDATE_ON_ALL_PLATFORMS
-
-#include <GLrecDb.h>
-int main( int argc, char **argv )
-{
-   printf( "sizeof( Sentinel )       = %ld\n", sizeof( Sentinel ) );
-   printf( "sizeof( GLrecDailyIdx )  = %ld\n", sizeof( GLrecDailyIdx ) );
-   printf( "sizeof( GLrecUpdStats )  = %ld\n", sizeof( GLrecUpdStats ) );
-   printf( "sizeof( GLrecChanStats ) = %ld\n", sizeof( GLrecChanStats ) );
-   printf( "sizeof( GLrecTapeHdr )   = %ld\n", sizeof( GLrecTapeHdr ) );
-   printf( "sizeof( GLrecTapeRec )   = %ld\n", sizeof( GLrecTapeRec ) );
-   printf( "sizeof( GLrecTapeMsg )   = %ld\n", sizeof( GLrecTapeMsg ) );
-   printf( "sizeof( struct timeval ) = %ld\n", sizeof( struct timeval ) );
-   printf( "sizeof( long )           = %ld\n", sizeof( long ) );
-   return 0;
-}
-#endif // _VALIDATE_ON_ALL_PLATFORMS
-
 int main( int argc, char **argv )
 {
    MyChannel   ch;
@@ -656,7 +682,7 @@ int main( int argc, char **argv )
    FILE       *fp;
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
    char       *cp, *rp, sTkr[K];
-   bool        bCfg, aOK, bBin, bStr, bVec, bTape, bQry, bPort;
+   bool        bCfg, aOK, bBin, bStr, bVec, bChn, bTape, bQry, bPort;
    void       *arg;
    string      s;
    u_int64_t   s0;
@@ -689,6 +715,7 @@ int main( int argc, char **argv )
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    bStr  = false;
    bVec  = false;
+   bChn  = false;
    bTape = true;
    bQry  = false;
    if ( bCfg ) {
@@ -707,6 +734,7 @@ int main( int argc, char **argv )
       s += "       [ -p  <Protocol MF|BIN> ] \\ \n";
       s += "       [ -bstr <If included, bytestream> ] \\ \n";
       s += "       [ -vector <If included, bytestream> ] \\ \n";
+      s += "       [ -chain <If included, bytestream> ] \\ \n";
       s += "       [ -csv true ] \\ \n";
       s += "       [ -csvF <csv list of FIDs> \\ \n";
       s += "       [ -renko <FID,BoxSize[,Mult]>\n";
@@ -730,6 +758,7 @@ int main( int argc, char **argv )
       printf( "      -p       : %s\n", bBin ? "BIN" : "MF" );
       printf( "      -bstr    : %s\n", bStr ? "YES" : "NO" );
       printf( "      -vector  : %s\n", bVec ? "YES" : "NO" );
+      printf( "      -chain   : %s\n", bChn ? "YES" : "NO" );
       printf( "      -csv     : %s\n", ch._bCSV ? "YES" : "NO" );
       printf( "      -csvF    : <empty>\n" );
       printf( "      -renko   : <empty>\n" );
@@ -784,6 +813,8 @@ int main( int argc, char **argv )
          bStr = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-vector" ) )
          bVec = _IsTrue( argv[++i] );
+      else if ( !::strcmp( argv[i], "-chain" ) )
+         bChn = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-renko" ) ) {
          string sr( argv[++i] );
 
@@ -806,6 +837,13 @@ int main( int argc, char **argv )
          bQry = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-table" ) )
          ch.LoadTable( argv[++i] );
+   }
+   nt  = bStr ? 1 : 0;
+   nt += bVec ? 1 : 0;
+   nt += bChn ? 1 : 0;
+   if ( nt > 1 ) {
+      printf( "Only one of -vector, -bstr or -chain allowed; Exitting ...\n" );
+      return 0;
    }
    printf( "%s\n", ch.Version() );
    ch.SetBinary( bStr || bBin || bVec );
@@ -832,10 +870,12 @@ int main( int argc, char **argv )
    vector<string *> tkrs;
    MyStream        *str;
    MyVector        *vec;
+   MyChain         *chn;
 
    if ( tkr && (fp=::fopen( tkr, "r" )) ) {
       while( ::fgets( (cp=sTkr), K, fp ) ) {
-         ::strtok( sTkr, "#" );
+         if( !bChn )
+            ::strtok( sTkr, "#" );
          cp += ( strlen( sTkr ) - 1 );
          for ( ; cp > sTkr; ) {
             if ( ( *cp == '\r' ) || ( *cp == '\n' ) ||
@@ -869,6 +909,14 @@ int main( int argc, char **argv )
          vec = new MyVector( svc, tkrs[i]->data() );
          vec->Subscribe( ch );
          printf( "Vector.Subscribe( %s,%s )\n", svc, vec->Ticker() );
+      }
+   }
+   else if ( bChn ) {
+      ch.Sleep( slp ); // Wait for protocol negotiation to finish
+      for ( i=0; i<nt; i++ ) {
+         chn = new MyChain( ch, svc, tkrs[i]->data() );
+         ch.Subscribe( *chn );
+         printf( "Chain.Subscribe( %s,%s )\n", svc, chn->name() );
       }
    }
    else if ( ch._bds )

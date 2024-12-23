@@ -8,8 +8,9 @@
 *      4 MAY 2015 jcs  Build 31: Fully-qualified  (compiler)
 *      2 JUL 2017 jcs  Build 34: _bLinkOnly
 *     16 MAR 2019 jcs  Build 42: OnChainLink( ..., Strings )
+*     21 DEC 2024 jcs  Build 74: IsListOnly()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Chain_H
 #define __RTEDGE_Chain_H
@@ -410,6 +411,16 @@ public:
 	const char *name()
 	{
 	   return _links[0]->name();
+	}
+
+	/**
+	 * \brief Return true for ChainLink's only; Do not subscribe to chain
+	 *
+	 * \return true for ChainLink's only; Do not subscribe to chain
+	 */
+	bool IsListOnly()
+	{
+	   return _bListOnly;
 	}
 
 	/**

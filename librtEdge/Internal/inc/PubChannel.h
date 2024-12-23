@@ -19,8 +19,9 @@
 *     26 MAY 2017 jcs  Build 34: Socket "has-a" Thread
 *     12 SEP 2017 jcs  Build 35: No mo GLHashMap
 *     12 FEB 2020 jcs  Build 42: Socket._tHbeat
+*     22 DEC 2024 jcs  Build 74: ConnCbk()
 *
-*  (c) 1994-2020 Gatea Ltd.
+*  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_PUB_CHANNEL_H
 #define __EDGLIB_PUB_CHANNEL_H
@@ -84,6 +85,7 @@ private:
 
 	// Socket Interface
 public:
+	virtual void ConnCbk( const char *, bool );
 	virtual bool Ioctl( rtEdgeIoctl, void * );
 
 	// Thread Notifications

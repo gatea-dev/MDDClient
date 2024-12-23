@@ -30,6 +30,8 @@
 *      5 JAN 2024 jcs  Build 67: CircularBuffer
 *     21 FEB 2024 jcs  Build 68: rtPreBuiltBUF._bHasHdr
 *     21 APR 2024 jcs  Build 71: OnConnect() / Ioctl() : Lock _mtx
+*      7 NOV 2024 jcs  Build 73: ioctl_setRawLog
+*     22 DEC 2024 jcs  Build 74: ConnCbk()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -433,6 +435,14 @@ int PubChannel::_PubPermQryRsp( rtEdgeData &d )
 ////////////////////////////////////////////
 // Socket Interface      
 ////////////////////////////////////////////
+void PubChannel::ConnCbk( const char *msg, bool bUP )
+{
+   rtEdgeState state = bUP ? edg_up : edg_down;
+
+   if ( _attr._connCbk )
+      (*_attr._connCbk)( _cxt, msg, state );
+}
+
 bool PubChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
 {
    size_t lVal;
@@ -478,6 +488,10 @@ bool PubChannel::Ioctl( rtEdgeIoctl ctl, void *arg )
       case ioctl_enablePerm:
          _bPerm = bArg;
          return true;
+      case ioctl_setRawLog:
+         if ( pArg )
+            oBuf().SetRawLog( pArg );
+         return true;
       default:
          break;
    }
@@ -499,8 +513,7 @@ void PubChannel::OnConnect( const char *pc )
    // UDP??
 
    if ( _bConnectionless ) {
-      if ( _attr._connCbk )
-         (*_attr._connCbk)( _cxt, pc, edg_up );
+      ConnCbk( pc, true );
       return;
    }
 
@@ -562,8 +575,7 @@ void PubChannel::OnConnect( const char *pc )
 
    // Notify
 
-   if ( _attr._connCbk )
-      (*_attr._connCbk)( _cxt, pc, edg_up );
+   ConnCbk( pc, true );
 }
 
 void PubChannel::OnDisconnect( const char *reason )
@@ -597,8 +609,7 @@ void PubChannel::OnDisconnect( const char *reason )
       (*_attr._closeCbk)( _cxt, pTkr );
       _Close( pTkr );
    }
-   if ( _attr._connCbk )
-      (*_attr._connCbk)( _cxt, reason, edg_down );
+   ConnCbk( reason, false );
 }
 
 void PubChannel::OnRead()

@@ -4,6 +4,7 @@
 *
 *  REVISION HISTORY:
 *      5 JAN 2024 jcs  Created (from Socket.cpp)
+*      7 NOV 2024 jcs  Build 74: SetRawLog()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -25,12 +26,17 @@ Buffer::Buffer( int maxSz ) :
    _cp( (char *)0 ),
    _qAlloc( 0 ),
    _qMax( maxSz ),
-   _bConnectionless( false )
+   _Total( 0 ),
+   _bConnectionless( false ),
+   _rawLog( (FPHANDLE)0 ),
+   _rawLogRoll( (FPHANDLE)0 )
 { ; }
 
 Buffer::~Buffer()
 {
    delete[] _bp;
+   GLmmap::Close( _rawLog );
+   GLmmap::Close( _rawLogRoll );
 }
 
 
@@ -113,6 +119,20 @@ int Buffer::ReadIn( int fd, int nL )
    return nb;
 }
 
+void Buffer::SetRawLog( const char *logFile )
+{
+   std::string rl( logFile );
+   const char *hdr = "TYPE,Total,FragSize,\n";
+
+   rl += "-roll";
+   GLmmap::Close( _rawLog );
+   GLmmap::Close( _rawLogRoll );
+   _rawLog     = GLmmap::Open( logFile, "w" );
+   _rawLogRoll = GLmmap::Open( rl.data(), "w" );
+   GLmmap::Write( (void *)hdr, strlen( hdr ), _rawLogRoll ); 
+   GLmmap::Flush( _rawLogRoll );
+}
+
 
 ////////////////////////////////////////////
 // Instance-Specific Operations
@@ -134,7 +154,7 @@ int Buffer::WriteOut( int fd, int off, int wSz )
 
    cp  = _bp + off;
    wSz = b_gmin( wSz, bufSz() );
-   nb  = wSz ? WRITE( fd, cp, wSz ) : 0;
+   nb  = wSz ? _Write2Wire( fd, cp, wSz ) : 0;
    return b_gmax( nb, 0 );
 }
 
@@ -162,6 +182,27 @@ void Buffer::Move( int off, int len )
    _cp  = _bp;
    _cp += len;
 }
+
+////////////////////////////////////////////
+// Helpers
+////////////////////////////////////////////
+int Buffer::_Write2Wire( int fd, char *rp, int wSz )
+{
+   int nb;
+
+   nb      = WRITE( fd, rp, wSz );
+   nb      = b_gmax( nb, 0 );
+   _Total += nb;
+   _RawLog( rp, nb );
+   return nb;
+}
+
+void Buffer::_RawLog( char *rp, int nb )
+{
+   if ( _rawLog && ( nb > 0 ) )
+      GLmmap::Write( rp, nb, _rawLog ); 
+}
+
 
 
 
@@ -212,7 +253,7 @@ int CircularBuffer::WriteOut( int fd, int notUsed, int wSz )
    rp  = _bp + _beg;
    nb  = 0;
    if ( b_InRange( 0, wSz, nL ) ) {
-      nb    = WRITE( fd, rp, wSz );
+      nb    = _Write2Wire( fd, rp, wSz );
       nb    = b_gmax( nb, 0 );
       _beg += nb;
       if ( _beg == _qAlloc )
@@ -220,8 +261,9 @@ int CircularBuffer::WriteOut( int fd, int notUsed, int wSz )
    }
    else if ( wSz ) {
       sz1  = b_gmin( wSz, _qAlloc - _beg );
-      nb   = WRITE( fd, rp, sz1 );
+      nb   = _Write2Wire( fd, rp, sz1 );
       nb   = b_gmax( nb, 0 );
+      _RawLog_Roll( nb, false );
       _beg = ( _beg + nb ) % _qAlloc;
       rp   = _bp + _beg;
       wSz2 = wSz - nb;
@@ -231,7 +273,8 @@ int CircularBuffer::WriteOut( int fd, int notUsed, int wSz )
       if ( wSz2 && !_beg ) {
 assert( nb == sz1 );
          sz2  = b_gmin( wSz2, _qAlloc - _beg );
-         nb2  = b_gmax( WRITE( fd, rp, sz2 ), 0 );
+         nb2  = b_gmax( _Write2Wire( fd, rp, sz2 ), 0 );
+         _RawLog_Roll( nb2, true );
          _beg = ( _beg + nb2 ) % _qAlloc;
          nb  += nb2;
       }
@@ -267,7 +310,6 @@ bool CircularBuffer::Push( char *data, int dLen )
 }
 
 
-
 ////////////////////////////////////////////
 // Helpers
 ////////////////////////////////////////////
@@ -281,4 +323,16 @@ int CircularBuffer::_memcpy( char *rp, int dLen )
    if ( _end == _qAlloc )
       _end = 0;
    return dLen;
+}
+
+void CircularBuffer::_RawLog_Roll( int frag, bool bSOM )
+{
+   const char *ty = bSOM ? "SOM" : "EOM";
+   char        buf[K];
+
+   if ( _rawLogRoll ) {
+      sprintf( buf, "%s,%ld,%d,\n", ty, _Total, frag );
+      GLmmap::Write( buf, strlen( buf ), _rawLogRoll ); 
+      GLmmap::Flush( _rawLogRoll );
+   }
 }

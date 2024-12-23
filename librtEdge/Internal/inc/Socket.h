@@ -22,6 +22,7 @@
 *      6 SEP 2022 jcs  Build 56: _bOverflow
 *      5 JAN 2024 jcs  Build 67: Buffer.h
 *      4 MAR 2024 jcs  Build 69: Buffered IO
+*     22 DEC 2024 jcs  Build 74: ConnCbk()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -120,6 +121,7 @@ public:
 
 	// Socket Interface
 
+	virtual void ConnCbk( const char *, bool ) = 0;
 	virtual bool Ioctl( rtEdgeIoctl, void * );
 
 	// Thread Notifications

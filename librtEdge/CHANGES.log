@@ -45,7 +45,19 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 73 24-09-xx
+ * ### Build 74 24-12-20
+ *
+ * -# Multi-threaded publisher : Overflow in Edge3
+ *    - ioctl_setRawLog
+ *
+ * -# Subscribe : -chain
+ *    - MyChain
+ *
+ * -# Pump._Destroy()
+ *    - Socket.ConnCbk
+ *
+ *
+ * ### Build 73 24-09-12
  *
  * -# Arkadiusz Gajewski request
  *    - hpp/admin/LVCStatMon.hpp

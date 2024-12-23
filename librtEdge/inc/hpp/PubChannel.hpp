@@ -22,6 +22,7 @@
 *      5 JAN 2024 jcs  Build 67: SetCircularBuffer()
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     26 JUN 2024 jcs  Build 72: Default : binary / unpacked / circQ
+*      7 NOV 2024 jcs  Build 74: ioctl_setRawLog
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -81,6 +82,7 @@ public:
 	   _hosts(),
 	   _authReq(),
 	   _authRsp(),
+	   _rawLog(),
 	   _schema(),
 	   _bBinary( true ),
 	   _bPerms( false ),
@@ -243,6 +245,8 @@ public:
 	   SetHeartbeat( _tHbeat );
 	   SetIdleCallback( _bIdleCbk );
 	   SetUnPacked( _bUnPacked );
+	   if ( _rawLog.size() )
+	      SetRawLog( _rawLog.data() );
 	   return ::rtEdge_PubStart( _cxt );
 	}
 
@@ -419,6 +423,19 @@ public:
 	{
 	   _authReq = auth;
 	}
+
+	/**
+	 * \brief Sets publication channel raw log
+	 *
+	 * \param logFile - Raw Log Filename
+	 */
+	void SetRawLog( const char *logFile )
+	{
+	   _rawLog = logFile;
+	   if ( IsValid() && _rawLog.size() )
+	      ::rtEdge_ioctl( _cxt, ioctl_setRawLog, (void *)_rawLog.data() );
+	}
+
 
 	/**
 	 * \brief Gets publication channel authentication token sent by the
@@ -890,6 +907,7 @@ private:
 	std::string   _hosts;
 	std::string   _authReq;
 	std::string   _authRsp;
+	std::string   _rawLog;
 	Schema        _schema;
 	rtEdgePubAttr _attr;
 	bool          _bBinary;

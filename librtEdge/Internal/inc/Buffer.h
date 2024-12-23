@@ -4,12 +4,14 @@
 *
 *  REVISION HISTORY:
 *      5 JAN 2024 jcs  Created (from Socket.h)
+*      7 NOV 2024 jcs  Build 74: SetRawLog()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_BUFFER_H
 #define __EDGLIB_BUFFER_H
 #include <librtEdge.h>
+#include <EDG_GLmmap.h>
 
 // EDG_Internal.h
 
@@ -38,11 +40,14 @@ namespace RTEDGE_PRIVATE
 class Buffer
 {
 protected:
-	char *_bp;
-	char *_cp;
-	int   _qAlloc;
-	int   _qMax;
-	bool  _bConnectionless;
+	char     *_bp;
+	char     *_cp;
+	int       _qAlloc;
+	int       _qMax;
+	u_int64_t _Total;
+	bool      _bConnectionless;
+	FPHANDLE  _rawLog;
+	FPHANDLE  _rawLogRoll;
 
 	// Constructor / Destructor
 public:
@@ -61,6 +66,7 @@ public:
 	int   nLeft();
 	void  Set( int );
 	int   ReadIn( int, int );
+	void  SetRawLog( const char * );
 
 	// Instance-Specific Operations
 
@@ -70,6 +76,11 @@ public:
 	virtual int   WriteOut( int, int, int );
 	virtual bool  Push( char *, int );
 	virtual void  Move( int, int );
+
+	// Helpers
+protected:
+	int  _Write2Wire( int, char *, int );
+	void _RawLog( char *, int );
 
 }; // class Buffer
 
@@ -97,7 +108,8 @@ public:
 
 	// Helpers
 private:
-	int _memcpy( char *, int );
+	int  _memcpy( char *, int );
+	void _RawLog_Roll( int, bool );
 
 }; // class CircularBuffer
 
