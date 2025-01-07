@@ -598,8 +598,10 @@ public:
 	   pb._dataType = mddDt_undef;
 	   pb._bHasHdr  = 1;
 	   ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, &pb );
-	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) )
+	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) ) {
+	      ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, (rtPreBuiltBUF *)0 );
 	      OnOverflow();
+	   }
 	   return rtn;
 	}
 
