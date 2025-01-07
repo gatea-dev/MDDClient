@@ -1,0 +1,636 @@
+<SplineMaker RunInForeground="false" >
+   <Subscriber Service  = "velocity" 
+               Username = "SplineMaker-velo" 
+               Server   = "localhost:9998" >
+      <Curve Name="Swaps" FieldID="6">
+         <Knot Ticker="RATES.SWAP.USD.PAR.3M"  Interval="3" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.6M"  Interval="6" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.1Y"  Interval="12" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.2Y"  Interval="24" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.3Y"  Interval="36" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.5Y"  Interval="60" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.7Y"  Interval="84" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.10Y" Interval="120" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.20Y" Interval="240" />
+         <Knot Ticker="RATES.SWAP.USD.PAR.30Y" Interval="360" />
+      </Curve>
+
+      <Curve Name="UST" FieldID="6">
+         <Knot Ticker="US3MT GOVT"  Interval="3" />
+         <Knot Ticker="US6MT GOVT"  Interval="6" />
+         <Knot Ticker="US1YT GOVT"  Interval="12" />
+         <Knot Ticker="US2YT GOVT"  Interval="24" />
+         <Knot Ticker="US3YT GOVT"  Interval="36" />
+         <Knot Ticker="US5YT GOVT"  Interval="60" />
+         <Knot Ticker="US7YT GOVT"  Interval="84" />
+         <Knot Ticker="US10YT GOVT" Interval="120" />
+         <Knot Ticker="US20YT GOVT" Interval="240" />
+         <Knot Ticker="US30YT GOVT" Interval="360" />
+      </Curve>
+
+      <Curve Name="AUD.USD" FieldID="6">
+        <Knot Ticker="AUD1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="AUD2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="AUD3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="AUD4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="AUD5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="AUD6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="AUD7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="AUD8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="AUD9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="AUD10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="AUD11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="AUD1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="AUD15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="AUD18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="AUD2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="AUD3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="AUD4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="AUD5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="AUD6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="AUD7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="AUD8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="AUD9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="AUD10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.CHF" FieldID="6">
+        <Knot Ticker="EURCHF1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EURCHF2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EURCHF3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EURCHF4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EURCHF5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EURCHF6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EURCHF7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EURCHF8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EURCHF9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EURCHF10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EURCHF11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EURCHF1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EURCHF15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EURCHF18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EURCHF2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EURCHF3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EURCHF4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EURCHF5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EURCHF6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EURCHF7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EURCHF8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EURCHF9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EURCHF10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.DKK" FieldID="6">
+        <Knot Ticker="EURDKK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EURDKK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EURDKK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EURDKK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EURDKK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EURDKK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EURDKK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EURDKK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EURDKK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EURDKK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EURDKK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EURDKK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EURDKK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EURDKK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EURDKK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EURDKK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EURDKK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EURDKK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EURDKK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EURDKK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EURDKK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EURDKK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EURDKK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.GBP" FieldID="6">
+        <Knot Ticker="EURGBP1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EURGBP2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EURGBP3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EURGBP4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EURGBP5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EURGBP6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EURGBP7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EURGBP8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EURGBP9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EURGBP10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EURGBP11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EURGBP1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EURGBP15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EURGBP18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EURGBP2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EURGBP3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EURGBP4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EURGBP5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EURGBP6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EURGBP7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EURGBP8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EURGBP9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EURGBP10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.NOK" FieldID="6">
+        <Knot Ticker="EURNOK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EURNOK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EURNOK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EURNOK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EURNOK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EURNOK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EURNOK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EURNOK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EURNOK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EURNOK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EURNOK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EURNOK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EURNOK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EURNOK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EURNOK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EURNOK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EURNOK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EURNOK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EURNOK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EURNOK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EURNOK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EURNOK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EURNOK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.SEK" FieldID="6">
+        <Knot Ticker="EURSEK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EURSEK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EURSEK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EURSEK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EURSEK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EURSEK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EURSEK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EURSEK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EURSEK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EURSEK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EURSEK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EURSEK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EURSEK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EURSEK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EURSEK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EURSEK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EURSEK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EURSEK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EURSEK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EURSEK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EURSEK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EURSEK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EURSEK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="EUR.USD" FieldID="6">
+        <Knot Ticker="EUR1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="EUR2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="EUR3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="EUR4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="EUR5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="EUR6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="EUR7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="EUR8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="EUR9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="EUR10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="EUR11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="EUR1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="EUR15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="EUR18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="EUR2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="EUR3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="EUR4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="EUR5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="EUR6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="EUR7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="EUR8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="EUR9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="EUR10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="GBP.USD" FieldID="6">
+        <Knot Ticker="GBP1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="GBP2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="GBP3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="GBP4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="GBP5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="GBP6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="GBP7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="GBP8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="GBP9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="GBP10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="GBP11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="GBP1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="GBP15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="GBP18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="GBP2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="GBP3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="GBP4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="GBP5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="GBP6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="GBP7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="GBP8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="GBP9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="GBP10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.ILS" FieldID="6">
+        <Knot Ticker="USDILS1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="USDILS2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="USDILS3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="USDILS4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="USDILS5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="USDILS6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="USDILS7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="USDILS8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="USDILS9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="USDILS10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="USDILS11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="USDILS1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="USDILS15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="USDILS18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="USDILS2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="USDILS3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="USDILS4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="USDILS5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="USDILS6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="USDILS7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="USDILS8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="USDILS9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="USDILS10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="NZD.USD" FieldID="6">
+        <Knot Ticker="NZD1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="NZD2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="NZD3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="NZD4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="NZD5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="NZD6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="NZD7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="NZD8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="NZD9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="NZD10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="NZD11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="NZD1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="NZD15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="NZD18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="NZD2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="NZD3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="NZD4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="NZD5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="NZD6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="NZD7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="NZD8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="NZD9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="NZD10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CAD" FieldID="6">
+        <Knot Ticker="CAD1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="CAD2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="CAD3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="CAD4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="CAD5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="CAD6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="CAD7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="CAD8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="CAD9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="CAD10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="CAD11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="CAD1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="CAD15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="CAD18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="CAD2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="CAD3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="CAD4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="CAD5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="CAD6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="CAD7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="CAD8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="CAD9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="CAD10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CHF" FieldID="6">
+        <Knot Ticker="CHF1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="CHF2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="CHF3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="CHF4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="CHF5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="CHF6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="CHF7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="CHF8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="CHF9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="CHF10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="CHF11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="CHF1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="CHF15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="CHF18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="CHF2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="CHF3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="CHF4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="CHF5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="CHF6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="CHF7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="CHF8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="CHF9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="CHF10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.CZK" FieldID="6">
+        <Knot Ticker="CZK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="CZK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="CZK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="CZK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="CZK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="CZK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="CZK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="CZK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="CZK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="CZK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="CZK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="CZK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="CZK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="CZK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="CZK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="CZK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="CZK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="CZK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="CZK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="CZK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="CZK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="CZK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="CZK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.DKK" FieldID="6">
+        <Knot Ticker="DKK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="DKK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="DKK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="DKK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="DKK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="DKK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="DKK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="DKK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="DKK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="DKK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="DKK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="DKK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="DKK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="DKK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="DKK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="DKK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="DKK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="DKK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="DKK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="DKK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="DKK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="DKK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="DKK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.HUF" FieldID="6">
+        <Knot Ticker="HUF1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="HUF2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="HUF3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="HUF4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="HUF5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="HUF6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="HUF7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="HUF8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="HUF9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="HUF10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="HUF11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="HUF1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="HUF15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="HUF18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="HUF2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="HUF3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="HUF4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="HUF5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="HUF6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="HUF7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="HUF8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="HUF9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="HUF10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.JPY" FieldID="6">
+        <Knot Ticker="JPY1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="JPY2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="JPY3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="JPY4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="JPY5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="JPY6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="JPY7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="JPY8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="JPY9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="JPY10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="JPY11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="JPY1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="JPY15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="JPY18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="JPY2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="JPY3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="JPY4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="JPY5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="JPY6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="JPY7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="JPY8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="JPY9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="JPY10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.MXN" FieldID="6">
+        <Knot Ticker="MXN1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="MXN2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="MXN3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="MXN4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="MXN5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="MXN6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="MXN7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="MXN8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="MXN9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="MXN10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="MXN11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="MXN1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="MXN15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="MXN18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="MXN2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="MXN3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="MXN4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="MXN5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="MXN6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="MXN7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="MXN8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="MXN9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="MXN10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.NOK" FieldID="6">
+        <Knot Ticker="NOK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="NOK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="NOK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="NOK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="NOK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="NOK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="NOK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="NOK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="NOK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="NOK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="NOK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="NOK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="NOK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="NOK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="NOK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="NOK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="NOK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="NOK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="NOK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="NOK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="NOK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="NOK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="NOK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.PLN" FieldID="6">
+        <Knot Ticker="PLN1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="PLN2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="PLN3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="PLN4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="PLN5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="PLN6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="PLN7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="PLN8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="PLN9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="PLN10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="PLN11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="PLN1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="PLN15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="PLN18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="PLN2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="PLN3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="PLN4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="PLN5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="PLN6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="PLN7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="PLN8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="PLN9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="PLN10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.SEK" FieldID="6">
+        <Knot Ticker="SEK1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="SEK2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="SEK3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="SEK4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="SEK5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="SEK6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="SEK7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="SEK8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="SEK9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="SEK10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="SEK11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="SEK1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="SEK15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="SEK18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="SEK2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="SEK3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="SEK4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="SEK5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="SEK6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="SEK7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="SEK8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="SEK9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="SEK10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+      <Curve Name="USD.ZAR" FieldID="6">
+        <Knot Ticker="ZAR1M CITI CURNCY"  Interval="1" />
+        <Knot Ticker="ZAR2M CITI CURNCY"  Interval="2" />
+        <Knot Ticker="ZAR3M CITI CURNCY"  Interval="3" />
+        <Knot Ticker="ZAR4M CITI CURNCY"  Interval="4" />
+        <Knot Ticker="ZAR5M CITI CURNCY"  Interval="5" />
+        <Knot Ticker="ZAR6M CITI CURNCY"  Interval="6" />
+        <Knot Ticker="ZAR7M CITI CURNCY"  Interval="7" />
+        <Knot Ticker="ZAR8M CITI CURNCY"  Interval="8" />
+        <Knot Ticker="ZAR9M CITI CURNCY"  Interval="9" />
+        <Knot Ticker="ZAR10M CITI CURNCY"  Interval="10" />
+        <Knot Ticker="ZAR11M CITI CURNCY"  Interval="11" />
+        <Knot Ticker="ZAR1Y CITI CURNCY"  Interval="12" />
+        <Knot Ticker="ZAR15M CITI CURNCY"  Interval="15" />
+        <Knot Ticker="ZAR18M CITI CURNCY"  Interval="18" />
+        <Knot Ticker="ZAR2Y CITI CURNCY"  Interval="24" />
+        <Knot Ticker="ZAR3Y CITI CURNCY"  Interval="36" />
+        <Knot Ticker="ZAR4Y CITI CURNCY"  Interval="48" />
+        <Knot Ticker="ZAR5Y CITI CURNCY"  Interval="60" />
+        <Knot Ticker="ZAR6Y CITI CURNCY"  Interval="72" />
+        <Knot Ticker="ZAR7Y CITI CURNCY"  Interval="84" />
+        <Knot Ticker="ZAR8Y CITI CURNCY"  Interval="96" />
+        <Knot Ticker="ZAR9Y CITI CURNCY"  Interval="108" />
+        <Knot Ticker="ZAR10Y CITI CURNCY"  Interval="120" />
+      </Curve>
+
+   </Subscriber>
+
+   <Publisher FID_X    = "0"
+          org_FID_X    = "-8001"
+              FID_Y    = "-8002"
+              FID_INC  = "6"
+              FID_KNOT = "-8101"
+              Service  = "splinemaker"
+              Server   = "localhost:9011" >
+      <Spline Name="Swap.D"     Increment="0.032876"  Curve="Swaps" />
+      <Spline Name="Swap.W"     Increment="0.230769"  Curve="Swaps" />
+      <Spline Name="Swap"       Increment="1.0"       Curve="Swaps" />
+      <Spline Name="AA-USTsy.D" Increment="0.032876"  Curve="UST" />
+      <Spline Name="AA-USTsy.W" Increment="0.230769"  Curve="UST" />
+      <Spline Name="AA-USTsy"   Increment="1.0"       Curve="UST" />
+      <Spline Name="AUD.USD"    Increment="1.0"       Curve="AUD.USD" />
+      <Spline Name="EUR.CHF"    Increment="1.0"       Curve="EUR.CHF" />
+      <Spline Name="EUR.DKK"    Increment="1.0"       Curve="EUR.DKK" />
+      <Spline Name="EUR.GBP"    Increment="1.0"       Curve="EUR.GBP" />
+      <Spline Name="EUR.NOK"    Increment="1.0"       Curve="EUR.NOK" />
+      <Spline Name="EUR.SEK"    Increment="1.0"       Curve="EUR.SEK" />
+      <Spline Name="EUR.USD"    Increment="1.0"       Curve="EUR.USD" />
+      <Spline Name="GBP.USD"    Increment="1.0"       Curve="GBP.USD" />
+      <Spline Name="USD.ILS"    Increment="1.0"       Curve="USD.ILS" />
+      <Spline Name="NZD.USD"    Increment="1.0"       Curve="NZD.USD" />
+      <Spline Name="USD.CAD"    Increment="1.0"       Curve="USD.CAD" />
+      <Spline Name="USD.CHF"    Increment="1.0"       Curve="USD.CHF" />
+      <Spline Name="USD.CZK"    Increment="1.0"       Curve="USD.CZK" />
+      <Spline Name="USD.DKK"    Increment="1.0"       Curve="USD.DKK" />
+      <Spline Name="USD.HUF"    Increment="1.0"       Curve="USD.HUF" />
+      <Spline Name="USD.JPY"    Increment="1.0"       Curve="USD.JPY" />
+      <Spline Name="USD.MXN"    Increment="1.0"       Curve="USD.MXN" />
+      <Spline Name="USD.NOK"    Increment="1.0"       Curve="USD.NOK" />
+      <Spline Name="USD.PLN"    Increment="1.0"       Curve="USD.PLN" />
+      <Spline Name="USD.SEK"    Increment="1.0"       Curve="USD.SEK" />
+      <Spline Name="USD.ZAR"    Increment="1.0"       Curve="USD.ZAR" />
+      <Spline Name="AUD.USD.D"  Increment="0.032876"  Curve="AUD.USD" />
+      <Spline Name="EUR.CHF.D"  Increment="0.032876"  Curve="EUR.CHF" />
+      <Spline Name="EUR.DKK.D"  Increment="0.032876"  Curve="EUR.DKK" />
+      <Spline Name="EUR.GBP.D"  Increment="0.032876"  Curve="EUR.GBP" />
+      <Spline Name="EUR.NOK.D"  Increment="0.032876"  Curve="EUR.NOK" />
+      <Spline Name="EUR.SEK.D"  Increment="0.032876"  Curve="EUR.SEK" />
+      <Spline Name="EUR.USD.D"  Increment="0.032876"  Curve="EUR.USD" />
+      <Spline Name="GBP.USD.D"  Increment="0.032876"  Curve="GBP.USD" />
+      <Spline Name="USD.ILS.D"  Increment="0.032876"  Curve="USDILSfs.USD" />
+      <Spline Name="NZD.USD.D"  Increment="0.032876"  Curve="NZD.USD" />
+      <Spline Name="USD.CAD.D"  Increment="0.032876"  Curve="USD.CAD" />
+      <Spline Name="USD.CHF.D"  Increment="0.032876"  Curve="USD.CHF" />
+      <Spline Name="USD.CZK.D"  Increment="0.032876"  Curve="USD.CZK" />
+      <Spline Name="USD.DKK.D"  Increment="0.032876"  Curve="USD.DKK" />
+      <Spline Name="USD.HUF.D"  Increment="0.032876"  Curve="USD.HUF" />
+      <Spline Name="USD.JPY.D"  Increment="0.032876"  Curve="USD.JPY" />
+      <Spline Name="USD.MXN.D"  Increment="0.032876"  Curve="USD.MXN" />
+      <Spline Name="USD.NOK.D"  Increment="0.032876"  Curve="USD.NOK" />
+      <Spline Name="USD.PLN.D"  Increment="0.032876"  Curve="USD.PLN" />
+      <Spline Name="USD.SEK.D"  Increment="0.032876"  Curve="USD.SEK" />
+      <Spline Name="USD.ZAR.D"  Increment="0.032876"  Curve="USD.ZAR" />
+   </Publisher>
+
+</SplineMaker>

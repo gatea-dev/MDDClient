@@ -27,8 +27,9 @@
 #     16 JAN 2024 jcs  rtEdgeData.UserArg()
 #     28 MAR 2024 jcs  MDDirect311
 #     30 APR 2024 jcs  LVC _SetData() arg mismatch
+#      6 JAN 2025 jcs  list( keys() )
 #
-#  (c) 1994-2024, Gatea Ltd.
+#  (c) 1994-2025, Gatea Ltd.
 #################################################################
 import gc, math, sys, time, threading
 
@@ -908,7 +909,7 @@ class BBDailyStats:
    ########################
    def Dump( self ):
       sdb = self._stats
-      kdb = sdb.keys()
+      kdb = list( sdb.keys() )
       rc  = [ '%-20s = %d' % ( k, sdb[k] ) for k in kdb ]
       return '\n'.join( rc )
 
@@ -1183,7 +1184,8 @@ class rtEdgeData:
       self._err   = ''
       bdb         = { fid: (val, ty) for fid, val, ty in flds }
       self._byFid = bdb
-      self._flds  = [ ( fid, bdb[fid][0], bdb[fid][1] ) for fid in bdb.keys() ]
+      fids        = list( bdb.keys() )
+      self._flds  = [ ( fid, bdb[fid][0], bdb[fid][1] ) for fid in fids ]
 ##      self._flds  = [ list( fld ) for fld in flds ] if bLVC else flds
       return self
 
@@ -1450,7 +1452,7 @@ class rtEdgeSchema:
    # @return list of FID's, optionally sorted
    #################################
    def GetFIDs( self, bSort=True ):
-      rc = [] + self._byFid.keys()
+      rc = [] + list( self._byFid.keys() )
       if bSort:
          rc.sort()
       return rc

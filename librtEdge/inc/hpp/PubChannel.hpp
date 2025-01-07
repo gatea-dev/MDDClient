@@ -23,8 +23,9 @@
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     26 JUN 2024 jcs  Build 72: Default : binary / unpacked / circQ
 *     22 DEC 2024 jcs  Build 74: ioctl_setRawLog; Remove from _pubChans AFTER Stop()
+*      7 JAN 2025 jcs  Build 75: PreBuilt w/ Overflow : Clear out
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_PubChannel_H
 #define __RTEDGE_PubChannel_H
@@ -574,8 +575,10 @@ public:
 	   pb._dataType = dt;
 	   pb._bHasHdr  = 0;
 	   ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, &pb );
-	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) )
+	   if ( !(rtn=::rtEdge_Publish( _cxt, d )) ) {
+	      ::rtEdge_ioctl( _cxt, ioctl_setPubDataPayload, (rtPreBuiltBUF *)0 );
 	      OnOverflow();
+	   }
 	   return rtn;
 	}
 

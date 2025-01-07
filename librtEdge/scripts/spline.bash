@@ -8,5 +8,5 @@ if [ -n "$1" ]; then
 fi
 
 /bin/rm -f ./nohup.out
-## nohup ./bin64/SplineMaker ./scripts/cfg/spline.xml > /tmp/log_SplineMkr.log  &
-nohup SplineMaker ./scripts/cfg/spline.xml > /tmp/log_SplineMkr.log  &
+## nohup ./bin64/SplineMaker ./scripts/cfg/all.xml > /tmp/log_SplineMkr.log  &
+nohup SplineMaker ./scripts/cfg/all.xml > /tmp/log_SplineMkr.log  &
