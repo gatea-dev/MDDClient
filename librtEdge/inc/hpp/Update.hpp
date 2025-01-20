@@ -22,8 +22,9 @@
 *     24 OCT 2023 jcs  Build 66: AddEmptyField()
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     18 MAR 2024 jcs  Build 70: AddField( int, double, int precision=10 )
+*     20 JAN 2025 jcs  Build 75: AddField( rtTime, bool bTimeSec=false )
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Update_H
 #define __RTEDGE_Update_H
@@ -444,14 +445,15 @@ public:
 	 * 
 	 * \param fid - Field ID
 	 * \param tm - Field value as rtTime
+	 * \param bTimeSec - rtFld_timeSec if true
 	 */
-	void AddField( int fid, rtTime tm )
+	void AddField( int fid, rtTime tm, bool bTimeSec=false )
 	{
 	   rtFIELD  f;
 	   rtVALUE &v = f._val;
 	   int      hms;
 
-	   f._type = rtFld_time;
+	   f._type = bTimeSec ? rtFld_timeSec : rtFld_time;
 	   f._fid  = fid;
 	   hms     = ( tm._hour*10000 ) + ( tm._minute*100 ) + tm._second;
 	   v._r64  = hms;

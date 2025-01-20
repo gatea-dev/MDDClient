@@ -45,11 +45,12 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 75 25-01-07
+ * ### Build 75 25-01-29
  *
  * -# PubChannel.Publish() : Clear out Pre-built Payload w/ overflow:
  *    - rtEdge_ioctl( ioctl_setPubDataPayload, NULL )
  *
+ * -# CME : Update.AddField( rtTime, bool bTimeSec=false )
  *
  *
  * ### Build 74 24-12-20
