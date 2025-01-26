@@ -6,8 +6,9 @@
 *  REVISION HISTORY:
 *     12 OCT 2015 jcs  Created
 *     14 JAN 2024 jcs  Build 67: Renamed to ChartDump
+*     24 JAN 2025 jcs  Build 75: swig
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -43,7 +44,7 @@ int main( int argc, char **argv )
 {
    bool        aOK, bCfg;
    int         i, fid;
-   string      s;
+   std::string s;
    const char *svr, *svc, *tkr;
 
    /////////////////////

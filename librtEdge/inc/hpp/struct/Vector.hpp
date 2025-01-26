@@ -7,16 +7,15 @@
 *     21 OCT 2022 jcs  Created.
 *     29 OCT 2022 jcs  Build 60: DoubleList.
 *     10 JAN 2023 jcs  Build 61: de-lint
+*     24 JAN 2025 jcs  Build 75: swig
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Vector_H
 #define __RTEDGE_Vector_H
 #include <assert.h>
 #include <hpp/rtEdge.hpp>
 #include <hpp/ByteStream.hpp>
-
-using namespace std;
 
 #ifndef DOXYGEN_OMIT
 /**
@@ -105,7 +104,7 @@ public:
 
 }; // class VectorValue
 
-typedef vector<VectorValue> VectorUpdate;
+typedef std::vector<VectorValue> VectorUpdate;
 
 #ifndef DOXYGEN_OMIT
 class IVector
@@ -570,11 +569,11 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector contents as formatted string
 	 */
-	string Dump( bool bPage=true )
+	std::string Dump( bool bPage=true )
 	{
-	   char  *cp, bp[K], fmt[K];
-	   size_t i, n;
-	   string s;
+	   char       *cp, bp[K], fmt[K];
+	   size_t      i, n;
+	   std::string s;
 
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = _vals.size();
@@ -593,7 +592,7 @@ public:
 	      cp += sprintf( cp, "\n" );
 	      s  += bp;
 	   }
-	   return string( s );
+	   return std::string( s );
 	}
 
 	/**
@@ -603,11 +602,11 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Vector Update contents as formatted string
 	 */
-	string Dump( VectorUpdate &upd, bool bPage=true )
+	std::string Dump( VectorUpdate &upd, bool bPage=true )
 	{
-	   char  *cp, bp[K], fmt[K];
-	   size_t i, n;
-	   string s;
+	   char       *cp, bp[K], fmt[K];
+	   size_t      i, n;
+	   std::string s;
 
 	   sprintf( fmt, "%%.%df,", _precision );
 	   n   = upd.size();
@@ -627,7 +626,7 @@ public:
 	      cp += sprintf( cp, "\n" );
 	      s  += bp;
 	   }
-	   return string( s );
+	   return std::string( s );
 	}
 
 	////////////////////////////////////

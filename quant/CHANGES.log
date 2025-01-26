@@ -21,22 +21,27 @@ Features To Add
 */
 
 /**
- * \mainpage librtEdge API Reference Manual
+ * \mainpage quant library - Cubic Spline / Surface and Greeks
  *
- * librtEdge allows you to consume and publish real-time and historical data
- * from the MD-Direct platform via C or C++ through the following components:
- * Function | Component | Description
- * ---- | --- | ----
- * Subscribe | rtEdgeCache3 | Consume real-time data
- * Publish | rtEdgeCache3 | Publish real-time data
- * Tick-by-Tick | gateaRecorder | Pull out every recorded message for a day
- * Bulk Snapshot | LVC | Bulk snapshot (5000 tickers in under 1 millisecond)
- * Chartable Time-Series | ChartDb | Snap chartable time-series historical data
+ * Simple quant stuff packaged as a headers to include in your app.  Comes
+ * right out of the textbooks:  
+ *
+ * Construct | Directory | Textbook
+ * --- | --- | ---
+ * Spline | QUANT | Numerical Recipes in C
+ * Surface | QUANT | Numerical Recipes in C
+ * Greeks | GREEK | Options, Futures and Other Derivatives by John C. Hull
+ *
  *
  * ## Change Log
  *
  *
- * ### Build  2 23-12-xx
+ * ### Build  3 25-01-25
+ *
+ * -# WIN64
+ *
+ *
+ * ### Build  2 23-12-17
  *
  * -# Debug against customer Greeks:
  *    - _Volatility.hpp : Constructor arg mixup

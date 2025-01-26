@@ -6,15 +6,14 @@
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
 *     29 OCT 2022 jcs  Build 60: Doubles.
+*     24 JAN 2025 jcs  Build 75: swig
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Surface_H
 #define __RTEDGE_Surface_H
 #include <assert.h>
 #include <hpp/struct/Vector.hpp>
-
-using namespace std;
 
 namespace RTEDGE
 {
@@ -43,9 +42,9 @@ public:
 
 
 /** \brief Surface = List or SurfaceRow's */
-typedef vector< Doubles >    SurfaceRows;
+typedef std::vector< Doubles >    SurfaceRows;
 /** \brief Surface Update */
-typedef vector<SurfaceValue> SurfaceUpdate;
+typedef std::vector<SurfaceValue> SurfaceUpdate;
 
 #ifndef DOXYGEN_OMIT
 
@@ -364,12 +363,12 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Surface contents as formatted string
 	 */
-	string Dump( bool bPage=true )
+	std::string Dump( bool bPage=true )
 	{    
 	   SurfaceRows &sdb = _vec.surface();
 	   char        *cp, bp[K], fmt[K];
 	   size_t       np, nr, nc;
-	   string       s;
+	   std::string  s;
 
 	   sprintf( fmt, "%%.%df,", _vec.Precision() );
 	   nr = sdb.size();
@@ -398,7 +397,7 @@ public:
 	   }    
 	   if ( cp-bp )
 	      s  += bp;
-	   return string( s ); 
+	   return std::string( s ); 
 	}    
 
 	/**
@@ -408,13 +407,13 @@ public:
 	 * \param bPage : true for < 80 char per row; false for 1 row
 	 * \return Surface Update contents as formatted string
 	 */
-	string Dump( SurfaceUpdate &upd, bool bPage=true )
+	std::string Dump( SurfaceUpdate &upd, bool bPage=true )
 	{
 	   VectorUpdate vdb;
 	   SurfaceValue vs;
 	   char        *cp, bp[K], fmt[K];
 	   size_t       i, n;
-	   string       s;
+	   std::string  s;
 
 	   sprintf( fmt, "%%.%df,", _vec.Precision() );
 	   n   = upd.size();
@@ -435,7 +434,7 @@ public:
 	      cp += sprintf( cp, "\n" );
 	      s  += bp;
 	   }
-	   return string( s ); 
+	   return std::string( s ); 
 	}
 
 	////////////////////////////////////

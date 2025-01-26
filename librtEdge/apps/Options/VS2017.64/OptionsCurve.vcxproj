@@ -55,6 +55,7 @@
          ..\inc;
          ..\..\..\..\libmddWire\inc;
          ..\..\..\..\librtEdge\inc;
+         ..\..\..\..\quant\inc;
          ..\..\..\..\libmddWire\expat\xmltok;
          ..\..\..\..\libmddWire\expat\xmlparse;
          %(AdditionalIncludeDirectories)
@@ -101,6 +102,7 @@
          ..\inc;
          ..\..\..\..\libmddWire\inc;
          ..\..\..\..\librtEdge\inc;
+         ..\..\..\..\quant\inc;
          ..\..\..\..\libmddWire\expat\xmltok;
          ..\..\..\..\libmddWire\expat\xmlparse;
          %(AdditionalIncludeDirectories)

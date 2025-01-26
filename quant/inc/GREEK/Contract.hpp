@@ -51,16 +51,19 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
+	 * \param R - RiskFreeCuve
 	 * \param bCall - true if CALL; false if PUT
 	 * \param X - Contract Strike Price
 	 * \param Tt - Time to expiration in % years
 	 * \param maxItr - Max Iterations for Newton-Raphson
 	 */
-	Contract( bool bCall, double X, double Tt, int maxItr=5 ) :
+	Contract( RiskFreeCurve &R, bool bCall, double X, double Tt, int maxItr=5 ) :
+	   _R( R ),
 	   _bCall( bCall ),
 	   _X( X ),
 	   _Tt( Tt ),
-	   _dtExp( 0 ),
+	   _ymd( 0 ),
+	   _rate( R.r( Tt ) ),
 	   _maxItr( maxItr ),
 	   _tCalcUs( 0.0 ),
 	   _bBi( false )
@@ -69,16 +72,19 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
+	 * \param R - RiskFreeCurve
 	 * \param bCall - true if CALL; false if PUT
 	 * \param X - Contract Strike Price
-	 * \param dtExp - Expiration date in YYYYMMDD
+	 * \param ymd - Expiration date in YYYYMMDD
 	 * \param maxItr - Max Iterations for Newton-Raphson
 	 */
-	Contract( bool bCall, double X, int dtExp, int maxItr=5 ) :
+	Contract( RiskFreeCurve &R, bool bCall, double X, int ymd, int maxItr=5 ) :
+	   _R( R ),
 	   _bCall( bCall ),
 	   _X( X ),
-	   _Tt( 0.0 ),
-	   _dtExp( dtExp ),
+	   _Tt( R.ymd2Tt( ymd ) ),
+	   _ymd( ymd ),
+	   _rate( R.r( R.ymd2Tt( ymd ) ) ),
 	   _maxItr( maxItr ),
 	   _bBi( false )
 	{ ; }
@@ -128,22 +134,21 @@ public:
 	 *
 	 * \param C - Contract Price
 	 * \param S - Underlyer Price
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return All Greeks
 	 */
-	Greeks AllGreeks( double C, double S, double r, double q=0.0 )
+	Greeks AllGreeks( double C, double S, double q=0.0 )
 	{
 	   Greeks rc;
 	   double d0;
 
 	   d0          = _dNow();
-	   rc._impVol  = ImpliedVolatility( C, S, r );
-	   rc._delta   = Delta( S, rc._impVol, r, q );
-	   rc._theta   = Theta( S, rc._impVol, r, q );
-	   rc._gamma   = Gamma( S, rc._impVol, r, q );
-	   rc._vega    = Vega( S, rc._impVol, r, q );
-	   rc._rho     = Rho( S, rc._impVol, r, q );
+	   rc._impVol  = ImpliedVolatility( C, S );
+	   rc._delta   = Delta( S, rc._impVol, q );
+	   rc._theta   = Theta( S, rc._impVol, q );
+	   rc._gamma   = Gamma( S, rc._impVol, q );
+	   rc._vega    = Vega( S, rc._impVol, q );
+	   rc._rho     = Rho( S, rc._impVol, q );
 	   rc._tCalcUs = ( _dNow() - d0 ) * _ZMIL;
 	   _tCalcUs    = rc._tCalcUs;
 	   return rc;
@@ -154,16 +159,12 @@ public:
 	 *
 	 * \param C - Option Price
 	 * \param S - Underlyer Price
-	 * \param r - Risk-Free Rate
 	 * \param precision - Precision of calculation
 	 * \return Implied volatility
 	 */
-	double ImpliedVolatility( double C, 
-	                          double S, 
-	                          double r, 
-	                          double precision=0.001 )
+	double ImpliedVolatility( double C, double S, double precision=0.001 )
 	{
-	   Volatility v( S, _X, r, _Tt, precision, _bCall ); 
+	   Volatility v( S, _X, _rate, _Tt, precision, _bCall ); 
 
 	   return v.volatility( C, _bBi, _maxItr );
 	}
@@ -184,13 +185,12 @@ public:
 	 *
 	 * \param S - Underlyer Price
 	 * \param stDev - Volatility (Standard Deviation)
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return Option Delta
 	 */
-	double Delta( double S, double stDev, double r, double q=0.0 )
+	double Delta( double S, double stDev, double q=0.0 )
 	{
-	   OptionDelta grk( stDev, _X, r );
+	   OptionDelta grk( stDev, _X, _rate );
 
 	   return _bCall ? grk.call( S, _Tt, q ) : grk.put( S, _Tt, q );
 	}
@@ -200,13 +200,12 @@ public:
 	 *
 	 * \param S - Underlyer Price
 	 * \param stDev - Volatility (Standard Deviation)
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return Option Theta
 	 */
-	double Theta( double S, double stDev, double r, double q=0.0 )
+	double Theta( double S, double stDev, double q=0.0 )
 	{
-	   OptionTheta grk( stDev, _X, r );
+	   OptionTheta grk( stDev, _X, _rate );
 
 	   return _bCall ? grk.call( S, _Tt, q ) : grk.put( S, _Tt, q );
 	}
@@ -216,13 +215,12 @@ public:
 	 *
 	 * \param S - Underlyer Price
 	 * \param stDev - Volatility (Standard Deviation)
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return Option Gamma
 	 */
-	double Gamma( double S, double stDev, double r, double q=0.0 )
+	double Gamma( double S, double stDev, double q=0.0 )
 	{
-	   OptionGamma grk( stDev, _X, r );
+	   OptionGamma grk( stDev, _X, _rate );
 
 	   return grk.value( S, _Tt, q );
 	}
@@ -232,13 +230,12 @@ public:
 	 *
 	 * \param S - Underlyer Price
 	 * \param stDev - Volatility (Standard Deviation)
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return Option Vega
 	 */
-	double Vega( double S, double stDev, double r, double q=0.0 )
+	double Vega( double S, double stDev, double q=0.0 )
 	{
-	   OptionVega grk( stDev, _X, r );
+	   OptionVega grk( stDev, _X, _rate );
 
 	   return grk.value( S, _Tt, q );
 	}
@@ -248,13 +245,12 @@ public:
 	 *
 	 * \param S - Underlyer Price
 	 * \param stDev - Volatility (Standard Deviation)
-	 * \param r - Risk-Free Rate
 	 * \param q - Foreign Risk-Free Rate
 	 * \return Option Rho
 	 */
-	double Rho( double S, double stDev, double r, double q=0.0 )
+	double Rho( double S, double stDev, double q=0.0 )
 	{
-	   OptionRho grk( stDev, _X, r );
+	   OptionRho grk( stDev, _X, _rate );
 
 	   return _bCall ?  grk.call( S, _Tt, q ) : grk.put( S, _Tt, q );
 	}
@@ -282,13 +278,15 @@ private:
 	// Private Members
 	////////////////////////
 private:
-	bool   _bCall;
-	double _X;       // Strike Price
-	double _Tt;      // Time to expire
-	int    _dtExp;   // Expiration date in YYYYMMDD
-	int    _maxItr;
-	double _tCalcUs; // Time of last calc in micros
-	bool   _bBi;
+	RiskFreeCurve &_R;
+	bool           _bCall;
+	double         _X;       // Strike Price
+	double         _Tt;      // Time to expire
+	int            _ymd;     // Expiration date in YYYYMMDD
+	double         _rate;    // Risk-Free Rate from _R @ _Tt
+	int            _maxItr;
+	double         _tCalcUs; // Time of last calc in micros
+	bool           _bBi;
 
 };  // class Contract
 

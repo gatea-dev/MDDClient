@@ -12,8 +12,9 @@
 *     14 AUG 2023 jcs  Build 64: LVCDataAll.GetRecord( svc, tkr )
 *     26 SEP 2023 jcs  Build 65: NumUpd,NumFld header - DUH!!
 *     30 JUN 2024 jcs  Build 72: -t working
+*     24 JAN 2025 jcs  Build 75: swig
 *
-*  (c) 1994-2024, Gatea, Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -105,11 +106,11 @@ static void _DumpOne( Message *msg, Ints &fids )
 class MyThread : public SubChannel
 {
 private:
-   LVC      *_lvc;
-   string    _lvcFile;
-   bool      _bSchema;
-   int       _tid;
-   u_int64_t _num;
+   LVC        *_lvc;
+   std::string _lvcFile;
+   bool        _bSchema;
+   int         _tid;
+   u_int64_t   _num;
 
    ////////////////////////////////
    // Constructor
@@ -183,7 +184,7 @@ private:
 
 }; // class MyThread
 
-typedef vector<MyThread *> MyThreads;
+typedef std::vector<MyThread *> MyThreads;
 
 
 //////////////////////////

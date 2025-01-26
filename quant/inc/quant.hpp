@@ -5,14 +5,20 @@
 *
 *  REVISION HISTORY:
 *     31 OCT 2023 jcs  Created (from librtEdge).
+*     25 JAN 2025 jcs  Build  3: WIN64
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __MDD_QUANT_HPP
 #define __MDD_QUANT_HPP
 #include <math.h>
 #include <string>
 #include <vector>
+
+#ifdef WIN32
+#define M_PI           3.14159265358979323846  /* pi */
+#define M_E            2.7182818284590452354   /* e */
+#endif // WIN32
 
 namespace QUANT
 {

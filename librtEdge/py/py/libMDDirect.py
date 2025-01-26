@@ -28,10 +28,12 @@
 #     28 MAR 2024 jcs  MDDirect311
 #     30 APR 2024 jcs  LVC _SetData() arg mismatch
 #      6 JAN 2025 jcs  list( keys() )
+#     21 JAN 2025 jcs  EdgMon
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
-import gc, math, sys, time, threading
+import gc, math, os, sys, time, threading
+import mmap, struct
 
 _UNDEF = 'Undefined'
 
@@ -146,6 +148,132 @@ def MemFree():
 #################################
 def NumPyObjects():
    return len( gc.get_objects() )
+
+#################################
+# Returns True if running on Windows
+#
+# @regturn True if running on Windows
+#################################
+def IsWindows():
+   return ( os.name == 'nt' )
+
+
+## \cond
+######################################
+#                                    #
+#           E d g M o n              #
+#                                    #
+######################################
+## \endcond
+## @class EdgMon
+#
+# Stripped-down MDD.MONITOR.EDGE.exe to sample object counts
+#
+# Member | Description
+# --- | ---
+# _name | Stats Filename
+# _off | Offset in stats file to count metrics
+# _fp | open()
+# _Size | File Size
+# _map | mmap'ed view of the file
+# _tStart | Start Time in UnixTime from stats file
+# _GLedgRequest | Object count : GLedgRequest
+# _GLedgRecord | Object count : GLedgRecord
+# _GLedgField | Object count : GLedgField
+# _GLedgEvent | Object count : GLedgEvent
+#
+class EdgMon:
+   ###########################
+   # Constructor
+   #
+   # @param filename - stats file
+   ###########################
+   def __init__( self, filename ):
+      self._name         = filename
+      self._off          = 2216
+      self._inc          = 8     ## sizeof( long ) == 8
+      if IsWindows():
+         self._off       = 2176  ## Not pack'ed
+         self._inc       = 4     ## sizeof( long ) == 4
+      self._fp           = None
+      self._Size         = None
+      self._map          = None
+      self._tStart       = 0
+      self._GLedgRequest = 0
+      self._GLedgRecord  = 0
+      self._GLedgField   = 0
+      self._GLedgEvent   = 0
+      try:    self._fp = open( filename, 'rb' ) 
+      except: return
+      try:    self._Size = os.stat( filename ).st_size
+      except: return
+      try:    self._map = mmap.mmap( fileno = self._fp.fileno(),
+                                     length = self._Size,
+                                     access = mmap.ACCESS_READ )
+      except: pass
+
+   ###########################
+   # Snap current Values
+   ###########################
+   def Snap( self ):
+      off = self._off
+      inc = self._inc
+      sz  = struct.calcsize( 'i' )
+      m   = self._map
+      if m:
+         self._tStart       = struct.unpack( 'i', m[8:8+sz] )[0]
+         self._GLedgRequest = struct.unpack( 'i', m[off:off+sz] )[0]
+         off               += inc
+         self._GLedgRecord  = struct.unpack( 'i', m[off:off+sz] )[0]
+         off               += inc
+         self._GLedgField   = struct.unpack( 'i', m[off:off+sz] )[0]
+         off               += inc
+         off               += inc
+         off               += inc
+         self._GLedgEvent   = struct.unpack( 'i', m[off:off+sz] )[0]
+      return
+
+   ###########################
+   # Snap and Dump to stdout
+   #
+   # @param bCSV : True to dump as CSV
+   ###########################
+   def SnapAndDump( self, bCSV=False ):
+      self.Snap()
+      if bCSV:
+         vdb = [ str( self._tStart ),
+                 str( self._GLedgRequest ),
+                 str( self._GLedgRecord ),
+                 str( self._GLedgField ),
+                 str( self._GLedgEvent )
+               ]
+         rc = ','.join( vdb )
+      else:
+         vdb = [ 'tStart       = %d' % self._tStart,
+                 'GLedgRequest = %d' % self._GLedgRequest,
+                 'GLedgRecord  = %d' % self._GLedgRecord,
+                 'GLedgField   = %d' % self._GLedgField,
+                 'GLedgEvent   = %d' % self._GLedgEvent
+               ]
+         rc = '\n'.join( vdb )
+      return rc
+
+   ###########################
+   # Close File
+   ###########################
+   def Close( self ):
+      fp  = self._fp
+      map = self._map
+      if map: map.close()
+      if fp:  fp.close()
+      self._fp           = None
+      self._Size         = None
+      self._map          = None
+      self._tStart       = 0
+      self._GLedgRequest = 0
+      self._GLedgRecord  = 0
+      self._GLedgField   = 0
+      self._GLedgEvent   = 0
 
 
 ## \cond

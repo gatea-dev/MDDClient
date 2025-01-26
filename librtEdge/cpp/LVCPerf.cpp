@@ -5,8 +5,9 @@
 *
 *  REVISION HISTORY:
 *     27 JUN 2024 jcs  Created.
+*     24 JAN 2025 jcs  Build 75: swig
 *
-*  (c) 1994-2024, Gatea, Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 
@@ -44,7 +45,7 @@ class TestStat;
 typedef std::vector<int>          FidSet;
 typedef hash_map<int, int>        FieldDict;
 typedef std::vector<const char *> Services;
-typedef hash_set<string>          StringSet;
+typedef hash_set<std::string>     StringSet;
 typedef std::vector<TestCfg *>    TestCfgs;
 typedef std::vector<TestStat *>   TestStats;
 

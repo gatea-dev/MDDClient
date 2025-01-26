@@ -50,39 +50,48 @@ class RiskFreeCurve
 public:
 	/**
 	 * \brief Constructor.
+	 *
+	 * You may optionally pass in the current time if your app is being 
+	 * fed recorded data from a tape.
+	 *
+	 * \param now - Time Now; 0 to snap
 	 */
-	RiskFreeCurve() :
+	RiskFreeCurve( time_t now=0 ) :
 	   _X(),
 	   _Y(),
 	   _r(),
 	   _rMap(),
 	   _julNumMap(),
-	   _now( _tvNow().tv_sec ),
+	   _now( now ? now : _tvNow().tv_sec ),
 	   _lt( _snap_localtime() )
 	{ ; }
 
 	/**
 	 * \brief Constructor.
 	 *
+	 * You may optionally pass in the current time if your app is being 
+	 * fed recorded data from a tape.
+	 *
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
 	 * \param n - Num X, Y
-	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \param bJul - true if X in julNum; false if YYYYMMDD
+	 * \param now - Time Now; 0 to snap
 	 */
-	RiskFreeCurve( double *X, double *Y, size_t n, bool bJulNum ) :
+	RiskFreeCurve( double *X, double *Y, size_t n, bool bJul, time_t now=0 ) :
 	   _X(),
 	   _Y(),
 	   _r(),
 	   _rMap(),
 	   _julNumMap(),
-	   _now( _tvNow().tv_sec ),
+	   _now( now ? now : _tvNow().tv_sec ),
 	   _lt( _snap_localtime() )
 	{
 	   DoubleList XX, YY;
 
 	   for ( size_t i=0; i<n; XX.push_back( X[i++] ) );
 	   for ( size_t i=0; i<n; YY.push_back( Y[i++] ) );
-	   _Init( XX, YY, bJulNum );
+	   _Init( XX, YY, bJul );
 	}
 
 	/**
@@ -90,9 +99,9 @@ public:
 	 *
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
-	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \param bJul - true if X in julNum; false if YYYYMMDD
 	 */
-	RiskFreeCurve( DoubleList &X, DoubleList &Y, bool bJulNum ) :
+	RiskFreeCurve( DoubleList &X, DoubleList &Y, bool bJul ) :
 	   _X(),
 	   _Y(),
 	   _r(),
@@ -101,7 +110,7 @@ public:
 	   _now( _tvNow().tv_sec ),
 	   _lt( _snap_localtime() )
 	{
-	   _Init( X, Y, bJulNum );
+	   _Init( X, Y, bJul );
 	}
 
 
@@ -113,12 +122,12 @@ public:
 	 *
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
-	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \param bJul - true if X in julNum; false if YYYYMMDD
 	 * \return Spline Size
 	 */
-	size_t Init( DoubleList &X, DoubleList &Y, bool bJulNum )
+	size_t Init( DoubleList &X, DoubleList &Y, bool bJul )
 	{
-	   _Init( X, Y, bJulNum );
+	   _Init( X, Y, bJul );
 	   return _rMap.size();
 	}
 
@@ -128,16 +137,16 @@ public:
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
 	 * \param n - Num X, Y
-	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \param bJul - true if X in julNum; false if YYYYMMDD
 	 * \return Spline Size
 	 */
-	size_t Init( double *X, double *Y, size_t n, bool bJulNum )
+	size_t Init( double *X, double *Y, size_t n, bool bJul )
 	{
 	   DoubleList XX, YY;
 
 	   for ( size_t i=0; i<n; XX.push_back( X[i++] ) );
 	   for ( size_t i=0; i<n; YY.push_back( Y[i++] ) );
-	   return Init( XX, YY, bJulNum );
+	   return Init( XX, YY, bJul );
 	}
 
 
@@ -256,6 +265,19 @@ public:
 	   return (u_int64_t)jul;
 	}
 
+	/**
+	 * \brief YYYYMMDD to % year
+	 *
+	 * \param ymd - YYYYMMDD
+	 * \return % years
+	 */
+	double ymd2Tt( int ymd )
+	{
+	   time_t t0 = _ymd2unix( ymd, _lt );
+
+	   return ( 1.0 / 365.25 ) * ( t0 - _now );
+	}
+
 
 	////////////////////////
 	// Helpers
@@ -266,9 +288,9 @@ private:
 	 *
 	 * \param X - Maturity (i.e., X-axis) values as julNum 
 	 * \param Y - Risk-Free Rate (i.e., Y-axis) values
-	 * \param bJulNum - true if X in julNum; false if YYYYMMDD
+	 * \param bJul - true if X in julNum; false if YYYYMMDD
 	 */
-	void _Init( DoubleList &X, DoubleList &Y, bool bJulNum )
+	void _Init( DoubleList &X, DoubleList &Y, bool bJul )
 	{
 	   size_t n = gmin( X.size(), Y.size() );
 
@@ -276,7 +298,7 @@ private:
 	   _Y.clear();
 	   _r.clear();
 	   _rMap.clear();
-	   if ( bJulNum )
+	   if ( bJul )
 	      for ( size_t i=0; i<n; _X.push_back( X[i++] ) );
 	   else
 	      for ( size_t i=0; i<n; _X.push_back( JulNum( X[i++] ) ) );
@@ -286,17 +308,7 @@ private:
 
 	u_int64_t _ymd2julNum( u_int64_t ymd )
 	{
-	   struct tm lt;
-	   time_t    rc;
-
-	   lt          = _lt;
-	   lt.tm_year  = ( ymd / 10000 );
-	   lt.tm_year -= 1900;
-	   lt.tm_mon   = ( ymd / 100 ) % 100;
-	   lt.tm_mon  -= 1;
-	   lt.tm_mday  = ( ymd % 100 );
-	   rc          = ::mktime( &lt );
-	   return rc / 86400;
+	   return _ymd2unix( ymd, _lt ) / 86400;
 	}
 
 	struct tm _snap_localtime()
@@ -311,6 +323,28 @@ private:
 	// Class-wide
 	////////////////////////
 public:
+	/**
+	 * \brief Convert YYYYMMDD to Unix Time
+	 *
+	 * \param ymd - YYYYMMDD
+	 * \param lt - Existing localtime struct
+	 * \return Unix Time
+	 */
+	static time_t _ymd2unix( u_int64_t ymd, struct tm &lt )
+	{
+	   struct tm ll;
+	   time_t    rc;
+
+	   ll          = lt;
+	   ll.tm_year  = ( ymd / 10000 );
+	   ll.tm_year -= 1900;
+	   ll.tm_mon   = ( ymd / 100 ) % 100;
+	   ll.tm_mon  -= 1;
+	   ll.tm_mday  = ( ymd % 100 );
+	   rc          = ::mktime( &ll );
+	   return rc;
+	}
+
 	static struct timeval _tvNow()
 	{    
 	   struct timeval tv;

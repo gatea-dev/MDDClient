@@ -1,9 +1,9 @@
 #!/bin/bash
 
 clear
-CFG=anees
+CFG=curve
 if [ -n "$1" ]; then
-   CFG=curve
+   CFG=anees
 fi
 
 ./scripts/stop.bash

@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *      5 JAN 2024 jcs  Created (from Socket.cpp)
 *      7 NOV 2024 jcs  Build 74: SetRawLog()
+*     25 JAN 2025 jcs  Build 75: De-lint
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <Buffer.h>
 
@@ -331,7 +332,11 @@ void CircularBuffer::_RawLog_Roll( int frag, bool bSOM )
    char        buf[K];
 
    if ( _rawLogRoll ) {
+#ifdef WIN32
+      sprintf( buf, "%s,%lld,%d,\n", ty, _Total, frag );
+#else
       sprintf( buf, "%s,%ld,%d,\n", ty, _Total, frag );
+#endif // WIN32
       GLmmap::Write( buf, strlen( buf ), _rawLogRoll ); 
       GLmmap::Flush( _rawLogRoll );
    }
