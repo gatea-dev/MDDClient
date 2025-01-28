@@ -16,6 +16,8 @@
 #include <SigHandler.h>
 #endif // WIN32
 #include <assert.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <list>
 
 // Configurable Precision
@@ -142,9 +144,9 @@ public:
    // Constructor
    /////////////////////////
 public:
-   OptionsCurve( XmlElem &xe, RiskFreeSpline *rf ) :
+   OptionsCurve( XmlElem &xe, RiskFreeSpline &rf ) :
       OptionsBase( xe.getElemValue( "db", "./cache.lvc" ) ),
-      _riskFree( *rf ),
+      _riskFree( rf ),
       _square( xe.getElemValue( "square", true ) ),
       _trim( xe.getElemValue( "trim", false ) ),
       _dump( xe.getElemValue( "dump", false ) ),
@@ -187,7 +189,7 @@ public:
     */
    void SetNow()
    {
-      struct timeval tv  = { TimeSec(), 0 };
+      struct timeval tv  = { (long)TimeSec(), 0 };
       rtDateTime     now = unix2rtDateTime( tv );
 
       SetToday( now._date );
@@ -313,7 +315,7 @@ public:
 class RiskFreeSpline : public QUANT::RiskFreeCurve
 {
 private:
-   OptionsCurve     &_lvc;
+   OptionsCurve     *_lvc;
    XmlElem          &_xe;
    string            _svc;
    int               _fid;
@@ -327,9 +329,9 @@ private:
    // Constructor
    /////////////////////////
 public:
-   RiskFreeSpline( OptionsCurve &lvc, time_t now, XmlElem &xe ) :
+   RiskFreeSpline( time_t now, XmlElem &xe ) :
       QUANT::RiskFreeCurve( now ),
-      _lvc( lvc ),
+      _lvc( (OptionsCurve *)0 ),
       _xe( xe ),
       _svc( xe.getAttrValue( "Service", "velocity" ) ),
       _fid( xe.getAttrValue( "FieldID", 6 ) ),
@@ -340,10 +342,16 @@ public:
       _tCalc( 0 )
    { ; }
 
+   void SetLVC( OptionsCurve &lvc )
+   {
+      _lvc = &lvc;
+   }
+
    /////////////////////////
    // Access
    /////////////////////////
 public:
+   OptionsCurve      &lvc()      { return *_lvc; }
    QUANT::DoubleList &X()        { return _X; }
    QUANT::DoubleList &Y()        { return _Y; }
    size_t             NumKnots() { return _kdb.size(); }
@@ -359,7 +367,7 @@ public:
     */ 
    void Load( LVCAll &all )
    {
-      RiskFreeSpline &R    = _lvc.riskFree();
+      RiskFreeSpline &R    = lvc().riskFree();
       XmlElemVector  &edb  = _xe.elements();
       const char     *svc, *tkr;
       XmlElem        *xk;
@@ -387,7 +395,7 @@ public:
             _kdb.push_back( k );
             continue; // for-i
          }
-         k._idx = _lvc.FindIndex( all, tkr, svc );
+         k._idx = lvc().FindIndex( all, tkr, svc );
          if ( k._idx != l_NoIndex )
             _kdb.push_back( k );
       }
@@ -424,7 +432,7 @@ public:
       for ( i=0; i<nk; i++ ) {
          k   = _kdb[i];
          msg = k._idx ? msgs[k._idx] : (Message *)0;
-         y   = msg ? _lvc.GetAsDouble( *msg, _fid ) : k._C;
+         y   = msg ? lvc().GetAsDouble( *msg, _fid ) : k._C;
          y  *= 0.01; // Velocity in Pct
          _X.push_back( k._jExp );
          _Y.push_back( y );
@@ -653,7 +661,7 @@ public:
       const char *ty[] = { ".P", ".C", "" };
       char        buf[K];
 
-      sprintf( buf, "%s %ld.E%s", name(), tExp, ty[splineType] );
+      sprintf( buf, "%s %" PRId64 ".E%s", name(), tExp, ty[splineType] );
       return string( buf );
    }
 
@@ -1213,7 +1221,7 @@ public:
       for ( i=1; i<M; assert( _kdb[i].size() == N ), i++ );
       cp  = bp;
       cp += sprintf( cp, "%-4s :", data() );
-      cp += sprintf( cp, " ( %3ld x %3ld )", M, N );
+      cp += sprintf( cp, " ( %3" PRId64 " x %3" PRId64 " )", M, N );
       LOG( bp );
    }
 
@@ -1431,7 +1439,7 @@ assert( nc == n );
          cp  = bp;
          cp += sprintf( cp, name() );
          for ( size_t x=0; x<m; x++ )
-            cp += sprintf( cp, ",%ld", _kdb[x][0]._exp );
+            cp += sprintf( cp, ",%" PRId64, _kdb[x][0]._exp );
          dmp += bp;
          dmp += "\n";
          for ( size_t y=0; y<n; y++ ) {
@@ -1619,8 +1627,8 @@ assert( kz._splineX || kz._splineE );
       for ( i=1; i<M1; assert( _kdb[i].size() == N1 ), i++ );
       cp  = bp;
       cp += sprintf( cp, "%-16s :", data() );
-      cp += sprintf( cp, " ( %3ld x %3ld )", M0, N0 );
-      cp += sprintf( cp, " -> ( %3ld x %3ld )", M1, N1 );
+      cp += sprintf( cp, " ( %3" PRId64 " x %3" PRId64 " )", M0, N0 );
+      cp += sprintf( cp, " -> ( %3" PRId64 " x %3" PRId64 " )", M1, N1 );
       LOG( bp );
    }
 
@@ -2417,7 +2425,8 @@ fmtDbl( 3.14, s );
    /////////////////////
    // Do it
    /////////////////////
-   OptionsCurve    lvc( root, new RiskFreeSpline( lvc, now, *xs ) );
+   RiskFreeSpline  rf( now, *xs );
+   OptionsCurve    lvc( root, rf );
    SplinePublisher pub( lvc, svr, svc, rate );
    double          d0, srfAge, age;
    size_t          ns;
@@ -2425,6 +2434,7 @@ fmtDbl( 3.14, s );
    /*
     * Dump Config
     */
+   rf.SetLVC( lvc );
    lvc.SetToday( dbDt );
    lvc.SetNow();
    LOG( "Config.LVC        = %s", lvc.pFilename() );
@@ -2445,15 +2455,14 @@ fmtDbl( 3.14, s );
    LOG( "Loading splines ..." );
    d0  = lvc.TimeNs();
    {
-      LVCAll         &all = lvc.ViewAll();
-      RiskFreeSpline &rf  = lvc.riskFree();
+      LVCAll &all = lvc.ViewAll();
 
       rf.Load( all );
       rf.Calc( all, lvc.TimeSec() );
       ns = pub.LoadSplines( all );
    }
    age = 1000.0 * ( lvc.TimeNs() - d0 );
-   LOG( "%ld splines loaded in %dms", ns, (int)age );
+   LOG( "%" PRId64 " splines loaded in %dms", ns, (int)age );
    /*
     * Load Surfaces
     */
@@ -2461,7 +2470,7 @@ fmtDbl( 3.14, s );
    d0  = lvc.TimeNs();
    ns    = pub.LoadSurfaces( argv[0], pWeb, dbDt );
    age = 1000.0 * ( lvc.TimeNs() - d0 );
-   LOG( "%ld surfaces loaded in %dms", ns, (int)age );
+   LOG( "%" PRId64 " surfaces loaded in %dms", ns, (int)age );
    /*
     * Calc Splines / Surfaces
     */
