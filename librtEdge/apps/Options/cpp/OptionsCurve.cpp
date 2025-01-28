@@ -7,8 +7,9 @@
 *     20 SEP 2023 jcs  FullSpline
 *     13 OCT 2023 jcs  OptionsSurface
 *     17 DEC 2023 jcs  Build 67: RiskFreeCur
+*     27 JAN 2025 jcs  Build 75: Show LVC file; LoadSurfaces( webFile )
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <OptionsBase.cpp>
 #ifndef WIN32
@@ -44,7 +45,13 @@ class Underlyer;
 
 typedef hash_map<string, OptionsSpline *>  SplineMap;
 typedef hash_map<string, OptionsSurface *> SurfaceMap;
+typedef hash_map<string, double>           PriceMap;
 typedef vector<Underlyer *>                Underlyers;
+
+static const char *_mons[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", 
+                               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+                               (char *)0
+                             };
 
 /////////////////////////////////////
 // Version, etc.
@@ -277,6 +284,23 @@ public:
       return rc;
    }
 
+   /**
+    * \brief Walk all messages - Return time of last update
+    *
+    * \param xe - XML Config Object
+    * \return Most recent update time
+    */
+   static time_t LastUpdateTime( XmlElem &xe ) 
+   {
+      LVC       lvc( xe.getElemValue( "db", "./cache.lvc" ) );
+      Messages &msgs = lvc.SnapAll().msgs();
+      double    rc;
+
+      rc = 0.0;
+      for ( size_t i=0; i<msgs.size(); rc=gmax( rc, msgs[i]->MsgTime() ), i++ );
+      return (time_t)rc;
+   }
+
 }; // class OptionsCurve
 
 
@@ -439,6 +463,7 @@ class Underlyer : public string
 private:
    OptionsCurve   &_lvc;
    RiskFreeSpline &_riskFree;
+   string          _svc;
    string          _ric;
    IndexCache      _byExp; // Expiration
    IndexCache      _byStr; // Strike Price
@@ -459,6 +484,7 @@ public:
       string( und ),
       _lvc( lvc ),
       _riskFree( lvc.riskFree() ),
+      _svc( "undefined" ),
       _ric( ric ),
       _byExp(),
       _byStr(),
@@ -481,7 +507,9 @@ public:
    /////////////////////////
 public:
    OptionsCurve   &lvc()     { return _lvc; }
+   const char     *svc()     { return _svc.data(); }
    const char     *name()    { return data(); }
+   const char     *ric()     { return _ric.data(); }
    IndexCache     &byExp()   { return _byExp; }
    IndexCache     &byStr()   { return _byStr; }
    SortedInt64Set &exps()    { return _exps; }
@@ -514,7 +542,7 @@ public:
       /*
        * 1) d/b Indices of all Puts and Calls
        */
-      _byExp._puts     = _lvc.GetUnderlyer( all, name(), spline_put,  true  );
+      _byExp._puts  = _lvc.GetUnderlyer( all, name(), spline_put,  true  );
       _byExp._calls = _lvc.GetUnderlyer( all, name(), spline_call, true  );
       _byExp._both  = _lvc.GetUnderlyer( all, name(), spline_both, true  );
       _byStr._puts  = _lvc.GetUnderlyer( all, name(), spline_put,  false );
@@ -550,8 +578,9 @@ public:
       Message  *msg;
 
       if ( _idx != l_NoIndex ) {
-         msg = msgs[_idx];
-         _S  = _lvc.Last( *msg );
+         msg  = msgs[_idx];
+         _S   = _lvc.Last( *msg );
+         _svc = msg->Service();
       }
       return _S;
    }
@@ -1193,12 +1222,15 @@ public:
    // Access
    /////////////////////////
 public:
-   const char *name() { return data(); }
-   size_t      M()    { return _X.size(); }
-   size_t      N()    { return _Y.size(); }
-   _DoubleList &X()    { return _X; }
-   _DoubleList &Y()    { return _Y; }
-   _DoubleGrid &Z()    { return _Z; }
+   const char *name()    { return data(); }
+   const char *svc()     { return _und.svc(); }
+   const char *undName() { return _und.ric(); }
+   Underlyer  &und()     { return _und; }
+   size_t      M()       { return _X.size(); }
+   size_t      N()       { return _Y.size(); }
+   _DoubleList &X()      { return _X; }
+   _DoubleList &Y()      { return _Y; }
+   _DoubleGrid &Z()      { return _Z; }
 
    /////////////////////////
    // WatchList
@@ -1779,7 +1811,7 @@ public:
       SortedStringMap::iterator nt;
       Underlyer                *und;
       OptionsSpline            *spl;
-      const char               *tkr, *ric;
+      const char               *tkr, *undTkr;
       u_int64_t                 tExp;
       double                    dX;
       string                    s;
@@ -1789,9 +1821,9 @@ public:
        * 1) Underlyers
        */
       for ( nt=ndb.begin(); nt!=ndb.end(); nt++ ) {
-         tkr = (*nt).first.data();
-         ric = (*nt).second.data();
-         und = new Underlyer( _lvc, all, tkr, ric );
+         tkr    = (*nt).first.data();
+         undTkr = (*nt).second.data();
+         und = new Underlyer( _lvc, all, tkr, undTkr );
          und->Init( all );
          udb.push_back( und );
       }
@@ -1829,27 +1861,120 @@ public:
       return sdb.size();
    }
 
-   size_t LoadSurfaces()
+   size_t LoadSurfaces( const char *exeFile, 
+                        const char *webFile,
+                        int         dbDt )
    {
       SurfaceMap     &sdb = _surfaces;
       LVCAll         &all = _lvc.ViewAll();
       Underlyers     &udb = _underlyers;
+      SortedStringMap ldb;
       Underlyer      *und;
       OptionsSurface *srf;
-      string          s;
+      string          s, svc;
+      size_t          i, j, k;
       bool            bPut, surfCalc;
 
-      for ( size_t i=0; i<udb.size(); i++ ) {
+      /*
+       * 1) Create / Load
+       */
+      for ( i=0; i<udb.size(); i++ ) {
          und    = udb[i];
-         for ( size_t j=0; j<2; j++ ) {
+         for ( j=0; j<2; j++ ) {
             bPut = ( j == 0 );
-            for ( size_t k=0; k<2; k++ ) {
+            for ( k=0; k<2; k++ ) {
                surfCalc = ( k == 0 );
                srf      = new OptionsSurface( *und, bPut, all, surfCalc );
                s        = srf->name();
                sdb[s]   = srf;
+               s        = srf->und().name();
+               svc      = srf->svc();
+               if ( ldb.find( s ) == ldb.end() )
+                  ldb[s] = string( srf->undName() );
             }
          }
+      }
+      /*
+       * 2) Dump Underlyer Prices for 3D Web
+       */
+      PriceMap                  pdb;
+      PriceMap::iterator        pt;
+      SortedStringMap::iterator it;
+      Message                  *msg;
+      Field                    *fld;
+      string                    tkr, ric;
+      double                    dPrc;
+      const char               *hdr;
+      char                      val[K];
+      FILE                     *fp;
+      rtDate                    now = unix2rtDateTime( (double)TimeSec() )._date;
+      const char               *mon = _mons[now._month];
+      int                       yr  = now._year;
+
+      for ( it=ldb.begin(); it!=ldb.end(); it++ ) {
+         tkr = (*it).first;
+         ric = (*it).second;
+         fld = (Field *)0;
+         if ( (msg=_lvc.Snap( svc.data(), ric.data() )) ) {
+            /*
+             * Last, else BID, else ASK, else Close 
+             */
+            if ( !(fld=msg->GetField( _TRDPRC_1 )) || !fld->GetAsDouble() ) {
+               if ( !(fld=msg->GetField( _BID )) || !fld->GetAsDouble() ) {
+                  if ( !(fld=msg->GetField( _ASK )) || !fld->GetAsDouble() )
+                     fld = msg->GetField( _HST_CLOSE );
+               }
+            }
+         }
+         if ( fld && ( pdb.find( ric ) == pdb.end() ))
+            pdb[ric] = fld->GetAsDouble();
+      }
+      if ( webFile && (fp=::fopen( webFile, "w" )) ) {
+         LOG( "Creating %s", webFile );
+         s = "";
+         for ( it=ldb.begin(); it!=ldb.end(); it++ ) {
+            s += s.size() ? "," : "";
+            s += (*it).first;
+         }
+         ::fprintf( fp, "/****************************************************\n" );
+         ::fprintf( fp, "*\n" );
+         ::fprintf( fp, "*  %s\n", webFile );
+         ::fprintf( fp, "*     Auto-generated config file by %s\n", exeFile );
+         ::fprintf( fp, "*\n" );
+         ::fprintf( fp, "*  REVISION HISTORY:\n" );
+         ::fprintf( fp, "*     %2d %s %04d jcs  Created\n", now._mday, mon, yr );
+         ::fprintf( fp, "*\n" );
+         ::fprintf( fp, "* (c) 1994-%04d, Gatea Ltd.\n", yr );
+         ::fprintf( fp, "****************************************************/\n" );
+         ::fprintf( fp, "\n" );
+         ::fprintf( fp, "var optTkr, opt3dTkrC, opt3dTkrP, opt3dLast, opt;\n" );
+         ::fprintf( fp, "var dbDt, lvcFile;\n" );
+         ::fprintf( fp, "\n" );
+         ::fprintf( fp, "lvcFile   = '%s';\n", _lvc.pFilename() );
+         ::fprintf( fp, "dbDt      = %d;\n", dbDt );
+         ::fprintf( fp, "optTkr    = '%s'.split(',');\n", s.data() );
+         ::fprintf( fp, "opt3dTkrC = [];\n" );
+         ::fprintf( fp, "opt3dTkrP = [];\n" );
+         ::fprintf( fp, "for ( var i=0; i<optTkr.length; i++ ) {\n" );
+         ::fprintf( fp, "   opt = optTkr[i];\n" );
+         ::fprintf( fp, "   opt3dTkrC.push( opt + '.C' );\n" );
+         ::fprintf( fp, "   opt3dTkrC.push( 'Knot_' + opt + '.C' );\n" );
+         ::fprintf( fp, "   opt3dTkrP.push( opt + '.P' );\n" );
+         ::fprintf( fp, "   opt3dTkrP.push( 'Knot_' + opt + '.P' );\n" );
+         ::fprintf( fp, "}\n" );
+         hdr = "opt3dLast = { ";
+         for ( it=ldb.begin(); it!=ldb.end(); it++ ) {
+            tkr  = (*it).first;
+            ric  = (*it).second;
+            dPrc = ( (pt=pdb.find( ric )) != pdb.end() ) ? (*pt).second : 0.0; 
+            sprintf( val, "'%s'", tkr.data() );
+            ::fprintf( fp, "%s%-18s : %5d,\n", hdr, val, (int)dPrc );
+            hdr  = "              ";
+            sprintf( val, "'Knot_%s'", tkr.data() );
+            ::fprintf( fp, "%s%-18s : %5d,\n", hdr, val, (int)dPrc );
+         }
+         ::fprintf( fp, "            }\n" );
+         ::fclose( fp );
       }
       return sdb.size();
    }
@@ -2227,6 +2352,7 @@ int main( int argc, char **argv )
    const char *svc   = root.getElemValue( "svc", "options.curve" );
    double      rate  = root.getElemValue( "rate", 1.0 );
    const char *pLog  = root.getElemValue( "log", "stdout" );
+   const char *pWeb  = root.getElemValue( "web", (const char *)0 );
    const char *_UST  = "RiskFree";
 
    if ( !(xs=root.find( _UST )) ) {
@@ -2276,13 +2402,17 @@ fmtDbl( 3.14, s );
    /////////////////////
    // d/b Date
    /////////////////////
-   int       dbDt = root.getElemValue( "dbDate", 0 );
-   time_t    now  = OptionsCurve::TimeSec();
+   time_t    now;
+   int       dbDt;
    struct tm lt;
 
+   now  = OptionsCurve::LastUpdateTime( root );
    ::localtime_r( &now, &lt );
-   now = RiskFreeSpline::_ymd2unix( dbDt, lt );
-
+   dbDt  = ( lt.tm_year+1900 );
+   dbDt *= 100;
+   dbDt += ( lt.tm_mon+1 );
+   dbDt *= 100;
+   dbDt += lt.tm_mday;
 
    /////////////////////
    // Do it
@@ -2297,7 +2427,8 @@ fmtDbl( 3.14, s );
     */
    lvc.SetToday( dbDt );
    lvc.SetNow();
-   LOG( OptionsCurveID() );
+   LOG( "Config.LVC        = %s", lvc.pFilename() );
+   LOG( "Config.dbDate     = %d", dbDt );
    LOG( "Config._square    = %s", _pBool( lvc._square ) );
    LOG( "Config._trim      = %s", _pBool( lvc._trim ) );
    LOG( "Config._dump      = %s", _pBool( lvc._dump ) );
@@ -2307,6 +2438,7 @@ fmtDbl( 3.14, s );
    LOG( "Config._yInc      = %.2f", lvc._yInc );
    LOG( "Config._maxX      = %d", lvc._maxX );
    LOG( "Config._rate      = %.1fs", rate );
+   LOG( "Config._pWeb      = %s", pWeb ? pWeb : "<empty>" );
    /*
     * Load Splines
     */
@@ -2327,7 +2459,7 @@ fmtDbl( 3.14, s );
     */
    LOG( "Loading surfaces ..." );
    d0  = lvc.TimeNs();
-   ns    = pub.LoadSurfaces();
+   ns    = pub.LoadSurfaces( argv[0], pWeb, dbDt );
    age = 1000.0 * ( lvc.TimeNs() - d0 );
    LOG( "%ld surfaces loaded in %dms", ns, (int)age );
    /*
