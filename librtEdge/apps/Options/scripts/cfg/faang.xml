@@ -1,10 +1,10 @@
 <OptionsCurve>
   <fg> false </fg>
-  <db_nowUsed> /RAMDISK//LVC//options.lvc </db_nowUsed>
-  <db> /RAMDISK//LVC//idn_rdf2.lvc </db>
+  <db> /RAMDISK//LVC//FAANG.dbf </db>
   <svr> localhost:9015 </svr>
   <svc> options.curve </svc>
-  <rate> 15.0 </rate>
+  <rate> 86400.0 </rate>
+  <rate_lwc> 15.0 </rate_lwc>
   <xInc> 1.0 </xInc>
   <yInc> 1.0 </yInc>
   <maxX> 500 </maxX>
@@ -12,8 +12,8 @@
   <knotCalc> true </knotCalc>
   <precision> 2 </precision>
   <dump> false </dump>
-  <log> /tmp/OptionsCurve.log </log>
-  <web> /tmp/curveCfg.js </web>
+  <log> ./log/faang.log </log>
+  <web> ./js/curveCfg-faang.js </web>
 
   <RiskFree Service="velocity" FieldID="6">
     <Knot Ticker="US1DY GOVT"  Interval="0.001" Value="4.50" />

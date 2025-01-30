@@ -10,8 +10,9 @@
 *     29 SEP 2023 jcs  DoubleList Spline(); double ValueAt(); operator=()
 *     22 OCT 2023 jcs  Surface() debug
 *     31 OCT 2023 jcs  Move out of librtEdge
+*     29 JAN 2025 jcs  CubicSurface._BestZ()
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __CubicSpline_H
 #define __CubicSpline_H
@@ -22,12 +23,13 @@ namespace QUANT
 {
 
 #ifndef DOXYGEN_OMIT
-#define _HUGE 0.99e30
+#define _HUGE   0.99e30
+double _NO_VAL = _HUGE;
 
 #define _gmin( a,b )          ( ((a)<=(b)) ? (a) : (b) )
 #define _gmax( a,b )          ( ((a)>=(b)) ? (a) : (b) )
 
-#endif // DOXYGEN_OMI
+#endif // DOXYGEN_OMIT
 
 ////////////////////////////////////////////////
 //
@@ -387,7 +389,7 @@ public:
 	 * 
 	 * \param X - M Sampled X-axis values
 	 * \param Y - N Sampled Y-axis values
-	 * \param Z - MxN Sampled Z-axis values
+	 * \param Z - MxN Sampled Z-axis values (Knots)
 	 */
 	CubicSurface( QUANT::DoubleList &X, 
 	              QUANT::DoubleList &Y, 
@@ -399,26 +401,11 @@ public:
 	   _M( X.size() ),
 	   _N( Y.size() )
 	{
-#ifdef OBSOLETE
-	   QUANT::DoubleList z;
-
-	   for ( size_t m=0; m<_M; _X.push_back( X[m] ), m++ );
-	   for ( size_t n=0; n<_N; _Y.push_back( Y[n] ), n++ );
-	   /*
-	    * 0-based array
-	    */
-	   for ( size_t m=0; m<_M; m++ ) {
-	      z.clear();
-	      for ( size_t n=0; n<_N; z.push_back( Z[m][n] ), n++ );
-	      _Z.push_back( z );
-	   }
-#endif // OBSOLETE
 	   _X = X;
 	   _Y = Y;
 	   _Z = Z;
 	   _Calc();
 	}
-
 
 	////////////////////////////////////
 	// Assignment Operator
@@ -440,7 +427,6 @@ public:
 	   _N  = s._N;
 	   return *this;
 	}
-
 
 	////////////////////////////////////
 	// Access / Operations
@@ -464,13 +450,14 @@ public:
 	 * \return Calculated Spline as DoubleList
 	 */
 	QUANT::DoubleGrid Surface( QUANT::DoubleList &X, 
-	                            QUANT::DoubleList &Y )
+	                           QUANT::DoubleList &Y )
 	{
 	   QUANT::DoubleGrid Z;
 	   QUANT::DoubleList zRow;
 	   size_t             nx, ny;
 	   double             z;
 
+	   _BestZ();
 	   nx = X.size();
 	   ny = Y.size();
 	   for ( size_t c=0; c<ny; c++ ) {
@@ -564,6 +551,20 @@ private:
 	   return src;
 	}
 
+	/** \brief Fill in missing Z values from spline */
+	void _BestZ()
+	{
+	   for ( size_t m=0; m<_Z.size(); m++ ) {
+	      QUANT::DoubleList &src = _Z[m];
+	      QUANT::DoubleList  dst;
+
+	      _SplineAt( m, dst );
+	      for ( size_t n=0; n<src.size(); n++ )
+	         src[n] = ( src[n] == _NO_VAL ) ? dst[n] : src[n];
+	   }
+	}
+
+
 	////////////////////////
 	// private Members
 	////////////////////////
@@ -572,7 +573,7 @@ private:
 	QUANT::DoubleList _X;
 	/** \brief N Y-axis values */
 	QUANT::DoubleList _Y;
-	/** \brief MxN sampled Z-axis values */
+	/** \brief MxN sampled Z-axis values (Knots) */
 	QUANT::DoubleGrid _Z;
 	/** \brief 2nd order derivative at _Z : Calculated Values */
 	QUANT::DoubleGrid _Z2;

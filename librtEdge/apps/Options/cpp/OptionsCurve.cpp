@@ -7,7 +7,7 @@
 *     20 SEP 2023 jcs  FullSpline
 *     13 OCT 2023 jcs  OptionsSurface
 *     17 DEC 2023 jcs  Build 67: RiskFreeCur
-*     27 JAN 2025 jcs  Build 75: Show LVC file; LoadSurfaces( webFile )
+*     27 JAN 2025 jcs  Build 75: Show LVC file; _BestZ() in quant lib 
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -119,6 +119,23 @@ typedef vector<KnotDef>              KnotList;
 typedef vector<KnotList>             KnotGrid;
 typedef hash_map<u_int64_t, KnotDef> KnotDefMap;
 
+// Atomic operations
+
+extern "C"
+{
+#ifdef WIN32
+#define ATOMIC_INC( pDest )           InterlockedIncrement( (LONG *)pDest )
+#define ATOMIC_DEC( pDest )           InterlockedDecrement( (LONG *)pDest )
+#else
+#define ATOMIC_INC( pDest )           __sync_add_and_fetch( pDest, 1 )
+#define ATOMIC_DEC( pDest )           __sync_sub_and_fetch( pDest, 1 )
+#endif // WIN32
+} // extern "C"
+
+static ::int64_t _NumSurface   = 0;
+static ::int64_t _TotalSurface = 0;
+static ::int64_t _NumCurve     = 0;
+static ::int64_t _NumSpline    = 0;
 
 ////////////////////////////////////////////////
 //
@@ -158,6 +175,12 @@ public:
       _jToday( 0 )
    {
       ::memset( &_kz, 0, sizeof( _kz ) );
+      ATOMIC_INC( &_NumCurve );
+   }
+
+   ~OptionsCurve()
+   {
+      ATOMIC_DEC( &_NumCurve );
    }
 
    /////////////////////////
@@ -282,6 +305,7 @@ public:
          case calc_gammaRTR:  rc = gl._gamma;  break;
          case calc_vegaRTR:   rc = gl._vega;   break;
          case calc_rhoRTR:    rc = gl._rho;    break;
+         case calc_undef:                      break;
       }
       return rc;
    }
@@ -725,6 +749,7 @@ private:
    QUANT::CubicSpline _CS; // Last Calc
    double             _xInc;
    int                _StreamID;
+   CalcType           _calcType;
    time_t             _tCalc;
 
    /////////////////////////
@@ -749,9 +774,11 @@ public:
       _CS(),
       _xInc( und.lvc()._xInc ),
       _StreamID( 0 ),
+      _calcType( calc_undef ),
       _tCalc( 0 )
    {
       _Init( all );
+      ATOMIC_INC( &_NumSpline );
    }
 
    /** \brief By Strike  Price */
@@ -772,10 +799,18 @@ public:
       _CS(),
       _xInc( und.lvc()._xInc ),
       _StreamID( 0 ),
+      _calcType( calc_undef ),
       _tCalc( 0 )
    {
       _Init( all );
+      ATOMIC_INC( &_NumSpline );
    }
+
+   ~OptionsSpline()
+   {
+      ATOMIC_DEC( &_NumSpline );
+   }
+
 
    /////////////////////////
    // Access
@@ -793,7 +828,9 @@ public:
 
    QUANT::CubicSpline &CS( LVCAll &all, time_t now )
    {
-      Calc( all, now );
+      bool bForce = ( _tCalc == 0 ); // 25-01-30 jcs
+
+      Calc( all, now, bForce );
       return _CS;
    }
 
@@ -805,7 +842,8 @@ public:
 
       // Rock on
 
-      SnapKnots( all, 0, calcType );
+      if( !SnapKnots( all, 0, calcType ) )
+         return _CS; // 25-01-30 jcs
       nx = XY.size();
       x0 = XY[1]._x;
       x1 = XY[nx-1]._x;
@@ -855,7 +893,7 @@ public:
 
       // Pre-condition(s)
 
-      if ( _tCalc == now )
+      if ( ( _tCalc == now ) && ( _calcType == calcType ) )
          return false;
       if ( !(nk=NumKnots()) )
          return false;
@@ -863,7 +901,8 @@ public:
       /*
        * 1) Pull out real-time Knot values from LVC
        */
-      _tCalc = now;
+      _tCalc    = now;
+      _calcType = calcType;
       _X.clear();
       _Y.clear();
       for ( i=0,bUpd=false; i<nk; i++ ) {
@@ -1103,6 +1142,7 @@ private:
    double        _yInc;
    int           _StreamID;
    time_t        _tCalc;
+   ::int64_t     _Num;
 
    /////////////////////////
    // Constructor
@@ -1132,7 +1172,8 @@ public:
       _xInc( und.lvc()._xInc ),
       _yInc( und.lvc()._yInc ),
       _StreamID( 0 ),
-      _tCalc( 0 )
+      _tCalc( 0 ),
+      _Num( ATOMIC_INC( &_TotalSurface ) )
    {
       string     &s  = *this;
       const char *ty = bPut ? ".P" : ".C";
@@ -1141,6 +1182,7 @@ public:
          s.insert( 0, "Knot_" );
       s += ty;
       _Init( all );
+      ATOMIC_INC( &_NumSurface );
    }
 
    /** 
@@ -1171,11 +1213,12 @@ public:
       _xInc( c._und.lvc()._xInc ),
       _yInc( c._und.lvc()._yInc ),
       _StreamID( 0 ),
-      _tCalc( 0 )
+      _tCalc( 0 ),
+      _Num( ATOMIC_INC( &_TotalSurface ) )
    {
       KnotGrid   &kdb = c._kdb;
-      _DoubleList &X   = c._X;
-      _DoubleList &Y   = c._Y;
+      _DoubleList &X  = c._X;
+      _DoubleList &Y  = c._Y;
       double      x0, x1, x, dr;
       KnotDef     k;
       size_t      i, M, N;
@@ -1223,8 +1266,13 @@ public:
       cp += sprintf( cp, "%-4s :", data() );
       cp += sprintf( cp, " ( %3" PRId64 " x %3" PRId64 " )", M, N );
       LOG( bp );
+      ATOMIC_INC( &_NumSurface );
    }
 
+   ~OptionsSurface()
+   {
+      ATOMIC_DEC( &_NumSurface );
+   }
 
    /////////////////////////
    // Access
@@ -1239,6 +1287,22 @@ public:
    _DoubleList &X()      { return _X; }
    _DoubleList &Y()      { return _Y; }
    _DoubleGrid &Z()      { return _Z; }
+
+   double debug_SumZ()
+   {
+      double dZ;
+
+      for ( size_t r=0; r<_Z.size(); r++ ) {
+         for ( size_t c=0; c<_Z[r].size(); dZ+=_Z[r][c], c++ );
+      }
+      return dZ;
+   }
+
+   _DoubleList &debug_LastZ()
+   {
+      return _Z[_Z.size()-1];
+   }
+
 
    /////////////////////////
    // WatchList
@@ -1316,6 +1380,8 @@ public:
          /*
           * 1b) Build row from snapped and interpolated values
           */
+if ( r == (nr-1) )
+breakpoint();
          for ( c=0; c<nc; c++ ) {
             z = 0.0;
             k = _kdb[r][c];
@@ -1351,7 +1417,7 @@ public:
                 * If both splines available, BestZ is as follows:
                 *    1) If k._splineX and strikes match, use zX
                 *    2) If k._splineE and expirations match, use zE
-                *    3) Else _BestZ()
+                *    3) Else QUANT::_NO_VAL
                 */
                if ( csX && csE ) {
                   if ( k._strike == k._splineX->dStr() )
@@ -1359,7 +1425,7 @@ public:
                   else if ( k._exp == k._splineE->tExp() )
                      z = zE;
                   else
-                     z = _BestZ( *csX, *csE, zSnap, c, zX, zE );
+                     z = QUANT::_NO_VAL;
                }
                /*
                 * Else, Only 1 available : use it
@@ -1678,57 +1744,6 @@ assert( kz._splineX || kz._splineE );
          for ( c=x0; c<x1; rowK.push_back( row[c] ), c++ );
          _kdb.push_back( rowK );
       }
-   }
-
-   /**
-    * \brief Determine 'best' spline value from dX or dE
-    *
-    * \param csX - CubicSpline : Strike Price
-    * \param csE - CubicSpline : Expiration Date
-    * \param snap - Snapped LVC values
-    * \param col -  Current column from snap
-    * \param dX - Value from Strike Price Spline
-    * \param dE - Value from Expiration Spline
-    * \return 'Best' value for col based on snapped LVC values
-    */ 
-   double _BestZ( QUANT::CubicSpline &csX,
-                  QUANT::CubicSpline &csE,
-                  _DoubleList         &snap, 
-                  size_t              col, 
-                  double              dX, 
-                  double              dE )
-   {
-      size_t c0, c1, sz;
-      double ds, rc;
-      bool   b0, b1;
-
-      /*
-       * 1) Find first non-zero snapped value up and down from col
-       */
-      sz = snap.size();
-      for ( c0=col; c0>=0 && !snap[c0]; c0-- );
-      for ( c1=col; c1<sz && !snap[c1]; c1++ );
-      b0 = ( (::int64_t)c0 >= 0 );
-      b1 = ( c1 < sz );
-      /*
-       * Return dX or dE depending on closest to non-zero snapped value
-       * If no snapped values, then return midpoint
-       */
-      rc = ( dX+dE ) / 2.0;
-      if ( b0 || b1 ) {
-         if ( b0 && b1 ) {
-            if ( ( col-c0 ) <= ( c1-col ) )
-               ds = snap[c0];
-            else
-               ds = snap[c1];
-         }
-         else if ( b0 )
-            ds = snap[c0];
-         else if ( b1 )
-            ds = snap[c1];
-         rc = ( ::fabs( dX-ds ) < ::fabs( dE-ds ) ) ? dX : dE;
-      }
-      return rc;
    }
 
 }; // class OptionsSurface
@@ -2102,7 +2117,10 @@ protected:
          nb = srf->Publish( u );
       }
       else if ( rng && (ft=fdb.find( ss )) != fdb.end() ) {
+double z[3];
+
          srf  = (*ft).second;
+z[0] = srf->debug_SumZ();
          srf1 = new OptionsSurface( *srf, tkr, last, rng, mon, calcTy );
          if ( !srf1->M() || !srf1->N() ) {
             err = "Empty surface";
@@ -2113,7 +2131,13 @@ protected:
             rdb[s] = srf1;
             srf1->SetWatch( (size_t)arg );
             srf1->Calc( all, now, true );
+_DoubleList &zl = srf1->debug_LastZ();
+
             nb = srf1->Publish( u );
+z[1] = srf->debug_SumZ();
+z[2] = srf1->debug_SumZ();
+if ( zl.size() || ( z[0] != z[1] ) )
+breakpoint();
          }
       }
       else

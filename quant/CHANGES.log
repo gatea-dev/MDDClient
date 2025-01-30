@@ -36,9 +36,11 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build  3 25-01-25
+ * ### Build  3 25-01-29
  *
  * -# WIN64
+ *
+ * -# CubicSurface.BestZ()
  *
  *
  * ### Build  2 23-12-17

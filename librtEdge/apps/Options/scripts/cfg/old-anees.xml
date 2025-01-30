@@ -1,6 +1,6 @@
 <OptionsCurve>
   <fg> false </fg>
-  <db> /RAMDISK//LVC//anees.dbf </db>
+  <db> /RAMDISK//LVC//Anees.dbf </db>
   <svr> localhost:9015 </svr>
   <svc> options.curve </svc>
   <rate> 15.0 </rate>
@@ -11,8 +11,8 @@
   <knotCalc> true </knotCalc>
   <precision> 2 </precision>
   <dump> false </dump>
-  <log> ./log/anees.log </log>
-  <web> ./js/curveCfg-anees.js </web>
+  <log> ./log/old-anees.log </log>
+  <web> ./js/curveCfg.js </web>
 
   <RiskFree Service="velocity" FieldID="6">
     <Knot Ticker="US1DY GOVT"  Interval="0.001"  Value="4.50" />

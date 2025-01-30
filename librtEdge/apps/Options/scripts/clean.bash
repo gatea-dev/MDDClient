@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/bin/rm -fv /tmp/OptionsCurve.log /tmp/*curve*.js ./core.*
+/bin/rm -fv ./log/*.log ./js/*.js ./core.* ./nohup.ouot

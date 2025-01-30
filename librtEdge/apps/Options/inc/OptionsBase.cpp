@@ -7,8 +7,9 @@
 *     17 SEP 2023 jcs  Created (from GreekServer.cpp)
 *     15 OCT 2023 jcs  Build 65: _ymd2julNum()
 *     31 OCT 2023 jcs  Build 66: quant.hpp
+*     30 JAN 2025 jcs  Build 75: calc_undef
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <quant.hpp>
@@ -77,6 +78,7 @@ typedef enum {
    calc_gammaRTR  = 10,
    calc_vegaRTR   = 11,
    calc_rhoRTR    = 12,
+   calc_undef
 } CalcType;
 
 ////////////////////////////////////////////////

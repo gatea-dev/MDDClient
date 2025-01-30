@@ -29,6 +29,7 @@
 #     30 APR 2024 jcs  LVC _SetData() arg mismatch
 #      6 JAN 2025 jcs  list( keys() )
 #     21 JAN 2025 jcs  EdgMon
+#     29 JAN 2025 jcs  LVCAdmin : schema=None means no argument
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -931,7 +932,8 @@ class LVCAdmin:
    # @param schema : (Optional) Schema Name; Default is None
    ########################
    def AddTicker( self, svc, tkr, schema=None ):
-      MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr, schema )
+      if schema: MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr, schema )
+      else:      MDDirect.LVCAdminAddTicker( self._cxt, svc, tkr )
 
    ########################
    # Add ticker list to LVC for specific service
@@ -941,7 +943,8 @@ class LVCAdmin:
    # @param schema : (Optional) Schema Name; Default is None
    ########################
    def AddTickers( self, svc, tkrs, schema=None ):
-      MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs, schema )
+      if schema: MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs, schema )
+      else:      MDDirect.LVCAdminAddTickers( self._cxt, svc, tkrs )
 
    ########################
    # Delete single ticker to LVC
@@ -951,7 +954,8 @@ class LVCAdmin:
    # @param schema : (Optional) Schema Name; Default is None
    ########################
    def DelTicker( self, svc, tkr, schema=None ):
-      MDDirect.LVCAdminDelTicker( self._cxt, svc, tkr, schema )
+      if schema: MDDirect.LVCAdminDelTicker( self._cxt, svc, tkr, schema )
+      else:      MDDirect.LVCAdminDelTicker( self._cxt, svc, tkr )
 
    ########################
    # Delete ticker list to LVC for specific service
@@ -961,7 +965,8 @@ class LVCAdmin:
    # @param schema : (Optional) Schema Name; Default is None
    ########################
    def DelTickers( self, svc, tkrs, schema=None ):
-      MDDirect.LVCAdminDelTickers( self._cxt, svc, tkrs, schema )
+      if schema: MDDirect.LVCAdminDelTickers( self._cxt, svc, tkrs, schema )
+      else:      MDDirect.LVCAdminDelTickers( self._cxt, svc, tkrs )
 
    ########################
    # Refresh single ticker to LVC
