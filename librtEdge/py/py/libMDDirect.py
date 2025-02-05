@@ -162,7 +162,7 @@ def NumPyObjects():
 #################################
 # Returns True if running on Windows
 #
-# @regturn True if running on Windows
+# @return True if running on Windows
 #################################
 def IsWindows():
    return ( os.name == 'nt' )
