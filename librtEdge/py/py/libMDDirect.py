@@ -1079,7 +1079,6 @@ class LVCAdmin( threading.Thread ):
       #
       # Drain until stopped
       #
-      msg = self._msg
       while self._run:
          rd = MDDirect.LVCAdminRead( self._cxt, 0.25 )
          if not rd:
@@ -1087,7 +1086,7 @@ class LVCAdmin( threading.Thread ):
          ( mt, blob ) = rd
          if mt == MDDirectEnum.EVT_CONN:
             ( ty, pMsg ) = blob.split('|')
-            bUP          = ( ty strip() == 'UP' )
+            bUP          = ( ty.strip() == 'UP' )
             self.OnConnect( pMsg, bUP )
          elif mt == MDDirectEnum.EVT_SVC:
             kv  = blob.split('|')
@@ -1099,8 +1098,8 @@ class LVCAdmin( threading.Thread ):
             except: svc = 'undefined'
             try:    tkr = kv[3]
             except: tkr = 'undefined'
-            if ack:
-            else:   self.On
+            if ack: self.OnAdminACK( bAdd, svc, tkr )
+            else:   self.OnAdminNAK( bAdd, svc, tkr )
       return
 ## \endcond
 
