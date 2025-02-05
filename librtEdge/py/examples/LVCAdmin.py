@@ -8,16 +8,59 @@
 #     20 JUL 2022 jcs  Created
 #     14 AUG 2023 jcs  Python 2 / 3
 #      4 SEP 2023 jcs  Named Schema; args like LVCAdmin.cpp; DelTickers()
+#      5 FEB 2025 jcs  Biuld 14: LVCAdmin.OnXxx()
 #
-#  (c) 1994-2023, Gatea Ltd.
+#  (c) 1994-2025, Gatea Ltd.
 #################################################################
 import sys, time
 import libMDDirect
+
+_CDB = { True : 'UP',  False : 'DOWN' }
+_ADB = { True : 'ADD', False : 'DEL' }
 
 def Log( msg ):
    if msg:
       libMDDirect.Log( msg )
    return
+
+class MyLVCAdmin( libMDDirect.LVCAdmin ):
+   ################################
+   # Constructor
+   #
+   # @param adm : host:port of LVC Admin Channel
+   ################################
+   def __init__( self, adm ):
+      libMDDirect.LVCAdmin.__init__( self, adm )
+
+   ########################
+   # @override : Called asynchronously when we connect or disconnect
+   #
+   # @param msg - Textual description of connect event
+   # @param bUP - True if UP; False if DOWN
+   ########################
+   def OnConnect( self, msg, bUP ):
+      Log( 'CONN.{%s} : %s' % ( _CDB[bUP], msg ) )
+
+   ########################
+   # @override : Called asynchronously when an ACK message arrives
+   #  
+   # @param bAdd - true if ADD; false if DEL
+   # @param svc - Service Name
+   # @param tkr - Ticker Name 
+   ########################
+   def OnAdminACK( self, bAdd, svc, tkr ):
+      Log( 'ACK.%s .{%s,%s}' % ( _ADB[bAdd], svc, tkr ) )
+
+   ########################
+   # @override : Called asynchronously when an NAK message arrives
+   #  
+   # @param bAdd - true if ADD; false if DEL
+   # @param svc - Service Name
+   # @param tkr - Ticker Name 
+   ########################
+   def OnAdminNAK( self, bAdd, svc, tkr ):
+      Log( 'NAK.%s .{%s,%s}' % ( _ADB[bAdd], svc, tkr ) )
+
 
 ############################################
 #
@@ -73,7 +116,7 @@ if __name__ == "__main__":
    #
    # Rock and Roll
    #
-   lvc = libMDDirect.LVCAdmin( adm )
+   lvc = MyLVCAdmin( adm )
    Log( 'LVCAdmin to %s' % adm )
    if cmd == 'REFRESH':
       lvc.RefreshTickers( svc, tkrs )
@@ -86,5 +129,9 @@ if __name__ == "__main__":
       cmd = None
    if cmd:
       Log( '%d tickers %s-ed' % ( len( tkrs ), cmd ) )
+   py3 = libMDDirect.IsPY3()
+   msg = 'Hit <ENTER> to terminate\n'
+   if py3: notUsed = input( msg )
+   else:   raw_input( msg )
    Log( lvc.Close() )
    Log( 'Done!!' )

@@ -40,7 +40,14 @@ class Sub( libMDDirect.rtEdgeSubscriber ):
 
    def OnData( self, mddMsg ):
 ##      Log( 'PyObj=%d' % libMDDirect.NumPyObjects() )
-      Log( mddMsg.Dump( bFldTy=True ) )
+      fBid = mddMsg.GetField( 22, True )
+      fAsk = mddMsg.GetField( 25, True )
+      try:    bid = '%.4f' % fBid.GetAsDouble()
+      except: bid = 'None'
+      try:    ask = '%.4f' % fAsk.GetAsDouble()
+      except: ask = 'None'
+##      Log( 'QUOTE : %s x %s' % ( bid, ask ) )
+      Log( mddMsg.Dump( bFldTy=True ) + '\n' )
 
    def OnSymbol( self, tkr ):
       Log( 'SYM-ADD : %s' % tkr )
