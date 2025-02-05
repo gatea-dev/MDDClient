@@ -109,6 +109,14 @@ pass
 # will remain portable across Python 2.7 and Python 3.9 interpreters.
 #
 
+##########################
+# Return True if Python 3.x
+#
+# @return True if Python 3.x
+##########################
+def IsPY3():
+   return ( sys.version_info.major >= 3 )
+
 #################################
 # Returns version and build info
 #
@@ -1098,8 +1106,8 @@ class LVCAdmin( threading.Thread ):
             except: svc = 'undefined'
             try:    tkr = kv[3]
             except: tkr = 'undefined'
-            if ack: self.OnAdminACK( bAdd, svc, tkr )
-            else:   self.OnAdminNAK( bAdd, svc, tkr )
+            if ack: self.OnAdminACK( add, svc, tkr )
+            else:   self.OnAdminNAK( add, svc, tkr )
       return
 ## \endcond
 
