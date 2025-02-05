@@ -1030,7 +1030,8 @@ class LVCAdmin( threading.Thread ):
       if self._tid:
          self.join()
       self._tid = None
-      MDDirect.LVCAdminClose( self._cxt )
+      if self._cxt:
+         MDDirect.LVCAdminClose( self._cxt )
       self._cxt = None
 
    ########################
