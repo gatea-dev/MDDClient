@@ -52,6 +52,9 @@ Features To Add
  *
  * -# CME : Update.AddField( rtTime, bool bTimeSec=false )
  *
+ * -# Cockpit_Destroy crash
+ *    - Thread.Stop() BEFORE destructor - DUH!!
+ *
  * -# libMDDirect.py Build 14 :
  *    - class EdgMon
  *    - LVCAdmin.OnConnect() and friends

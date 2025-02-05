@@ -30,8 +30,9 @@
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     14 JAN 2024 jcs  Build 67: No mo OFF_T
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
+*      5 FEB 2025 jcs  Build 75: Cockpit_Destroy : Kill thread first
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 #include <OS_cpu.h>
@@ -1317,6 +1318,7 @@ void Cockpit_Destroy( Cockpit_Context cxt )
 
    if ( (it=_cock.find( cxt )) != _cock.end() ) {
       qod = (*it).second;
+      qod->thr().Stop();
       _cock.erase( it );
       delete qod;
    }
