@@ -17,6 +17,7 @@
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
 *     27 MAR 2024 jcs  Build 13: 3.11
+*      5 FEB 2025 jcs  Build 13: 3.11
 *
 *  (c) 1994-2024, Gatea, Ltd.
 ******************************************************************************/
@@ -355,10 +356,10 @@ static PyObject *OpenByStr( PyObject *self, PyObject *args )
 
 static PyObject *Read( PyObject *self, PyObject *args )
 {
-   int         cxt;
+   int          cxt;
    MDDpySubChan *ch;
-   PyObject   *rtn;
-   double      dWait;
+   PyObject     *rtn;
+   double       dWait;
 
    // Usage : Read( cxt, dWait )
 
@@ -740,6 +741,24 @@ static PyObject *LVCAdmRfrshTkrs( PyObject *self, PyObject *args )
    return _PyReturn( Py_None );
 }
 
+static PyObject *LVCAdmRead( PyObject *self, PyObject *args )
+{
+   int            cxt;
+   MDDpyLVCAdmin *adm;
+   PyObject      *rtn;
+   double         dWait;
+
+   // Usage : Read( cxt, dWait )
+
+   if ( !PyArg_ParseTuple( args, "id", &cxt, &dWait ) )
+      return _PyReturn( Py_None );
+   if ( !(adm=_GetLVCAdmin( cxt )) )
+      return _PyReturn( Py_None );
+   if ( (rtn=adm->Read( dWait )) == Py_None )
+      return _PyReturn( Py_None );
+   return rtn;
+}
+
 static PyObject *LVCAdmClose( PyObject *self, PyObject *args )
 {
    int  cxt;
@@ -1073,6 +1092,7 @@ static PyMethodDef EdgeMethods[] =
     { "LVCAdminDelTickers",     LVCAdmDelTkrs,   _PY_ARGS, "Delete Ticker List to LVC" },
     { "LVCAdminRefreshTicker",  LVCAdmRfrshTkr,  _PY_ARGS, "Refresh Ticker to LVC" },
     { "LVCAdminRefreshTickers", LVCAdmRfrshTkrs, _PY_ARGS, "Refresh Ticker List to LVC" },
+    { "LVCAdminRead",           LVCAdmRead,      _PY_ARGS, "Read update - LVCAdmin." },
     { "LVCAdminClose",          LVCAdmClose,     _PY_ARGS, "Close LVCAdmin Channel" },
     /*
      * Library Utilities
@@ -1101,7 +1121,7 @@ static PyMethodDef EdgeMethods[] =
 /*
  * Python 3.11
  */
-static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
+A
                                   "MDDirect311",
                                   "MD-Direct for Python 3.11",
                                   -1,

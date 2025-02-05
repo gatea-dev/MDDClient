@@ -6,21 +6,6 @@
 *  REVISION HISTORY:
 *     21 JUL 2009 jcs  Created.
 *     . . .
-*     18 NOV 2014 jcs  Build 28: rtFld_bytestream; rtEdge_MapFile(); inc/hpp
-*      6 JAN 2015 jcs  Build 29: ByteStream / Chain; rtEdgeData._StreamID
-*     20 MAR 2015 jcs  Build 30: ioctl_setHeartbeat
-*      6 JUL 2015 jcs  Build 31: ioctl_getFd; ioctl_setPubDataPayload
-*     15 APR 2016 jcs  Build 32: ioctl_isSnapChan; ioctl_setUserPubMsgTy
-*     12 SEP 2016 jcs  Build 33: ioctl_userDefStreamID
-*     26 MAY 2017 jcs  Build 34: rtEdgePubAttr._bConnectionless
-*     24 SEP 2017 jcs  Build 35: Cockpit; No mo LVC_XxxTicker()
-*     12 OCT 2017 jcs  Build 36: rtBuf64
-*      7 NOV 2017 jcs  Build 38: rtEdge_RemapFile()
-*     21 JAN 2018 jcs  Build 39: CockpitAttr._cxtLVC
-*      6 MAR 2018 jcs  Build 40: OS_StartThread / OS_StopThread()
-*      6 DEC 2018 jcs  Build 41: VOID_PTR
-*      7 SEP 2020 jcs  Build 44: ioctl_normalTapeDir; ioctl_xxxThreadName
-*     16 SEP 2020 jcs  Build 45: rtEdge_Parse()
 *     22 OCT 2020 jcs  Build 46: rtEdge_StartPumpFullTape()
 *      3 DEC 2020 jcs  Build 47: rtEdge_Data._TapePos
 *      6 OCT 2021 jcs  Build 50: doxygen de-lint
@@ -42,8 +27,9 @@
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
 *      9 SEP 2024 jcs  Build 73: LVCStatMon.hpp
 *      7 NOV 2024 jcs  Build 74: ioctl_setRawLog
+*      4 FEB 2025 jcs  Build 75: Surface.hpp; 
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 
 /**
@@ -512,7 +498,20 @@ typedef enum {
     *
     * \param (void *)val - Raw log filename
     */
-   ioctl_setRawLog         = 39
+   ioctl_setRawLog         = 39,
+   /**
+    * \brief Enable / Disable Low Latency Read / Write
+    *
+    * Channel | Low Latency | Description
+    * --- | --- | ---
+    * Subscription | ENABLE | read, process, read, process, ...
+    * Subscription | DISABLE | read, read ... until drained, process, read ...
+    * Publication | ENABLE | TODO
+    * Publication | DISABLE | TODO
+    *
+    * \param (void *)val - 1 to ENABLE; Default is 0 (DISABLE)
+    */
+   ioctl_lowLatency        = 40,
 } rtEdgeIoctl;
 
 /**
@@ -2303,6 +2302,10 @@ _CPP_END
 #include <hpp/admin/LVCAdmin.hpp>
 #include <hpp/admin/LVCStatMon.hpp>
 #include <hpp/struct/Vector.hpp>
+#ifdef _SURFACE_NOT_READY
+#include <struct/Surface.hpp>
+#endif /* _SURFACE_NOT_READY */
+
 #endif /* __cplusplus */
 
 #endif // __LIB_RTEDGE_H

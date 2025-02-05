@@ -24,6 +24,7 @@
 *     23 SEP 2022 jcs  Build 56: GLrpyDailyIdxVw; TapeChannel.GetField( int )
 *     26 JUN 2024 jcs  Build 72: FIDSet in EDG_Internal.h
 *     22 DEC 2024 jcs  Build 74: ConnCbk()
+*      4 FEB 2025 jcs  Build 75: _OnRead()
 *
 *  (c) 1994-2024, Gatea Ltd.
 ******************************************************************************/
@@ -149,6 +150,8 @@ protected:
 	virtual void OnConnect( const char * );
 	virtual void OnDisconnect( const char * );
 	virtual void OnRead();
+private:
+	void         _OnRead();
 
 	// TimerEvent Notifications
 protected:

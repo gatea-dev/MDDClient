@@ -32,8 +32,9 @@
 *     13 JAN 2024 jcs  Build 67: IsFile()
 *      4 MAR 2024 jcs  Build 69: XxxBufferedIO()
 *     24 APR 2024 jcs  Build 71: unix2rtDateTime() crash : WIN64
+*      4 FEB 2025 jcs  Build 75: pDateTimeUs(); SetLowLatency()
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_rtEdge_H
 #define __RTEDGE_rtEdge_H
@@ -261,12 +262,36 @@ public:
 	}
 
 	/**
-	 * \brief Returns  time in YYYY-MM-DD HH:MM:SS.mmm
+	 * \brief Returns  time in YYYY-MM-DD HH:MM:SS.uuuuuu
 	 *
-	 * \see ::rtEdge_pDateTimeMs()
 	 * \param rtn - std::string to hold return value
 	 * \param dTime - 0 for current time
 	 * \return Current time in YYYY-MM-DD HH:MM:SS.mmm 
+	 * \see TimeNs()
+	 * \see ::rtEdge_pDateTimeMs()
+	 */
+	static const char *pDateTimeUs( std::string &rtn, double dTime=0.0 )
+	{
+	   char   buf[K];
+	   double us;
+	   int    uS;
+
+	   if ( dTime == 0.0 )
+	      dTime = TimeNs();
+	   us = dTime - (time_t)dTime;
+	   uS = ( us * e_MIL );
+	   sprintf( buf, "%s%03d", pDateTimeMs( rtn, dTime ), uS % 1000 );
+	   rtn = buf;
+	   return rtn.data();
+	}
+
+	/**
+	 * \brief Returns  time in YYYY-MM-DD HH:MM:SS.mmm
+	 *
+	 * \param rtn - std::string to hold return value
+	 * \param dTime - 0 for current time
+	 * \return Current time in YYYY-MM-DD HH:MM:SS.mmm 
+	 * \see ::rtEdge_pDateTimeMs()
 	 */
 	static const char *pDateTimeMs( std::string &rtn, double dTime=0.0 )
 	{
@@ -1134,6 +1159,20 @@ public:
 	   return bufSiz;
 	}
 
+	/**
+	 * \brief Sets / Clears channel to Low Latency Mode
+	 *
+	 * CALL THIS AFTER CHANNEL IS INITIALIZED
+	 *
+	 * \param bLowLatency - true to enable low latency; default is false
+	 */
+	void SetLowLatency( bool bLowLatency )
+	{
+	   ::int64_t arg;
+
+	   arg = bLowLatency ? 1 : 0;
+	   ::rtEdge_ioctl( _cxt, ioctl_lowLatency, (void *)arg );
+	}
 
 
 	////////////////////////////////////

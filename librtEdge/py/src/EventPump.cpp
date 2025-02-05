@@ -9,8 +9,9 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     20 NOV 2020 jcs  Build  2: Tape stuff
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*      5 FEB 2025 jcs  Build 14: _adm 
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -27,15 +28,26 @@
 // Constructor / Destructor
 ///////////////////////////////
 EventPump::EventPump( MDDpySubChan &ch ) :
-   _ch( ch ),
+   _sub( &ch ),
+   _adm( (MDDpyLVCAdmin *)0 ),
    _mtx(),
    _upds(),
    _updFifo( _MAX_FIFOQ ),
    _msgs(),
    _Notify( false ),
    _SleepMillis( 1 )
-{
-}
+{ ; }
+
+EventPump::EventPump( MDDpyLVCAdmin &adm ) :
+   _sub( (MDDpySubChan *)0 ),
+   _adm( &adm ),
+   _mtx(),
+   _upds(),
+   _updFifo( _MAX_FIFOQ ),
+   _msgs(),
+   _Notify( false ),
+   _SleepMillis( 1 )
+{ ; }
 
 EventPump::~EventPump()
 {
@@ -90,7 +102,8 @@ bool EventPump::GetOneUpd( Update &rtn )
       bUpd = ( (rt=_msgs.begin()) != _msgs.end() );
       if ( bUpd ) {
          msg = (*rt);
-         upd = _ch.ToUpdate( *msg );
+         if ( _sub )
+         upd = _sub->ToUpdate( *msg );
          rtn = upd;
          _msgs.erase( rt );
          delete msg;
@@ -158,9 +171,17 @@ void EventPump::Wait( double dWait )
    d0   = dNow();
    dSlp = 0.001 * (double)_SleepMillis;
    age  = 0;
-   for ( ; !_Notify && ( age < dWait ); _ch.Sleep( dSlp ), age = dNow()-d0 );
+   for ( ; !_Notify && ( age < dWait ); _Sleep( dSlp ), age = dNow()-d0 );
    _Notify = false;
    Py_BLOCK_THREADS
+}
+
+void EventPump::_Sleep( double dSlp )
+{
+   if ( _sub )
+      _sub->Sleep( dSlp );
+   else if ( _adm )
+      _adm->Sleep( dSlp );
 }
 
 

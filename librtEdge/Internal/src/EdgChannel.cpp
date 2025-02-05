@@ -29,8 +29,9 @@
 *     12 JAN 2024 jcs  Build 67: Buffer.h; TapeHeader.h
 *     12 SEP 2024 jcs  Build 71: Handle !::mddSub_ParseHdr()
 *     22 DEC 2024 jcs  Build 74: ConnCbk()
+*      4 FEB 2025 jcs  Build 75: ReadOnce()
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -727,15 +728,43 @@ void EdgChannel::OnRead()
 {
    Locker           lck( _mtx );
    rtEdgeChanStats &st = stats();
+   int              tot, nb;
+
+   // Normal (old) processing
+
+   if ( !_bLowLatency ) {
+      Socket::OnRead();
+      _OnRead();
+      return;
+   }
+
+   // Low Latency
+
+   setNonBlocking();
+   for ( tot=0; (nb=ReadOnce()) > 0; ) {
+      nb         = gmax( nb,0 );
+      st._nByte += _bPub ? 0 : nb;
+      tot       += nb;
+      if ( !nb )
+         break; // for-tot
+      _OnRead();
+   }
+   setBlocking();
+#if !defined(WIN32)
+   if ( !tot )
+      OnException();
+#endif // !defined(WIN32)
+}
+
+void EdgChannel::_OnRead()
+{
+   Locker           lck( _mtx );
+   rtEdgeChanStats &st = stats();
    const char      *cp;
    mddMsgBuf        b;
    mddMsgHdr        h;
    struct timeval   tv;
    int              i, sz, nMsg, nb, nL;
-
-   // 1) Base class drains channel and populates _in / _cp
-
-   Socket::OnRead();
 
    // 2) OK, now we chop up ...
 

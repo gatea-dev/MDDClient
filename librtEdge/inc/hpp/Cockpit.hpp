@@ -8,8 +8,9 @@
 *     21 JAN 2018 jcs  Build 39: protected, not private
 *     26 OCT 2022 jcs  Build 58: CxtMap
 *     22 JAN 2024 jcs  Build 67: Cockpit._cMtx
+*      5 FEB 2025 jcs  Build 75: Cockpit : public rtEdge
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Cockpit_H
 #define __RTEDGE_Cockpit_H
@@ -267,7 +268,7 @@ private:
  * Use the (reusable) Message class to parse incoming messages 
  */
 
-class Cockpit
+class Cockpit : public rtEdge
 {
 	////////////////////////////////////
 	// Constructor / Destructor

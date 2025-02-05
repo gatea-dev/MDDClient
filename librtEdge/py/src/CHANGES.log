@@ -30,7 +30,25 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 12  23-10-xx
+ * ### Build 14  25-02-05
+ *
+ * -# class EdgMon
+ *
+ * -# libMDDirect.py:
+ *    - __del__ : LVC, LVCAdmin, rtEdgeSubscriber
+ *    - libMDDirect.LVCAdmin : OnConnect() / OnACK() / OnNAK()
+ *
+ * -# LVCAdmin.OnConnect() and friends:
+ *    - libMDDirect.LVCAdmin : MDDirect.LVCAdminRead() / Buried Thread
+ *    - libMDDirect.LVCAdmin.OnConnect() and friends
+ *
+ *
+ * ### Build 13  24-03-27
+ * 
+ * -# Python 3.11
+ *
+ *
+ * ### Build 12  23-10-17
  * 
  * -# More tuple-based leaks : mdd_PyList_PackX()
  *    - MDDpyLVC.PyGetTickers()

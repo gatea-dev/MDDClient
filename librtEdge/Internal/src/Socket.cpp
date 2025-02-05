@@ -30,8 +30,9 @@
 *      5 JAN 2024 jcs  Build 67: Buffer.h
 *      4 MAR 2024 jcs  Build 69: BufferedIO
 *     21 APR 2024 jcs  Build 71: _SendPing() / Write() : Lock _mtx
+*      4 FEB 2025 jcs  Build 75: ReadOnce(); _bLowLatency
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -79,6 +80,7 @@ Socket::Socket( const char *pHosts, bool bConnectionless, bool bCircBuf ) :
    _bLatency( false ),
    _bRandomize( false ),
    _bIdleCbk( false ),
+   _bLowLatency( false ),
    _ovrFloMtx(),
    _overflow(),
    _tHbeat( 3600 ),
@@ -516,6 +518,9 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
       case ioctl_getBufferedIO:
          *p32 = _bufIO;
          return true;
+      case ioctl_lowLatency:
+         _bLowLatency = i32 ? true : false; 
+         return true;
       default:
          break;
    }
@@ -529,25 +534,17 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
 void Socket::OnRead()
 {
    rtEdgeChanStats &st = stats();
-   int              tot, nb, nL;
+   int              tot, nb;
 
    // Drain ; Connectionless is 1 read ...
 
    setNonBlocking();
-   if ( !(nL=_in.nLeft()) )
-      _in.Grow( _in.nAlloc() );
-   nL = _in.nLeft();
-   if ( _bConnectionless ) {
-      _in.Reset();
-      nb         = _in.ReadIn( fd(), nL );
-      tot        = nb;
-      st._nByte += _bPub ? 0 : nb;
-   }
+   if ( _bConnectionless )
+      tot = ReadOnce();
    else {
-      for ( tot=0; (nb=_in.ReadIn( fd(), nL )) > 0; ) {
+      for ( tot=0; (nb=ReadOnce()) > 0; ) {
          nb         = gmax( nb,0 );
          st._nByte += _bPub ? 0 : nb;
-         nL        -= nb;
          tot       += nb;
       }
    }
@@ -761,6 +758,31 @@ int Socket::setNonBlocking()
 #endif // WIN32
    }
    return _flags;
+}
+
+int Socket::ReadOnce()
+{
+   rtEdgeChanStats &st = stats();
+   int              nb, nL;
+
+   // Caller sets into non-blocking
+
+   if ( !(nL=_in.nLeft()) )
+      _in.Grow( _in.nAlloc() );
+   nL = _in.nLeft();
+   if ( _bConnectionless ) {
+      _in.Reset();
+      nb         = _in.ReadIn( fd(), nL );
+      st._nByte += _bPub ? 0 : nb;
+   }
+   else {
+      if ( (nb=_in.ReadIn( fd(), nL )) > 0 ) {
+         nb         = gmax( nb,0 );
+         st._nByte += _bPub ? 0 : nb;
+         nL        -= nb;
+      }
+   }
+   return nb;
 }
 
 void Socket::setBlocking()

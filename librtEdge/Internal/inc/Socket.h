@@ -23,8 +23,9 @@
 *      5 JAN 2024 jcs  Build 67: Buffer.h
 *      4 MAR 2024 jcs  Build 69: Buffered IO
 *     22 DEC 2024 jcs  Build 74: ConnCbk()
+*      4 FEB 2025 jcs  Build 75: ReadOnce(); _bLowLatency
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_SOCKET_H
 #define __EDGLIB_SOCKET_H
@@ -83,6 +84,7 @@ protected:
 	bool               _bLatency;
 	bool               _bRandomize;
 	bool               _bIdleCbk;
+	bool               _bLowLatency;
 	Mutex              _ovrFloMtx;
 	string             _overflow;
 	int                _tHbeat;
@@ -148,8 +150,9 @@ protected:
 	int         _AddAttr( mddMsgHdr &, const char *, char * );
 
 	// Helpers
-private:
+protected:
 	int  setNonBlocking();
+	int  ReadOnce();
 	void setBlocking();
 	int  _GetError();
 	bool NagleOff();

@@ -8,8 +8,9 @@
 *      . . .
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*      5 FEB 2025 jcs  Build 14: _adm
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #ifndef __MDDPY_EVTPMP_H
 #define __MDDPY_EVTPMP_H
@@ -20,6 +21,7 @@
 // Forwards
 //////////////
 class MDDpySubChan;
+class MDDpyLVCAdmin;
 class rtMsg;
 
 
@@ -29,17 +31,19 @@ class rtMsg;
 class EventPump
 {
 protected:
-	MDDpySubChan &_ch;
-	RTEDGE::Mutex _mtx;
-	Updates       _upds;  // Conflated
-	UpdateFifo    _updFifo;
-	rtMsgs        _msgs;  // Unconflated
-	volatile bool _Notify;
-	int           _SleepMillis;
+	MDDpySubChan  *_sub;
+	MDDpyLVCAdmin *_adm;
+	RTEDGE::Mutex  _mtx;
+	Updates        _upds;  // Conflated
+	UpdateFifo     _updFifo;
+	rtMsgs         _msgs;  // Unconflated
+	volatile bool  _Notify;
+	int            _SleepMillis;
 
 	// Constructor / Destructor
 public:
 	EventPump( MDDpySubChan & );
+	EventPump( MDDpyLVCAdmin & );
 	~EventPump();
 
 	// Access / Operations
@@ -56,7 +60,9 @@ public:
 	void SleepMillis( int );
 	void Notify();
 	void Wait( double );
-
+private:
+	void _Sleep( double );
+ 
 }; // class EventPump
 
 

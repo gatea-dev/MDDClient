@@ -28,8 +28,9 @@
 #     28 MAR 2024 jcs  MDDirect311
 #     30 APR 2024 jcs  LVC _SetData() arg mismatch
 #      6 JAN 2025 jcs  list( keys() )
-#     21 JAN 2025 jcs  EdgMon
-#     29 JAN 2025 jcs  LVCAdmin : schema=None means no argument
+#     21 JAN 2025 jcs  Build 13: EdgMon
+#     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
+#      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -373,6 +374,11 @@ class rtEdgeSubscriber( threading.Thread ):
       self._bThrMD = False
       self._msg    = rtEdgeData()
       self._ready  = threading.Event()
+
+## \cond
+   def __del__( self ):
+      self.Stop()
+## \endcond
 
    ########################
    # Returns Version and Build info
@@ -741,8 +747,9 @@ class rtEdgeSubscriber( threading.Thread ):
             bUP = ( kv[0].strip() == 'UP' )
             self.OnService( kv[1], bUP )
          elif mt == MDDirectEnum.EVT_CONN:
-            ( ty, pMsg )  = blob.split('|')
-            self.OnConnect( pMsg, ty.strip() )
+            ( ty, pMsg ) = blob.split('|')
+            bUP          = ( ty.strip() == 'UP' )
+            self.OnConnect( pMsg, bUP )
          elif mt == MDDirectEnum.EVT_SCHEMA:
             self._schema = rtEdgeSchema( blob )
             self.OnSchema( self._schema )
@@ -775,6 +782,11 @@ class LVC:
    def __init__( self ):
       self._cxt    = None
       self._schema = None
+
+## \cond
+   def __del__( self ):
+      self.Close()
+## \endcond
 
    ########################
    # Returns Field ID from Field Name in Schema
@@ -894,18 +906,34 @@ class LVC:
 #
 # Control channel to LVC : Add, Refresh Tickers
 #
+# You get notified of channel events via:
+# + OnConnect()
+# + OnAdminACK()
+# + OnAdminNAK()
+#
 # Member | Description
 # --- | ---
 # _cxt    | LVCAdmin Context from MDDirect library
 #
-class LVCAdmin:
+class LVCAdmin( threading.Thread ):
    ########################
    # Constructor : Create and Connect to LVCAdmin channel
    #
    # @param conn : host:port of LVC Admin Channel
    ########################
    def __init__( self, conn='localhost:8775' ):
-      self._cxt = MDDirect.LVCAdminOpen( conn )
+      threading.Thread.__init__( self )
+      self._cxt   = MDDirect.LVCAdminOpen( conn )
+      self._run   = True
+      self._tid   = None
+      self._ready = threading.Event()
+      self.start()
+      self._ready.wait()
+
+## \cond
+   def __del__( self ):
+      self.Close()
+## \endcond
 
    ########################
    # Add Broadcast Data Stream (BDS) to LVC
@@ -988,13 +1016,93 @@ class LVCAdmin:
 
    ########################
    # Close LVCAdmin channel
-   #
-   # @see Open()
    ########################
    def Close( self ):
+      self._run = False
+      if self._tid:
+         self.join()
+      self._tid = None
       MDDirect.LVCAdminClose( self._cxt )
       self._cxt = None
 
+   ########################
+   # Called asynchronously when we connect or disconnect from LVCAdmin.
+   #
+   # Override this method to take action when you connect or disconnect
+   # from LVCAdmin.
+   #
+   # @param msg - Textual description of connect event
+   # @param bUP - True if UP; False if DOWN
+   ########################
+   def OnConnect( self, msg, bUP ):
+      pass
+
+   ########################
+   # Called asynchronously when an NAK message arrives
+   #
+   # Override this method to take action on Admin ACK
+   #
+   # @param bAdd - true if ADD; false if DEL
+   # @param svc - Service Name
+   # @param tkr - Ticker Name
+   ########################
+   def OnAdminACK( self, bAdd, svc, tkr ):
+      pass
+
+   ########################
+   # Called asynchronously when an NAK message arrives
+   #
+   # Override this method to take action on Admin ACK
+   #
+   # @param bAdd - true if ADD; false if DEL
+   # @param svc - Service Name
+   # @param tkr - Ticker Name
+   ########################
+   def OnAdminACK( self, bAdd, svc, tkr ):
+      pass
+
+## \cond
+   #################################
+   # (private) threading.Thread Interface
+   #
+   # MDDirect.Read() returns as follows:
+   #    EVT_CONN   : UP|Message or 
+   #                 DOWN|Mesasge
+   #    EVT_SVC    : ACK|ADD|service|ticker or
+   #                 NAK|ADD|service|ticker or
+   #                 ACK|DEL|service|ticker or
+   #                 NAK|DEL|service|ticker or
+   #################################
+   def run( self ):
+      self._tid = threading.currentThread().ident
+      self._ready.set()
+      #
+      # Drain until stopped
+      #
+      msg = self._msg
+      while self._run:
+         rd = MDDirect.LVCAdminRead( self._cxt, 0.25 )
+         if not rd:
+            continue ## while
+         ( mt, blob ) = rd
+         if mt == MDDirectEnum.EVT_CONN:
+            ( ty, pMsg ) = blob.split('|')
+            bUP          = ( ty strip() == 'UP' )
+            self.OnConnect( pMsg, bUP )
+         elif mt == MDDirectEnum.EVT_SVC:
+            kv  = blob.split('|')
+            try:    ack = ( kv[0] == 'ACK' )
+            except: ack = False
+            try:    add = ( kv[1] == 'ADD' )
+            except: add = False
+            try:    svc = kv[2]
+            except: svc = 'undefined'
+            try:    tkr = kv[3]
+            except: tkr = 'undefined'
+            if ack:
+            else:   self.On
+      return
+## \endcond
 
 ## \cond
 ######################################
