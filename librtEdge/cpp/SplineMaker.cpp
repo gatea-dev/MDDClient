@@ -1,6 +1,7 @@
 /******************************************************************************
 *
 *  SplineMaker.cpp
+*     TODO : Interactive
 *
 *  REVISION HISTORY:
 *     17 DEC 2022 jcs  Created (from SplineMaker.cs)

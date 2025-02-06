@@ -383,10 +383,13 @@ class rtEdgeSubscriber( threading.Thread ):
       self._msg    = rtEdgeData()
       self._ready  = threading.Event()
 
-## \cond
+   ########################
+   # Destructor : Called at garbage collection time 
+   # 
+   # @see Stop()
+   ########################
    def __del__( self ):
       self.Stop()
-## \endcond
 
    ########################
    # Returns Version and Build info
@@ -791,10 +794,13 @@ class LVC:
       self._cxt    = None
       self._schema = None
 
-## \cond
+   ########################
+   # Destructor : Called at garbage collection time 
+   # 
+   # @see Close()
+   ########################
    def __del__( self ):
       self.Close()
-## \endcond
 
    ########################
    # Returns Field ID from Field Name in Schema
@@ -938,10 +944,13 @@ class LVCAdmin( threading.Thread ):
       self.start()
       self._ready.wait()
 
-## \cond
+   ########################
+   # Destructor : Called at garbage collection time
+   #
+   # @see Close()
+   ########################
    def __del__( self ):
       self.Close()
-## \endcond
 
    ########################
    # Add Broadcast Data Stream (BDS) to LVC
