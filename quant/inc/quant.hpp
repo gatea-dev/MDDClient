@@ -5,7 +5,7 @@
 *
 *  REVISION HISTORY:
 *     31 OCT 2023 jcs  Created (from librtEdge).
-*     25 JAN 2025 jcs  Build  3: WIN64
+*     18 FEB 2025 jcs  Build  3: WIN64; mainpage
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -14,6 +14,35 @@
 #include <math.h>
 #include <string>
 #include <vector>
+
+/**
+ * \mainpage quant API Reference Manual
+ *
+ * quant is a set of header files for doing basic FinTech quantative 
+ * calculations.  2 namespaces are available:
+ *
+ * Namespace | Source | Description
+ * --- | --- | ---
+ * GREEK | Hull | Option Greeks - Implied Vol, Delta, Gamma and friends
+ * QUANT | NumRec in C | Cubic Spline, Fast Fourier Transform and friends
+ *
+ * The following sources are used:
+ *
+ * Source | Book
+ * --- | ---
+ * Hull | Options, Futures and Other Derivatives by John C Hull, (c) 1997
+ * NumRec in Cc | Numerical Recipes in C by Press, Vetterling, et al (c) 1992
+ * 
+ * ### Usage 
+ *
+ * This module is a set of header files, rather than a compiled library.  To 
+ * use the functionality, simply  add the following to your code:
+ *
+ * \code
+ * #include <quant.hpp>
+ * \endcode
+ *
+ */
 
 #ifdef WIN32
 #define M_PI           3.14159265358979323846  /* pi */
@@ -108,9 +137,6 @@ typedef struct {
 #include <QUANT/CubicSpline.hpp>
 #include <QUANT/FFT.hpp>
 #include <QUANT/LU.hpp>
-#ifdef _SURFACE_NOT_READY
-#include <struct/Surface.hpp>
-#endif /* _SURFACE_NOT_READY */
 
 /*
  * Hull : Options, Futures and Other Derivitives
