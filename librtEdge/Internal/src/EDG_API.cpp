@@ -30,7 +30,7 @@
 *     22 OCT 2023 jcs  Build 65: OS_SetThreadName()
 *     14 JAN 2024 jcs  Build 67: No mo OFF_T
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
-*      5 FEB 2025 jcs  Build 75: Cockpit_Destroy : Kill thread first
+*     19 FEB 2025 jcs  Build 75: Cockpit_Destroy : Kill thread first; rtEdge_ClockNs()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -1408,6 +1408,11 @@ char rtEdge_SetMDDirectMon( rtEdge_Context cxt,
 //////////////////////////////
 // Utilities
 //////////////////////////////
+double rtEdge_ClockNs()
+{
+   return Logger::dblNow();
+}
+
 double rtEdge_TimeNs()
 {
    return Logger::Time2dbl( Logger::tvNow() );

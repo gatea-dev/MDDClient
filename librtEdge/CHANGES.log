@@ -65,6 +65,7 @@ Features To Add
  *    - Socket.ReadOnce()
  *    - EdgChannel._OnRead()
  *    - ioctl_lowLatency
+ *    - rtEdge_ClockNs()
  *
  *
  * ### Build 74 24-12-20

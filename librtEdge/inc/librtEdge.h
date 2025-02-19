@@ -27,7 +27,7 @@
 *     26 JUN 2024 jcs  Build 72: LVC_SetFilter( flds, svcs )
 *      9 SEP 2024 jcs  Build 73: LVCStatMon.hpp
 *      7 NOV 2024 jcs  Build 74: ioctl_setRawLog
-*      4 FEB 2025 jcs  Build 75: Surface.hpp; 
+*     19 FEB 2025 jcs  Build 75: rtEdge_ClockNs()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -2134,6 +2134,18 @@ void rtEdge_Log( const char *pLog, int dbgLvl );
 /**********************
  * Library Utilities  *
  *********************/
+
+/**
+ * \brief Returns clock time in mikes
+ *
+ * OS | Clock Time | OS Call
+ * --- | --- | ---
+ * Linux64 | Unix Time | gettimeofday()
+ * Win64 | Clock Ticks | QueryPerformanceCounter()
+ *
+ * \return Clock time in mikes
+ */
+double rtEdge_ClockNs( void );
 
 /**
  * \brief Returns Unix system time as a double including microseconds

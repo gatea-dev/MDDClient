@@ -32,7 +32,7 @@
 *     13 JAN 2024 jcs  Build 67: IsFile()
 *      4 MAR 2024 jcs  Build 69: XxxBufferedIO()
 *     24 APR 2024 jcs  Build 71: unix2rtDateTime() crash : WIN64
-*      4 FEB 2025 jcs  Build 75: pDateTimeUs(); SetLowLatency()
+*     19 FEB 2025 jcs  Build 75: pDateTimeUs(); SetLowLatency(); ClockNs()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -242,9 +242,19 @@ public:
 	}
 
 	/**
-	 * \brief Returns clock counter to nanosecond granularity
+	 * \brief Returns clock counter to mike granularity
 	 *
-	 * \return Clock counter to nanosecond granularity
+	 * \return Clock counter to mike granularity
+	 */
+	static double ClockNs()
+	{
+	   return ::rtEdge_ClockNs();
+	}
+
+	/**
+	 * \brief Returns Unix Time to microsecond granularity
+	 *
+	 * \return Unix Time to microsecond granularity
 	 */
 	static double TimeNs()
 	{
