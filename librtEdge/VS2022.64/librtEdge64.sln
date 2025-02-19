@@ -20,7 +20,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Publish", "Publish.vcxproj"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Subscribe", "Subscribe.vcxproj", "{30D6C9AF-0E83-AEF5-A3A7-EBA031A9796D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test.vcxproj", "{7952E99C-C5F2-5731-36D0-639E399725E4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoundTrip", "RoundTrip.vcxproj", "{7952E99C-C5F2-5731-36D0-639E399725E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
