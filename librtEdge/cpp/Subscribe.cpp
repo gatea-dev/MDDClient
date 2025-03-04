@@ -19,8 +19,9 @@
 *     11 JUL 2023 jcs  Build 64: -h <hostOnly>
 *     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
 *     20 DEC 2024 jcs  Build 74: -chain
+*      4 MAR 2025 jcs  Build 75: MySubscribe()
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
@@ -296,9 +297,32 @@ public:
 
       // All OK??
 
-      if ( IsTable() )
+      if ( _eolFid && IsTable() )
          _pTbl = new char[K*K];
    }
+
+   void MySubscribe( const char *svc, RTEDGE::Strings &tkrs )
+   {
+      const char *tkr;
+      void       *arg;
+      size_t      i, nt;
+
+      // Don't require _eolFid
+
+      if ( IsTable() && !_pTbl )
+         _pTbl = new char[K*K];
+
+      // Open all
+
+      nt = tkrs.size();
+      for ( i=0; i<nt; i++ ) {
+         tkr = tkrs[i].data();
+         arg = ( IsTable() && ( nt > 1 ) ) ? (VOID_PTR)(i+2) : (void *)0;
+         Subscribe( svc, tkr, arg );
+      }
+   }
+
+
 
    ///////////////////////////////////
    // RTEDGE::SubChannel Notifications
@@ -683,7 +707,6 @@ int main( int argc, char **argv )
    const char *pt, *svr, *usr, *svc, *tkr, *t0, *t1, *tf, *r0, *r1, *r2;
    char       *cp, *rp, sTkr[K];
    bool        bCfg, aOK, bBin, bStr, bVec, bChn, bTape, bQry, bPort;
-   void       *arg;
    string      s;
    u_int64_t   s0;
    double      slp;
@@ -691,6 +714,21 @@ int main( int argc, char **argv )
    int         i, nt, tRun, ti, sn;
    ::MDDResult res; 
    ::MDDRecDef rd;
+
+
+   /////////////////////
+   // Windoze
+   /////////////////////
+#ifdef WIN32
+   HANDLE hOut;
+   DWORD  mode;
+
+   hOut = ::GetStdHandle( STD_OUTPUT_HANDLE );
+   mode = 0;
+   ::GetConsoleMode( hOut, &mode );
+   mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+   ::SetConsoleMode(hOut, mode);
+#endif // WIN32
 
    /////////////////////
    // Quickie checks
@@ -867,7 +905,7 @@ int main( int argc, char **argv )
 
    // Open Items; Run until user kills us
 
-   vector<string *> tkrs;
+   RTEDGE::Strings  tkrs;
    MyStream        *str;
    MyVector        *vec;
    MyChain         *chn;
@@ -887,18 +925,18 @@ int main( int argc, char **argv )
          }
          cp[1] = '\0';
          if ( strlen( sTkr ) )
-            tkrs.push_back( new string( sTkr ) );
+            tkrs.push_back( string( sTkr ) );
       }
       ::fclose( fp );
    }
    else if ( tkr )
-      tkrs.push_back( new string ( tkr ) );
+      tkrs.push_back( string( tkr ) );
    nt  = (int)tkrs.size();
    slp = (r2=::getenv( "__JD_SLEEP" )) ? atof( r2 ) : 2.5; 
    if ( bStr ) {
       ch.Sleep( slp); // Wait for protocol negotiation to finish
       for ( i=0; i<nt; i++ ) {
-         str = new MyStream( svc, tkrs[i]->data() );
+         str = new MyStream( svc, tkrs[i].data() );
          ch.Subscribe( *str );
          printf( "ByteStream.Subscribe( %s,%s )\n", svc, str->Ticker() );
       }
@@ -906,7 +944,7 @@ int main( int argc, char **argv )
    else if ( bVec ) {
       ch.Sleep( slp ); // Wait for protocol negotiation to finish
       for ( i=0; i<nt; i++ ) {
-         vec = new MyVector( svc, tkrs[i]->data() );
+         vec = new MyVector( svc, tkrs[i].data() );
          vec->Subscribe( ch );
          printf( "Vector.Subscribe( %s,%s )\n", svc, vec->Ticker() );
       }
@@ -914,17 +952,15 @@ int main( int argc, char **argv )
    else if ( bChn ) {
       ch.Sleep( slp ); // Wait for protocol negotiation to finish
       for ( i=0; i<nt; i++ ) {
-         chn = new MyChain( ch, svc, tkrs[i]->data() );
+         chn = new MyChain( ch, svc, tkrs[i].data() );
          ch.Subscribe( *chn );
          printf( "Chain.Subscribe( %s,%s )\n", svc, chn->name() );
       }
    }
    else if ( ch._bds )
-      for ( i=0; i<nt; ch.OpenBDS( svc, tkrs[i++]->data(), arg_ ) );
-   else {
-      arg = ch.IsTable() ? (void *)0 : arg_;
-      for ( i=0; i<nt; ch.Subscribe( svc, tkrs[i++]->data(), arg ) );
-   }
+      for ( i=0; i<nt; ch.OpenBDS( svc, tkrs[i++].data(), arg_ ) );
+   else
+      ch.MySubscribe( svc, tkrs );
    pt = ch.IsSnapshot() ? "snap again" : "stop";
    if ( ch.IsTape() ) {
       if ( t0 && t1 ) {

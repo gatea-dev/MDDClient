@@ -50,7 +50,7 @@ public:
       double d0, d1, D0, D1;
       int    fid, sec, uS, age;
 
-      d1  = TimeNs();
+      d1  = ClockNs();
       fid = _TIME_FID;
       sec = (f=msg.GetField( fid++ )) ? f->GetAsInt32() : 0;
       uS  = (f=msg.GetField( fid++ )) ? f->GetAsInt32() : 0;
@@ -194,7 +194,7 @@ public:
 
       fid = _TIME_FID;
       u.Init( w.tkr(), w._arg, true );
-      dd  = TimeNs();
+      dd  = ClockNs();
       sec = (int)dd;
       dr  = _MIKE * ( dd - sec );
       uS  = (int)dr;

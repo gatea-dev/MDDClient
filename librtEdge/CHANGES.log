@@ -67,6 +67,10 @@ Features To Add
  *    - ioctl_lowLatency
  *    - rtEdge_ClockNs()
  *
+ * -# Subscribe:
+ *    - -table working
+ *    - Windows : SetConsoleMode()
+ *
  *
  * ### Build 74 24-12-20
  *

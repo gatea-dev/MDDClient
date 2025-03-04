@@ -8,6 +8,7 @@
 *     13 OCT 2023 jcs  OptionsSurface
 *     17 DEC 2023 jcs  Build 67: RiskFreeCur
 *     27 JAN 2025 jcs  Build 75: Show LVC file; _BestZ() in quant lib 
+*     26 FEB 2025 jcs  Build 75: Init dZ in debug_SumZ(); Transient LVC 
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -1290,7 +1291,7 @@ public:
 
    double debug_SumZ()
    {
-      double dZ;
+      double dZ = 0.0;
 
       for ( size_t r=0; r<_Z.size(); r++ ) {
          for ( size_t c=0; c<_Z[r].size(); dZ+=_Z[r][c], c++ );
