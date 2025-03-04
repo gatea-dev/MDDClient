@@ -726,7 +726,7 @@ int main( int argc, char **argv )
    hOut = ::GetStdHandle( STD_OUTPUT_HANDLE );
    mode = 0;
    ::GetConsoleMode( hOut, &mode );
-   mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+   mode |= 0x0004; // ENABLE_VIRTUAL_TERMINAL_PROCESSING;
    ::SetConsoleMode(hOut, mode);
 #endif // WIN32
 
