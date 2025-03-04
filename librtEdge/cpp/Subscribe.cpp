@@ -58,6 +58,7 @@ static Renko _zRenko = { 0, 0.0, 0.0, 1.0, (char *)"Black" };
 
 typedef hash_map<int, string>     ColFmtMap;
 typedef hash_map<int, size_t>     FidPosMap;
+typedef hash_map<int, string>     ColSigMap;
 typedef hash_set<int>             FidSet;
 typedef vector<int>               Fids;
 typedef hash_map<int, mddField>   Fields;
@@ -190,9 +191,11 @@ public:
    int             _nUpd;
    Fids            _csvFids;
    RTEDGE::Strings _colFmt;
+   vector<int>     _colSig;
    FidSet          _colFidSet;
    FidPosMap       _fidPosMap;
    ColFmtMap       _colFmtMap;
+   ColSigMap       _colSigMap;
    int             _eolFid;
    char           *_pTbl;
    Renko           _Renko;
@@ -212,9 +215,11 @@ public:
       _nUpd( 0 ),
       _csvFids(),
       _colFmt(),
+      _colSig(),
       _colFidSet(),
       _fidPosMap(),
       _colFmtMap(),
+      _colSigMap(),
       _eolFid( 0 ),
       _pTbl( (char *)0 ),
       _Renko( _zRenko ),
@@ -261,11 +266,11 @@ public:
    {
       RTEDGE::Strings sdb;
       string          s( fids );
-      char           *t1, *t2, fmt[K];
-      int             fid, wid;
+      char           *t1, *t2, *t3, fmt[K], sFmt[K];
+      int             fid, wid, sig;
       size_t          pos;
 
-      // -table fid:colW,fid:colW,...,eolFid
+      // -table fid[:colW:sigFig],fid:colW,...,eolFid
 
       t1 = (char *)s.data();
       t1 = ::strtok( t1, "," );
@@ -275,19 +280,26 @@ public:
       pos += _TKR_LEN;
       for ( size_t i=0; !_eolFid && i<sdb.size(); i++ ) {
          t1  = (char *)sdb[i].data();
-         t1  = ::strtok( t1, ":" );
-         t2  = ::strtok( NULL, ":" );
+         t1  = ::strtok( t1, ":" );    // fid
+         t2  = ::strtok( NULL, ":" );  // colWid
+         t3  = ::strtok( NULL, ":" );  // sigFig
          fid = atoi( t1 );
          wid = t2 ? atoi( t2 ) : 0;
+         sig = t3 ? atoi( t3 ) : 0;
          if ( !fid )
             break; // for
          if ( wid ) {
             _csvFids.push_back( fid );
             _colFidSet.insert( fid );
             sprintf( fmt, "%%%ds", wid );
+            ::memset( sFmt, 0, sizeof( sFmt ) );
+            if ( sig )
+               sprintf( sFmt, "%%.%df", sig );
             _colFmt.push_back( string( fmt ) );
+            _colSig.push_back( sig );
             _fidPosMap[fid] = pos;
             _colFmtMap[fid] = string( fmt );
+            _colSigMap[fid] = string( sFmt );
             pos += ::abs( wid );
             pos += 1; // " "
          }
@@ -477,14 +489,16 @@ private:
       FidSet              &cols = _colFidSet;
       FidPosMap           &pos  = _fidPosMap;
       ColFmtMap           &cdb  = _colFmtMap;
+      ColSigMap           &sdb  = _colSigMap;
       mddField            *fdb  = (mddField *)msg.Fields();
       FidPosMap::iterator it;
       ColFmtMap::iterator ct;
+      ColSigMap::iterator st;
       RTEDGE::FieldDef   *def;
       mddField            f;
       Fields              row;
-      char               *cp;
-      const char         *pn, *fmt, *pf;
+      char               *cp, sig[K];
+      const char         *pn, *fmt, *pf, *sFmt;
       int                 i, nc, nf, fid;
       size_t              nRow, nCol;
 
@@ -522,10 +536,17 @@ private:
                continue; // for-i
             if ( (ct=cdb.find( fid )) == cdb.end() )
                continue; // for-i
+            if ( (st=sdb.find( fid )) == sdb.end() )
+               continue; // for-i
             _uFld.Set( f );
             nCol = (*it).second;
             fmt  = (*ct).second.data();
+            sFmt = (*st).second.size() ?  (*st).second.data() : NULL;
             pf   = _uFld.GetAsString();
+            if ( sFmt ) {
+               sprintf( sig, sFmt, _uFld.GetAsDouble() );
+               pf = (const char *)sig;
+            }
             cp  += sprintf( cp, ANSI_POS, nRow, nCol );
             cp  += sprintf( cp, fmt, pf );
             cp  += sprintf( cp, " " );
@@ -779,7 +800,7 @@ int main( int argc, char **argv )
       s += "       [ -bds true ] \\ \n";
       s += "       [ -tapeDir <true for to pump in tape (reverse) dir> ] \\ \n";
       s += "       [ -query <true to dump directory, if available> ] \\ \n";
-      s += "       [ -table fid:colW,fid:colW,...,eolFid ] \\ \n";
+      s += "       [ -table fid[:colW:sigFig],fid:colW,...,eolFid ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
       printf( "      -h       : %s\n", svr );
