@@ -23,6 +23,7 @@
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     18 MAR 2024 jcs  Build 70: AddField( int, double, int precision=10 )
 *     20 JAN 2025 jcs  Build 75: AddField( rtTime, bool bTimeSec=false )
+*      5 MAR 2025 jcs  Build 76: bool AddVector() / _MaxVector
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -37,6 +38,7 @@
 static double _MIL       = 1000000.0;
 static double _MAX_DBL   =     879.0; // 879.6093022207 = 0x7ffffffffff 
 static double _MAX_FLOAT =   53000.0; // 53687.0911 = 0x1fffffff 
+static size_t _MaxVector = ( K*K ) / sizeof( double ); // 1MB buf in Edge3
 #endif // DOXYGEN_OMIT   
 
 namespace RTEDGE
@@ -593,17 +595,22 @@ public:
 	 * \param fid - Field ID
 	 * \param src - Vector array of doubles to add
 	 * \param precision - Vector Precision 0 to 20
+	 * \return true if added; false if max size exceeded
 	 * \see Publish()
 	 */
-	void AddVector( int fid, DoubleList &src, int precision=10 )
+	bool AddVector( int fid, DoubleList &src, int precision=10 )
 	{
 	   rtFIELD f;
+	   bool    ok;
 
 	   f._type       = rtFld_vector;
 	   f._fid        = fid;
 	   f._vPrecision = precision;
 	   f._val._buf   = _StoreVector( src );
-	   _Add( f );
+	   ok            = ( f._val._buf._dLen != 0 );
+	   if ( ok )
+	      _Add( f );
+	   return ok;
 	}
 
 	/**
@@ -614,9 +621,10 @@ public:
 	 * \param fid - Field ID
 	 * \param src - Surface array of doubles to add
 	 * \param precision - Vector Precision 0 to 20
+	 * \return true if added; false if not
 	 * \see Publish()
 	 */
-	void AddSurface( int fid, DoubleGrid &src, int precision=10 )
+	bool AddSurface( int fid, DoubleGrid &src, int precision=10 )
 	{
 	   DoubleList v;
 
@@ -625,7 +633,7 @@ public:
 
 	      v.insert( v.end(), s.begin(), s.end() );
 	   }
-	   AddVector( fid, v, precision );
+	   return AddVector( fid, v, precision );
 	}
 
 	/**
@@ -633,16 +641,17 @@ public:
 	 * 
 	 * \param fid - Field ID
 	 * \param src - Vector array of DateTime's to add
+	 * \return true if added; false if not
 	 * \see Publish()
 	 */
-	void AddVector( int fid, DateTimeList &src )
+	bool AddVector( int fid, DateTimeList &src )
 	{
 	   DoubleList dst;
 	   size_t     i, n;
 
 	   n = src.size();
 	   for ( i=0; i<n; dst.push_back( rtEdgeDateTime2unix( src[i] ) ), i++ );
-	   AddVector( fid, dst, 6 ); 
+	   return AddVector( fid, dst, 6 ); 
 	}
 
 
@@ -818,7 +827,7 @@ public:
 	   ByteStreamFld f;
 	   const char   *fmt;
 	   char         *cp, buf[K];
-	   int           i, nf, np, off, len, fid, fSz, byMsg;
+	   int           i, nf, np, off, len, fid, fSz, byMsg, mSz, bSz;
 	   double        dSlp;
 
 	   // Quick Check : Channel must be binary
@@ -841,6 +850,13 @@ public:
 	   cp           = pBuf._data;
 	   len          = pBuf._dLen;
 	   _bPubByteStr = true;
+	   /*
+	    * 25-03-06 Build 76 : Ensure we have enough buffer space
+	    */
+	   bSz = _pub.GetTxMaxBufSize();
+	   mSz = pBuf._dLen + K; // fidOff(), fidLen(), etc.
+	   if ( mSz > bSz )
+	      bSz = _pub.SetTxBufSize( mSz );
 	   for ( i=0,off=0; off<len && _bPubByteStr; i++ ) {
 	      Init( bStr.Ticker(), arg, true );
 	      AddField( bStr.fidOff(), off );
@@ -931,7 +947,14 @@ private:
 
 	rtBUF _StoreVector( DoubleList &v )
 	{
-	   rtBUF rc;
+	   rtBUF rc = { (char *)0, 0 };
+
+	   // Pre-condition
+
+	   if ( v.size() >= _MaxVector )
+	      return rc;
+
+	   // Rock on
 
 	   rc._dLen  = (int)( v.size() * sizeof( double ) );
 	   rc._data  = new char[rc._dLen+4];

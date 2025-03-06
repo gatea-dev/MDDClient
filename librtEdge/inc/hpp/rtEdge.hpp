@@ -916,12 +916,12 @@ public:
 	 * \brief Sets the max queue size on outbound channel to Edge3
 	 *
 	 * \param bufSiz - Max queue size
-	 * \return  GetTxBufSize()
+	 * \return  GetTxMaxBufSize()
 	 */
 	int SetTxBufSize( int bufSiz )
 	{
 	   ::rtEdge_ioctl( _cxt, ioctl_setTxBufSize, &bufSiz );
-	   return GetTxBufSize();
+	   return GetTxMaxBufSize();
 	}
 
 	/**

@@ -8,6 +8,7 @@
 *     29 OCT 2022 jcs  Build 60: DoubleList.
 *     10 JAN 2023 jcs  Build 61: de-lint
 *     24 JAN 2025 jcs  Build 75: swig
+*      6 MAR 2025 jcs  Build 76: _CopyIn() bug
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -230,7 +231,7 @@ public:
 	      off = rc._dLen;
 	      sz  = bs._dLen;
 	      while ( (off+sz) >= rc._nAlloc ) {
-	         aSz        = !rc._nAlloc ? _MIN_VECTOR : ( rc._nAlloc >> 1 );
+	         aSz        = !rc._nAlloc ? _MIN_VECTOR : ( rc._nAlloc << 1 );
 	         cp         = rc._data;
 	         rc._data   = new char[aSz];
 	         rc._nAlloc = aSz;
@@ -549,7 +550,7 @@ public:
 	   pb._dLen = (int)sz;
 	   _str.SetPublishData( pb );
 	   u.Init( _str.Ticker(), StreamID, true );
-	   u.Publish( _str, _fidPayload );
+	   u.Publish( _str, _fidPayload, K, 512 );
 
 	   // Clean up
 
@@ -711,7 +712,7 @@ private:
 	   char          *bp, *cp;
 	   VecWireHdr    *h;
 	   VecWireUpdVal *udb;
-	   DoubleList        img;
+	   DoubleList     img;
 	   VectorUpdate   upd;
 	   VectorValue    v;
 	   u_int64_t      sz, *vdb;

@@ -47,10 +47,10 @@ Features To Add
  *
  * ### Build 76 25-03-xx
  *
- * -# TODO : Big Vector Publishing:
- *    - PubChannel._maxMsgSize / _maxFldSize
- *    - bool Update.AddVector()
- *    - class BigVector : public ByteStream
+ * -# Big Vector Publishing:
+ *    - bool Update.AddVector() / _MaxVector
+ *    - Update.Publish( ByteStream ) : Dynamic _pub.SetTxBufSize() 
+ *    - Subscribe : Socket._in.Init( 4*MB ) : Default ByteStream holds 1MB
  *
  *
  * ### Build 75 25-03-04

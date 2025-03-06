@@ -31,6 +31,7 @@
 *      4 MAR 2024 jcs  Build 69: BufferedIO
 *     21 APR 2024 jcs  Build 71: _SendPing() / Write() : Lock _mtx
 *      4 FEB 2025 jcs  Build 75: ReadOnce(); _bLowLatency
+*      6 MAR 2025 jcs  Build 76: _in.Init( 4MB ) : Default ByteStream 1MB
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -98,7 +99,7 @@ Socket::Socket( const char *pHosts, bool bConnectionless, bool bCircBuf ) :
    _out = bCircBuf ?  new CircularBuffer() : new Buffer();
    if ( bConnectionless )
       _out->SetConnectionless();
-   _in.Init( K*K );
+   _in.Init( 4*K*K );
    _out->Init( K*K );
 
    // host:port,host:port, ...
