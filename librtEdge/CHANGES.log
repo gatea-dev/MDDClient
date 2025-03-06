@@ -45,6 +45,14 @@ Features To Add
  * ## Change Log
  *
  *
+ * ### Build 76 25-03-xx
+ *
+ * -# TODO : Big Vector Publishing:
+ *    - PubChannel._maxMsgSize / _maxFldSize
+ *    - bool Update.AddVector()
+ *    - class BigVector : public ByteStream
+ *
+ *
  * ### Build 75 25-03-04
  *
  * -# PubChannel.Publish() : Clear out Pre-built Payload w/ overflow:
