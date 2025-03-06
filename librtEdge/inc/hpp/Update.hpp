@@ -838,6 +838,13 @@ public:
 	      return 0;
 	   }
 
+	   // Hard-coded : 1 MB
+
+	   while( ( maxFldSiz*maxFld ) > K*K ) {
+	      maxFldSiz >>= 1;
+	      maxFld    >>= 1;
+	   }
+
 	   // Bytes / message; Sleep interval
 
 	   if ( !InRange( K, bytesPerSec, 100*K*K ) )
