@@ -52,6 +52,9 @@ Features To Add
  *    - Update.Publish( ByteStream ) : Dynamic _pub.SetTxBufSize() 
  *    - Subscribe : Socket._in.Init( 4*MB ) : Default ByteStream holds 1MB
  *
+ * -# Subscribe -table:
+ *    - StatusBar()
+ *
  *
  * ### Build 75 25-03-04
  *

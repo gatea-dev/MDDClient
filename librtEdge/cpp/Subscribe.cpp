@@ -25,10 +25,12 @@
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
+#include <stdarg.h>
 #include <vector>
 
 // http://ascii-table.com/ansi-escape-sequences.php
 
+#define _MAX_STS     5
 #define _TICKER      "TICKER"
 #define _TKR_LEN     10
 #define _TKR_FMT     "%-10s"
@@ -197,6 +199,8 @@ public:
    ColFmtMap       _colFmtMap;
    ColSigMap       _colSigMap;
    int             _eolFid;
+   RTEDGE::Strings _stsBar;
+   size_t          _stsRow;
    char           *_pTbl;
    Renko           _Renko;
    Renkos          _rdb;
@@ -221,11 +225,12 @@ public:
       _colFmtMap(),
       _colSigMap(),
       _eolFid( 0 ),
+      _stsBar(),
+      _stsRow( 0 ),
       _pTbl( (char *)0 ),
       _Renko( _zRenko ),
       _rdb()
-   {
-   }
+   { ; }
 
    ~MyChannel()
    {
@@ -332,8 +337,8 @@ public:
          arg = ( IsTable() && ( nt > 1 ) ) ? (VOID_PTR)(i+2) : (void *)0;
          Subscribe( svc, tkr, arg );
       }
+      _stsRow = IsTable() ? ( nt+4 ) : 0; 
    }
-
 
 
    ///////////////////////////////////
@@ -342,15 +347,14 @@ public:
 public:
    virtual void OnConnect( const char *msg, bool bOK )
    {
-      ::fprintf( stdout, "OnConnect( %s,%sOK )\n", msg, bOK ? "" : "NOT " );
-      _flush();
+      _StatusBar( "OnConnect( %s,%sOK )", msg, bOK ? "" : "NOT " );
    }
 
-   virtual void OnService( const char *msg, bool bOK )
+   virtual void OnService( const char *svc, bool bOK )
    {
-      ::fprintf( stdout, "OnService( %s,%sOK )\n", msg, bOK ? "" : "NOT " );
-      _flush();
-   }
+      if ( ::strcmp( svc, "__GLOBAL__" ) )
+         _StatusBar( "OnService( %s,%sOK )", svc, bOK ? "" : "NOT " );
+  }
 
    virtual void OnData( Message &msg )
    {
@@ -449,10 +453,9 @@ public:
       mt  = msg.MsgType();
       svc = msg.Service();
       tkr = msg.Ticker();
-      ::fprintf( stdout, "[%s] %s ( %s,%s ) :%s", tm, mt, svc, tkr, err );
+      _StatusBar( "[%s] %s ( %s,%s ) :%s", tm, mt, svc, tkr, err );
       if ( (off=msg.TapePos()) )
-         ::fprintf( stdout, "; Pos=%ld", off );
-      ::fprintf( stdout, "\n" );
+         ::fprintf( stdout, "; Pos=%ld\n", off );
       _flush();
    }
 
@@ -564,6 +567,8 @@ private:
 
       ::fwrite( _pTbl, cp-_pTbl, 1, stdout );
       _flush();
+      if ( _nUpd == 1 )
+         _ShowStatus();
    }
 
    int _DumpRow( char *bp, Fields &row )
@@ -662,6 +667,49 @@ private:
    void _flush()
    {
       fflush( stdout );
+   }
+
+   void _StatusBar( const char *fmt, ... )
+   {
+      va_list ap;
+      char    bp[8*K], *cp;
+
+      va_start( ap, fmt );
+      cp  = bp;
+      cp += vsprintf( cp, fmt, ap );
+      cp += sprintf( cp, "\n" );
+      va_end( ap );
+      if ( _stsRow ) {
+         _stsBar.push_back( string( bp ) );
+         _ShowStatus();
+      }
+      else
+         ::fprintf( stdout, bp );
+      _flush();
+   }
+
+   void _ShowStatus()
+   {
+      size_t sz;
+
+      // Only if -table
+
+      if ( !_stsRow )
+         return;
+
+      // Roll Tape
+
+      if ( _stsBar.size() > _MAX_STS )
+         _stsBar.erase( _stsBar.begin() );
+      sz = _stsBar.size();
+      for ( size_t i=0; i<sz; i++ ) {
+         ::fprintf( stdout, ANSI_POS, _stsRow+i, (size_t)1 );
+         ::fprintf( stdout, "                              " );
+         ::fprintf( stdout, "                              " );
+         ::fprintf( stdout, ANSI_POS, _stsRow+i, (size_t)1 );
+         ::fprintf( stdout, _stsBar[sz-1-i].data() );
+      }
+      _flush();
    }
 
 }; // class MyChannel
@@ -1009,6 +1057,8 @@ int main( int argc, char **argv )
 
    printf( "Cleaning up ...\n" );
    ch.Stop();
+   if ( ch.IsTable() )
+      printf( ANSI_CLEAR );
    printf( "Done!!\n " );
    return 1;
 }
