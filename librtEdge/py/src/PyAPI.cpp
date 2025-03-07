@@ -1121,7 +1121,7 @@ static PyMethodDef EdgeMethods[] =
 /*
  * Python 3.11
  */
-A
+static PyModuleDef _mddModule = { PyModuleDef_HEAD_INIT,
                                   "MDDirect311",
                                   "MD-Direct for Python 3.11",
                                   -1,
