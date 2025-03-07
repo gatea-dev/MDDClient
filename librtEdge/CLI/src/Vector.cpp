@@ -4,8 +4,9 @@
 *
 *  REVISION HISTORY:
 *     21 OCT 2022 jcs  Created.
+*      7 MAR 2025 jcs  Build 76: std::string - DUH!!
 *
-*  (c) 1994-2022, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include "StdAfx.h"
 #include <Vector.h>
@@ -171,7 +172,7 @@ int Vector::Publish( librtEdge::rtEdgePublisher ^pub, int StreamID, bool bImg )
 ////////////////////////////////////
 String ^Vector::Dump( bool bPage )
 {
-   string s;
+   std::string s;
 
    s = _vec->Dump( bPage );
    return gcnew String( s.data() );
@@ -181,7 +182,7 @@ String ^Vector::Dump( cli::array<VectorValue ^> ^upd, bool bPage )
 {
    RTEDGE::VectorUpdate udb;
    RTEDGE::VectorValue  v;
-   string               s;
+   std::string          s;
    int                  i;
 
    for ( i=0; i<upd->Length; i++ ) {
