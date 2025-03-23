@@ -54,6 +54,7 @@ Features To Add
  *
  * -# Subscribe -table:
  *    - StatusBar()
+ *    - Formatted _DumpRow()
  *
  *
  * ### Build 75 25-03-04

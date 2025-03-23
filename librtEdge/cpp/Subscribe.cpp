@@ -19,7 +19,8 @@
 *     11 JUL 2023 jcs  Build 64: -h <hostOnly>
 *     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
 *     20 DEC 2024 jcs  Build 74: -chain
-*     23 MAR 2025 jcs  Build 75: MySubscribe(); Formatted _DumpRow()
+*      3 MAR 2025 jcs  Build 75: MySubscribe()
+*     23 MAR 2025 jcs  Build 76: Formatted _DumpRow()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
