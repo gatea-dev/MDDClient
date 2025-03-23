@@ -19,7 +19,7 @@
 *     11 JUL 2023 jcs  Build 64: -h <hostOnly>
 *     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
 *     20 DEC 2024 jcs  Build 74: -chain
-*      4 MAR 2025 jcs  Build 75: MySubscribe()
+*     23 MAR 2025 jcs  Build 75: MySubscribe(); Formatted _DumpRow()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -573,13 +573,19 @@ private:
 
    int _DumpRow( char *bp, Fields &row )
    {
-      RTEDGE::Strings &cfmt = _colFmt;
-      mddField         f;
-      Fields::iterator it;
-      char            *cp;
-      const char      *pf;
-      int              fid;
-      size_t           i, nc;
+      RTEDGE::Strings     &cfmt = _colFmt;
+      FidPosMap           &pos  = _fidPosMap;
+      ColFmtMap           &cdb  = _colFmtMap;
+      ColSigMap           &sdb  = _colSigMap;
+      FidPosMap::iterator it;
+      ColFmtMap::iterator ct;
+      ColSigMap::iterator st;
+      mddField            f;
+      Fields::iterator    ft;
+      char               *cp, sig[K];
+      const char         *fmt, *pf, *sFmt;
+      int                 fid, nCol;
+      size_t              i, nc;
 
       // Pre-condition
 
@@ -593,12 +599,32 @@ private:
       for ( i=0; i<nc; i++ ) {
          fid = _csvFids[i];
          pf  = "-";
-         if ( (it=row.find( fid )) != row.end() ) {
-            f = (*it).second;
+         if ( (ft=row.find( fid )) != row.end() ) {
+            f = (*ft).second;
             _uFld.Set( f );
+            if ( (it=pos.find( fid )) == pos.end() )
+               continue; // for-i
+            if ( (ct=cdb.find( fid )) == cdb.end() )
+               continue; // for-i
+            if ( (st=sdb.find( fid )) == sdb.end() )
+               continue; // for-i
+            _uFld.Set( f );
+            nCol = (*it).second;
+            fmt  = (*ct).second.data();
+            sFmt = (*st).second.size() ?  (*st).second.data() : NULL;
+            pf   = _uFld.GetAsString();
+            if ( sFmt ) {
+               sprintf( sig, sFmt, _uFld.GetAsDouble() );
+               pf = (const char *)sig;
+            }
+            cp  += sprintf( cp, fmt, pf );
+            cp  += sprintf( cp, " " );
+#ifdef OBSOLETE_FUCKED
             pf = _uFld.GetAsString();
          }
          cp += sprintf( cp, cfmt[i].data(), pf );
+#endif // OBSOLETE_FUCKED
+         }
          cp += sprintf( cp, " " );
       }
 
