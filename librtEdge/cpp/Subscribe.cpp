@@ -20,7 +20,7 @@
 *     13 JAN 2024 jcs  Build 67: Append 9998 iff !IsFile()
 *     20 DEC 2024 jcs  Build 74: -chain
 *      3 MAR 2025 jcs  Build 75: MySubscribe()
-*     23 MAR 2025 jcs  Build 76: Formatted _DumpRow()
+*      1 APR 2025 jcs  Build 76: Formatted _DumpRow()
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -33,8 +33,7 @@
 
 #define _MAX_STS     5
 #define _TICKER      "TICKER"
-#define _TKR_LEN     10
-#define _TKR_FMT     "%-10s"
+static int  _TKR_LEN = 10;
 #define ANSI_CLEAR   "\033[H\033[m\033[J"
 #define ANSI_HOME    "\033[2;1H\033[K"
 #define ANSI_POS     "\033[%ld;%ldf"   // ( Row, Col )
@@ -203,6 +202,7 @@ public:
    RTEDGE::Strings _stsBar;
    size_t          _stsRow;
    char           *_pTbl;
+   char            _TKR_FMT[20];
    Renko           _Renko;
    Renkos          _rdb;
 
@@ -231,7 +231,14 @@ public:
       _pTbl( (char *)0 ),
       _Renko( _zRenko ),
       _rdb()
-   { ; }
+   {
+      char *pp;
+      int   tLen;
+
+      if ( (pp=::getenv( "_TKR_LEN" )) != NULL )
+         _TKR_LEN = (tLen=atoi( pp )) > 0 ? tLen : _TKR_LEN;
+      sprintf( _TKR_FMT, "%%-%ds", _TKR_LEN );
+   }
 
    ~MyChannel()
    {
@@ -276,7 +283,7 @@ public:
       int             fid, wid, sig;
       size_t          pos;
 
-      // -table fid[:colW:sigFig],fid:colW,...,eolFid
+      // -table tkrLen,fid[:colW:sigFig],fid:colW,...,eolFid
 
       t1 = (char *)s.data();
       t1 = ::strtok( t1, "," );
