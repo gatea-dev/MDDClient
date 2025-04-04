@@ -45,7 +45,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 76 25-03-xx
+ * ### Build 76 25-04-xx
  *
  * -# Big Vector Publishing:
  *    - bool Update.AddVector() / _MaxVector
@@ -55,6 +55,8 @@ Features To Add
  * -# Subscribe -table:
  *    - StatusBar()
  *    - Formatted _DumpRow()
+ *
+ * -# Update.AddField( double ) : Downgrade precision if !InRange( _MAX_DBL10 )
  *
  *
  * ### Build 75 25-03-04

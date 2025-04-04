@@ -23,7 +23,7 @@
 *     21 FEB 2024 jcs  Build 68: PublishRaw()
 *     18 MAR 2024 jcs  Build 70: AddField( int, double, int precision=10 )
 *     20 JAN 2025 jcs  Build 75: AddField( rtTime, bool bTimeSec=false )
-*      5 MAR 2025 jcs  Build 76: bool AddVector() / _MaxVector
+*      4 APR 2025 jcs  Build 76: bool AddVector() / _MaxVector
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -38,7 +38,9 @@
 static double _MIL       = 1000000.0;
 static double _MAX_DBL   =     879.0; // 879.6093022207 = 0x7ffffffffff 
 static double _MAX_FLOAT =   53000.0; // 53687.0911 = 0x1fffffff 
+static double _MAX_DBL10 = 100*_MIL;  // Max actually 922,337,203.6854775807
 static size_t _MaxVector = ( K*K ) / sizeof( double ); // 1MB buf in Edge3
+
 #endif // DOXYGEN_OMIT   
 
 namespace RTEDGE
@@ -400,13 +402,22 @@ public:
 	   rtVALUE &v = f._val;
 	   bool     bPacked = !_pub.IsUnPacked();
 
+	   /*
+	    * Packed within tolerance
+	    */
 	   if ( bPacked && !InRange( -_MAX_DBL, r64, _MAX_DBL ) ) {
 	      if ( bPacked && InRange( -_MAX_FLOAT, r64, _MAX_FLOAT ) )
 	         AddField( fid, (float)r64 );
 	      else
 	         AddField( fid, (u_int64_t)r64 );
+	      return;
 	   }
-	   else if ( precision == 10 ) {
+	   /*
+	    * Unpacked : Downgrade precision to 4 and real if out of range
+	    */
+	   if ( ( precision == 10 ) && !InRange( -_MAX_DBL10, r64, _MAX_DBL10 ) )
+	      precision = 4;
+	   if ( precision == 10 ) {
 	      f._type = rtFld_double;
 	      f._fid  = fid;
 	      v._r64  = r64;
