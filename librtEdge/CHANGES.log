@@ -45,7 +45,14 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 76 25-04-xx
+ * ### Build 77 25-05-xx
+ *
+ * -# Python Publishing:
+ *    - py/src/PubChannel.cpp 
+ *    - No mo py/inc/bld.cpp : Use inc/bld.cpp 
+ *
+ *
+ * ### Build 76 25-04-08
  *
  * -# Big Vector Publishing:
  *    - bool Update.AddVector() / _MaxVector

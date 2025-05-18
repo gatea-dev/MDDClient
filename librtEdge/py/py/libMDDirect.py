@@ -31,6 +31,7 @@
 #     21 JAN 2025 jcs  Build 13: EdgMon
 #     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
+#     18 MAY 2025 jcs  Build 77: PubChannel
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -56,7 +57,7 @@ except:
       except: 
          try: 
             import MDDirect27 as MDDirect
-         except: 
+         except Exception:
             Log( 'MDDirect not found; Exitting ...' )
             sys.exit()
 pass
@@ -414,7 +415,7 @@ class rtEdgeSubscriber( threading.Thread ):
    # @param usr - rtEdgeCache3 username
    # @param bBin - True for binary protocol
    ########################
-   def Start( self, svr, usr, bBin ):
+   def Start( self, svr, usr, bBin=True ):
       if not self._cxt:
          self._cxt = MDDirect.Start( svr, usr, bBin )
       self.start()
@@ -765,6 +766,174 @@ class rtEdgeSubscriber( threading.Thread ):
             self._schema = rtEdgeSchema( blob )
             self.OnSchema( self._schema )
             self._msg._schema = self._schema
+      return
+## \endcond
+
+
+## \cond
+######################################
+#                                    #
+#   r t E d g e P u b l i s h e r    #
+#                                    #
+######################################
+## \endcond
+## @class rtEdgePublisher
+#
+# Publication channel to MDDirect rtEdgeCache3
+#
+# You override 2 asynchronous functions:
+#
+# Function | Description
+# --- | ---
+# OnPubOpen | Called when MDD requests to open a data stream from your publisher
+# OnPubClose | Called when MDD closes a data stream from your publisher
+#
+# You call Publish() to publish data to MDD.
+#
+class rtEdgePublisher( threading.Thread ):
+   ########################
+   # Constructor
+   ########################
+   def __init__( self ):
+      threading.Thread.__init__( self )
+      self._run    = True
+      self._tid    = None
+      self._cxt    = None
+      self._bThrMD = False
+      self._ready  = threading.Event()
+
+   ########################
+   # Destructor : Called at garbage collection time 
+   # 
+   # @see Stop()
+   ########################
+   def __del__( self ):
+      self.Stop()
+
+   ########################
+   # Returns Version and Build info
+   #
+   # @return Version and Build info
+   ########################
+   def Version( self ):
+      return MDDirect.Version()
+
+   ########################
+   # Returns True if dispatching from this thread
+   #
+   # @return True if dispatching from this thread
+   ########################
+   def IsOurThread( self ):
+      return self._bThrMD
+
+   ########################
+   # Connect and Start session to MD-Direct rtEdgeCache3 server
+   #
+   # @param host - host:port of rtEdgeCache3 server to connect to
+   # @param svc - Published Service Name
+   ########################
+   def Start( self, host, svc ):
+      if not self._cxt:
+         self._cxt = MDDirect.PubStart( host, svc )
+      self.start()
+      self._ready.wait()
+
+   ########################
+   # Stop session and disconnect from MD-Direct rtEdgeCache3 server 
+   ########################
+   def Stop( self ):
+      self._run = False
+      if self._tid:
+         self.join()
+      self._tid = None
+      if self._cxt:
+         MDDirect.PubStop( self._cxt )
+      self._cxt = None
+
+   ########################
+   # Publish a Field List for a Stream
+   #
+   # @param svc - Service Name (e.g., bloomberg)
+   # @param StreamID - Stream ID
+   # @param fl - Field List as [ [ fid1, val1 ], [ fid2, val2 ], ... ]
+   # @return Number of bytes published
+   ########################
+   def Publish( self, tkr, StreamID, fl ):
+      return MDDirect.Publish( self._cxt, tkr, StreamID, fl )
+
+   ########################
+   # Called asynchronously when we connect or disconnect from rtEdgeCache3.
+   #
+   # Override this method to take action when you connect or disconnect 
+   # from rtEdgeCache3.
+   #
+   # @param msg - Textual description of connect event
+   # @param bUP - True if UP; False if DOWN
+   ########################
+   def OnConnect( self, msg, bUP ):
+      pass
+
+   ########################
+   # Called asynchronously when a user opens a market data stream
+   #
+   # Override this method in your application to publish data for this stream
+   #
+   # @param tkr - Ticker Name
+   # @param StreamID - Stream ID
+   #
+   # @see Publish()
+   ########################
+   def OnPubOpen( self, tkr, StreamID ):
+      pass
+
+   ########################
+   # Called asynchronously when a user closes a market data stream
+   #
+   # Override this method to stop publishing and remove internal resources
+   # related to this stream
+   #
+   # @param tkr - Ticker Name
+   # @param StreamID - Stream ID
+   #
+   # @see Publish()
+   ########################
+   def OnPubClose( self, tkr, StreamID ):
+      pass
+
+## \cond
+   #################################
+   # (private) threading.Thread Interface
+   #
+   # MDDirect.Read() returns as follows:
+   #    EVT_CONN   : msg
+   #    EVT_OPEN   : [ tkr, oid ]
+   #    EVT_CLOSE  : [ tkr, oid ]
+   #################################
+   def run( self ):
+      self._tid = threading.currentThread().ident
+      self._ready.set()
+      #
+      # Drain until stopped
+      #
+      while self._run:
+         self._bThrMD = False
+         rd = MDDirect.PubRead( self._cxt, 0.25 )
+         self._bThrMD = True
+         if not rd:
+            continue ## while-run
+         ( mt, blob ) = rd
+         if mt == MDDirectEnum.EVT_CONN:
+            ( ty, pMsg ) = blob.split('|')
+            bUP          = ( ty.strip() == 'UP' )
+            self.OnConnect( pMsg, bUP )
+         elif mt == MDDirectEnum.EVT_OPEN:
+            self.OnPubOpen( blob[0], blob[1] )
+         elif mt == MDDirectEnum.EVT_CLOSE:
+            self.OnPubClose( blob[0], blob[1] )
+         elif mt == MDDirectEnum.EVT_OVFLOW:
+            self.OnOverflow()
+         elif mt == MDDirectEnum.EVT_IDLE:
+            self.OnIdle()
       return
 ## \endcond
 
@@ -1803,12 +1972,14 @@ class MDDirectEnum:
    EVT_UPD    = 0x0004
    EVT_STS    = 0x0008
    EVT_SCHEMA = 0x0010
-   EVT_OPEN   = 0x0100
-   EVT_CLOSE  = 0x0200
-   EVT_BYSTR  = 0x0400
-   EVT_RECOV  = 0x0800
-   EVT_DONE   = 0x1000
-   EVT_BDS    = 0x2000
+   EVT_OPEN   = 0x0020
+   EVT_CLOSE  = 0x0040
+   EVT_BYSTR  = 0x0080
+   EVT_RECOV  = 0x0100
+   EVT_DONE   = 0x0200
+   EVT_BDS    = 0x0400
+   EVT_OVFLOW = 0x0800
+   EVT_IDLE   = 0x1000
    EVT_CHAN   = ( EVT_CONN | EVT_SVC )
    EVT_ALL    = 0xffff
    IOCTL_RTD  = 0x0001

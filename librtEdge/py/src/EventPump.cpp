@@ -10,6 +10,7 @@
 *     20 NOV 2020 jcs  Build  2: Tape stuff
 *     17 OCT 2023 jcs  Build 12: No mo Book
 *      5 FEB 2025 jcs  Build 14: _adm 
+*     18 MAR 2025 jcs  Build 77: PubChannel
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -27,7 +28,20 @@
 ///////////////////////////////
 // Constructor / Destructor
 ///////////////////////////////
+EventPump::EventPump( MDDpyPubChan &ch ) :
+   _pub( &ch ),
+   _sub( (MDDpySubChan *)0 ),
+   _adm( (MDDpyLVCAdmin *)0 ),
+   _mtx(),
+   _upds(),
+   _updFifo( _MAX_FIFOQ ),
+   _msgs(),
+   _Notify( false ),
+   _SleepMillis( 1 )
+{ ; }
+
 EventPump::EventPump( MDDpySubChan &ch ) :
+   _pub( (MDDpyPubChan *)0 ),
    _sub( &ch ),
    _adm( (MDDpyLVCAdmin *)0 ),
    _mtx(),
@@ -39,6 +53,7 @@ EventPump::EventPump( MDDpySubChan &ch ) :
 { ; }
 
 EventPump::EventPump( MDDpyLVCAdmin &adm ) :
+   _pub( (MDDpyPubChan *)0 ),
    _sub( (MDDpySubChan *)0 ),
    _adm( &adm ),
    _mtx(),
@@ -103,7 +118,7 @@ bool EventPump::GetOneUpd( Update &rtn )
       if ( bUpd ) {
          msg = (*rt);
          if ( _sub )
-         upd = _sub->ToUpdate( *msg );
+            upd = _sub->ToUpdate( *msg );
          rtn = upd;
          _msgs.erase( rt );
          delete msg;
@@ -178,7 +193,9 @@ void EventPump::Wait( double dWait )
 
 void EventPump::_Sleep( double dSlp )
 {
-   if ( _sub )
+   if ( _pub )
+      _pub->Sleep( dSlp );
+   else if ( _sub )
       _sub->Sleep( dSlp );
    else if ( _adm )
       _adm->Sleep( dSlp );

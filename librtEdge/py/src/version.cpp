@@ -28,7 +28,7 @@ char *MDDirectID()
       char bp[K], *cp;
 
       cp     = bp;
-      cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s ", GL64, _PYMDD_LIB_BLD );
+      cp    += sprintf( cp, "@(#)MDDirect4py %s Build %s ", GL64, _MDD_LIB_BLD );
       cp    += sprintf( cp, "%s %s Gatea Ltd.", __DATE__, __TIME__ );
       cp    += sprintf( cp, "\n" );
       cp    += sprintf( cp, "%s", ::Py_GetVersion() );
@@ -91,3 +91,18 @@ PyObject *_PyReturn( PyObject *obj )
    return obj;
 }
 
+const char *_Py_GetString( PyObject *pyo, string &rc )
+{
+#if PY_MAJOR_VERSION >= 3
+   Py_ssize_t sz;
+   wchar_t   *pw = ::PyUnicode_AsWideCharString( pyo, &sz );
+   wstring    wc( pw );
+   string     ss( wc.begin(), wc.end() );
+
+   rc = ss.data();
+   ::PyMem_Free( pw );
+#else
+   rc = ::PyString_AsString( pyo );
+#endif // PY_MAJOR_VERSION >= 3
+   return rc.data();
+}

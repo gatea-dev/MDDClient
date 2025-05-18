@@ -16,10 +16,10 @@
 *     29 AUG 2023 jcs  Build 10: LVCSnapAll; Named Schema; OpenBDS()
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
-*     27 MAR 2024 jcs  Build 13: 3.11
 *      5 FEB 2025 jcs  Build 13: 3.11
+*     18 MAR 2025 jcs  Build 77: PubChannel
 *
-*  (c) 1994-2024, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -30,26 +30,6 @@
 PyMethodDef *_pMethods = (PyMethodDef *)0;
 
 
-/////////////////////
-// Helpers
-/////////////////////
-static const char *_Py_GetString( PyObject *pyo, string &rc )
-{
-#if PY_MAJOR_VERSION >= 3
-   Py_ssize_t sz;
-   wchar_t   *pw = ::PyUnicode_AsWideCharString( pyo, &sz );
-   wstring    wc( pw );
-   string     ss( wc.begin(), wc.end() );
-
-   rc = ss.data();
-   ::PyMem_Free( pw );
-#else
-   rc = ::PyString_AsString( pyo );
-#endif // PY_MAJOR_VERSION >= 3
-   return rc.data();
-}
-
-
 ////////////////////////////////////////////////////////////
 //
 //       Python 'C' Extension Implementation Methods
@@ -57,10 +37,12 @@ static const char *_Py_GetString( PyObject *pyo, string &rc )
 ////////////////////////////////////////////////////////////
 
 typedef hash_map<int, MDDpySubChan *>  PySubChanMap;
+typedef hash_map<int, MDDpyPubChan *>  PyPubChanMap;
 typedef hash_map<int, MDDpyLVC *>      PyLVCMap;
 typedef hash_map<int, MDDpyLVCAdmin *> PyLVCAdminMap;
 
 static PySubChanMap  _subMap;
+static PyPubChanMap  _pubMap;
 static PyLVCMap      _lvcMap;
 static PyLVCAdminMap _admMap;
 
@@ -73,6 +55,28 @@ static MDDpySubChan *_GetSub( int cxt )
    it = sdb.find( cxt );
    ch = ( it != sdb.end() ) ? (*it).second : (MDDpySubChan *)0;
    return ch;
+}
+
+static MDDpyPubChan *_GetPub( int cxt )
+{
+   PyPubChanMap          &pdb = _pubMap;
+   PyPubChanMap::iterator it;
+   MDDpyPubChan          *ch;
+
+   it = pdb.find( cxt );
+   ch = ( it != pdb.end() ) ? (*it).second : (MDDpyPubChan *)0;
+   return ch;
+}
+
+static MDDpyLVC *_GetLVC( int cxt )
+{
+   PyLVCMap          &ldb = _lvcMap;
+   PyLVCMap::iterator it;
+   MDDpyLVC          *lvc;
+
+   it = ldb.find( cxt );
+   lvc = ( it != ldb.end() ) ? (*it).second : (MDDpyLVC *)0;
+   return lvc;
 }
 
 static bool _DelSub( int cxt )
@@ -91,15 +95,20 @@ static bool _DelSub( int cxt )
    return false;
 }
 
-static MDDpyLVC *_GetLVC( int cxt )
+static bool _DelPub( int cxt )
 {
-   PyLVCMap          &ldb = _lvcMap;
-   PyLVCMap::iterator it;
-   MDDpyLVC          *lvc;
+   PyPubChanMap          &pdb = _pubMap;
+   PyPubChanMap::iterator it;
+   MDDpyPubChan          *ch;
 
-   it = ldb.find( cxt );
-   lvc = ( it != ldb.end() ) ? (*it).second : (MDDpyLVC *)0;
-   return lvc;
+   if ( (it=pdb.find( cxt )) != pdb.end() ) {
+      ch = (*it).second;
+      pdb.erase( it );
+      ch->Stop();
+      delete ch;
+      return true;
+   }
+   return false;
 }
 
 static bool _DelLVC( int cxt )
@@ -162,9 +171,9 @@ static PyObject *Version( PyObject *self, PyObject *args )
 static PyObject *Start( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *pHost, *pUser;
-   int         iBin, cxt;
-   bool        bBin;
+   const char   *pHost, *pUser;
+   int           iBin, cxt;
+   bool          bBin;
 
    // Usage : Start( 'localhost:9998', 'Username', [bBinary] )
 
@@ -187,14 +196,14 @@ static PyObject *Start( PyObject *self, PyObject *args )
 static PyObject *StartSlice( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *pHost, *pUser;
-   int         iBin, cxt;
-   bool        bBin;
+   const char   *pHost, *pUser;
+   int           iBin, cxt;
+   bool          bBin;
 
    // Usage : StartSlice( 'localhost:9998', 'Username', [bBinary] )
 
    if ( !PyArg_ParseTuple( args, "ssi", &pHost, &pUser, &iBin ) ) {
-      iBin = 0;
+      iBin = 1;
       if ( !PyArg_ParseTuple( args, "ss", &pHost, &pUser ) )
          return _PyReturn( Py_None );
    }
@@ -228,7 +237,7 @@ static PyObject *IsTape( PyObject *self, PyObject *args )
 static PyObject *SetTapeDir( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   int         cxt, bDir;
+   int           cxt, bDir;
 
    // Usage : SetTapeDir( cxt, bDir )
 
@@ -306,8 +315,8 @@ static PyObject *QueryTape( PyObject *self, PyObject *args )
 static PyObject *Open( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *svc, *tkr;
-   int         rtn, cxt, uid, sid;
+   const char   *svc, *tkr;
+   int           rtn, cxt, uid, sid;
 
    // Usage : Open( cxt, 'BBO', 'EUR/USD', UserReqID )
 
@@ -340,8 +349,8 @@ static PyObject *OpenBDS( PyObject *self, PyObject *args )
 static PyObject *OpenByStr( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   const char *svc, *tkr;    
-   int         rtn, cxt, uid, sid;
+   const char   *svc, *tkr;    
+   int           rtn, cxt, uid, sid;
 
    // Usage : OpenByteStream( cxt, 'ChainDB', 'ULTRAFEED|CSCO|22', UserReqID )
 
@@ -356,10 +365,10 @@ static PyObject *OpenByStr( PyObject *self, PyObject *args )
 
 static PyObject *Read( PyObject *self, PyObject *args )
 {
-   int          cxt;
+   int           cxt;
    MDDpySubChan *ch;
    PyObject     *rtn;
-   double       dWait;
+   double        dWait;
 
    // Usage : Read( cxt, dWait )
 
@@ -388,8 +397,8 @@ static PyObject *ReadFltr( PyObject *self, PyObject *args )
 static PyObject *Close( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   int         cxt, sid;
-   const char *svc, *tkr;
+   int           cxt, sid;
+   const char   *svc, *tkr;
 
    // Usage : Close( cxt, 'BBO', 'EUR/USD' )
 
@@ -449,8 +458,8 @@ static PyObject *Ioctl( PyObject *self, PyObject *args )
 static PyObject *Protocol( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
-   int         cxt;
-   const char *ty;
+   int           cxt;
+   const char   *ty;
 
    // Usage : Protocol( cxt )
 
@@ -778,130 +787,72 @@ static PyObject *LVCAdmClose( PyObject *self, PyObject *args )
 ////////////////////////////
 static PyObject *PubStart( PyObject *self, PyObject *args )
 {
-#ifdef TODO_PUB
-   rtEdgePubAttr attr;
-   rmdsPubAttr   attR;
-   const char   *pEdgHost, *pPubName, *pc;
-   int           bInteractive;
+   PyPubChanMap &pdb = _pubMap;
+   MDDpyPubChan *ch;
+   const char   *host, *svc;
+   int           cxt;
 
-   // Usage : Start( 'localhost:9998', 'MyPublisher', bInteractive )
+   // Usage : PubStart( 'localhost:9998', 'service' )
 
-   if ( !PyArg_ParseTuple( args, "ssi", &pEdgHost, &pPubName, &bInteractive ) )
-      return PyString_FromString( "Bad Arguments" );
+   if ( !PyArg_ParseTuple( args, "ss", &host, &svc ) )
+      return _PyReturn( Py_None );
 
-   return PyString_FromFormat( "%s Connected", pc );
-#endif // TODO_PUB
-   return PyString_FromFormat( "TODO - Publication" );
+   // MD-Direct Publication Channel
+
+   ch       = new MDDpyPubChan( host, svc );
+   ch->Start( svc, host );
+   cxt      = ch->cxt();
+   pdb[cxt] = ch;
+   return PyInt_FromLong( cxt );
 }
 
 static PyObject *Publish( PyObject *self, PyObject *args )
 {
-#ifdef TODO_PUB
-   const char *pSvc, *pTkr;
-   PyObject   *lst, *pyFidVal, *pyFid, *pyVal;
-   rmdsData    r;
-   rtEdgeData  e;
-   int         i, j, nf, nk;
-   rtFIELD    *flds, f;
-   rtVALUE    &v = f._val;
-   rtBUF      &b = v._buf;
+   MDDpyPubChan *ch;
+   PyObject     *lst;
+   const char   *tkr;
+   int           cxt, ReqID;
 
-   // Pre-condition
+   // Usage : Publish( 'EUR CURNCY', StreamID, [ [ fid1, val1 ], [ fid2, val2 ] ... ] )
 
-   if ( !_cxtPub )
+   if ( !PyArg_ParseTuple( args, "isiO!", &cxt, &tkr, &ReqID, &PyList_Type, &lst ) )
       return _PyReturn( Py_None );
 
-   // Usage : Publish( 'EUR/USD', [ [ fid1, 'val1' ], [ fid2, 'val2' ], ... ]
+   // MD-Direct Publication Channel
 
-   pSvc = _sPubName;
-   if ( !PyArg_ParseTuple( args, "sO!", &pTkr, &PyList_Type, &lst ) )
-      return _PyReturn( Py_None );
-
-   // Parse Python List
-
-   nf = PyList_Size( lst );
-   if ( !nf )
-      return PyInt_FromLong( 0 );
-   flds = new rtFIELD[nf];
-   for ( i=0,j=0; i<nf; i++ ) {
-      pyFidVal = PyList_GetItem( lst, i );
-      nk       = PyList_Size( pyFidVal );
-      if ( nk == 2 ) {
-         ::memset( &f, 0, sizeof( f ) );
-         pyFid   = PyList_GetItem( pyFidVal, 0 );
-         pyVal   = PyList_GetItem( pyFidVal, 1 );
-         f._fid  = PyInt_AsLong( pyFid );
-         b._data = PyString_AsString( pyVal );
-         b._dLen = strlen( b._data );
-         flds[j] = f;
-         j      += 1;
-      }
-   }
-
-   // Publish, Clean up
-
-   if ( _rmds ) {
-      ::memset( &r, 0, sizeof( r ) );
-      r._pSvc = pSvc;
-      r._pTkr = pTkr;
-      r._arg  = (void *)0; // TODO
-      r._ty   = rmds_image;
-      r._flds = flds;
-      r._nFld = j;
-      _rmds->Publish( _cxtPub, r );
-   }
-   else {
-      ::memset( &e, 0, sizeof( e ) );
-      e._pSvc = pSvc;
-      e._pTkr = pTkr;
-      e._arg  = (void *)0; // TODO 
-      e._ty   = edg_image;
-      e._flds = flds;
-      e._nFld = j;
-      ::rtEdge_Publish( _cxtPub, e );
-   }
-   delete[] flds;
-   return PyInt_FromLong( j );
-#endif // TODO_PUB
-   return PyInt_FromLong( 0 );
+   if ( (ch=_GetPub( cxt )) )
+      return PyInt_FromLong( ch->pyPublish( tkr, ReqID, lst ) );
+   return _PyReturn( Py_None );
 }
 
 static PyObject *PubRead( PyObject *self, PyObject *args )
 {
-#ifdef TODO_PUB
-   PyObject *rtn;
-   double    dWait;
+   int           cxt;
+   MDDpyPubChan *ch;
+   PyObject     *rtn;
+   double        dWait;
 
-   // Usage : PubRead( dWait )
+   // Usage : Read( cxt, dWait )
 
-   if ( !PyArg_ParseTuple( args, "d", &dWait ) )
+   if ( !PyArg_ParseTuple( args, "id", &cxt, &dWait ) )
       return _PyReturn( Py_None );
-   if ( (rtn=_ReadPubEvent( dWait )) == Py_None )
+   if ( !(ch=_GetPub( cxt )) )
+      return _PyReturn( Py_None );
+   if ( (rtn=ch->Read( dWait )) == Py_None )
       return _PyReturn( Py_None );
    return rtn;
-#endif // // TODO_PUB
-   return _PyReturn( Py_None );
 }
-
 static PyObject *PubStop( PyObject *self, PyObject *args )
 {
-#ifdef TODO_PUB
-   PyObject *rtn;
+   int  cxt;
+   bool rc;
 
-   // Once
+   // Usage : PubStop( cxt )
 
-   if ( _cxtPub ) {
-      if ( _rmds )
-         _rmds->Destroy( _cxtPub );
-      else 
-         ::rtEdge_PubDestroy( _cxtPub );
-   }
-   ::memset( _sPubName, 0, sizeof( _sPubName ) );
-   rtn     = _cxtPub ? Py_True : Py_False;
-   _cxtPub = 0;
-   return _PyReturn( rtn );
-#endif // // TODO_PUB
-   return _PyReturn( Py_None );
+   if ( !PyArg_ParseTuple( args, "i", &cxt ) )
+      return _PyReturn( Py_False );
+   rc = _DelPub( cxt );
+   return _PyReturn( rc ? Py_True : Py_False );
 }
 
 

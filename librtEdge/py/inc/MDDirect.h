@@ -16,8 +16,9 @@
 *     29 AUG 2023 jcs  Build 10: EVT_BDS
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*     15 MAY 2025 jcs  Build 77: PubChannel.h
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #ifndef _MDDPY_PYTHON_H
 #define _MDDPY_PYTHON_H
@@ -35,6 +36,7 @@ typedef struct IUnknown IUnknown;
 #include <math.h>
 #include <stdio.h>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <librtEdge.h>
@@ -112,12 +114,14 @@ extern "C"
 #define EVT_UPD    0x0004
 #define EVT_STS    0x0008
 #define EVT_SCHEMA 0x0010
-#define EVT_OPEN   0x0100
-#define EVT_CLOSE  0x0200
-#define EVT_BYSTR  0x0400
-#define EVT_RECOV  0x0800
-#define EVT_DONE   0x1000
-#define EVT_BDS    0x2000
+#define EVT_OPEN   0x0020
+#define EVT_CLOSE  0x0040
+#define EVT_BYSTR  0x0080
+#define EVT_RECOV  0x0100
+#define EVT_DONE   0x0200
+#define EVT_BDS    0x0400
+#define EVT_OVFLOW 0x0800
+#define EVT_IDLE   0x1000
 #define EVT_CHAN   ( EVT_CONN | EVT_SVC )
 #define EVT_ALL    0xffff
 
@@ -152,9 +156,13 @@ public:
                           { (char *)0, 0 } \
                         }
 
+typedef set<string, less<string> > SortedStringSet;
+typedef hash_map<int, string>      IntStrMap;
+typedef hash_map<string, int>      StrIntMap;
 typedef hash_map<int, Record *>    RecByOid;
 typedef hash_map<string, Record *> RecByName;
 typedef hash_map<int, rtFIELD>     Fields;
+typedef vector<string *>           Strings;
 typedef vector<PyObject *>         PyObjects;
 typedef vector<int>                Ints;
 typedef vector<Update>             Updates;
@@ -169,16 +177,18 @@ typedef LocklessFifo<Update>       UpdateFifo;
 #include <LVC.h>
 #include <LVCAdmin.h>
 #include <Stats.h>
+#include <PubChannel.h>
 #include <SubChannel.h>
 
 // version.cpp
 
-extern void      m_breakpoint();
-extern int       strncpyz( char *, char *, int );
-extern int       atoin( char *, int );
-extern char     *MDDirectID();
-extern PyObject *mdd_PyList_Pack2( PyObject *, PyObject * );
-extern PyObject *mdd_PyList_Pack3( PyObject *, PyObject *, PyObject * );
-extern PyObject *_PyReturn( PyObject * );
+extern void        m_breakpoint();
+extern int         strncpyz( char *, char *, int );
+extern int         atoin( char *, int );
+extern char       *MDDirectID();
+extern PyObject   *mdd_PyList_Pack2( PyObject *, PyObject * );
+extern PyObject   *mdd_PyList_Pack3( PyObject *, PyObject *, PyObject * );
+extern PyObject   *_PyReturn( PyObject * );
+extern const char *_Py_GetString( PyObject *, string & );
 
 #endif // _MDDPY_PYTHON_H

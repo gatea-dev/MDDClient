@@ -9,6 +9,7 @@
 *      3 APR 2019 jcs  Build 23: MD-Direct / VS2017.32
 *     17 OCT 2023 jcs  Build 12: No mo Book
 *      5 FEB 2025 jcs  Build 14: _adm
+*     18 MAR 2025 jcs  Build 77: PubChannel
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -20,6 +21,7 @@
 //////////////
 // Forwards
 //////////////
+class MDDpyPubChan;
 class MDDpySubChan;
 class MDDpyLVCAdmin;
 class rtMsg;
@@ -31,6 +33,7 @@ class rtMsg;
 class EventPump
 {
 protected:
+	MDDpyPubChan  *_pub;
 	MDDpySubChan  *_sub;
 	MDDpyLVCAdmin *_adm;
 	RTEDGE::Mutex  _mtx;
@@ -42,6 +45,7 @@ protected:
 
 	// Constructor / Destructor
 public:
+	EventPump( MDDpyPubChan & );
 	EventPump( MDDpySubChan & );
 	EventPump( MDDpyLVCAdmin & );
 	~EventPump();
