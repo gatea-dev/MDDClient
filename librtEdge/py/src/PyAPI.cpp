@@ -178,7 +178,7 @@ static PyObject *Start( PyObject *self, PyObject *args )
    // Usage : Start( 'localhost:9998', 'Username', [bBinary] )
 
    if ( !PyArg_ParseTuple( args, "ssi", &pHost, &pUser, &iBin ) ) {
-      iBin = 0;
+      iBin = 1;
       if ( !PyArg_ParseTuple( args, "ss", &pHost, &pUser ) )
          return _PyReturn( Py_None );
    }

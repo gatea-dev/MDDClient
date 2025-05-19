@@ -12,8 +12,9 @@
 *      3 FEB 2022 jcs  Build  5: De-lint
 *     29 AUG 2023 jcs  Build 10: BDS
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*     19 MAY 2025 jcs  Build 77: OnIdle()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #ifndef __MDDPY_SUBCHAN_H
 #define __MDDPY_SUBCHAN_H
@@ -84,6 +85,7 @@ protected:
 	virtual void OnStreamDone( RTEDGE::Message & );
 	virtual void OnSymbol( RTEDGE::Message &, const char * );
 	virtual void OnSchema( RTEDGE::Schema & );
+	virtual void OnIdle();
 
 	// PyByteStream Notifications
 public:

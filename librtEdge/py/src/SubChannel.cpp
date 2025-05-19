@@ -14,8 +14,9 @@
 *     29 AUG 2023 jcs  Build 10: BDS
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
+*     19 MAY 2025 jcs  Build 77: OnIdle()
 *
-*  (c) 1994-2023, Gatea, Ltd.
+*  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
 
@@ -50,6 +51,7 @@ MDDpySubChan::MDDpySubChan( const char *host, const char *user, bool bBin ) :
    _bTapeUpd( false )
 {
    SetBinary( bBin );
+   SetIdleCallback( true );
 }
 
 MDDpySubChan::~MDDpySubChan()
@@ -525,6 +527,14 @@ void MDDpySubChan::OnSchema( RTEDGE::Schema &sch )
    _pmp.Notify();
 }
 
+void MDDpySubChan::OnIdle()
+{
+   Update u = _INIT_MDDPY_UPD;
+
+   u._mt  = EVT_IDLE;
+   _pmp.Add( u );
+}
+
 
 ///////////////////////////////
 // ByteStream Notifications
@@ -761,6 +771,9 @@ PyObject *MDDpySubChan::_Get1stUpd()
       case EVT_BDS:
          s   = upd._msg;
          pyd = PyString_FromString( s->data() );
+         break;
+      case EVT_IDLE:
+         pyd = PyString_FromString( "OnIdle" );
          break;
       default:
          pyd = PyString_FromString( "Unknown msg type" );

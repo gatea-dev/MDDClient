@@ -682,6 +682,14 @@ class rtEdgeSubscriber( threading.Thread ):
    def OnSchema( self, schema ):
       pass
 
+   ########################
+   # Called asynchronously every second or so when channel is idle
+   #
+   # Override this method to take action during idle periods 
+   ########################
+   def OnIdle( self ):
+      pass 
+
 ## \cond
    #################################
    # (private) threading.Thread Interface
@@ -766,6 +774,8 @@ class rtEdgeSubscriber( threading.Thread ):
             self._schema = rtEdgeSchema( blob )
             self.OnSchema( self._schema )
             self._msg._schema = self._schema
+         elif mt == MDDirectEnum.EVT_IDLE:
+            self.OnIdle()
       return
 ## \endcond
 
@@ -899,6 +909,15 @@ class rtEdgePublisher( threading.Thread ):
    ########################
    def OnPubClose( self, tkr, StreamID ):
       pass
+
+   ########################
+   # Called asynchronously every second or so when channel is idle
+   #
+   # Override this method to take action during idle periods
+   ########################
+   def OnIdle( self ):
+      pass
+
 
 ## \cond
    #################################
