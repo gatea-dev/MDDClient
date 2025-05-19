@@ -60,6 +60,7 @@
       <AdditionalIncludeDirectories>
          ..\inc;
          ..\inc\stats;
+         ..\..\inc;
          ..\..\..\libmddWire\inc;
          ..\..\..\libmddWire\expat\xmltok;
          ..\..\..\libmddWire\expat\xmlparse;
@@ -94,6 +95,7 @@
       <AdditionalIncludeDirectories>
          ..\inc;
          ..\inc\stats;
+         ..\..\inc;
          ..\..\..\libmddWire\inc;
          ..\..\..\libmddWire\expat\xmltok;
          ..\..\..\libmddWire\expat\xmlparse;

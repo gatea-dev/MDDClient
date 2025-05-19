@@ -10,7 +10,7 @@ elif PY3:  PYLIB = 'MDDirect36'
 else:      PYLIB = 'MDDirect27'
 
 WARNS    = [ '-Wno-misleading-indentation' ]
-INC_DIR  = [ './inc', './inc/stats' ]
+INC_DIR  = [ '../inc', './inc', './inc/stats' ]
 LIB_DIR  = [ '/usr/lib64' ]
 LIBS     = [ 'expat' ]
 for pLib in [ 'mddWire', 'rtEdge' ]:

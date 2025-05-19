@@ -31,7 +31,7 @@
 #     21 JAN 2025 jcs  Build 13: EdgMon
 #     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
-#     18 MAY 2025 jcs  Build 77: PubChannel
+#     18 MAY 2025 jcs  Build 77: rtEdgePublisher
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
