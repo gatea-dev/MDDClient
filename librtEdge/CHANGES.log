@@ -45,11 +45,14 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 77 25-05-xx
+ * ### Build 77 25-06-xx
  *
  * -# Python Publishing:
  *    - py/src/PubChannel.cpp 
  *    - No mo py/inc/bld.cpp : Use inc/bld.cpp 
+ *
+ * -# Read from Live Tape:
+ *    - TapeChannel.PumpTicker() : bReload
  *
  *
  * ### Build 76 25-04-08

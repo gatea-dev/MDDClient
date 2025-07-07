@@ -17,7 +17,7 @@
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
 *      5 FEB 2025 jcs  Build 13: 3.11
-*     18 MAR 2025 jcs  Build 77: PubChannel
+*      6 JUL 2025 jcs  Build 77: PubChannel; Publish( .., bImg )
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -172,21 +172,16 @@ static PyObject *Start( PyObject *self, PyObject *args )
 {
    MDDpySubChan *ch;
    const char   *pHost, *pUser;
-   int           iBin, cxt;
-   bool          bBin;
+   int           cxt;
 
-   // Usage : Start( 'localhost:9998', 'Username', [bBinary] )
+   // Usage : Start( 'localhost:9998', 'Username' )
 
-   if ( !PyArg_ParseTuple( args, "ssi", &pHost, &pUser, &iBin ) ) {
-      iBin = 1;
-      if ( !PyArg_ParseTuple( args, "ss", &pHost, &pUser ) )
-         return _PyReturn( Py_None );
-   }
-   bBin = iBin ? true : false;
+   if ( !PyArg_ParseTuple( args, "ss", &pHost, &pUser ) )
+      return _PyReturn( Py_None );
 
    // MD-Direct Subscription Channel
 
-   ch           = new MDDpySubChan( pHost, pUser, bBin );
+   ch           = new MDDpySubChan( pHost, pUser, true );
    ch->Start( pHost, pUser );
    cxt          = ch->cxt();
    _subMap[cxt] = ch;
@@ -800,28 +795,53 @@ static PyObject *PubStart( PyObject *self, PyObject *args )
    // MD-Direct Publication Channel
 
    ch       = new MDDpyPubChan( host, svc );
+   ch->SetCircularBuffer( true );
+   ch->SetCache( false );
+   ch->SetBinary( true );
+   ch->SetUnPacked( true );
    ch->Start( svc, host );
    cxt      = ch->cxt();
    pdb[cxt] = ch;
+   ch->SetTxBufSize( 40*K*K ); // 40 MB
    return PyInt_FromLong( cxt );
 }
 
 static PyObject *Publish( PyObject *self, PyObject *args )
 {
    MDDpyPubChan *ch;
-   PyObject     *lst;
+   PyObject     *lst, *pyImg;
    const char   *tkr;
+   bool          bImg;
    int           cxt, ReqID;
 
-   // Usage : Publish( 'EUR CURNCY', StreamID, [ [ fid1, val1 ], [ fid2, val2 ] ... ] )
+   // Usage : Publish( 'EUR CURNCY', StreamID, [ [ fid1, val1 ], [ fid2, val2 ] ... ], bImg )
 
-   if ( !PyArg_ParseTuple( args, "isiO!", &cxt, &tkr, &ReqID, &PyList_Type, &lst ) )
+   if ( !PyArg_ParseTuple( args, "isiO!O", &cxt, &tkr, &ReqID, &PyList_Type, &lst, &pyImg ) )
+      return _PyReturn( Py_None );
+
+   // MD-Direct Publication Channel
+
+   bImg = ::PyObject_IsTrue( pyImg ) ? true : false;
+   if ( (ch=_GetPub( cxt )) )
+      return PyInt_FromLong( ch->pyPublish( tkr, ReqID, lst, bImg ) );
+   return _PyReturn( Py_None );
+}
+
+static PyObject *PubError( PyObject *self, PyObject *args )
+{
+   MDDpyPubChan *ch;
+   const char   *tkr, *err;
+   int           cxt, ReqID;
+
+   // Usage : PubError( 'EUR CURNCY', StreamID, err )
+
+   if ( !PyArg_ParseTuple( args, "isis", &cxt, &tkr, &ReqID, &err ) )
       return _PyReturn( Py_None );
 
    // MD-Direct Publication Channel
 
    if ( (ch=_GetPub( cxt )) )
-      return PyInt_FromLong( ch->pyPublish( tkr, ReqID, lst ) );
+      return PyInt_FromLong( ch->pyPubError( tkr, ReqID, err ) );
    return _PyReturn( Py_None );
 }
 
@@ -1021,6 +1041,7 @@ static PyMethodDef EdgeMethods[] =
      */
     { "PubStart",      PubStart, _PY_ARGS, "MDD Connect - Publish" },
     { "Publish",       Publish,  _PY_ARGS, "Publish" },
+    { "PubError",      PubError, _PY_ARGS, "Publish Error" },
     { "PubRead",       PubRead,  _PY_ARGS, "Read MDD update - Publish." },
     { "PubStop",       PubStop,  _PY_ARGS, "MDD Disconnect - Publish" },
     /*

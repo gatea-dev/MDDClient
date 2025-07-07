@@ -31,7 +31,7 @@
 #     21 JAN 2025 jcs  Build 13: EdgMon
 #     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
-#     18 MAY 2025 jcs  Build 77: rtEdgePublisher
+#     29 JUN 2025 jcs  Build 77: rtEdgePublisher; Publish( ..., bImg )
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -413,11 +413,10 @@ class rtEdgeSubscriber( threading.Thread ):
    #
    # @param svr - host:port of rtEdgeCache3 server to connect to
    # @param usr - rtEdgeCache3 username
-   # @param bBin - True for binary protocol
    ########################
-   def Start( self, svr, usr, bBin=True ):
+   def Start( self, svr, usr ):
       if not self._cxt:
-         self._cxt = MDDirect.Start( svr, usr, bBin )
+         self._cxt = MDDirect.Start( svr, usr )
       self.start()
       self._ready.wait()
 
@@ -863,13 +862,25 @@ class rtEdgePublisher( threading.Thread ):
    ########################
    # Publish a Field List for a Stream
    #
-   # @param svc - Service Name (e.g., bloomberg)
+   # @param tkr - Ticker Name
    # @param StreamID - Stream ID
    # @param fl - Field List as [ [ fid1, val1 ], [ fid2, val2 ], ... ]
+   # @param bImg - True for image
    # @return Number of bytes published
    ########################
-   def Publish( self, tkr, StreamID, fl ):
-      return MDDirect.Publish( self._cxt, tkr, StreamID, fl )
+   def Publish( self, tkr, StreamID, fl, bImg=False ):
+      return MDDirect.Publish( self._cxt, tkr, StreamID, fl, bImg )
+
+   ########################
+   # Publish a Error for a Stream
+   #
+   # @param tkr - Ticker Name
+   # @param StreamID - Stream ID
+   # @param err - Error Messge
+   # @return Number of bytes published
+   ########################
+   def PubError( self, tkr, StreamID, err ):
+      return MDDirect.PubError( self._cxt, tkr, StreamID, err )
 
    ########################
    # Called asynchronously when we connect or disconnect from rtEdgeCache3.
@@ -909,6 +920,15 @@ class rtEdgePublisher( threading.Thread ):
    ########################
    def OnPubClose( self, tkr, StreamID ):
       pass
+
+   ########################
+   # Called asynchronously when Publish() overflows outbound buffer 
+   #  to rtEdgeCache3.
+   #
+   # Override this method to take action during idle periods 
+   ########################
+   def OnOverflow( self ):
+      raise MDDirectException( 'rtEdgePublisher.OnOverflow not handled' ) 
 
    ########################
    # Called asynchronously every second or so when channel is idle

@@ -5,7 +5,8 @@
 *
 *  REVISION HISTORY:
 *     15 MAY 2025 jcs  Created.
-*
+*     29 JUN 2025 jcs  Build 77: pyPublish( ..., bImg )
+*      
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
@@ -65,17 +66,26 @@ PyObject *MDDpyPubChan::Read( double dWait )
    return _Get1stUpd();
 }
 
-int MDDpyPubChan::pyPublish( const char *tkr, int ReqID, PyObject *lst )
+int MDDpyPubChan::pyPublish( const char *tkr, int ReqID, PyObject *lst, bool bImg )
 {
    RTEDGE::Locker l( _mtx );
    RTEDGE::Update &u = upd();
 
    if ( _py2mdd( lst ) ) {
-      u.Init( tkr, ReqID );
+      u.Init( tkr, ReqID, bImg );
       u.AddFieldList( _fl );
       return u.Publish();
    }
    return 0;
+}
+
+int MDDpyPubChan::pyPubError( const char *tkr, int ReqID, const char *err )
+{
+   RTEDGE::Locker l( _mtx );
+   RTEDGE::Update &u = upd();
+
+   u.Init( tkr, ReqID, false );
+   return u.PubError( err );
 }
 
 

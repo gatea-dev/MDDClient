@@ -5,6 +5,7 @@
 *
 *  REVISION HISTORY:
 *     15 MAY 2025 jcs  Created.
+*     29 JUN 2025 jcs  Build 77: pyPublish( ..., bImg )
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -39,7 +40,8 @@ public:
 	// Operations
 public:
 	PyObject *Read( double );
-	int       pyPublish( const char *, int, PyObject * );
+	int       pyPublish( const char *, int, PyObject *, bool );
+	int       pyPubError( const char *, int, const char * );
 
 	// RTEDGE::PubChannel Interface
 protected:

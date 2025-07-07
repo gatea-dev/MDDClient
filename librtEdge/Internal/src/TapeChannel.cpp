@@ -9,8 +9,9 @@
 *     10 OCT 2022 jcs  Multiple tickers
 *     14 OCT 2022 jcs  PumpOneMsg( ..., bool &bContinue )
 *     12 JAN 2024 jcs  Build 67: TapeHeader.h
+*     16 JUN 2025 jcs  Build 77: Read from Live Tape
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -448,8 +449,9 @@ int TapeChannel::PumpTicker( int ix )
    mddBuf        m;
    Offsets       odb;
    u_int64_t     off, diff, nMsg;
+   u_int64_t     vwSz, vwSz1, loc, loc1;
    size_t        i, j, nr;
-   bool          bPmp, notUsed;
+   bool          bPmp, notUsed, bReload;
    int           n, mSz, pct;
    static int    _pct[] = { 10, 25, 50, 75 };
 
@@ -461,16 +463,22 @@ int TapeChannel::PumpTicker( int ix )
    // One Ticker
 
    rec  = _tdb[ix];
-   off  = rec->_loc();
    nMsg = rec->_nMsg();
    msg  = (GLrecTapeMsg *)0;
    /*
     * Remap if too big
     */
-   if ( off > _vwHdr->siz() ) {
+   loc     = hdr()._curLoc();
+   vwSz    = _vwHdr->siz();
+   loc     = _vwHdr->siz();
+   vwSz1   = 0;
+   bReload = ( off > vwSz );
+   if ( bReload ) {
       Unload();
       Load();
-      rec = _tdb[ix];
+      rec   = _tdb[ix];
+      vwSz1 = _vwHdr->siz();
+      loc1  = hdr()._curLoc();
    }
    _PumpDead();
    bPmp = true;
