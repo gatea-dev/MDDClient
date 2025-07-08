@@ -53,6 +53,10 @@ Features To Add
  *
  * -# Read from Live Tape:
  *    - TapeChannel.PumpTicker() : bReload
+
+ * -# Python ChartDbSvr:
+ *    - py/src/ChartDbSvr.cpp 
+ *
  *
  *
  * ### Build 76 25-04-08

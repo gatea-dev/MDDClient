@@ -85,6 +85,21 @@ PyObject *mdd_PyList_Pack3( PyObject *py1, PyObject *py2, PyObject *py3 )
    return rc;
 }
 
+PyObject *mdd_PyList_Pack4( PyObject *py1, 
+                            PyObject *py2, 
+                            PyObject *py3,
+                            PyObject *py4 )
+{
+   PyObject *rc;
+
+   rc = ::PyList_New( 4 );
+   ::PyList_SetItem( rc, 0, py1 );
+   ::PyList_SetItem( rc, 1, py2 );
+   ::PyList_SetItem( rc, 2, py3 );
+   ::PyList_SetItem( rc, 3, py4 );
+   return rc;
+}
+
 PyObject *_PyReturn( PyObject *obj )
 {
    Py_INCREF( obj );

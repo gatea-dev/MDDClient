@@ -31,7 +31,7 @@
 #     21 JAN 2025 jcs  Build 13: EdgMon
 #     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
-#     29 JUN 2025 jcs  Build 77: rtEdgePublisher; Publish( ..., bImg )
+#      8 JUL 2025 jcs  Build 77: rtEdgePublisher; Publish( ..., bImg ); ChartDB
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -286,6 +286,7 @@ class EdgMon:
       self._GLedgField   = 0
       self._GLedgEvent   = 0
 
+""" class EdgMon """
 
 ## \cond
 ######################################
@@ -313,6 +314,8 @@ class MDDirectException( Exception ):
       return repr(self.value)
 ## \endcond
 
+""" class MDDirectException """
+
 
 ## \cond
 ######################################
@@ -333,6 +336,8 @@ class MDDirectValueException( MDDirectException ):
    ###########################
    def __init__( self, value ):
       MDDirectException.__init__( self, 'Invalid value %s' % str( value ) )
+
+""" class MDDirectValueException """
 
 
 ## \cond
@@ -778,6 +783,8 @@ class rtEdgeSubscriber( threading.Thread ):
       return
 ## \endcond
 
+""" class rtEdgeSubscriber """
+
 
 ## \cond
 ######################################
@@ -976,6 +983,7 @@ class rtEdgePublisher( threading.Thread ):
       return
 ## \endcond
 
+""" class rtEdgePublisher """
 
 
 ## \cond
@@ -1115,6 +1123,8 @@ class LVC:
       flds       = blob[4:]
       return msg._SetData( svc, tkr, None, flds, True )
 ## \endcond
+
+""" class LVC """
 
 
 ## \cond
@@ -1329,6 +1339,148 @@ class LVCAdmin( threading.Thread ):
       return
 ## \endcond
 
+""" class LVCAdmin """
+
+## \cond
+######################################
+#                                    #
+#            C h a r t D B           #
+#                                    #
+######################################
+## \endcond
+## @class ChartDB
+#
+# Read-only view on ChartDbSvr (ChartDB) file
+#
+# Member | Description
+# --- | ---
+# _cxt    | ChartDB Context from MDDirect library
+#
+class ChartDB:
+   ########################
+   # Constructor
+   #
+   # @param file : ChartDB filename
+   ########################
+   def __init__( self, file ):
+      self._cxt = MDDirect.ChartDbOpen( file )
+
+   ########################
+   # Destructor : Called at garbage collection time 
+   # 
+   # @see Close()
+   ########################
+   def __del__( self ):
+      if self._cxt:
+         MDDirect.ChartDbClose( self._cxt )
+      self._cxt = None
+
+   ########################
+   # Return list of [ Svc, Tkr, FID, Interval ] tuples in the ChartDB
+   #
+   # @return [ [ Svc1, Tkr1, FID1, Interval1 ], ... ]
+   ########################
+   def GetTickers( self ):
+      return MDDirect.ChartDbQuery( self._cxt )
+
+   ########################
+   # Snap most recent ChartDB data for ( svc, tkr, fid )
+   #
+   # @param svc : Service Name
+   # @param tkr : Ticker Name
+   # @param fid : Field ID
+   # @param num : Most recent slice to pull; 0 for all
+   # @return ChartData
+   ########################
+   def Snap( self, svc, tkr, fid, num=0 ):
+      res = MDDirect.ChartDbSnap( self._cxt, svc, tkr, fid, num )
+      return ChartData( res )
+
+""" class ChartDB """
+
+
+
+## \cond
+######################################
+#                                    #
+#        C h a r t D a t a           #
+#                                    #
+######################################
+## \endcond
+## @class ChartData
+#
+# ChartDB Data Result Set
+#
+# Member | Description
+# --- | ---
+# _Age | Age of last update
+# _Times | [ tUnix1, tUnix2, ... ]
+# _Values | [ val1, val2, ... ]
+#
+class ChartData:
+   ########################
+   # Constructor
+   #
+   # @param res : [ Age, list( Times ), list( Values ) ]
+   # @see ChartDB.Snap()
+   ########################
+   def __init__( self, res ):
+      try:    self._Age    = res[0]
+      except: self._Age    = None
+      try:    self._Times  = res[1]
+      except: self._Times  = []
+      try:    self._Values = res[2]
+      except: self._Values = []
+
+   ########################
+   # Return [ tUnix1, tUnix2, ... ]
+   #
+   # @return [ tUnix1, tUnix2, ... ]
+   ########################
+   def Times( self ):
+      return self._Times
+
+   ########################
+   # Return [ val1, val2, ... ]
+   #
+   # @return [ val1, val2, ... ]
+   ########################
+   def Values( self ):
+      return self._Values
+
+   ########################
+   # Return age of last update
+   #
+   # @return age of last update
+   ########################
+   def Age( self ):
+      return self._Age
+
+   ########################
+   # Return size of result set
+   #
+   # @return size of result set
+   ########################
+   def Size( self ):
+      return len( self._Times )
+
+   ########################
+   # Return string-ified list of values
+   #
+   # @return string-ified list of values
+   # @return String-ified list of stats
+   ########################
+   def Dump( self, precision=2 ):
+      TDB = self._Times
+      VDB = self._Values
+      sz  = self.Size()
+      fmt = f'%d %.{precision}f'
+      rc  = [ fmt % ( TDB[i], VDB[i] ) for i in range( sz ) ]
+      return '\n'.join( rc )
+
+""" class ChartData """
+
+
 ## \cond
 ######################################
 #                                    #
@@ -1391,6 +1543,8 @@ class BBDailyStats:
       if statName in sdb:
          val = sdb[statName]
       return val
+
+""" class BBDailyStats """
 
 
 ## \cond
@@ -1686,6 +1840,7 @@ class rtEdgeData:
       return ddb.GetFieldName( fid )
 ## \endcond
 
+""" class rtEdgeData """
 
 
 ## \cond
@@ -1862,6 +2017,8 @@ class rtEdgeField:
       self._val = v
 ## \endcond
 
+""" class rtEdgeField """
+
 
 ## \cond
 ######################################
@@ -1991,6 +2148,8 @@ class rtEdgeSchema:
       ty = self.GetFieldType( fid )
       return GetTypeSuffix( ty )
 
+""" class rtEdgeSchema """
+
 
 ## \cond
 ######################################
@@ -2075,3 +2234,5 @@ def GetTypeName( ty ):
    return rc
 
 ## \endcond
+
+""" class MDDirectEnum """

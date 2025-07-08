@@ -1,4 +1,4 @@
-/******************************************************************************
+/***************************************************************************** 
 *
 *  PyAPI.cpp
 *     MDDirect Python interface
@@ -17,7 +17,7 @@
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
 *      5 FEB 2025 jcs  Build 13: 3.11
-*      6 JUL 2025 jcs  Build 77: PubChannel; Publish( .., bImg )
+*      8 JUL 2025 jcs  Build 77: PubChannel; Publish( .., bImg ); ChartDbSvr
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -36,15 +36,28 @@ PyMethodDef *_pMethods = (PyMethodDef *)0;
 //
 ////////////////////////////////////////////////////////////
 
+typedef hash_map<int, MDDpyChartDB *>  PyChartMap;
 typedef hash_map<int, MDDpySubChan *>  PySubChanMap;
 typedef hash_map<int, MDDpyPubChan *>  PyPubChanMap;
 typedef hash_map<int, MDDpyLVC *>      PyLVCMap;
 typedef hash_map<int, MDDpyLVCAdmin *> PyLVCAdminMap;
 
+static PyChartMap    _cdbMap;
 static PySubChanMap  _subMap;
 static PyPubChanMap  _pubMap;
 static PyLVCMap      _lvcMap;
 static PyLVCAdminMap _admMap;
+
+static MDDpyChartDB *_GetCDB( int cxt )
+{
+   PyChartMap          &sdb = _cdbMap;
+   PyChartMap::iterator it;
+   MDDpyChartDB        *ch;
+
+   it = sdb.find( cxt );
+   ch = ( it != sdb.end() ) ? (*it).second : (MDDpyChartDB *)0;
+   return ch;
+}
 
 static MDDpySubChan *_GetSub( int cxt )
 {
@@ -77,6 +90,21 @@ static MDDpyLVC *_GetLVC( int cxt )
    it = ldb.find( cxt );
    lvc = ( it != ldb.end() ) ? (*it).second : (MDDpyLVC *)0;
    return lvc;
+}
+
+static bool _DelCDB( int cxt )
+{
+   PyChartMap          &sdb = _cdbMap;
+   PyChartMap::iterator it;
+   MDDpyChartDB        *ch;
+
+   if ( (it=sdb.find( cxt )) != sdb.end() ) {
+      ch = (*it).second;
+      sdb.erase( it );
+      delete ch;
+      return true;
+   }
+   return false;
 }
 
 static bool _DelSub( int cxt )
@@ -481,7 +509,7 @@ static PyObject *LVCOpen( PyObject *self, PyObject *args )
    if ( !PyArg_ParseTuple( args, "s", &file ) )
       return _PyReturn( Py_None );
 
-   // MD-Direct Subscription Channel
+   // MD-Direct LVC
 
    lvc          = new MDDpyLVC( file );
    cxt          = lvc->cxt();
@@ -778,6 +806,73 @@ static PyObject *LVCAdmClose( PyObject *self, PyObject *args )
 
 
 ////////////////////////////
+// ChartDbSvr
+////////////////////////////
+static PyObject *CDBOpen( PyObject *self, PyObject *args )
+{
+   MDDpyChartDB *cdb;
+   const char   *file;
+   int           cxt;
+
+   // Usage : CDBOpen( './DB/cdb.db' )
+
+   if ( !PyArg_ParseTuple( args, "s", &file ) )
+      return _PyReturn( Py_None );
+
+   // ChartDbSvr Object
+
+   cdb          = new MDDpyChartDB( file );
+   cxt          = cdb->cxt();
+   _cdbMap[cxt] = cdb;
+   return PyInt_FromLong( cxt );
+}
+
+static PyObject *CDBGetTkrs( PyObject *self, PyObject *args )
+{
+   MDDpyChartDB *cdb;
+   int           cxt;
+
+   // Usage : CDBGetTickers( cxt )
+
+   if ( !PyArg_ParseTuple( args, "i", &cxt ) )
+      return _PyReturn( Py_None );
+   if ( (cdb=_GetCDB( cxt )) )
+      return cdb->PyGetTickers();
+   return _PyReturn( Py_None );
+}
+
+static PyObject *CDBSnap( PyObject *self, PyObject *args )
+{
+   MDDpyChartDB *cdb;
+   const char   *svc, *tkr;
+   int           cxt, fid, num;
+
+   // Usage : CDBSnap( cxt, svc, tkr, fid [, num ] )
+
+   num = 0;
+   if ( !PyArg_ParseTuple( args, "issi|i", &cxt, &svc, &tkr, &fid, &num ) )
+      return _PyReturn( Py_None );
+   if ( (cdb=_GetCDB( cxt )) )
+      return cdb->PySnap( svc, tkr, fid, num );
+   return _PyReturn( Py_None );
+}
+
+
+static PyObject *CDBClose( PyObject *self, PyObject *args )
+{
+   int  cxt;
+   bool rc;
+
+   // Usage : CDBClose( cxt )
+
+   if ( !PyArg_ParseTuple( args, "i", &cxt ) )
+      return _PyReturn( Py_False );
+   rc = _DelCDB( cxt );
+   return _PyReturn( rc ? Py_True : Py_False );
+}
+
+
+////////////////////////////
 // Publication Channel
 ////////////////////////////
 static PyObject *PubStart( PyObject *self, PyObject *args )
@@ -1053,6 +1148,13 @@ static PyMethodDef EdgeMethods[] =
     { "LVCSnap",       LVCSnap,    _PY_ARGS, "Snap from LVC File" },
     { "LVCSnapAll",    LVCSnapAll, _PY_ARGS, "Snap All Tickers from LVC File" },
     { "LVCClose",      LVCClose,   _PY_ARGS, "Close LVC File" },
+    /*
+     * ChartDbSvr
+     */
+    { "ChartDbOpen",   CDBOpen,    _PY_ARGS, "Open ChartDbSvr File" },
+    { "ChartDbQuery",  CDBGetTkrs, _PY_ARGS, "Get All Tickers from ChartDbSvr" },
+    { "ChartDbSnap",   CDBSnap,    _PY_ARGS, "Snap from ChartDbSvr File" },
+    { "ChartDbClose",  CDBClose,   _PY_ARGS, "Close ChartDbSvr File" },
     /*
      * LVC Admin Channel
      */

@@ -16,7 +16,7 @@
 *     29 AUG 2023 jcs  Build 10: EVT_BDS
 *     20 SEP 2023 jcs  Build 11: mdd_PyList_PackX()
 *     17 OCT 2023 jcs  Build 12: No mo Book
-*     15 MAY 2025 jcs  Build 77: PubChannel.h
+*      8 JUL 2025 jcs  Build 77: PubChannel.h; ChartDbSvr.h
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -172,6 +172,7 @@ typedef LocklessFifo<Update>       UpdateFifo;
 ///////////////
 // Us
 ///////////////
+#include <ChartDbSvr.h>
 #include <EventPump.h>
 #include <RecCache.h>
 #include <LVC.h>
@@ -188,6 +189,7 @@ extern int         atoin( char *, int );
 extern char       *MDDirectID();
 extern PyObject   *mdd_PyList_Pack2( PyObject *, PyObject * );
 extern PyObject   *mdd_PyList_Pack3( PyObject *, PyObject *, PyObject * );
+extern PyObject   *mdd_PyList_Pack4( PyObject *, PyObject *, PyObject *, PyObject * );
 extern PyObject   *_PyReturn( PyObject * );
 extern const char *_Py_GetString( PyObject *, string & );
 
