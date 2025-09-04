@@ -17,6 +17,10 @@ using namespace MDDPY;
 #define INT_PTR int)(size_t
 #define PTR_INT void *)(size_t
 
+// TODO : Configurable somehow
+
+#define _PRECISION 4
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //                c l a s s      M D D p y P u b C h a n
@@ -295,10 +299,11 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
          _strs.push_back( s );
       }
       else if ( PyList_Check( val ) ) {
-         bv      = _pyVector( val );
-         f._type = mddFld_vector;
-         b._data = bv._data;
-         b._dLen = bv._dLen;
+         bv            = _pyVector( val );
+         f._type       = mddFld_vector;
+         f._vPrecision = _PRECISION;
+         b._data       = bv._data;
+         b._dLen       = bv._dLen;
          _vecs.push_back( b._data );
 #if PY_MAJOR_VERSION < 3
          Py_DECREF( val );
