@@ -245,7 +245,7 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
    mddBuf        &b = v._buf;
    mddBuf         bv;
    string        *s;
-   int            i, j, nf, nk;
+   int            i, j, nf, nk, prec;
 
    // Pre-condition(s)
 
@@ -299,9 +299,10 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
          _strs.push_back( s );
       }
       else if ( PyList_Check( val ) ) {
-         bv            = _pyVector( val );
+         prec          = _PRECISION;
+         bv            = _pyVector( val, prec );
          f._type       = mddFld_vector;
-         f._vPrecision = _PRECISION;
+         f._vPrecision = prec;
          b._data       = bv._data;
          b._dLen       = bv._dLen;
          _vecs.push_back( b._data );
@@ -316,7 +317,7 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
    return j;
 }
 
-mddBuf MDDpyPubChan::_pyVector( PyObject *lst )
+mddBuf MDDpyPubChan::_pyVector( PyObject *lst, int &prec )
 {
    mddBuf    b = { (char *)0, 0 };
    PyObject *pv;
@@ -332,8 +333,11 @@ mddBuf MDDpyPubChan::_pyVector( PyObject *lst )
       return b;
 
    /*
-    * Value : Deep copy vector
+    * [ precision, [ val1, val2, val2, ... ] ], or
+    * [ val1, val2, val2, ... ]
     */
+   lst     = _ParsePyList( lst, nf, prec );
+   nf      = ::PyList_Size( lst );
    dLen    = nf * sizeof( double );
    b._data = new char[dLen+4];
    b._dLen = dLen;
@@ -347,6 +351,31 @@ mddBuf MDDpyPubChan::_pyVector( PyObject *lst )
    b._dLen       = dLen;
    b._data[dLen] = '\0';
    return b;
+}
+
+PyObject *MDDpyPubChan::_ParsePyList( PyObject *lst, int nf, int &prec )
+{
+   PyObject *p1, *p2;
+
+   /*
+    * [ precision, [ val1, val2, val2, ... ] ], or
+    * [ val1, val2, val2, ... ]
+    */
+   if ( nf != 2 )
+      return lst;
+   p1 = ::PyList_GetItem( lst, 0 );
+   p2 = ::PyList_GetItem( lst, 1 );
+   if ( !PyList_Check( p2 ) )
+      return lst;
+   if ( !(nf=::PyList_Size( p2 )) )
+      return lst;
+   if ( PyInt_Check( p1 ) )
+      prec = ::_PyInt_AsInt( p1 );
+   else if ( PyLong_Check( p1 ) )
+      prec = ::PyLong_AsLong( p1 );
+   else
+      return lst;
+   return p2;
 }
 
 PyObject *MDDpyPubChan::_Get1stUpd()
