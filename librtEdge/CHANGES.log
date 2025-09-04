@@ -45,7 +45,7 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 77 25-06-xx
+ * ### Build 77 25-09-04
  *
  * -# Python Publishing:
  *    - py/src/PubChannel.cpp 
@@ -53,10 +53,9 @@ Features To Add
  *
  * -# Read from Live Tape:
  *    - TapeChannel.PumpTicker() : bReload
-
+ *
  * -# Python ChartDbSvr:
  *    - py/src/ChartDbSvr.cpp 
- *
  *
  *
  * ### Build 76 25-04-08

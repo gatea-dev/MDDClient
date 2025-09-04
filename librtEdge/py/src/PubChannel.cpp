@@ -6,7 +6,8 @@
 *  REVISION HISTORY:
 *     15 MAY 2025 jcs  Created.
 *     29 JUN 2025 jcs  Build 77: pyPublish( ..., bImg )
-*      
+*      4 SEP 2025 jcs  Build 77: _pyVector()
+*
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
 #include <MDDirect.h>
@@ -35,7 +36,8 @@ MDDpyPubChan::MDDpyPubChan( const char *host, const char *svc ) :
    _fl( ::mddFieldList_Alloc( K ) ),
    _bdsStreamID( 0 ),
    _mtx(),
-   _strs()
+   _strs(),
+   _vecs()
 {
    SetIdleCallback( true );
 }
@@ -44,7 +46,9 @@ MDDpyPubChan::~MDDpyPubChan()
 {
    ::mddFieldList_Free( _fl );
    for ( size_t i=0; i<_strs.size(); delete _strs[i++] );
+   for ( size_t i=0; i<_vecs.size(); delete _vecs[i++] );
    _strs.clear();
+   _vecs.clear();
 }
 
 
@@ -235,6 +239,7 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
    mddField      *fdb, f;
    mddValue      &v = f._val;
    mddBuf        &b = v._buf;
+   mddBuf         bv;
    string        *s;
    int            i, j, nf, nk;
 
@@ -248,7 +253,9 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
    // Rock on
 
    for ( size_t ii=0; ii<_strs.size(); delete _strs[ii++] );
+   for ( size_t ii=0; ii<_vecs.size(); delete _vecs[ii++] );
    _strs.clear(); 
+   _vecs.clear(); 
    if ( nf > _fl._nAlloc ) {
       ::mddFieldList_Free( _fl );
       _fl = ::mddFieldList_Alloc( nf+4 );
@@ -287,18 +294,54 @@ int MDDpyPubChan::_py2mdd( PyObject *lst )
          b._dLen = strlen( b._data );
          _strs.push_back( s );
       }
-#ifdef VECTOR_NOT_SUPPORTED
-      else if ( PyList_Check( pyV ) ) {
-         f._type   = mddFld_vector;
-         v._Vector = pyV;
-         Py_INCREF( pyV );
+      else if ( PyList_Check( val ) ) {
+         bv      = _pyVector( val );
+         f._type = mddFld_vector;
+         b._data = bv._data;
+         b._dLen = bv._dLen;
+         _vecs.push_back( b._data );
+#if PY_MAJOR_VERSION < 3
+         Py_DECREF( val );
+#endif // PY_MAJOR_VERSION < 3
       }
-#endif // VECTOR_NOT_SUPPORTED
       fdb[j]  = f;
       j++;
    }
    _fl._nFld = j;
    return j;
+}
+
+mddBuf MDDpyPubChan::_pyVector( PyObject *lst )
+{
+   mddBuf    b = { (char *)0, 0 };
+   PyObject *pv;
+   double   *dv;
+   int       i, nf;
+   size_t    dLen;
+
+   // Pre-condition(s)
+
+   if ( !lst || !PyList_Check( lst ) )
+      return b;
+   if ( !(nf=::PyList_Size( lst )) )
+      return b;
+
+   /*
+    * Value : Deep copy vector
+    */
+   dLen    = nf * sizeof( double );
+   b._data = new char[dLen+4];
+   b._dLen = dLen;
+   dv      = (double *)b._data;
+   for ( i=0; i<nf; i++ ) {
+      pv    = ::PyList_GetItem( lst, i );
+      dv[i] = 0.0;
+      if ( PyFloat_Check( pv ) || PyLong_Check( pv ) || PyInt_Check( pv ) )
+         dv[i] = ::PyFloat_AsDouble( pv );
+   }
+   b._dLen       = dLen;
+   b._data[dLen] = '\0';
+   return b;
 }
 
 PyObject *MDDpyPubChan::_Get1stUpd()

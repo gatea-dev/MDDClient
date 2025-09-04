@@ -13,6 +13,7 @@
 *     26 SEP 2023 jcs  Build 65: NumUpd,NumFld header - DUH!!
 *     30 JUN 2024 jcs  Build 72: -t working
 *     24 JAN 2025 jcs  Build 75: swig
+*     15 JUL 2025 jcs  Build 77: LATENCY
 *
 *  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
@@ -234,7 +235,7 @@ int main( int argc, char **argv )
    if ( bCfg ) {
       s  = "Usage: %s \\ \n";
       s += "       [ -db      <LVC d/b filename> ] \\ \n";
-      s += "       [ -ty      <DUMP | DICT | MEM> ] \\ \n";
+      s += "       [ -ty      <DUMP | DICT | MEM | LATENCY> ] \\ \n";
       s += "       [ -s       <Service> ] \\ \n";
       s += "       [ -t       <Ticker : CSV, filename or * for all> ] \\ \n";
       s += "       [ -f       <CSV Fids or empty for all> ] \\ \n";
@@ -317,6 +318,28 @@ int main( int argc, char **argv )
    }
    bAllS = !::strcmp( svc, "*" );
    bAllT = !::strcmp( tkrs[0].data(), "*" );
+
+   /////////////////////
+   // LATENCY is special
+   /////////////////////
+   if ( !::strcmp( cmd, "LATENCY" ) ) {
+      double    d0 = rtEdge::TimeNs();
+      LVC       lvc( svr );
+      double    d1  = lvc.TimeNs();
+      LVCAll   &all = lvc.ViewAll();
+      Messages &mdb = all.msgs();
+      double    d2  = lvc.TimeNs();
+      double    a1  = 1000.0 * ( d1-d0 );
+      double    a2  = 1000.0 * ( d2-d1 );
+      int       nb  = all.Size();
+      size_t    nt  = mdb.size();
+      double    tMs = 1000.0 * all.dSnap();
+
+      printf( "Load %s LVC in %.2fmS\n", svr, a1 );
+      printf( "SnapAll %s LVC in %.2fmS\n", svr, a2 );
+      printf( "[%d bytes] : %ld tickers in %.2fmS\n", nb, nt, tMs );
+      return 0;
+   }
 
    /////////////////////
    // Do it

@@ -6,6 +6,7 @@
 *  REVISION HISTORY:
 *     15 MAY 2025 jcs  Created.
 *     29 JUN 2025 jcs  Build 77: pyPublish( ..., bImg )
+*      4 SEP 2025 jcs  Build 77: _pyVector()
 *
 *  (c) 1994-2025, Gatea, Ltd.
 ******************************************************************************/
@@ -15,6 +16,8 @@
 #include <set>
 
 using namespace MDDPY;
+
+typedef vector<char *> mddVectors;
 
 /////////////////////////////////////////
 // Edge3 Publication Channel
@@ -31,6 +34,7 @@ private:
 	int           _bdsStreamID;
 	RTEDGE::Mutex _mtx;
 	Strings       _strs;
+	mddVectors    _vecs;
 
 	// Constructor / Destructor
 public:
@@ -56,7 +60,8 @@ protected:
 
 	// Helpers
 private:
-	int       _py2mdd( PyObject* );
+	int       _py2mdd( PyObject * );
+	mddBuf    _pyVector( PyObject * );
 	PyObject *_Get1stUpd();
 
 };  // class MDDpyPubChan
