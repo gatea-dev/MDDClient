@@ -61,7 +61,8 @@ protected:
 	// Helpers
 private:
 	int       _py2mdd( PyObject * );
-	mddBuf    _pyVector( PyObject * );
+	mddBuf    _pyVector( PyObject *, int & );
+	PyObject *_ParsePyList( PyObject *, int, int & );
 	PyObject *_Get1stUpd();
 
 };  // class MDDpyPubChan

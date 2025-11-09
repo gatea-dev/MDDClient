@@ -19,12 +19,12 @@ for pLib in [ 'mddWire', 'rtEdge' ]:
    INC_DIR += [ '%s/lib%s/expat/xmlparse' % ( MDD_ROOT, pLib ) ]
    LIB_DIR += [ '%s/lib%s/lib' % ( MDD_ROOT, pLib ) ]
    LIBS    += [ '%s64' % pLib ]
-SRCS        = [ './src/PyAPI.cpp',
+SRCS        = [ './src/PubChannel.cpp',
+                './src/PyAPI.cpp',
                 './src/ChartDbSvr.cpp',
                 './src/EventPump.cpp',
                 './src/LVC.cpp',
                 './src/LVCAdmin.cpp',
-                './src/PubChannel.cpp',
                 './src/RecCache.cpp',
                 './src/Stats.cpp',
                 './src/SubChannel.cpp',
