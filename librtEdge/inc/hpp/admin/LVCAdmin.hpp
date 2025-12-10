@@ -39,7 +39,7 @@ static const char *_dtdNAK     = "NAK";
 static const char *_attrSchema = "Schema";
 static const char *_tkrALL     = "*";
 
-typedef hash_set<std::string>  StringSet;
+typedef hash_set<std::string>  _StringSet;
 
 namespace RTEDGE
 {
@@ -296,7 +296,7 @@ public:
 	   LVCAll       dst( lvc, lvc.GetSchema( false ) );
 	   LVCAll      &all = lvc.ViewAll_safe( dst );
 	   Messages    &mdb = all.msgs();
-	   StringSet    ldb;
+	   _StringSet   ldb;
 	   std::string  s;
 	   const char **fltr;
 	   size_t       sz;
