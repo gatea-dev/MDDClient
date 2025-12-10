@@ -32,6 +32,7 @@
 #     29 JAN 2025 jcs  Build 13: LVCAdmin : schema=None means no argument
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
 #      8 JUL 2025 jcs  Build 77: rtEdgePublisher; Publish( ..., bImg ); ChartDB
+#      9 NOV 2025 jcs  Build 77: IsValid()
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -397,6 +398,8 @@ class rtEdgeSubscriber( threading.Thread ):
    def __del__( self ):
       self.Stop()
 
+   """ ############## Access ############## """
+
    ########################
    # Returns Version and Build info
    #
@@ -406,12 +409,30 @@ class rtEdgeSubscriber( threading.Thread ):
       return MDDirect.Version()
 
    ########################
+   # Returns True if connected
+   #
+   # @return True if connected
+   ########################
+   def IsValid( self ):
+      return( self._cxt != None )
+
+   ########################
    # Returns True if dispatching from this thread
    #
    # @return True if dispatching from this thread
    ########################
    def IsOurThread( self ):
       return self._bThrMD
+
+   ########################
+   # Returns True if fed from tape; False if from rtEdgeCache3
+   #
+   # @return True if fed from tape; False if from rtEdgeCache3
+   ########################
+   def IsTape( self ):
+      return MDDirect.IsTape( self._cxt )
+
+   """ ############## Life Cycle Operations ############## """
 
    ########################
    # Connect and Start session to MD-Direct rtEdgeCache3 server
@@ -437,13 +458,7 @@ class rtEdgeSubscriber( threading.Thread ):
          MDDirect.Stop( self._cxt )
       self._cxt = None
 
-   ########################
-   # Returns True if fed from tape; False if from rtEdgeCache3
-   #
-   # @return True if fed from tape; False if from rtEdgeCache3
-   ########################
-   def IsTape( self ):
-      return MDDirect.IsTape( self._cxt )
+   """ ############## Tape Operations ############## """
 
    ########################
    # Sets tape direction based on bTapeDir
@@ -521,6 +536,8 @@ class rtEdgeSubscriber( threading.Thread ):
       if type( t1 ) != type( 'abc' ): t1 = '23:59:59'
       return MDDirect.PumpTape( self._cxt, t0, t1 )
 
+   """ ############## Streaming Operations ############## """
+
    ########################
    # Open a subscription stream for the ( svc, tkr ) data stream.  
    #
@@ -577,6 +594,8 @@ class rtEdgeSubscriber( threading.Thread ):
    ########################
    def CloseBDS( self, svc, bds ):
       return MDDirect.CloseBDS( self._cxt, svc, bds )
+
+   """ ############## libMDDirect Reactor ############## """
 
    ########################
    # Called asynchronously when we connect or disconnect from rtEdgeCache3.
@@ -694,6 +713,7 @@ class rtEdgeSubscriber( threading.Thread ):
    def OnIdle( self ):
       pass 
 
+   """ ############## Helpers ############## """
 ## \cond
    #################################
    # (private) threading.Thread Interface
@@ -826,6 +846,16 @@ class rtEdgePublisher( threading.Thread ):
    def __del__( self ):
       self.Stop()
 
+   """ ############## Access ############## """
+
+   ########################
+   # Returns True if connected
+   #
+   # @return True if connected
+   ########################
+   def IsValid( self ):
+      return( self._cxt != None )
+
    ########################
    # Returns Version and Build info
    #
@@ -841,6 +871,8 @@ class rtEdgePublisher( threading.Thread ):
    ########################
    def IsOurThread( self ):
       return self._bThrMD
+
+   """ ############## Life Cycle Operations ############## """
 
    ########################
    # Connect and Start session to MD-Direct rtEdgeCache3 server
@@ -866,6 +898,8 @@ class rtEdgePublisher( threading.Thread ):
          MDDirect.PubStop( self._cxt )
       self._cxt = None
 
+   """ ############## Publish Operations ############## """
+
    ########################
    # Publish a Field List for a Stream
    #
@@ -888,6 +922,8 @@ class rtEdgePublisher( threading.Thread ):
    ########################
    def PubError( self, tkr, StreamID, err ):
       return MDDirect.PubError( self._cxt, tkr, StreamID, err )
+
+   """ ############## libMDDirect Reactor ############## """
 
    ########################
    # Called asynchronously when we connect or disconnect from rtEdgeCache3.
@@ -945,7 +981,7 @@ class rtEdgePublisher( threading.Thread ):
    def OnIdle( self ):
       pass
 
-
+   """ ############## Helpers ############## """
 ## \cond
    #################################
    # (private) threading.Thread Interface
