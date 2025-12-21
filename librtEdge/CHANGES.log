@@ -45,6 +45,12 @@ Features To Add
  * ## Change Log
  *
  *
+ * ### Build 78 25-12-21
+ *
+ * -# Attached LVC Consumer Locking d/b file
+ *    - FILE_SHARE_DELETE
+ *
+ *
  * ### Build 77 25-09-04
  *
  * -# Python Publishing:
