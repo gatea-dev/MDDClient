@@ -13,8 +13,9 @@
 *     12 OCT 2017 jcs  Build 36: u_int64_t siz(); _w32XxSz / _w32FileMapping()
 *      7 NOV 2017 jcs  Build 38: pFile()
 *     14 JAN 2024 jcs  Build 67: No mo OFF_T
+*     21 DEC 2025 jcs  Build 78: FILE_SHARE_DELETE
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2025, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -436,7 +437,7 @@ FPHANDLE GLmmap::Open( const char *pName, const char *flags )
    }
    else if ( !::strcmp( flags, _mm_r ) ) {  // mmap()
       dwAccess = GENERIC_READ;
-      dwShare  = FILE_SHARE_READ | FILE_SHARE_WRITE;
+      dwShare  = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
       dwCreate = OPEN_EXISTING;
    }
    else if ( !::strcmp( flags, "w+" ) ) {
