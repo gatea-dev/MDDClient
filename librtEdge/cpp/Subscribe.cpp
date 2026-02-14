@@ -21,8 +21,9 @@
 *     20 DEC 2024 jcs  Build 74: -chain
 *      3 MAR 2025 jcs  Build 75: MySubscribe()
 *      1 APR 2025 jcs  Build 76: Formatted _DumpRow()
+*     13 FEB 2026 jcs  Build 78: -level2
 *
-*  (c) 1994-2025, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <math.h>
@@ -60,6 +61,7 @@ static Renko _zRenko = { 0, 0.0, 0.0, 1.0, (char *)"Black" };
 
 typedef hash_map<int, string>     ColFmtMap;
 typedef hash_map<int, size_t>     FidPosMap;
+typedef FidPosMap                 DepthMap;
 typedef hash_map<int, string>     ColSigMap;
 typedef hash_set<int>             FidSet;
 typedef vector<int>               Fids;
@@ -196,6 +198,7 @@ public:
    vector<int>     _colSig;
    FidSet          _colFidSet;
    FidPosMap       _fidPosMap;
+   DepthMap        _depthMap;
    ColFmtMap       _colFmtMap;
    ColSigMap       _colSigMap;
    int             _eolFid;
@@ -205,6 +208,7 @@ public:
    char            _TKR_FMT[20];
    Renko           _Renko;
    Renkos          _rdb;
+   int             _nL2;
 
    ///////////////////////////////////
    // Constructor / Destructor
@@ -223,6 +227,7 @@ public:
       _colSig(),
       _colFidSet(),
       _fidPosMap(),
+      _depthMap(),
       _colFmtMap(),
       _colSigMap(),
       _eolFid( 0 ),
@@ -230,7 +235,8 @@ public:
       _stsRow( 0 ),
       _pTbl( (char *)0 ),
       _Renko( _zRenko ),
-      _rdb()
+      _rdb(),
+      _nL2( 0 )
    {
       char *pp;
       int   tLen;
@@ -326,6 +332,36 @@ public:
          _pTbl = new char[K*K];
    }
 
+  void LoadL2Map()
+   {
+      DepthMap           &ddb = _depthMap;
+      FidPosMap          &pdb = _fidPosMap;
+      ColFmtMap          &fdb = _colFmtMap;
+      ColSigMap          &sdb = _colSigMap;
+      FidPosMap::iterator pt;
+      ColFmtMap::iterator ft;
+      ColSigMap::iterator st;
+      string              sf, ss;
+      size_t              pos;
+      int                 fid, fidD;
+
+      for ( size_t i=0; _nL2 && i<_csvFids.size(); i++ ) {
+         fid  = _csvFids[i];
+         pos  = ( (pt=pdb.find( fid )) != pdb.end() ) ? (*pt).second : 0;
+         pos -= _TKR_LEN;
+         sf   = ( (ft=fdb.find( fid )) != fdb.end() ) ? (*ft).second : "";
+         ss   = ( (st=sdb.find( fid )) != sdb.end() ) ? (*st).second : "";
+         for ( int r=0; r<_nL2; r++ ) {
+            fidD      = fid;
+            fidD     += ( fid > 0 ) ? r : -r;
+            ddb[fidD] = r+2;
+            pdb[fidD] = pos;
+            fdb[fidD] = string( sf );
+            sdb[fidD] = string( ss );
+         }
+      }
+   }
+
    void MySubscribe( const char *svc, RTEDGE::Strings &tkrs )
    {
       const char *tkr;
@@ -345,6 +381,7 @@ public:
          arg = ( IsTable() && ( nt > 1 ) ) ? (VOID_PTR)(i+2) : (void *)0;
          Subscribe( svc, tkr, arg );
       }
+      nt     += _nL2;
       _stsRow = IsTable() ? ( nt+4 ) : 0; 
    }
 
@@ -501,10 +538,12 @@ private:
       FidPosMap           &pos  = _fidPosMap;
       ColFmtMap           &cdb  = _colFmtMap;
       ColSigMap           &sdb  = _colSigMap;
+      DepthMap            &ddb  = _depthMap;
       mddField            *fdb  = (mddField *)msg.Fields();
       FidPosMap::iterator it;
       ColFmtMap::iterator ct;
       ColSigMap::iterator st;
+      DepthMap::iterator  dt;
       RTEDGE::FieldDef   *def;
       mddField            f;
       Fields              row;
@@ -520,7 +559,7 @@ private:
       nRow = (size_t)msg.arg();
       if ( !_nUpd++ ) {
          cp += sprintf( cp, ANSI_CLEAR );
-         cp += nRow ? sprintf( cp, _TKR_FMT, _TICKER ) : 0;
+         cp += ( !_nL2 && nRow ) ? sprintf( cp, _TKR_FMT, _TICKER ) : 0;
          for ( i=0; i<nc; i++ ) {
             fid = _csvFids[i];
             def = sch.GetDef( fid );
@@ -529,11 +568,11 @@ private:
             cp += sprintf( cp, " " );
          }
       }
-      if ( nRow ) {
+      if ( !_nL2 && nRow ) {
          cp += sprintf( cp, ANSI_POS, nRow, (size_t)1 );
          cp += sprintf( cp, _TKR_FMT, msg.Ticker() );
       }
-      else
+      else if ( !_nL2 )
          cp += sprintf( cp, ANSI_HOME );
       nf  = msg.NumFields();
 
@@ -542,6 +581,8 @@ private:
       for ( i=0; i<nf; i++ ) {
          f   = fdb[i];
          fid = f._fid;
+         if ( _nL2 )
+            nRow = ( (dt=ddb.find( fid )) != ddb.end() ) ? (*dt).second : 0;
          if ( nRow ) {
             if ( (it=pos.find( fid )) == pos.end() )
                continue; // for-i
@@ -885,6 +926,8 @@ int main( int argc, char **argv )
       s += "      Optional Column Qualifiers: \\ \n";
       s += "         colW : Column Width; Negative to left justify \\ \n";
       s += "         sig  : Significant digits for double / float \\ \n";
+      s += "   -level2 <depth> \\ \n";
+      s += "      REQUIRES a) -table and b) only 1 ticker \\ \n";
       s += "   -query <true to dump directory, if available>\n";
       printf( s.data(), argv[0] );
       printf( "\n" );
@@ -910,6 +953,7 @@ int main( int argc, char **argv )
       printf( "   -bds     : %s\n", ch._bds ? "YES" : "NO" );
       printf( "   -tapeDir : %s\n", bTape   ? "YES" : "NO" );
       printf( "   -table   : <empty>\n" );
+      printf( "   -level2  : 0\n" );
       printf( "   -query   : %s\n", bQry    ? "YES" : "NO" );
       return 0;
    }
@@ -982,6 +1026,12 @@ int main( int argc, char **argv )
          bQry = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-table" ) )
          ch.LoadTable( argv[++i] );
+      else if ( !::strcmp( argv[i], "-level2" ) )
+         ch._nL2 = atoi( argv[++i] );
+   }
+   if ( ch._nL2 && !ch.IsTable() ) {
+      printf( "Can not have -level2 without -table; Exitting ...\n" );
+      return 0;
    }
    nt  = bStr ? 1 : 0;
    nt += bVec ? 1 : 0;
@@ -990,13 +1040,6 @@ int main( int argc, char **argv )
       printf( "Only one of -vector, -bstr or -chain allowed; Exitting ...\n" );
       return 0;
    }
-   printf( "%s\n", ch.Version() );
-   ch.SetBinary( bStr || bBin || bVec );
-   ch.SetTapeDirection( bTape );
-   pc = ch.Start( svr, usr );
-   printf( "%s\n", pc ? pc : "" );
-   if ( !ch.IsValid() )
-      return 0;
 
    // Tape Query??
 
@@ -1039,6 +1082,21 @@ int main( int argc, char **argv )
    else if ( tkr )
       tkrs.push_back( string( tkr ) );
    nt  = (int)tkrs.size();
+   if ( !ch._bds && ch._nL2 && ( nt > 1 ) ) {
+      printf( "Can only have 1 tkr w/ -level2, not %d; Exitting ...\n", nt );
+      return 0;
+   }
+  void LoadL2Map();
+  /*
+   * Start Channel / Load 'em up
+   */
+   printf( "%s\n", ch.Version() );
+   ch.SetBinary( bStr || bBin || bVec );
+   ch.SetTapeDirection( bTape );
+   pc = ch.Start( svr, usr );
+   printf( "%s\n", pc ? pc : "" );
+   if ( !ch.IsValid() )
+      return 0;
    slp = (r2=::getenv( "__JD_SLEEP" )) ? atof( r2 ) : 2.5; 
    if ( bStr ) {
       ch.Sleep( slp); // Wait for protocol negotiation to finish
