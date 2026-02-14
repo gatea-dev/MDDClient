@@ -1086,7 +1086,7 @@ int main( int argc, char **argv )
       printf( "Can only have 1 tkr w/ -level2, not %d; Exitting ...\n", nt );
       return 0;
    }
-  void LoadL2Map();
+   ch.LoadL2Map();
   /*
    * Start Channel / Load 'em up
    */
