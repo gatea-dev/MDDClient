@@ -45,9 +45,13 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 78 26-02-14
+ * ### Build 78 26-03-xx
  *
- * -# Attached LVC Consumer Locking d/b file
+ * -# rtMessage.Dump() : flds and bytes like UPA
+ *
+ * -# Publish -tease
+ *
+ * -# Attached LVC Consumer Locking d/b file (26-02-14)
  *    - FILE_SHARE_DELETE
  *
  * -# Subscribe -level2

@@ -16,8 +16,9 @@
 *      1 SEP 2022 jcs  Build 56: RTL()
 *     30 OCT 2022 jcs  Build 60: rtFld_vector
 *      6 DEC 2023 jcs  Build 67: volatile GetField()
+*      6 MAR 2026 jcs  Build 78: Dump() : flds / bytes
 *
-*  (c) 1994-2023, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #ifndef __RTEDGE_Message_H
 #define __RTEDGE_Message_H
@@ -498,7 +499,8 @@ public:
 	   cp     = bp;
 	   pd     = pDateTimeMs( dt, MsgTime() );
 	   pm     = MsgType();
-	   cp    += sprintf( cp, "%s {%s} (%s,%s)\n", pd, pm, Service(), Ticker() ); 
+	   cp    += sprintf( cp, "%s {%s} (%s,%s)", pd, pm, Service(), Ticker() ); 
+	   cp    += sprintf( cp, " [%04d flds; %05d bytes]\n", NumFields(), Size() );
 	   for ( reset(); (*this)(); ) {
 	      f   = field();
 	      ty  = f->TypeFromMsg();
