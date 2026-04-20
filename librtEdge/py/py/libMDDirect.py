@@ -33,6 +33,7 @@
 #      5 FEB 2025 jcs  Build 14: __del__; LVCAdmin.OnConnect()
 #      8 JUL 2025 jcs  Build 77: rtEdgePublisher; Publish( ..., bImg ); ChartDB
 #      9 NOV 2025 jcs  Build 77: IsValid()
+#      2 APR 2026 jcs  Build 78: PYRT_BUILD
 #
 #  (c) 1994-2025, Gatea Ltd.
 #################################################################
@@ -65,7 +66,9 @@ pass
 
 ## \endcond
 
+## @ifnot PYRT_BUILD
 ## @mainpage
+## @endif
 #
 # ### librtEdge C Extension in Python
 #
