@@ -17,9 +17,10 @@
 *     31 OCT 2023 jcs  Build 66: ../quant
 *      7 JAN 2023 jcs  Build 67: -nPub; -circBuf
 *     18 MAR 2024 jcs  Build 70: mddFld_real
-*     15 MAY 2024 jcs  Build 71: SeqNum / logUpd; LOG; koList
+*     15 MAY 2024 jcs  Build 71: SeqNum / logUpd; LOG; KOList
+*      7 MAR 2026 jcs  Build 78: MyConfig; -tease
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #include <librtEdge.h>
 #include <stdarg.h>
@@ -208,6 +209,73 @@ public:
 
 ////////////////////////
 //
+//  M y C o n f i g
+//
+////////////////////////
+
+typedef set<string> KOList;
+
+class MyConfig
+{
+public:
+   bool   _bLogUpd;
+   string _svr;
+   string _svc;
+   string _chn;
+   string _togl;
+   string _dead;
+   int    _hBeat;
+   double _tRun;
+   double _tPub;
+   int    _vecSz;
+   int    _vecPrec;
+   bool   _bVecFld;
+   bool   _bFull;
+   bool   _bCirc;
+   bool   _bPack;
+   bool   _tease;
+   int    _qTxKb;
+   KOList _KO;
+
+   ////////////////////////////////
+   // Constructor
+   ////////////////////////////////
+public:
+   MyConfig() :
+      _bLogUpd( true ),
+      _svr( "localhost:9995" ), 
+      _svc( "my_publisher" ), 
+      _chn(),
+      _togl(),
+      _dead(),
+      _hBeat( 15 ),
+      _tRun( 60.0 ),
+      _tPub( 1.0 ),
+      _vecSz( 0 ),
+      _vecPrec( 2 ),
+      _bVecFld( false ),
+      _bFull( false ),
+      _bCirc( true ),
+      _bPack( true ),
+      _tease( false ),
+      _qTxKb( K ),
+      _KO()  
+   { ; }
+
+   ////////////////////////////////
+   // Access
+   ////////////////////////////////
+   const char *svr()  { return _svr.data(); }
+   const char *svc()  { return _svc.data(); }
+   const char *chn()  { return _chn.size() ? _chn.data() : (const char *)0; }
+   const char *togl() { return _togl.data(); }
+   const char *dead() { return _dead.data(); }
+
+}; // MyConfig
+
+
+////////////////////////
+//
 //  M y C h a n n e l
 //
 ////////////////////////
@@ -217,9 +285,6 @@ class MyChannel;
 typedef map<string, Watch *>    WatchList;
 typedef map<string, MyVector *> WatchListV;
 typedef vector<MyChannel *>     MyChannels;
-typedef set<string>             KOList;
-
-static bool _bLogUpd = true;
 
 class MyChannel : public PubChannel
 {
@@ -227,14 +292,7 @@ class MyChannel : public PubChannel
    // Members
    ////////////////////////////////
 private:
-   int          _vecSz;
-   int          _vecPrec;
-   bool         _bVecFld;
-   bool         _bFull;
-   int          _qTxKb;
-   string       _togl;
-   string       _dead;
-   KOList       _KO;
+   MyConfig    &_cfg;
    WatchList    _wl;
    WatchListV   _wlV;
    Mutex        _mtx;
@@ -246,24 +304,9 @@ private:
    // Constructor
    ////////////////////////////////
 public:
-   MyChannel( const char *svc, 
-              int         vecSz, 
-              int         vecPrec, 
-              bool        bVecFld, 
-              bool        bFull, 
-              int         qTxKb, 
-              const char *togl,
-              const char *dead,
-              KOList     &KO ) :
-      PubChannel( svc ),
-      _vecSz( vecSz ),
-      _vecPrec( vecPrec ),
-      _bVecFld( bVecFld ),
-      _bFull( bFull ),
-      _qTxKb( WithinRange( 1, qTxKb, 256*K ) ),
-      _togl( togl ),
-      _dead( dead ),
-      _KO( KO ),
+   MyChannel( MyConfig &cfg ) :
+      PubChannel( cfg.svc() ),
+      _cfg( cfg ),
       _wl(),
       _wlV(),
       _mtx(),
@@ -273,7 +316,6 @@ public:
    {
       SetUserPubMsgTy( true );
    }
-
 
    ////////////////////////////////
    // Operations
@@ -297,11 +339,12 @@ public:
    MyVector *AddVector( const char *tkr, int sid )
    {
       Locker               lck( _mtx );
+      MyConfig            &c = _cfg;
       WatchListV::iterator vt;
       string               s( tkr );
 
       if ( (vt=_wlV.find( s )) == _wlV.end() )
-         _wlV[s] = new MyVector( pPubName(), tkr, _vecSz, _vecPrec, sid );
+         _wlV[s] = new MyVector( pPubName(), tkr, c._vecSz, c._vecPrec, sid );
       vt = _wlV.find( s );
       return (*vt).second;
    }
@@ -315,6 +358,7 @@ public:
    size_t PublishAll()
    {
       Locker               lck( _mtx );
+      MyConfig            &c   = _cfg;
       const char          *svc = pPubName();
       WatchList::iterator  it;
       WatchListV::iterator vt;
@@ -333,14 +377,16 @@ public:
          nb += v->PubVector( upd() );
       }
       nt = _wl.size() + _wlV.size();
-      if ( nt && _bLogUpd )
+      if ( nt && c._bLogUpd )
          LOG( "Publish %ld tkrs ( %s ); %ld bytes\n", nt, svc, nb );
       return nt;
    }
 
    size_t PubTkr( Watch &w )
    {
-      return _bFull ? PubTkr_FULL( w ) : PubTkr_SIMPLE( w );
+      MyConfig &c = _cfg;
+
+      return c._bFull ? PubTkr_FULL( w ) : PubTkr_SIMPLE( w );
    }
 
    size_t PubTkr_SIMPLE( Watch &w )
@@ -374,6 +420,7 @@ public:
    size_t PubTkr_FULL( Watch &w )
    {
       Locker         lck( _mtx );
+      MyConfig      &c   = _cfg;
       Update        &u   = upd();
       const char    *svc = pPubName();
       rtDateTime     dtTm;
@@ -441,9 +488,9 @@ public:
       u.AddField(  fid++, dtTm._date );
       u.AddField(  fid++, dtTm._time );
  */
-      if ( _vecSz && _bVecFld ) {
-         for ( i=0; i<_vecSz; vdb.push_back( ::drand48() * 100.0 ), i++ );
-         u.AddVector( -7151, vdb, _vecPrec );
+      if ( c._vecSz && c._bVecFld ) {
+         for ( i=0; i<c._vecSz; vdb.push_back( ::drand48() * 100.0 ), i++ );
+         u.AddVector( -7151, vdb, c._vecPrec );
       }
       w._rtl += 1;
       return u.Publish();
@@ -478,6 +525,7 @@ public:
 public:
    virtual void OnConnect( const char *msg, bool bUP )
    {
+      MyConfig   &c   = _cfg;
       const char *pUp = bUP ? "UP" : "DOWN";
       char        bp[K], *cp;
       int         qSz;
@@ -485,7 +533,7 @@ public:
       cp  = bp;
       cp += sprintf( cp,  "CONN %s : %s", pUp, msg );
       if ( bUP ) {
-         SetTxBufSize( _qTxKb*K );
+         SetTxBufSize( c._qTxKb*K );
          qSz = GetTxMaxBufSize();
          cp += sprintf( cp, "; TX Queue=%dK", qSz/K );
       }
@@ -496,11 +544,12 @@ public:
    virtual void OnPubOpen( const char *tkr, void *arg )
    {
       Locker      lck( _mtx );
+      MyConfig   &c = _cfg;
       Update     &u = upd();
       string      tmp( tkr ), s( tkr );
       Watch      *w;
       MyVector   *v;
-      const char *err;
+      const char *err, *dt;
       char       *pfx, *ric, buf[K];
       bool        bChn;
       int         StreamID = (int)(size_t)arg;
@@ -508,9 +557,9 @@ public:
       pfx    = ::strtok( (char *)tmp.data(), "#" );
       ric    = ::strtok( NULL, "#" );
       bChn   = _chn && ric;
-      err    = _dead.data();
+      err    = c.dead();
       LOG( "OPEN [%6d] ( %s,%s )\n", StreamID, pPubName(), tkr ); 
-      if ( !::strcmp( tkr, _togl.data() ) ) { 
+      if ( !::strcmp( tkr, c.togl() ) ) { 
          _XON = !_XON;
          sprintf( buf, "XON toggled = %s", _XON ? "true" : "false" );
          err = buf;
@@ -525,12 +574,17 @@ public:
          u.Init( tkr, StreamID );
          u.PubError( err );
       }
-      else if ( _dead.length() ) {
-         LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
+      else if ( strlen( c.dead() ) ) {
+         dt = c._tease ? "-TEASE" : "";
+         LOG( "DEAD%s [%6d] %s : %s\n", dt, StreamID, tkr, err );
          u.Init( tkr, StreamID );
          u.PubError( err );
+         if ( c._tease ) {
+           w = AddWatch( tkr, StreamID );
+           PubTkr( *w );
+         }
       }
-      else if ( _KO.find( s ) != _KO.end() ) {
+      else if ( c._KO.find( s ) != c._KO.end() ) {
          err = "KO List";
          LOG( "DEAD [%6d] %s : %s\n", StreamID, tkr, err );
          u.Init( tkr, StreamID );
@@ -538,7 +592,7 @@ public:
       }
       else if ( bChn )
          PubChainLink( atoi( pfx ), ric, arg );
-      else if ( _vecSz && !_bVecFld ) {
+      else if ( c._vecSz && !c._bVecFld ) {
          v = AddVector( tkr, StreamID );
          v->PubVector( upd() );
       }
@@ -618,14 +672,14 @@ static bool _IsTrue( const char *p )
 
 int main( int argc, char **argv )
 {
-   const char *svr, *svc, *pChn, *ty, *dead, *togl;
+   MyConfig    c;
+   const char *ty;
    const char *lnks[_MAX_CHAIN];
    char       *cp, *rp, *pKO, sSvr[K], sSvc[K];
-   double      tPub, tRun, d0, dn;
-   int         i, nl, hBeat, vecSz, vPrec, nPub, txQ;
-   bool        bCfg, bPack, bFldV, bCirc, bFull, aOK;
+   double      d0, dn;
+   int         i, nl, nPub;
+   bool        bCfg, aOK;
    string      s;
-   KOList      koList;
    FILE       *fp;
    rtBuf64     chn;
 
@@ -637,21 +691,6 @@ int main( int argc, char **argv )
       printf( "%s\n", rtEdge::Version() );
       return 0;
    }
-   svr   = "localhost:9995";
-   svc   = "my_publisher";
-   pChn  = NULL;
-   hBeat = 15;
-   tRun  = 60.0;
-   tPub  = 1.0;
-   vecSz = 0;
-   vPrec = 2;
-   bFldV = false;
-   bCirc = false;
-   bFull = false;
-   txQ   = K;
-   bPack = true;
-   dead  = "";
-   togl  = "";
    nPub  = 1;
    bCfg  = ( argc < 2 ) || ( argc > 1 && !::strcmp( argv[1], "--config" ) );
    if ( bCfg ) {
@@ -677,23 +716,24 @@ int main( int argc, char **argv )
       s += "  [ -ko      <KO List Filename> ] \\ \n";
       printf( s.data(), argv[0] );
       printf( "   Defaults:\n" );
-      printf( "      -h       : %s\n", svr );
-      printf( "      -s       : %s\n", svc );
-      printf( "      -pub     : %.1f\n", tPub );
-      printf( "      -run     : %.1f\n", tRun );
-      printf( "      -vector  : %d\n", vecSz );
-      printf( "      -vecPrec : %d\n", vPrec );
-      printf( "      -vecFld  : %s\n", bFldV ? "YES" : "NO" );
-      printf( "      -packed  : %s\n", bPack ? "YES" : "NO" );
-      printf( "      -hbeat   : %d\n", hBeat );
+      printf( "      -h       : %s\n", c.svr() );
+      printf( "      -s       : %s\n", c.svc() );
+      printf( "      -pub     : %.1f\n", c._tPub );
+      printf( "      -run     : %.1f\n", c._tRun );
+      printf( "      -vector  : %d\n", c._vecSz );
+      printf( "      -vecPrec : %d\n", c._vecPrec );
+      printf( "      -vecFld  : %s\n", c._bVecFld ? "YES" : "NO" );
+      printf( "      -packed  : %s\n", c._bPack ? "YES" : "NO" );
+      printf( "      -hbeat   : %d\n", c._hBeat );
       printf( "      -x       : <empty>\n" );
       printf( "      -tx      : <empty>\n" );
       printf( "      -nPub    : %d\n", nPub );
-      printf( "      -circBuf : %s\n", bCirc ? "YES" : "NO" );
-      printf( "      -full    : %s\n", bFull ? "YES" : "NO" );
-      printf( "      -logUpd  : %s\n", _bLogUpd ? "YES" : "NO" );
-      printf( "      -txQ     : %dK\n", txQ );
+      printf( "      -circBuf : %s\n", c._bCirc ? "YES" : "NO" );
+      printf( "      -full    : %s\n", c._bFull ? "YES" : "NO" );
+      printf( "      -logUpd  : %s\n", c._bLogUpd ? "YES" : "NO" );
+      printf( "      -txQ     : %dK\n", c._qTxKb );
       printf( "      -ko      : <empty>\n" );
+      printf( "      -tease   : %s\n", c._tease ? "YES" : "NO" );
       return 0;
    }
 
@@ -705,39 +745,39 @@ int main( int argc, char **argv )
       if ( !aOK )
          break; // for-i
       if ( !::strcmp( argv[i], "-h" ) )
-         svr = argv[++i];
+         c._svr = argv[++i];
       else if ( !::strcmp( argv[i], "-s" ) )
-         svc = argv[++i];
+         c._svc = argv[++i];
       else if ( !::strcmp( argv[i], "-pub" ) )
-         tPub = atof( argv[++i] );
+         c._tPub = atof( argv[++i] );
       else if ( !::strcmp( argv[i], "-run" ) )
-         tRun = atof( argv[++i] );
+         c._tRun = atof( argv[++i] );
       else if ( !::strcmp( argv[i], "-vector" ) )
-         vecSz = atoi( argv[++i] );
+         c._vecSz = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-vecPrec" ) )
-         vPrec = atoi( argv[++i] );
+         c._vecPrec = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-vecFld" ) )
-         bFldV = _IsTrue( argv[++i] );
+         c._bVecFld = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-packed" ) )
-         bPack = _IsTrue( argv[++i] );
+         c._bPack = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-packed" ) )
-         hBeat = _IsTrue( argv[++i] );
+         c._hBeat = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-x" ) )
-         dead = argv[++i];
+         c._dead = argv[++i];
       else if ( !::strcmp( argv[i], "-tx" ) )
-         togl = argv[++i];
+         c._togl = argv[++i];
       else if ( !::strcmp( argv[i], "-nPub" ) ) {
          nPub = atoi( argv[++i] );
          nPub = WithinRange( 1, nPub, 1024 );
       }
       else if ( !::strcmp( argv[i], "-circBuf" ) )
-         bCirc = _IsTrue( argv[++i] );
+         c._bCirc = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-full" ) )
-         bFull = _IsTrue( argv[++i] );
+         c._bFull = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-logUpd" ) )
-         _bLogUpd = _IsTrue( argv[++i] );
+         c._bLogUpd = _IsTrue( argv[++i] );
       else if ( !::strcmp( argv[i], "-txQ" ) )
-         txQ   = atoi( argv[++i] );
+         c._qTxKb   = atoi( argv[++i] );
       else if ( !::strcmp( argv[i], "-ko" ) ) {
          pKO = argv[++i];
          if ( (fp=::fopen( pKO, "r" )) ) {
@@ -754,26 +794,28 @@ int main( int argc, char **argv )
                }
                cp[1] = '\0';
                if ( strlen( sSvr ) )
-                  koList.insert( string( sSvr ) );
+                  c._KO.insert( string( sSvr ) );
             }
             ::fclose( fp );
          }
       }
+      else if ( !::strcmp( argv[i], "-tease" ) )
+         c._tease = _IsTrue( argv[++i] );
    }
 
    MyChannels pubs;
    MyChannel *pub;
 
-   strcpy( sSvc, svc );
+   strcpy( sSvc, c.svc() );
    for ( i=0; i<nPub; i++ ) {
-      pub = new MyChannel( sSvc, vecSz, vPrec, bFldV, bFull, txQ, togl, dead, koList );
+      pub = new MyChannel( c );
       pubs.push_back( pub );
-      sprintf( sSvc, "%s.%d", svc, i+1 );
+      sprintf( sSvc, "%s.%d", c.svc(), i+1 );
    }
    pub = pubs[0];
    ::srand48( pub->TimeSec() ); 
-   s = "";
-   if ( pChn && (chn=pub->MapFile( pChn ))._dLen ) {
+   s    = "";
+   if ( c.chn() && (chn=pub->MapFile( c.chn() ))._dLen ) {
       string tmp( chn._data, chn._dLen );
 
       s = tmp;
@@ -785,37 +827,36 @@ int main( int argc, char **argv )
       cp       = ::strtok_r( NULL, "\n", &rp );
    }
    lnks[nl] = NULL;
-   for ( i=0; i<nPub; pubs[i++]->SetCircularBuffer( bCirc ) );
-   for ( i=0; i<nPub; pubs[i++]->SetUnPacked( !bPack ) );
+   for ( i=0; i<nPub; pubs[i++]->SetCircularBuffer( c._bCirc ) );
+   for ( i=0; i<nPub; pubs[i++]->SetUnPacked( !c._bPack ) );
    for ( i=0; i<nPub; pubs[i++]->SetChain( lnks, nl ) );
    LOG( "%s\n", pub->Version() );
    LOG( "%sPACKED\n", pub->IsUnPacked() ? "UN" : "" );
-   LOG( "%s BUFFER\n", bCirc ? "Circular" : "Normal" );
-   LOG( "%s PAYLOAD\n", bFull ? "Full" : "Small" );
-   if ( koList.size() )
-      LOG( "%ld KO List\n", koList.size() );
-   if ( vecSz ) {
-      ty = bFldV ? "FIELD" : "BYTESTREAM";
-      LOG( "%d VECTOR as %s\n", vecSz, ty );
+   LOG( "%s BUFFER\n", c._bCirc ? "Circular" : "Normal" );
+   LOG( "%s PAYLOAD\n", c._bFull ? "Full" : "Small" );
+   if ( c._KO.size() )
+      LOG( "%ld KO List\n", c._KO.size() );
+   if ( c._vecSz ) {
+      ty = c._bVecFld ? "FIELD" : "BYTESTREAM";
+      LOG( "%d VECTOR as %s\n", c._vecSz, ty );
    }
    for ( i=0; i<nPub; i++ ) {
-      string hp( svr );
+      string hp( c.svr() );
       char  *ph = ::strtok_r( (char *)hp.data(), ":", &rp );
       char  *pp = ::strtok_r( NULL, ":", &rp );
 
-      svc = pubs[i]->pPubName();
       sprintf( sSvr, "%s:%d", ph, atoi( pp ) + i );
       pubs[i]->SetBinary( true );
-      pubs[i]->SetHeartbeat( hBeat );
+      pubs[i]->SetHeartbeat( c._hBeat );
 #ifdef TODO_PERMS_BUT_NOT_NOW
       pubs[i]->SetPerms( true );
 #endif // TODO_PERMS_BUT_NOT_NOW
-      LOG( "%s@%s\n", svc, pubs[i]->Start( sSvr ) );
+      LOG( "%s@%s\n", pubs[i]->pPubName(), pubs[i]->Start( sSvr ) );
 //      pubs[i]->SetMDDirectMon( "./MDDirectMon.stats", "Pub", "Pub" );
    }
-   LOG( "Running for %.1fs; Publish every %.1fs\n", tRun, tPub );
-   for ( d0=dn=pub->TimeNs(); ( dn-d0 ) < tRun; ) {
-      for ( i=0; i<nPub; pubs[i++]->Sleep( tPub ) );
+   LOG( "Running for %.1fs; Publish every %.1fs\n", c._tRun, c._tPub );
+   for ( d0=dn=pub->TimeNs(); ( dn-d0 ) < c._tRun; ) {
+      for ( i=0; i<nPub; pubs[i++]->Sleep( c._tPub ) );
       for ( i=0; i<nPub; pubs[i++]->PublishAll() );
       dn = pub->TimeNs();
    }

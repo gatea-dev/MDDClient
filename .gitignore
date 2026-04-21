@@ -5,6 +5,7 @@ __init__.py
 *.out
 *.?xq
 nohup.*
+obj
 Debug
 Release/*
 lib
