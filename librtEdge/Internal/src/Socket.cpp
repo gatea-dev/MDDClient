@@ -32,8 +32,9 @@
 *     21 APR 2024 jcs  Build 71: _SendPing() / Write() : Lock _mtx
 *      4 FEB 2025 jcs  Build 75: ReadOnce(); _bLowLatency
 *      6 MAR 2025 jcs  Build 76: _in.Init( 4MB ) : Default ByteStream 1MB
+*      5 JUN 2025 jcs  Build 79: OneOff
 *
-*  (c) 1994-2025, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -86,7 +87,9 @@ Socket::Socket( const char *pHosts, bool bConnectionless, bool bCircBuf ) :
    _overflow(),
    _tHbeat( 3600 ),
    _SO_RCVBUF( 0 ),
-   _bufIO( 0 )
+   _bufIO( 0 ),
+   sync_out( 0 ),
+   sync_wr( 0 )
 {
    char       *cp, *hp, *pp, *rp;
    const char *_sep0 = ",";
@@ -342,6 +345,7 @@ const char *Socket::Connect()
 bool Socket::Disconnect( const char *reason )
 {
    Locker           lck( _mtx );
+//   OneOff           one( sync_out );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
 
@@ -356,6 +360,7 @@ bool Socket::Disconnect( const char *reason )
    if ( fd() > 0 )
       CLOSE( _fd );
    _fd = 0;
+
    _in.Reset();
    out.Reset();
    return true;
@@ -368,6 +373,7 @@ bool Socket::Write( const char *pData, int dLen )
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
    Locker           l( _mtx );
+//   OneOff           oneW( sync_wr, false );
    struct sockaddr *sa;
    bool             bOK, flush;
    char            *pkt, buf[K];
@@ -388,9 +394,13 @@ bool Socket::Write( const char *pData, int dLen )
    }
 
    // Buffered IO
+//   {
+//      OneOff oneO( sync_out );
 
-   bSz0 = bSz1 = out.bufSz();
-   if ( (bOK=out.Push( (char *)pData, dLen )) ) {
+      bSz0 = bSz1 = out.bufSz();
+      bOK  = out.Push( (char *)pData, dLen );
+//   }
+   if ( bOK ) {
       bSz1  += dLen;
       flush  = !_bufIO;
       flush |= ( ( bSz0 < _bufIO ) && ( bSz1 > _bufIO ) );
@@ -478,6 +488,7 @@ bool Socket::Ioctl( rtEdgeIoctl ctl, void *arg )
           */
          cap          = out.bufSz() ? out.maxSiz() : out.nAlloc();
          out.maxSiz() = gmax( cap, *p32 );
+out.Grow( out.maxSiz() );
          return true;
       case ioctl_getTxBufSize:
          *p32 = out.bufSz();
@@ -559,8 +570,11 @@ void Socket::OnRead()
 void Socket::OnWrite()
 {
    Locker           l( _mtx );
+//   OneOff           oneO( sync_out );
+//   OneOff           oneW( sync_wr, false );
    rtEdgeChanStats &st  = stats();
    Buffer          &out = oBuf();
+   const char      *fmt = "Socket.OnWrite( %s ) : nWr=%d; nL=%d; qSz=%d\n";
    int              wSz, nWr, nL, off, nb;
 
    // Pre-condition
@@ -591,6 +605,8 @@ void Socket::OnWrite()
       out.Reset();
    st._qSiz    =  out.bufSz();
    st._qSizMax = gmax( st._qSiz, st._qSizMax );
+   if ( nL && _log )
+      _log->logT( 0, fmt, dstConn(), nWr, nL, st._qSiz );
 }
 
 void Socket::OnException()

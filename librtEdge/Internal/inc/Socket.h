@@ -24,8 +24,9 @@
 *      4 MAR 2024 jcs  Build 69: Buffered IO
 *     22 DEC 2024 jcs  Build 74: ConnCbk()
 *      4 FEB 2025 jcs  Build 75: ReadOnce(); _bLowLatency
+*      5 JUN 2025 jcs  Build 79: OneOff
 *
-*  (c) 1994-2025, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_SOCKET_H
 #define __EDGLIB_SOCKET_H
@@ -46,6 +47,38 @@ class Thread;
 
 typedef vector<string *>   Hosts;
 typedef vector<int>        Ports;
+
+/////////////////////////////////////////
+// Synchronized Access Check
+/////////////////////////////////////////
+class OneOff
+{
+private:
+        ::int64_t &_cnt;
+        bool       _bOne; // Only 1 at a time
+        ::int64_t  _lwc;
+
+	///////////////////////
+	// Constructor / Destructor
+	///////////////////////
+public:
+	OneOff( ::int64_t &cnt, bool bOne=true ) :
+	   _cnt( cnt ),
+	   _bOne( bOne ),
+	   _lwc( ATOMIC_INC( &cnt ) )
+	{
+assert( !_bOne || ( _lwc == 1 ) );
+	}
+
+	~OneOff()
+	{
+	   ::int64_t c = ATOMIC_DEC( &_cnt );
+assert( c == ( _lwc-1 ) );
+assert( !_bOne || ( c == 0 ) );
+	}
+
+}; // class SyncCheck
+
 
 /////////////////////////////////////////
 // Socket
@@ -91,6 +124,8 @@ protected:
 	int                _SO_RCVBUF;
 	int                _bufIO;
 	Mold64Pkt          _udp;
+	::int64_t          sync_out;
+	::int64_t          sync_wr;
 
 	// Constructor / Destructor
 public:

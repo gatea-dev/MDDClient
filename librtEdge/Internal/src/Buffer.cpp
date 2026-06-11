@@ -6,9 +6,12 @@
 *      5 JAN 2024 jcs  Created (from Socket.cpp)
 *      7 NOV 2024 jcs  Build 74: SetRawLog()
 *     25 JAN 2025 jcs  Build 75: De-lint
+*     10 JUN 2026 jcs  Build 79: Socket._log
 *
-*  (c) 1994-2025, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
+#include <Logger.h>
+#include <Socket.h>
 #include <Buffer.h>
 
 using namespace RTEDGE_PRIVATE;
@@ -48,41 +51,6 @@ void Buffer::Init( int nAlloc )
 {
    Grow( nAlloc );
    Reset();
-}
-
-bool Buffer::Grow( int nReqGrow )
-{
-   char *lwc;
-   int   bSz, nGrow;
-
-   // Pre-condition
-
-   nGrow = b_gmin( nReqGrow, ( _qMax-_qAlloc ) );
-   nGrow = b_WithinRange( 0, nGrow, _qMax );  // Build 56
-   if ( !nGrow )
-      return false;
-
-   // Save
-
-   lwc = _bp;
-   bSz = _cp - _bp;
-
-   // Grow
-
-   _qAlloc += nGrow;
-   _bp      = new char[_qAlloc];
-   _cp      = _bp;
-
-   // Restore
-
-   if ( lwc ) {
-      if ( bSz ) {
-         ::memcpy( _bp, lwc, bSz );
-         _cp += bSz;
-      }
-      delete[] lwc;
-   }
-   return true;
 }
 
 rtBUF Buffer::buf()
@@ -138,6 +106,41 @@ void Buffer::SetRawLog( const char *logFile )
 ////////////////////////////////////////////
 // Instance-Specific Operations
 ////////////////////////////////////////////
+bool Buffer::Grow( int nReqGrow )
+{
+   char *lwc;
+   int   bSz, nGrow;
+
+   // Pre-condition
+
+   nGrow = b_gmin( nReqGrow, ( _qMax-_qAlloc ) );
+   nGrow = b_WithinRange( 0, nGrow, _qMax );  // Build 56
+   if ( !nGrow )
+      return false;
+
+   // Save
+
+   lwc = _bp;
+   bSz = _cp - _bp;
+
+   // Grow
+
+   _qAlloc += nGrow;
+   _bp      = new char[_qAlloc];
+   _cp      = _bp;
+
+   // Restore
+
+   if ( lwc ) {
+      if ( bSz ) {
+         ::memcpy( _bp, lwc, bSz );
+         _cp += bSz;
+      }
+      delete[] lwc;
+   }
+   return true;
+}
+
 void Buffer::Reset()
 {
    _cp = _bp;
@@ -227,6 +230,20 @@ CircularBuffer::CircularBuffer( int maxSz ) :
 ////////////////////////////////////////////
 // Instance-Specific Operations
 ////////////////////////////////////////////
+bool CircularBuffer::Grow( int nReqGrow )
+{
+   Logger     *lf  = Socket::_log;
+   const char *fmt = "CirculafBuffer.Grow() : %d -> %d; beg=%d; end=%d\n";
+   int         qa1 = _qAlloc;
+   bool        rc;
+
+   qa1 = _qAlloc;
+   rc  = Buffer::Grow( nReqGrow );
+   if ( lf && ( qa1 < _qAlloc ) ) 
+      lf->logT( 0, fmt, qa1, _qAlloc, _beg, _end );
+   return rc;
+}
+
 void CircularBuffer::Reset()
 {
    Buffer::Reset();

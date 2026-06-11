@@ -17,6 +17,8 @@ Performance
 
 Known Bugs
 ----------
+-# CircularBuffer.Grow()
+   - Handle fragment at end of buffer : _end < _beg
 
 
 Features To Add
@@ -45,7 +47,21 @@ Features To Add
  * ## Change Log
  *
  *
- * ### Build 78 26-03-xx
+ * ### Build 79 26-06-11
+ *
+ * -# Sloppy Mutex._cnt
+ *    - ::int64_t Mutex._cnt
+ *    - Mutex.Lock() like GFC2 : _tid, etc
+ *
+ * -# Double check synchronized access to PubChannel._out:
+ *    - OneOff / Socket.sync_xxx
+ *
+ * -# Overflow in Edge:
+ *    - CircularBuffer.Grow() : fragment at end of existing buffer
+ *    - Solution : CircularBuffer.Grow() @ ioctl_setTxBufSize time
+ *
+ *
+ * ### Build 78 26-03-07
  *
  * -# rtMessage.Dump() : flds and bytes like UPA
  *
