@@ -9,8 +9,9 @@
 *     12 NOV 2014 jcs  Build 28: Semaphore; RTEDGE_PRIVATE
 *     12 OCT 2015 jcs  Build 32: EDG_Internal.h
 *     25 JAN 2022 jcs  Build 51: pthread_t as 64-bit on WINxx
+*      8 JUN 2026 jcs  Build 79: Mutex.Lock() like GFC2; ::int64_t _cnt
 *
-*  (c) 1994-2022, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_MUTEX_H
 #define __EDGLIB_MUTEX_H
@@ -34,9 +35,9 @@ namespace RTEDGE_PRIVATE
 class Mutex
 {
 protected:
-	pthread_mutex_t _mtx;
-	pthread_t       _tid;
-	int             _cnt;
+	pthread_mutex_t    _mtx;
+	pthread_t          _tid;
+	volatile ::int64_t _cnt;
 
 	// Constructor / Destructor
 public:

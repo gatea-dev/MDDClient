@@ -5,8 +5,9 @@
 *  REVISION HISTORY:
 *      5 JAN 2024 jcs  Created (from Socket.h)
 *      7 NOV 2024 jcs  Build 74: SetRawLog()
+*     11 JUN 2026 jcs  Build 79: virtual Grow()
 *
-*  (c) 1994-2024, Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #ifndef __EDGLIB_BUFFER_H
 #define __EDGLIB_BUFFER_H
@@ -61,7 +62,6 @@ public:
 	int  &maxSiz() { return _qMax; }
 	void  SetConnectionless() { _bConnectionless = true; }
 	void  Init( int );
-	bool  Grow( int );
 	rtBUF buf();
 	int   nLeft();
 	void  Set( int );
@@ -71,6 +71,7 @@ public:
 	// Instance-Specific Operations
 
 	virtual char *cp()  { return _cp; }
+	virtual bool  Grow( int );
 	virtual void  Reset();
 	virtual int   bufSz();
 	virtual int   WriteOut( int, int, int );
@@ -100,6 +101,7 @@ public:
 
 	// Instance-Specific Operations
 
+	virtual bool  Grow( int );
 	virtual void  Reset();
 	virtual int   bufSz();
 	virtual int   WriteOut( int, int, int );

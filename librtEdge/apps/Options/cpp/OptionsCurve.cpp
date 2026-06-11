@@ -2357,6 +2357,21 @@ breakpoint();
 //////////////////////////
 int main( int argc, char **argv )
 {
+   double xx[8] = { 1,3,6,12,24,36,60,120 };
+   double yy[8] = { 3.655, 3.696, 3.744, 3.799, 3.996, 4.020, 4.114, 4.451 };
+   QUANT::DoubleList X, Y;
+   for ( int i=0; i<8; X.push_back( xx[i] ), i++ );
+   for ( int i=0; i<8; Y.push_back( yy[i] ), i++ );
+   QUANT::CubicSpline s( X, Y );
+   QUANT::DoubleList  c = s.Spline( X.front(), X.back(), 1 );
+
+   for ( size_t i=0; i<c.size(); i++ )
+      printf( "%02ld : %.3f\n", i+1, c[i] );
+   return 0;
+}
+
+int main_benop( int argc, char **argv )
+{
    XmlParser x;
    XmlElem  *xs;
    string    s;

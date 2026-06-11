@@ -8,8 +8,9 @@
 *     20 MAR 2012 jcs  Build 18: WaitEvent( double )
 *     12 NOV 2014 jcs  Build 28: Semaphore; RTEDGE_PRIVATE
 *     20 MAR 2016 jcs  Build 32: EDG_Internal.h
+*      8 JUN 2026 jcs  Build 79: Mutex.Lock() like GFC2; ::int64_t _cnt
 *
-*  (c) 1994-2016 Gatea Ltd.
+*  (c) 1994-2026, Gatea Ltd.
 ******************************************************************************/
 #include <EDG_Internal.h>
 
@@ -20,6 +21,8 @@ using namespace RTEDGE_PRIVATE;
 //                  c l a s s       M u t e x
 //
 /////////////////////////////////////////////////////////////////////////////
+
+static ::int64_t _zero   =  0;
 
 ////////////////////////////////////////////
 // Constructor / Destructor
@@ -60,57 +63,50 @@ pthread_t Mutex::tid()
 
 void Mutex::Lock()
 {
-#ifdef WIN32
-   ::EnterCriticalSection( &_mtx );
-#else
-   ::pthread_mutex_lock( &_mtx );
-#endif // WIN32
-    _cnt += 1;
-   _tid   = CurrentThreadID();
-}
+   pthread_t tid = CurrentThreadID();
+   ::int64_t seq;
 
-void Mutex::Unlock()
-{
-   _cnt--;
-   _tid = 0;
-#ifdef WIN32
-   ::LeaveCriticalSection( &_mtx );
-#else
-   ::pthread_mutex_unlock( &_mtx );
-#endif // WIN32
-}
+   // Re-entrant
 
-#ifdef FUCKED
-void Mutex::Lock()
-{
-   // Allow locking by same thread
-
-   if ( _cnt && ( _tid == CurrentThreadID() ) ) {
-      _cnt += 1;
+   if ( _tid == tid ) {
+      seq = ATOMIC_INC( &_cnt );
       return;
    }
+
+   // Lock
+
 #ifdef WIN32
    ::EnterCriticalSection( &_mtx );
 #else
    ::pthread_mutex_lock( &_mtx );
 #endif // WIN32
-    _cnt += 1;
-   _tid   = CurrentThreadID();
+   seq = ATOMIC_INC( &_cnt );
+   ATOMIC_EXCH( &_tid, tid );
+// assert( seq == 1 );
 }
 
 void Mutex::Unlock()
 {
-   _cnt--;
-   if ( _cnt > 0 )
+   pthread_t tid = CurrentThreadID();
+   ::int64_t seq;
+
+   // Re-entrant
+
+   seq = ATOMIC_DEC( &_cnt );
+// assert( _tid == tid );
+   if ( seq )
       return;
-   _tid = 0;
+
+   // Unlock
+
+   ATOMIC_EXCH( &_tid, _zero );
+// assert( seq == 0 );
 #ifdef WIN32
    ::LeaveCriticalSection( &_mtx );
 #else
    ::pthread_mutex_unlock( &_mtx );
 #endif // WIN32
 }
-#endif // FUCKED
 
 
 ////////////////////////////////////////////
